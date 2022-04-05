@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pypaperless",
-    version="0.0.5",
+    version="0.0.6",
     author="tbsch",
     author_email="info@tbsch.de",
     description="A small API wrapper for paperless-ngx dms.",
@@ -20,7 +20,6 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    # package_dir={"": "pypaperless"},
-    packages=setuptools.find_packages(where="pypaperless"),
+    packages=["pypaperless"],
     python_requires=">=3.6",
 )
