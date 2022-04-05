@@ -1,43 +1,26 @@
-import asyncio
-from time import sleep
-import aiohttp
+import setuptools
 
-from paperless import Auth, PaperlessAPI
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
-
-async def main():
-    async with aiohttp.ClientSession() as session:
-        auth = Auth(session, "http://nas.local.tbsch.de:9120/api",
-                    "17d85e03b83c4bfd9aa0e9a4e71dc3b79265d51e")
-
-        api = PaperlessAPI(auth)
-
-        correspondents = await api.async_get_correspondents()
-        correspondents = await api.async_get_correspondents()
-        correspondents = await api.async_get_correspondents()
-
-        for data in correspondents:
-            print(data.raw_data)
-
-        # doctypes = await api.async_get_document_types()
-
-        # for data in doctypes:
-        #     print(data.raw_data)
-
-        # tags = await api.async_get_tags()
-
-        # for data in tags:
-        #     print(data.raw_data)
-
-        # views = await api.async_get_saved_views()
-
-        # for data in views:
-        #     print(data.raw_data)
-
-        # docs = await api.async_get_documents()
-
-        # for data in docs:
-        #     print(data.raw_data)
-
-
-asyncio.run(main())
+setuptools.setup(
+    name="pypaperless",
+    version="0.0.1",
+    author="tbsch",
+    author_email="info@tbsch.de",
+    description="A small API wrapper for paperless-ngx dms.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/grdn1337/paperless-api",
+    project_urls={
+        "Bug Tracker": "https://github.com/grdn1337/paperless-api/issues",
+    },
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    package_dir={"": "paperless"},
+    packages=setuptools.find_packages(where="paperless"),
+    python_requires=">=3.6",
+)
