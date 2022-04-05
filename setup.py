@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="pypaperless",
-    version="0.0.1",
+    version="0.0.2",
     author="tbsch",
     author_email="info@tbsch.de",
     description="A small API wrapper for paperless-ngx dms.",
