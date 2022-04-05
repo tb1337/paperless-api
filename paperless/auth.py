@@ -4,20 +4,19 @@ from aiohttp import ClientSession, ClientResponse
 class Auth:
     """Class to make authenticated requests."""
 
-    def __init__(self, websession: ClientSession, path: str, access_token: str):
+    def __init__(self, endpoint: str, token: str):
         """Initialize the auth."""
-        self.websession = websession
-        self.basepath = path
-        self.access_token = access_token
+        self.basepath = endpoint
+        self.token = token
 
-    async def request(self, method: str, path: str, **kwargs) -> ClientResponse:
+    async def request(self, session: ClientSession, method: str, path: str, **kwargs) -> ClientResponse:
         uri = f"{self.basepath}/{path}/"
-        return await self.__request(method, uri, **kwargs)
+        return await self.__request(session, method, uri, **kwargs)
 
-    async def request_raw(self, method: str, uri: str, **kwargs) -> ClientResponse:
-        return await self.__request(method, uri, **kwargs)
+    async def request_raw(self, session: ClientSession, method: str, uri: str, **kwargs) -> ClientResponse:
+        return await self.__request(session, method, uri, **kwargs)
 
-    async def __request(self, method: str, uri: str, **kwargs) -> ClientResponse:
+    async def __request(self, session: ClientSession, method: str, uri: str, **kwargs) -> ClientResponse:
         """Make a request."""
         headers = kwargs.get("headers")
         params = kwargs.get("params")
@@ -33,8 +32,8 @@ class Auth:
             params = dict(params)
 
         params["format"] = "json"
-        headers["authorization"] = f"Token {self.access_token}"
+        headers["authorization"] = f"Token {self.token}"
 
-        return await self.websession.request(
+        return await session.request(
             method, uri, **kwargs, headers=headers,
         )
