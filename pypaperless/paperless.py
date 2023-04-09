@@ -18,7 +18,7 @@ class PaperlessAPI:
         """Initialize the API and store the auth so we can make token-based requests."""
         self.auth = Auth(endpoint, username, password)
 
-    async def __get_paginated_results(self, path: str, isa: object) -> List[object]:
+    async def __get_paginated_results(self, path: str, isa: object, params = None) -> List[object]:
         """Walk through the pagination and return a list of objects of type <isa>."""
         json = {}
         results = []
@@ -26,7 +26,7 @@ class PaperlessAPI:
         async with aiohttp.ClientSession() as session:
             while True:
                 if not "next" in json:
-                    resp = await self.auth.request(session, "get", path)
+                    resp = await self.auth.request(session, "get", path, params=params)
                 else:
                     resp = await self.auth.request_raw(session, "get", json["next"])
                 resp.raise_for_status()
@@ -106,3 +106,8 @@ class PaperlessAPI:
 
             resp = await self.auth.request(session=session, method="post", path="documents/post_document/", data=data)
             resp.raise_for_status()
+    
+    async def search(self, query: str) -> List[Document]:
+        params = {}
+        params["query"] = query
+        return await self.__get_paginated_results("documents", Document, params)
