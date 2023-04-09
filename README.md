@@ -32,3 +32,20 @@ tags = await api.get_tags()
 views = await api.get_saved_views()
 documents = await api.get_documents()
 ```
+
+Request a single item by id from an endpoint.
+```python
+doctype = await api.get_document_type(3)
+tag = await api.get_tag(6)
+document = await api.get_document(6)
+```
+
+Post a document to Paperless. Only the file is mandatory, title, creation date correspondent id, and document type id are optional. Tags are crurrently not supported.
+```python
+await api.post_document("./invoice.pdf",title="Invoice bedroom closet")
+```
+
+Search for a document and receive a list of results. Search syntax is the same as in Paperless: https://docs.paperless-ngx.com/usage/#basic-usage_searching.
+```python
+matching_documents = await api.search("bedroom*")
+```
