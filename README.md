@@ -31,6 +31,7 @@ doctypes = await api.get_document_types()
 tags = await api.get_tags()
 views = await api.get_saved_views()
 documents = await api.get_documents()
+tasks = await apt.get_tasks()
 ```
 
 Request a single item by id from an endpoint.
@@ -38,6 +39,8 @@ Request a single item by id from an endpoint.
 doctype = await api.get_document_type(3)
 tag = await api.get_tag(6)
 document = await api.get_document(6)
+task = await api.get_task(123)
+by_task_id = await api.get_task_by_task_id("fdaa724b-xxxx-yyyy-aaf8-edc5c113c656")
 ```
 
 Post a document to Paperless. Only the file is mandatory, title, creation date correspondent id, and document type id are optional. Tags are crurrently not supported.
