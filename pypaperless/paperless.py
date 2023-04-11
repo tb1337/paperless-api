@@ -10,13 +10,9 @@ import aiohttp
 class PaperlessAPI:
     """Class to communicate with the paginated API."""
 
-    def __init__(self, endpoint: str, token: str):
-        """Initialize the API and store the auth so we can make token-based requests."""
-        self.auth = Auth(endpoint, token)
-
-    def __init__(self, endpoint: str, username: str, password: str):
-        """Initialize the API and store the auth so we can make token-based requests."""
-        self.auth = Auth(endpoint, username, password)
+    def __init__(self, endpoint: str, token: str = None, username: str = None, password: str = None):
+        """Initialize the API and store the auth so we can make token-based or Basic-auth requests."""
+        self.auth = Auth(endpoint=endpoint,token=token,username=username, password=password)
 
     async def __get_paginated_results(self, path: str, isa: object, params = None) -> List[object]:
         """Walk through the pagination and return a list of objects of type <isa>."""

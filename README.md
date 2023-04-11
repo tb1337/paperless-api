@@ -15,6 +15,7 @@ import pypaperless
 
 async def main():
     api = pypaperless.PaperlessAPI("http://127.0.0.1:9120", "SUPER_SECRET_API_TOKEN_HERE")
+    # alternative: api = pypaperless.PaperlessAPI("http://127.0.0.1:9120", username="user", password="pass")
 
     correspondents = await api.get_correspondents()
 

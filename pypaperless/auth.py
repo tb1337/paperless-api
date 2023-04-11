@@ -7,14 +7,13 @@ class Auth:
     token: str = ""
     basic_auth: str = ""
 
-    def __init__(self, endpoint: str, token: str):
+    def __init__(self, endpoint: str, token: str = None, username: str = None, password: str = None):
         """Initialize the auth."""
         self.basepath = endpoint
-        self.token = token
-    
-    def __init__(self, endpoint: str, username: str, password: str):
-        self.basepath = endpoint
-        self.basic_auth = base64.b64encode(f"{username}:{password}".encode()).decode()
+        if token:
+            self.token = token
+        if username and password:
+            self.basic_auth = base64.b64encode(f"{username}:{password}".encode()).decode()
 
     async def request(self, session: ClientSession, method: str, path: str, **kwargs) -> ClientResponse:
         uri = f"{self.basepath}/{path}/"
