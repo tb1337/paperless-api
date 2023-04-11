@@ -43,12 +43,28 @@ class PaperlessAPI:
 
         return results
     
-    async def __get_result(self, path: str, isa: object) -> object:
+    async def __get_non_paginated_results(self, path: str, isa: object, params = None) -> List[object]:
+        """Walk through the pagination and return a list of objects of type <isa>."""
+        json = {}
+        results = []
+
+        async with aiohttp.ClientSession() as session:
+            resp = await self.auth.request(session, "get", path, params=params)
+            resp.raise_for_status()
+            
+            json = await resp.json()
+
+            # extend list
+            results.extend([isa(data, self.auth)
+                            for data in json])
+        return results
+    
+    async def __get_result(self, path: str, isa: object, params = None) -> object:
         """ Return an objects of type <isa>."""
         json = {}
 
         async with aiohttp.ClientSession() as session:
-            resp = await self.auth.request(session, "get", path)
+            resp = await self.auth.request(session, "get", path, params=params)
             resp.raise_for_status()
 
             json = dict(await resp.json())
@@ -84,14 +100,34 @@ class PaperlessAPI:
         return await self.__get_paginated_results("saved_views", SavedView)
 
     async def get_document(self, id: int) -> Document:
+        """Return single document by id."""
         return await self.__get_result(f"documents/{id}", Document)
 
     async def get_documents(self) -> List[Document]:
         """Return all documents."""
         return await self.__get_paginated_results("documents", Document)
-    
-    async def post_document(self, file, title: str = "", created: datetime = None, correspondent: int = None, document_type: int = None):
-        """Post new document."""
+
+    async def get_task(self, id: int) -> Task:
+        """Return single task by id."""
+        return await self.__get_result(f"tasks/{id}", Task)
+
+    async def get_task_by_task_id(self, task_id: str) -> Task:
+        """Return single task by task id."""
+        params = {}
+        params["task_id"] = task_id
+        # Paperless REST API returns an array with one element and not a single object
+        result = await self.__get_non_paginated_results(f"tasks", Task, params=params)
+        if len(result) == 1:
+            return result[0]
+        else:
+            return None
+
+    async def get_tasks(self) -> List[Task]:
+        """Return all tasks."""
+        return await self.__get_non_paginated_results("tasks", Task)
+        
+    async def post_document(self, file, title: str = "", created: datetime = None, correspondent: int = None, document_type: int = None) -> object:
+        """Post new document and returns task id"""
         async with aiohttp.ClientSession() as session:
             data = {
                 "document": open(file, 'rb'),
@@ -106,6 +142,7 @@ class PaperlessAPI:
 
             resp = await self.auth.request(session=session, method="post", path="documents/post_document/", data=data)
             resp.raise_for_status()
+            return await resp.json()
     
     async def search(self, query: str) -> List[Document]:
         params = {}
