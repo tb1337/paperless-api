@@ -4,7 +4,7 @@ from datetime import datetime
 from .auth import Auth
 from .model import *
 
-import aiohttp
+from aiohttp import FormData, ClientSession
 
 
 class PaperlessAPI:
@@ -19,7 +19,7 @@ class PaperlessAPI:
         json = {}
         results = []
 
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             while True:
                 if not "next" in json:
                     resp = await self.auth.request(session, "get", path, params=params)
@@ -44,7 +44,7 @@ class PaperlessAPI:
         json = {}
         results = []
 
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             resp = await self.auth.request(session, "get", path, params=params)
             resp.raise_for_status()
             
@@ -59,7 +59,7 @@ class PaperlessAPI:
         """ Return an objects of type <isa>."""
         json = {}
 
-        async with aiohttp.ClientSession() as session:
+        async with ClientSession() as session:
             resp = await self.auth.request(session, "get", path, params=params)
             resp.raise_for_status()
 
@@ -122,21 +122,26 @@ class PaperlessAPI:
         """Return all tasks."""
         return await self.__get_non_paginated_results("tasks", Task)
         
-    async def post_document(self, file, title: str = "", created: datetime = None, correspondent: int = None, document_type: int = None) -> object:
+    async def post_document(self, file, title: str = "", created: datetime = None, correspondent: int = None, document_type: int = None, tags: List[int] = None) -> object:
         """Post new document and returns task id"""
-        async with aiohttp.ClientSession() as session:
-            data = {
-                "document": open(file, 'rb'),
-                "title": f"{title}",
-            }
-            if created:
-                data["created"] = f"{created}"
-            if correspondent:
-                data["correspondent"] = f"{correspondent}"
-            if document_type:
-                data["document_type"] = f"{document_type}"
+        async with ClientSession() as session:
+            form = FormData()
 
-            resp = await self.auth.request(session=session, method="post", path="documents/post_document/", data=data)
+            form.add_field("document", open(file, 'rb'))
+
+            if title:
+                form.add_field("title", title)
+
+            if created:
+                form.add_field("created", f"{created}")
+            if correspondent:
+                form.add_field("correspondent", f"{correspondent}")
+            if document_type:
+                form.add_field("document_type", f"{document_type}")            
+            for tag in tags:
+                form.add_field("tags",f"{tag}")            
+
+            resp = await self.auth.request(session=session, method="post", path="documents/post_document", data=form)
             resp.raise_for_status()
             return await resp.json()
     
