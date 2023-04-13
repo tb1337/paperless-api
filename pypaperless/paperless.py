@@ -138,8 +138,9 @@ class PaperlessAPI:
                 form.add_field("correspondent", f"{correspondent}")
             if document_type:
                 form.add_field("document_type", f"{document_type}")            
-            for tag in tags:
-                form.add_field("tags",f"{tag}")            
+            if tags:
+                for tag in tags:
+                    form.add_field("tags",f"{tag}")            
 
             resp = await self.auth.request(session=session, method="post", path="documents/post_document", data=form)
             resp.raise_for_status()
