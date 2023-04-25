@@ -262,3 +262,56 @@ class Document:
     def archived_file_name(self) -> str:
         """Return the archived_file_name."""
         return self.raw_data["archived_file_name"]
+
+class Task:
+    """Class that represents a task object in the paperless API"""
+
+    def __init__(self, raw_data: dict, auth: Auth):
+        """Initialize a task object."""
+        self.raw_data = raw_data
+        self.auth = auth
+
+    @property
+    def task_id(self) -> str:
+        """Return the task id."""
+        return self.raw_data["task_id"]
+
+    @property
+    def task_file_name(self) -> str:
+        """Return the task file name."""
+        return self.raw_data["task_file_name"]
+
+    @property
+    def date_created(self) -> datetime:
+        """Return the creation date."""
+        return self.raw_data["date_created"]
+    
+    @property
+    def date_done(self) -> datetime:
+        """Return the finishing date."""
+        return self.raw_data["date_done"]
+
+    @property
+    def type(self) -> str:
+        """Return the type."""
+        return self.raw_data["type"]
+
+    @property
+    def status(self) -> str:
+        """Return the status."""
+        return self.raw_data["status"]
+
+    @property
+    def result(self) -> str:
+        """Return the result string."""
+        return self.raw_data["result"]
+
+    @property
+    def result(self) -> bool:
+        """Return if the task was acknowledged"""
+        return self.raw_data["acknowledged"]
+    
+    @property
+    def related_document(self) -> int:
+        """Return the related document id"""
+        return self.raw_data["related_document"]    
