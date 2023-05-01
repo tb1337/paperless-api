@@ -263,6 +263,7 @@ class Document:
         """Return the archived_file_name."""
         return self.raw_data["archived_file_name"]
 
+
 class Task:
     """Class that represents a task object in the paperless API"""
 
@@ -285,7 +286,7 @@ class Task:
     def date_created(self) -> datetime:
         """Return the creation date."""
         return self.raw_data["date_created"]
-    
+
     @property
     def date_done(self) -> datetime:
         """Return the finishing date."""
@@ -310,8 +311,8 @@ class Task:
     def result(self) -> bool:
         """Return if the task was acknowledged"""
         return self.raw_data["acknowledged"]
-    
+
     @property
     def related_document(self) -> int:
         """Return the related document id"""
-        return self.raw_data["related_document"]    
+        return self.raw_data["related_document"]

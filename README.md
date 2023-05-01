@@ -49,6 +49,17 @@ Post a document to Paperless. Only the file is mandatory, title, creation date c
 await api.post_document("./invoice.pdf",title="Invoice bedroom closet")
 ```
 
+Create a new correspondent:
+```python
+correspondent = {
+    "name": "test",
+    "match": "test",
+    "matching_algorithm": 3,
+    "is_insensitive": "false",
+}
+print (await api.add_correspondent(correspondent))
+```
+
 Search for a document and receive a list of results. Search syntax is the same as in Paperless: https://docs.paperless-ngx.com/usage/#basic-usage_searching.
 ```python
 matching_documents = await api.search("bedroom*")
