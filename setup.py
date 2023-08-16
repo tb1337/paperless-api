@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 
 setup(
     name="pypaperless",
-    version="1.0.0",
+    version="1.1.0",
     description="A small API wrapper for the paperless-ngx dms.",
     long_description=long_description,
     long_description_content_type="text/markdown",

@@ -58,9 +58,10 @@ class Paperless:
             return {"Authorization": f"Token {self.token}"}
         elif self.username and self.password:
             return {"Authorization": 
-                base64.b64encode(
-                    f"{self.username}:{self.password}".encode()
-                ).decode()
+                "Basic " + 
+                    base64.b64encode(
+                        f"{self.username}:{self.password}".encode()
+                    ).decode()
             }
         else:
             raise RuntimeError("No credentials provided")
@@ -213,7 +214,7 @@ class Paperless:
     def get_mail_accounts(self) -> List[PaperlessMailAccount]:
         return self.get_all(PaperlessMailAccount)
     
-    def get_mail_rule(self) -> List[PaperlessMailRule]:
+    def get_mail_rules(self) -> List[PaperlessMailRule]:
         return self.get_all(PaperlessMailRule)
     
 
