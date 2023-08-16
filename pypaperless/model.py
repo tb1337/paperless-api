@@ -1,318 +1,272 @@
-from datetime import datetime
+from dataclasses import dataclass, field
 from typing import List
 
-from .auth import Auth
-
-
-class Correspondent:
-    """Class that represents a correspondent object in the paperless API."""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a correspondent object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def id(self) -> int:
-        """Return the id."""
-        return self.raw_data["id"]
-
-    @property
-    def slug(self) -> str:
-        """Return the slug."""
-        return self.raw_data["slug"]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self.raw_data["name"]
-
-    @property
-    def match(self) -> str:
-        """Return the match."""
-        return self.raw_data["match"]
-
-    @property
-    def matching_algorithm(self) -> int:
-        """Return the matching_algorithm."""
-        return self.raw_data["matching_algorithm"]
-
-    @property
-    def is_insensitive(self) -> bool:
-        """Return the is_insensitive flag."""
-        return self.raw_data["is_insensitive"]
-
-    @property
-    def document_count(self) -> int:
-        """Return the document_count."""
-        return self.raw_data["document_count"]
-
-    @property
-    def last_correspondence(self) -> datetime:
-        """Return the last_correspondence date."""
-        return self.raw_data["last_correspondence"]
-
-
-class DocumentType:
-    """Class that represents a document type object in the paperless API."""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a document type object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def id(self) -> int:
-        """Return the id."""
-        return self.raw_data["id"]
-
-    @property
-    def slug(self) -> str:
-        """Return the slug."""
-        return self.raw_data["slug"]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self.raw_data["name"]
-
-    @property
-    def match(self) -> str:
-        """Return the match."""
-        return self.raw_data["match"]
-
-    @property
-    def matching_algorithm(self) -> int:
-        """Return the matching_algorithm."""
-        return self.raw_data["matching_algorithm"]
-
-    @property
-    def is_insensitive(self) -> bool:
-        """Return the is_insensitive flag."""
-        return self.raw_data["is_insensitive"]
-
-    @property
-    def document_count(self) -> int:
-        """Return the document_count."""
-        return self.raw_data["document_count"]
-
-
-class Tag:
-    """Class that represents a tag object in the paperless API."""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a tag object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def id(self) -> int:
-        """Return the id."""
-        return self.raw_data["id"]
-
-    @property
-    def slug(self) -> str:
-        """Return the slug."""
-        return self.raw_data["slug"]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self.raw_data["name"]
-
-    @property
-    def colour(self) -> int:
-        """Return the colour."""
-        return self.raw_data["colour"]
-
-    @property
-    def match(self) -> str:
-        """Return the match."""
-        return self.raw_data["match"]
-
-    @property
-    def matching_algorithm(self) -> int:
-        """Return the matching_algorithm."""
-        return self.raw_data["matching_algorithm"]
-
-    @property
-    def is_insensitive(self) -> bool:
-        """Return the is_insensitive flag."""
-        return self.raw_data["is_insensitive"]
-
-    @property
-    def is_inbox_tag(self) -> bool:
-        """Return the is_inbox_tag flag."""
-        return self.raw_data["is_inbox_tag"]
-
-    @property
-    def document_count(self) -> int:
-        """Return the document_count."""
-        return self.raw_data["document_count"]
-
-
-class SavedView:
-    """Class that represents a saved view object in the paperless API."""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a saved view object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def id(self) -> int:
-        """Return the id."""
-        return self.raw_data["id"]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self.raw_data["name"]
-
-    @property
-    def show_on_dashboard(self) -> bool:
-        """Return the show_on_dashboard flag."""
-        return self.raw_data["show_on_dashboard"]
-
-    @property
-    def show_in_sidebar(self) -> bool:
-        """Return the show_in_sidebar flag."""
-        return self.raw_data["show_in_sidebar"]
-
-    @property
-    def sort_field(self) -> str:
-        """Return the sort_field."""
-        return self.raw_data["sort_field"]
-
-    @property
-    def sort_reverse(self) -> bool:
-        """Return the sort_reverse flag."""
-        return self.raw_data["sort_reverse"]
-
-    @property
-    def filter_rules(self) -> List[dict]:
-        """Return the filter_rules dict."""
-        return self.raw_data["filter_rules"]
-
-
-class Document:
-    """Class that represents a document object in the paperless API."""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a document object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def id(self) -> int:
-        """Return the id."""
-        return self.raw_data["id"]
-
-    @property
-    def correspondent(self) -> int:
-        """Return the correspondent id."""
-        return self.raw_data["correspondent"]
-
-    @property
-    def document_type(self) -> int:
-        """Return the document_type id."""
-        return self.raw_data["document_type"]
-
-    @property
-    def title(self) -> str:
-        """Return the title."""
-        return self.raw_data["title"]
-
-    @property
-    def content(self) -> str:
-        """Return the content."""
-        return self.raw_data["content"]
-
-    @property
-    def tags(self) -> List[int]:
-        """Return the list of mapped tags."""
-        return self.raw_data["tags"]
-
-    @property
-    def created(self) -> datetime:
-        """Return the created date."""
-        return self.raw_data["created"]
-
-    @property
-    def modified(self) -> datetime:
-        """Return the modified date."""
-        return self.raw_data["modified"]
-
-    @property
-    def added(self) -> datetime:
-        """Return the added date."""
-        return self.raw_data["added"]
-
-    @property
-    def archive_serial_number(self) -> str:
-        """Return the archive_serial_number."""
-        return self.raw_data["archive_serial_number"]
-
-    @property
-    def original_file_name(self) -> str:
-        """Return the original_file_name."""
-        return self.raw_data["original_file_name"]
-
-    @property
-    def archived_file_name(self) -> str:
-        """Return the archived_file_name."""
-        return self.raw_data["archived_file_name"]
-
-
-class Task:
-    """Class that represents a task object in the paperless API"""
-
-    def __init__(self, raw_data: dict, auth: Auth):
-        """Initialize a task object."""
-        self.raw_data = raw_data
-        self.auth = auth
-
-    @property
-    def task_id(self) -> str:
-        """Return the task id."""
-        return self.raw_data["task_id"]
-
-    @property
-    def task_file_name(self) -> str:
-        """Return the task file name."""
-        return self.raw_data["task_file_name"]
-
-    @property
-    def date_created(self) -> datetime:
-        """Return the creation date."""
-        return self.raw_data["date_created"]
-
-    @property
-    def date_done(self) -> datetime:
-        """Return the finishing date."""
-        return self.raw_data["date_done"]
-
-    @property
-    def type(self) -> str:
-        """Return the type."""
-        return self.raw_data["type"]
-
-    @property
-    def status(self) -> str:
-        """Return the status."""
-        return self.raw_data["status"]
-
-    @property
-    def result(self) -> str:
-        """Return the result string."""
-        return self.raw_data["result"]
-
-    @property
-    def result(self) -> bool:
-        """Return if the task was acknowledged"""
-        return self.raw_data["acknowledged"]
-
-    @property
-    def related_document(self) -> int:
-        """Return the related document id"""
-        return self.raw_data["related_document"]
+from datetime import datetime
+
+
+__all__ = [
+    "PaperlessCorrespondent", "PaperlessDocumentType", "PaperlessTag", 
+    "PaperlessSavedView", "PaperlessDocumentNote", "PaperlessDocument", 
+    "PaperlessTask", "PaperlessStoragePath", "PaperlessUser", "PaperlessGroup",
+    "PaperlessMailAccount", "PaperlessMailRule",
+    "PaperlessModel",
+]
+
+
+ENDPOINT_USERS = "users"
+ENDPOINT_CORRESPONDENTS = "correspondents"
+ENDPOINT_DOCUMENT_TYPES = "document_types"
+ENDPOINT_TAGS = "tags"
+ENDPOINT_SAVED_VIEWS = "saved_views"
+ENDPOINT_DOCUMENTS = "documents"
+ENDPOINT_TASKS = "tasks"
+ENDPOINT_STORAGE_PATHS = "storage_paths"
+ENDPOINT_GROUPS = "groups"
+ENDPOINT_MAIL_ACCOUNTS = "mail_accounts"
+ENDPOINT_MAIL_RULES = "mail_rules"
+
+ENDPOINT_SUFFIX_NOTES = "notes"
+
+
+def datetime_field_factory():
+    return datetime.now()
+
+
+class PaperlessModel:
+    _endpoint: str = None
+    _endpoint_suffix: str = ""
+
+
+@dataclass(kw_only=True)
+class PaperlessUser(PaperlessModel):
+    """
+    Class that represents a user object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_USERS
+    id: int = None
+    username: str
+    password: str
+    email: str
+    first_name: str
+    last_name: str
+    date_joined: datetime = field(default_factory=datetime_field_factory)
+    last_login: datetime = None
+    is_staff: bool = True
+    is_active: bool = True
+    is_superuser: bool = False
+    groups: List[int] = field(default_factory=list)
+    user_permissions: List[str] = field(default_factory=list)
+    inherited_permissions: List[str] = None
+
+
+@dataclass(kw_only=True)
+class PaperlessCorrespondent(PaperlessModel):
+    """
+    Class that represents a document type object in the paperless API.
+    """
+    _endpoint: str = ENDPOINT_CORRESPONDENTS
+    id: int = None
+    slug: str = None
+    name: str
+    match: str = ""
+    matching_algorithm: int = 0
+    is_insensitive: bool = True
+    document_count: int = None
+    last_correspondence: datetime = None
+    owner: int = None
+    user_can_change: bool = None
+
+
+@dataclass(kw_only=True)
+class PaperlessDocumentType(PaperlessModel):
+    """
+    Class that represents a document type object in the paperless API.
+    """
+    _endpoint: str = ENDPOINT_DOCUMENT_TYPES
+    id: int = None
+    slug: str = None
+    name: str
+    match: str = ""
+    matching_algorithm: int = 0
+    is_insensitive: bool = True
+    document_count: int = None
+    owner: int = None
+    user_can_change: bool = None
+
+
+@dataclass(kw_only=True)
+class PaperlessTag(PaperlessModel):
+    """
+    Class that represents a tag object in the paperless API.
+    """
+    _endpoint: str = ENDPOINT_TAGS
+    id: int = None
+    slug: str = None
+    name: str
+    colour: int = 1
+    match: str = ""
+    matching_algorithm: int = 0
+    is_insensitive: bool = True
+    is_inbox_tag: bool = False
+    document_count: int = None
+    owner: int = None
+    user_can_change: bool = None
+
+
+@dataclass(kw_only=True)
+class PaperlessSavedView(PaperlessModel):
+    """
+    Class that represents a saved view object in the paperless API.
+    """
+    _endpoint: str = ENDPOINT_SAVED_VIEWS
+    id: int = None
+    name: str
+    show_on_dashboard: bool = False
+    show_in_sidebar: bool = False
+    sort_field: str = None
+    sort_reverse: bool = False
+    filter_rules: List[dict] = field(default_factory=list)
+    owner: PaperlessUser = None
+    user_can_change: bool = None
+
+    def __post_init__(self):
+        if self.owner:
+            self.owner = PaperlessUser(**self.owner)
+
+
+@dataclass(kw_only=True)
+class PaperlessDocumentNote(PaperlessModel):
+    """
+    Class that respresents a document note in the paperless API
+    """
+    _endpoint: str = ENDPOINT_DOCUMENTS
+    _endpoint_suffix: str = ENDPOINT_SUFFIX_NOTES
+    id: int = None
+    note: str
+    created: datetime = None
+    document: int
+    user: int = None
+
+
+@dataclass(kw_only=True)
+class PaperlessDocument(PaperlessModel):
+    """
+    Class that represents a document object in the paperless API.
+    """
+    _endpoint: str = ENDPOINT_DOCUMENTS
+    id: int
+    correspondent: int
+    document_type: int
+    storage_path: int
+    title: str
+    content: str
+    tags: List[int]
+    created: datetime
+    created_date: datetime
+    modified: datetime
+    added: datetime
+    archive_serial_number: int
+    original_file_name: str
+    archived_file_name: str
+    owner: int
+    user_can_change: bool
+    notes: List[PaperlessDocumentNote]
+
+    def __post_init__(self):
+        self.notes = [PaperlessDocumentNote(**item) for item in self.notes]
+
+
+@dataclass(kw_only=True)
+class PaperlessTask(PaperlessModel):
+    """
+    Class that represents a task object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_TASKS
+    id: int
+    task_id: str
+    task_file_name: str
+    date_created: datetime
+    date_done: datetime
+    type: str
+    status: str
+    result: str
+    acknowledged: bool
+    related_document: int
+
+
+@dataclass(kw_only=True)
+class PaperlessStoragePath(PaperlessModel):
+    """
+    Class that represents a storage path object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_STORAGE_PATHS
+    id: int = None
+    slug: str = None
+    name: str
+    path: str
+    match: str = ""
+    matching_algorithm: int = 0
+    is_insensitive: bool = True
+    document_count: int = None
+    owner: int = None
+    user_can_change: bool = None
+
+
+@dataclass(kw_only=True)
+class PaperlessGroup(PaperlessModel):
+    """
+    Class that represents a group object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_GROUPS
+    id: int = None
+    name: str
+    permissions: List[str] = field(default_factory=list)
+
+
+@dataclass(kw_only=True)
+class PaperlessMailAccount(PaperlessModel):
+    """
+    Class that represents a mail account object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_MAIL_ACCOUNTS
+    id: int = None
+    name: str
+    imap_server: str
+    imap_port: int
+    imap_security: int
+    username: str
+    password: str
+    character_set: str
+    is_token: bool
+    owner: int = None
+    user_can_change: bool = None
+
+
+@dataclass(kw_only=True)
+class PaperlessMailRule(PaperlessModel):
+    """
+    Class that represents a mail rule object in the paperless API
+    """
+    _endpoint: str = ENDPOINT_MAIL_RULES
+    id: int = None
+    name: str
+    account: int
+    folder: str
+    filter_from: str
+    filter_to: str
+    filter_subject: str
+    filter_body: str
+    filter_attachment_filename: str
+    maximum_age: int
+    action: int
+    action_parameter: str
+    assign_title_from: int
+    assign_tags: List[int]
+    assign_correspondent_from: int
+    assign_correspondent: int
+    assign_document_type: int
+    order: int
+    attachment_type: int
+    consumption_scope: int
+    owner: int = None
+    user_can_change: bool = None

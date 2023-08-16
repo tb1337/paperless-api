@@ -1,25 +1,26 @@
-import setuptools
+from setuptools import setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+with open("README.md", "r", encoding="utf-8") as f:
+    long_description = f.read()
 
-setuptools.setup(
+setup(
     name="pypaperless",
-    version="0.0.8",
-    author="tbsch",
-    author_email="info@tbsch.de",
-    description="A small API wrapper for paperless-ngx dms.",
+    version="1.0.0",
+    description="A small API wrapper for the paperless-ngx dms.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/grdn1337/paperless-api",
+    author="tb1337",
+    author_email="info@tbsch.de",
+    url="https://github.com/tb1337/paperless-api",
     project_urls={
-        "Bug Tracker": "https://github.com/grdn1337/paperless-api/issues",
+        "Source": "https://github.com/tb1337/paperless-api/",
+        "Bug Tracker": "https://github.com/tb1337/paperless-api/issues",
     },
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+    install_requires=[
+        "requests>=2.30.0",
+        "urllib3>=2.0.0",
     ],
     packages=["pypaperless"],
-    python_requires=">=3.6",
+    license="MIT",
+    python_requires=">=3.9",
 )
