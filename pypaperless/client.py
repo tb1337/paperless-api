@@ -72,6 +72,9 @@ class Paperless:
 
         headers = self._auth_headers()
 
+        # Use API Version 2 per default
+        headers["Accept"] = "application/json; version=2"
+
         if "content_type" in args["params"]:
             headers["Content-Type"] = args["params"]["content_type"]
             del args["params"]["content_type"]
@@ -252,3 +255,6 @@ class Paperless:
     def get_tasks(self) -> List[PaperlessTask]:
         response = self._http_get(f"{self.basepath}/{PaperlessTask._endpoint}/", format="json")
         return [PaperlessTask(**item) for item in response]
+    
+    def get_custom_field(self, id:int) -> PaperlessCustomField:
+        return self.get(PaperlessCustomField, id)

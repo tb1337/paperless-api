@@ -5,11 +5,20 @@ from datetime import datetime
 
 
 __all__ = [
-    "PaperlessCorrespondent", "PaperlessDocumentType", "PaperlessTag", 
-    "PaperlessSavedView", "PaperlessDocumentNote", "PaperlessDocument", 
-    "PaperlessTask", "PaperlessStoragePath", "PaperlessUser", "PaperlessGroup",
-    "PaperlessMailAccount", "PaperlessMailRule",
+    "PaperlessCorrespondent",
+    "PaperlessDocumentType",
+    "PaperlessTag",
+    "PaperlessSavedView",
+    "PaperlessDocumentNote",
+    "PaperlessDocument",
+    "PaperlessTask",
+    "PaperlessStoragePath",
+    "PaperlessUser",
+    "PaperlessGroup",
+    "PaperlessMailAccount",
+    "PaperlessMailRule",
     "PaperlessModel",
+    "PaperlessCustomField"
 ]
 
 
@@ -24,6 +33,7 @@ ENDPOINT_STORAGE_PATHS = "storage_paths"
 ENDPOINT_GROUPS = "groups"
 ENDPOINT_MAIL_ACCOUNTS = "mail_accounts"
 ENDPOINT_MAIL_RULES = "mail_rules"
+ENDPOINT_CUSTOM_FIELDS = "custom_fields"
 
 ENDPOINT_SUFFIX_NOTES = "notes"
 
@@ -38,10 +48,23 @@ class PaperlessModel:
 
 
 @dataclass(kw_only=True)
+class PaperlessCustomField(PaperlessModel):
+    """
+    Class that represents a custom field in the paperless API
+    """
+
+    _endpoint: str = ENDPOINT_CUSTOM_FIELDS
+    id: int = None
+    name: str
+    data_type: str
+
+
+@dataclass(kw_only=True)
 class PaperlessUser(PaperlessModel):
     """
     Class that represents a user object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_USERS
     id: int = None
     username: str
@@ -64,6 +87,7 @@ class PaperlessCorrespondent(PaperlessModel):
     """
     Class that represents a document type object in the paperless API.
     """
+
     _endpoint: str = ENDPOINT_CORRESPONDENTS
     id: int = None
     slug: str = None
@@ -82,6 +106,7 @@ class PaperlessDocumentType(PaperlessModel):
     """
     Class that represents a document type object in the paperless API.
     """
+
     _endpoint: str = ENDPOINT_DOCUMENT_TYPES
     id: int = None
     slug: str = None
@@ -99,6 +124,7 @@ class PaperlessTag(PaperlessModel):
     """
     Class that represents a tag object in the paperless API.
     """
+
     _endpoint: str = ENDPOINT_TAGS
     id: int = None
     slug: str = None
@@ -111,6 +137,8 @@ class PaperlessTag(PaperlessModel):
     document_count: int = None
     owner: int = None
     user_can_change: bool = None
+    color: str
+    text_color: str
 
 
 @dataclass(kw_only=True)
@@ -118,6 +146,7 @@ class PaperlessSavedView(PaperlessModel):
     """
     Class that represents a saved view object in the paperless API.
     """
+
     _endpoint: str = ENDPOINT_SAVED_VIEWS
     id: int = None
     name: str
@@ -139,6 +168,7 @@ class PaperlessDocumentNote(PaperlessModel):
     """
     Class that respresents a document note in the paperless API
     """
+
     _endpoint: str = ENDPOINT_DOCUMENTS
     _endpoint_suffix: str = ENDPOINT_SUFFIX_NOTES
     id: int = None
@@ -153,6 +183,7 @@ class PaperlessDocument(PaperlessModel):
     """
     Class that represents a document object in the paperless API.
     """
+
     _endpoint: str = ENDPOINT_DOCUMENTS
     id: int
     correspondent: int
@@ -171,6 +202,7 @@ class PaperlessDocument(PaperlessModel):
     owner: int
     user_can_change: bool
     notes: List[PaperlessDocumentNote]
+    custom_fields: List[PaperlessCustomField]
 
     def __post_init__(self):
         self.notes = [PaperlessDocumentNote(**item) for item in self.notes]
@@ -181,6 +213,7 @@ class PaperlessTask(PaperlessModel):
     """
     Class that represents a task object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_TASKS
     id: int
     task_id: str
@@ -199,6 +232,7 @@ class PaperlessStoragePath(PaperlessModel):
     """
     Class that represents a storage path object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_STORAGE_PATHS
     id: int = None
     slug: str = None
@@ -217,6 +251,7 @@ class PaperlessGroup(PaperlessModel):
     """
     Class that represents a group object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_GROUPS
     id: int = None
     name: str
@@ -228,6 +263,7 @@ class PaperlessMailAccount(PaperlessModel):
     """
     Class that represents a mail account object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_MAIL_ACCOUNTS
     id: int = None
     name: str
@@ -247,6 +283,7 @@ class PaperlessMailRule(PaperlessModel):
     """
     Class that represents a mail rule object in the paperless API
     """
+
     _endpoint: str = ENDPOINT_MAIL_RULES
     id: int = None
     name: str
