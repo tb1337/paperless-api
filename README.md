@@ -1,75 +1,109 @@
-# Paperless API
+<p align="right">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://docs.paperless-ngx.com/assets/logo_full_white.svg#only-dark">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.paperless-ngx.com/assets/logo_full_black.svg#only-light">
+    <img width="200" alt="Shows an illustrated sun in light mode and a moon with stars in dark mode." src="https://docs.paperless-ngx.com/assets/logo_full_black.svg#only-light">
+  </picture>
+</p>
 
-Simple stupid Python wrapper for the paperless-ngx REST API endpoint. Find out more here: https://paperless-ngx.readthedocs.io/en/latest/api.html
+<!-- omit in toc -->
+
+# PyPaperless
+
+Little api client for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)! Find out more here:
+
+* Project: https://docs.paperless-ngx.com
+* REST API: https://docs.paperless-ngx.com/api/
+
+## Features
+
+- Depends on aiohttp.
+- Token authentication, _note that credentials aren't supported anymore_.
+- list requests all object ids of resources.
+- get methods for each resources. Accepts page parameters and Django filters and is thus very powerful.
+- iterate for each paginated endpoint, you may want to apply some Django filters here, as well.
+- create, update, delete methods for documents and their master data endpoints.
+- Paperless makes use of pagination. We use that too. You have the full control over how much data to fetch.
+- pypaperless is meant to be only the transportation layer. Store and reduce/aggregate data on your own.
 
 ## Examples
 
-### Request a specific document and update it.
+### Handling a session.
 
 ```python
-from pypaperless import *
+import asyncio
 
-# do not ever do that... but it would work
-paperless = Paperless("http://paperless.url:8000", username="test", password="test")
+from pypaperless import Paperless
 
-# create a token via admin panel instead
-paperless = Paperless("http://paperless.url:8000", "super_secret_api_token")
+paperless = Paperless("localhost:8000", "your-secret-token")
 
-secret_document = paperless.get_document(1337)
-secret_document.title = "TOP SECRET!"
+async def main():
+  paperless.initialize()
+  # do something
+  paperless.close()
 
-paperless.save(secret_document)
+  # or just use it in a context
+  async with paperless:
+    # do something
+
+asyncio.run(main())
 ```
 
-### Same is possible for every other entity provided by the API, excepting logs.
+### Actually request something
 
 ```python
-user = paperless.get_user(3)
-correspondent = paperless.get_correspondent(1)
-document_type = paperless.get_document_type(1)
-tag = paperless.get_tag(1)
-saved_view = paperless.get_saved_view(1)
-storage_path = paperless.get_storage_path(1)
-group = paperless.get_group(1)
-mail_account = paperless.get_mail_account(1)
-mail_rule = paperless.get_mail_rule(1)
+# requests one page
+documents = await paperless.documents.get(page=1)
+for item in documents.items:
+  print(f"document #{item.id} has the following content: {item.content}")
 ```
 
-### Request all entities from paperless.
-
+### Request all items of specific document types and iterate over them
 ```python
-users = paperless.get_users()
-correspondents = paperless.get_correspondents()
-document_types = paperless.get_document_types()
-tags = paperless.get_tags()
-saved_views = paperless.get_saved_views()
-storage_paths = paperless.get_storage_paths()
-groups = paperless.get_groups()
-mail_accounts = paperless.get_mail_accounts()
-mail_rules = paperless.get_mail_rules()
+doc_types = [
+  "3", # salary
+  "8", # contract
+  "11", # bank account
+]
 
-# could take some time
-documents = paperless.get_documents()
+# iterates over all pages
+async for item in paperless.documents.iterate(document_type__id__in=",".join(doc_types)):
+  print(f"document #{item.id} has the following content: {item.content}")
 ```
 
-### Post a document to paperless.
-
+### Request a specific item
 ```python
-# will return soon
+correspondent = await paperless.correspondents.one(23)
 ```
 
-### Create a new correspondent:
-
+### Create a new correspondent
 ```python
-new_correspondent = PaperlessCorrespondent(name="Salty Correspondent")
+from pypaperless.models import CorrespondentPost
+from pypaperless.models.shared import MatchingAlgorithm
 
-paperless.create(new_correspondent)
+new_correspondent = CorrespondentPost(
+  name="Salty Correspondent",
+  match="Give me all your money",
+  matching_algorithm=MatchingAlgorithm.ALL,
+)
+# watch out, the result is a Correspondent object...
+created_correspondent = paperless.correspondents.create(new_correspondent)
+print(created_correspondent.id) # >> 1337
 ```
 
-### Search for a document and receive a list of results.
+### And delete that salty guy again, including all of his god damn documents!
 
-Search syntax is the same as in Paperless: https://docs.paperless-ngx.com/usage/#basic-usage_searching.
+> [!CAUTION]
+> That code actually requests Paperless to physically delete that data! There is no point of return!
+> ```python
+> # ...
+> async for item in paperless.documents.iterate(correspondent__id=1337):
+>   await paperless.documents.delete(item)
+>
+> await paperless.correspondents.delete(created_correspondent)
+> ```
 
-```python
-# will return soon
-```
+## Thanks to
+
+* The Paperless-ngx Team
+* The Home Assistant Community

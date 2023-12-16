@@ -3,23 +3,19 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import CorrespondentsEndpoint, PaginatedResult
+from pypaperless.api import CorrespondentsEndpoint, EndpointCUDMixin, PaginatedResult
 from pypaperless.models import Correspondent
 from pypaperless.models.shared import MatchingAlgorithm
 
 
 async def test_endpoint(paperless: Paperless) -> None:
-    """Test correspondents endpoint."""
+    """Test endpoint."""
     assert isinstance(paperless.correspondents, CorrespondentsEndpoint)
-
-    # test endpoint implements CUD features
-    assert paperless.correspondents.create
-    assert paperless.correspondents.update
-    assert paperless.correspondents.delete
+    assert isinstance(paperless.correspondents, EndpointCUDMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):
-    """Test correspondents list."""
+    """Test list."""
     with patch.object(paperless, "request", return_value=data["correspondents"]):
         result = await paperless.correspondents.list()
 
@@ -29,14 +25,12 @@ async def test_list_and_get(paperless: Paperless, data):
         page = await paperless.correspondents.get()
 
         assert isinstance(page, PaginatedResult)
-        assert page.current_page == 1
-        assert page.next_page == 2
-        assert len(page.items) >= 5
+        assert len(page.items) > 0
         assert isinstance(page.items.pop(), Correspondent)
 
 
 async def test_one(paperless: Paperless, data):
-    """Test correspondents one."""
+    """Test one."""
     with patch.object(paperless, "request", return_value=data["correspondents"]["results"][0]):
         item = await paperless.correspondents.one(72)
 

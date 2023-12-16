@@ -1,6 +1,5 @@
 """Basic wrapper for each api endpoint."""
 
-import uuid
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar
 
@@ -160,7 +159,7 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], EndpointCUDMixin):
     endpoint_cls = Document
     endpoint_type = ResourceType.DOCUMENTS
 
-    async def create(self, item: DocumentPost) -> uuid.UUID:
+    async def create(self, item: DocumentPost) -> str:
         """Create a new document. Raise on failure."""
         form = FormData()
 
@@ -183,7 +182,7 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], EndpointCUDMixin):
 
         endpoint = f"{self._endpoint}post_document/"
         res = await self._paperless.request("post", endpoint, data=form)
-        return uuid.UUID(res)
+        return str(res)
 
     def _get_item_id(self, item) -> int:
         if isinstance(item, Document):
@@ -281,6 +280,8 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
     endpoint_cls = Task
     endpoint_type = ResourceType.TASKS
 
+    # this endpoint inherits list() from BaseEndpoint
+    # TODO: we have to do something about it, as tasks have no all-attribute in result json
     async def get(
         self,
         **kwargs: dict[str, Any],
@@ -289,9 +290,9 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
         res = await self._paperless.request("get", self._endpoint, params=kwargs)
         return [dataclass_from_dict(self.endpoint_cls, item) for item in res]
 
-    async def one(self, idx: uuid.UUID) -> T:
+    async def one(self, idx: str) -> T:
         """Request exactly one entity by id."""
-        res = await self._paperless.request("get", self._endpoint, params={"task_id": f"{idx}"})
+        res = await self._paperless.request("get", self._endpoint, params={"task_id": idx})
         return dataclass_from_dict(self.endpoint_cls, res.pop())
 
 

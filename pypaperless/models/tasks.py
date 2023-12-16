@@ -1,6 +1,5 @@
 """Model for task resource."""
 
-import uuid
 from dataclasses import dataclass
 
 from .base import PaperlessModel
@@ -12,7 +11,7 @@ class Task(PaperlessModel):
     """Represent a task resource in the Paperless api."""
 
     id: int | None = None
-    task_id: uuid.UUID | None = None
+    task_id: str | None = None
     task_file_name: str | None = None
     date_created: str | None = None
     date_done: str | None = None
