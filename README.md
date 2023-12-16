@@ -58,10 +58,16 @@ for item in documents.items:
   print(f"document #{item.id} has the following content: {item.content}")
 ```
 
-### Request all items and iterate over them
+### Request all items of specific document types and iterate over them
 ```python
+doc_types = [
+  "3", # salary
+  "8", # contract
+  "11", # bank account
+]
+
 # iterates over all pages
-async for item in paperless.documents.iterate():
+async for item in paperless.documents.iterate(document_type__id__in=",".join(doc_types)):
   print(f"document #{item.id} has the following content: {item.content}")
 ```
 
@@ -77,7 +83,7 @@ from pypaperless.models.shared import MatchingAlgorithm
 
 new_correspondent = CorrespondentPost(
   name="Salty Correspondent",
-  match="Give,me,all,your,money",
+  match="Give me all your money",
   matching_algorithm=MatchingAlgorithm.ALL,
 )
 # watch out, the result is a Correspondent object...
