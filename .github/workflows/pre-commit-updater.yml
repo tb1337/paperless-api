@@ -1,4 +1,7 @@
+# Update pre-commit on a daily interval
+
 name: Pre-commit auto-update
+
 on:
   schedule:
     - cron: '0 0 * * *'
@@ -18,7 +21,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5.0.2
         with:
-          token: ${{ secrets.PRE_COMMIT_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: update/pre-commit-autoupdate
           title: Auto-update pre-commit hooks
           commit-message: Auto-update pre-commit hooks
