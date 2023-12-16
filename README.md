@@ -35,7 +35,7 @@ mail_account = paperless.get_mail_account(1)
 mail_rule = paperless.get_mail_rule(1)
 ```
 
-### Request all entitys from paperless.
+### Request all entities from paperless.
 
 ```python
 users = paperless.get_users()

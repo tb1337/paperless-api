@@ -25,6 +25,7 @@ wheels/
 *.egg
 MANIFEST
 .venv/
+++*.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -47,6 +48,9 @@ coverage.xml
 *.cover
 .hypothesis/
 .pytest_cache/
+
+# Ruff
+.ruff_cache/
 
 # Translations
 *.mo
@@ -103,8 +107,3 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-# visual studio code 
-.vscode
-
-mytest.py

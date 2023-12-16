@@ -1,0 +1,98 @@
+{
+    "endpoints": {
+        "correspondents": "http://localhost:8000/api/correspondents/",
+        "document_types": "http://localhost:8000/api/document_types/",
+        "documents": "http://localhost:8000/api/documents/",
+        "logs": "http://localhost:8000/api/logs/",
+        "tags": "http://localhost:8000/api/tags/",
+        "saved_views": "http://localhost:8000/api/saved_views/",
+        "storage_paths": "http://localhost:8000/api/storage_paths/",
+        "tasks": "http://localhost:8000/api/tasks/",
+        "users": "http://localhost:8000/api/users/",
+        "groups": "http://localhost:8000/api/groups/",
+        "mail_accounts": "http://localhost:8000/api/mail_accounts/",
+        "mail_rules": "http://localhost:8000/api/mail_rules/",
+        "share_links": "http://localhost:8000/api/share_links/",
+        "consumption_templates": "http://localhost:8000/api/consumption_templates/",
+        "custom_fields": "http://localhost:8000/api/custom_fields/"
+    },
+    "correspondents": {
+        "count": 89,
+        "next": "http://localhost:8000/api/correspondents/?page=2",
+        "previous": null,
+        "all": [
+            49,
+            42,
+            19,
+            84,
+            2,
+            79,
+            60,
+            65,
+            69,
+            40
+        ],
+        "results": [
+            {
+                "id": 9,
+                "slug": "sample-correspondent",
+                "name": "Sample Correspondent",
+                "match": "",
+                "matching_algorithm": 1,
+                "is_insensitive": true,
+                "document_count": 12,
+                "last_correspondence": "2022-10-18T00:00:00Z",
+                "owner": null,
+                "user_can_change": true
+            },
+            {
+                "id": 21,
+                "slug": "burger-fastfood-delivery-billing",
+                "name": "Burger FastFood Delivery Billing",
+                "match": "",
+                "matching_algorithm": 1,
+                "is_insensitive": true,
+                "document_count": 6,
+                "last_correspondence": "2006-03-07T23:00:00Z",
+                "owner": null,
+                "user_can_change": true
+            },
+            {
+                "id": 72,
+                "slug": "example-company",
+                "name": "Example Company",
+                "match": "",
+                "matching_algorithm": 6,
+                "is_insensitive": true,
+                "document_count": 3,
+                "last_correspondence": "2022-03-11T00:00:00Z",
+                "owner": 3,
+                "user_can_change": true
+            },
+            {
+                "id": 18,
+                "slug": "no-illness-more-money-health-insurance",
+                "name": "No Illness More Money Health Insurance",
+                "match": "",
+                "matching_algorithm": 1,
+                "is_insensitive": true,
+                "document_count": 6,
+                "last_correspondence": "2000-07-18T22:00:00Z",
+                "owner": null,
+                "user_can_change": true
+            },
+            {
+                "id": 4,
+                "slug": "your-cash-is-my-cash-bank",
+                "name": "Your Cash is my Cash Bank",
+                "match": "Your Cash My Bank",
+                "matching_algorithm": 2,
+                "is_insensitive": true,
+                "document_count": 20,
+                "last_correspondence": "2023-08-28T00:00:00Z",
+                "owner": null,
+                "user_can_change": true
+            }
+        ]
+    }
+}

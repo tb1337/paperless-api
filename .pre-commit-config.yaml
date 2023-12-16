@@ -1,0 +1,46 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
+      - id: debug-statements
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.1.8
+    hooks:
+      - id: ruff
+  - repo: https://github.com/psf/black
+    rev: 23.12.0
+    hooks:
+      - id: black
+        args:
+          - --safe
+          - --quiet
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.6
+    hooks:
+      - id: codespell
+        args: []
+        exclude_types: [csv, json]
+        exclude: ^tests/fixtures/
+        additional_dependencies:
+          - tomli
+  # - repo: local
+  #   hooks:
+  #     - id: mypy
+  #       name: mypy
+  #       entry: script/run-in-env.sh mypy
+  #       language: script
+  #       types: [python]
+  #       require_serial: true
+  #       files: ^pypaperless/.+\.py$
+  #     - id: pylint
+  #       name: pylint
+  #       entry: script/run-in-env.sh pylint -j 0
+  #       language: script
+  #       types: [python]
+  #       files: ^pypaperless/.+\.py$

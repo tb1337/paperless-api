@@ -1,2 +1,4 @@
-include *.txt *.md
+include *.txt
+include *.md
+include LICENSE
 recursive-include *.txt
