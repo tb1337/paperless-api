@@ -20,4 +20,4 @@ jobs:
         uses: ludeeus/action-require-labels@1.0.0
         with:
           labels: >-
-            breaking-change, bug, chore, enhancement, refactor
+            breaking change, bug, chore, enhancement, refactor
