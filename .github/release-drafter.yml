@@ -23,5 +23,4 @@ version-resolver:
   minor:
     labels:
       - 'enhancement'
-      - 'refactor'
   default: patch
