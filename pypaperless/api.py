@@ -52,7 +52,7 @@ class BaseEndpoint(Generic[T]):
         """Initialize endpoint."""
         self._paperless = paperless
         self._endpoint = endpoint
-        self.logger = paperless.logger.getChild(self.endpoint_type)
+        self._logger = paperless.logger.getChild(self.endpoint_type)
 
     async def list(self) -> list[int] | None:
         """Return a list of all entity ids, if applicable."""
@@ -60,7 +60,7 @@ class BaseEndpoint(Generic[T]):
         if "all" in res:
             return [*res["all"]]
 
-        self.logger.debug("List result is empty.")
+        self._logger.debug("List result is empty.")
 
     async def get(
         self,

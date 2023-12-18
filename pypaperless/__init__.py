@@ -50,8 +50,8 @@ class Paperless:
         self._request_opts = request_opts
         self._session = session
         self._initialized = False
-
         self.logger = logging.getLogger(f"{__package__}[{host}]")
+
         # endpoints
         self._consumption_templates: ConsumptionTemplatesEndpoint | None = None
         self._correspondents: CorrespondentsEndpoint | None = None
