@@ -10,6 +10,8 @@
 
 # PyPaperless
 
+![Test Badge](https://github.com/tb1337/paperless-api/actions/workflows/test.yml/badge.svg)
+
 Little api client for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)! Find out more here:
 
 * Project: https://docs.paperless-ngx.com
