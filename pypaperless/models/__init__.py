@@ -1,4 +1,4 @@
-"""Schemas for paperless objects."""
+"""Models for Paperless resources."""
 
 from .consumption_templates import ConsumptionTemplate
 from .correspondents import Correspondent, CorrespondentPost
