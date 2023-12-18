@@ -24,3 +24,15 @@ version-resolver:
     labels:
       - 'enhancement'
   default: patch
+autolabeler:
+  - label: 'bug'
+    branch:
+      - '/fix\/.+/'
+    title:
+      - '/fix/i'
+  - label: 'enhancement'
+    branch:
+      - '/feature\/.+/'
+  - label: 'chore'
+    branch:
+      - '/chore\/.+/'
