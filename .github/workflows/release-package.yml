@@ -13,6 +13,8 @@ jobs:
     environment:
       name: pypi
       url: https://pypi.org/project/pypaperless
+    permissions:
+      id-token: write # important for trusted publishing (pypi)
     outputs:
       version: ${{ steps.vars.outputs.tag }}
     steps:
