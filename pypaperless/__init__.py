@@ -1,7 +1,5 @@
 """PyPaperless."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -205,7 +203,7 @@ class Paperless:
                 return await res.json()
             return await res.read()
 
-    async def __aenter__(self) -> Paperless:
+    async def __aenter__(self) -> "Paperless":
         """Return context manager."""
         await self.initialize()
         return self

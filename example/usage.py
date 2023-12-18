@@ -2,16 +2,24 @@
 
 import asyncio
 import logging
+import os.path
+import sys
 
-from pypaperless import Paperless
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(levelname)-8s %(name)s - %(message)s",
+)
+
+from pypaperless import Paperless  # noqa
 
 paperless = Paperless(
     "localhost:8000",
-    "ultra-secret-api-token",
+    # replace with your own token
+    "17d85e03b83c4bfd9aa0e9a4e71dc3b79265d51e",
     request_opts={"ssl": False},
 )
-paperless.logger.setLevel(logging.DEBUG)
-paperless.logger.addHandler(logging.StreamHandler())
 
 
 async def main():
@@ -23,8 +31,10 @@ async def main():
 
         documents = await p.documents.get(page=1)
         for item in documents.items:
-            print(f"Correspondent of document {item.id} is: {correspondents[item.correspondent]}!")
-            await asyncio.sleep(0.05)
+            print(
+                f"Correspondent of document {item.id} is: {correspondents[item.correspondent].name}!"  # noqa
+            )
+            await asyncio.sleep(0.25)
 
 
 if __name__ == "__main__":
