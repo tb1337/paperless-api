@@ -58,7 +58,7 @@ class BaseEndpoint(Generic[T]):
         """Return a list of all entity ids, if applicable."""
         res = await self._paperless.request("get", self._endpoint)
         if "all" in res:
-            return [*res["all"]]
+            return res["all"]
 
         self._logger.debug("List result is empty.")
 
