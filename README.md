@@ -1,18 +1,10 @@
-<p align="right">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://docs.paperless-ngx.com/assets/logo_full_white.svg#only-dark">
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.paperless-ngx.com/assets/logo_full_black.svg#only-light">
-    <img width="200" alt="Shows an illustrated sun in light mode and a moon with stars in dark mode." src="https://docs.paperless-ngx.com/assets/logo_full_black.svg#only-light">
-  </picture>
-</p>
-
-<!-- omit in toc -->
-
 # PyPaperless
 
 ![Test Badge](https://github.com/tb1337/paperless-api/actions/workflows/test.yml/badge.svg)
 
-Little api client for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)! Find out more here:
+Little api client for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)!
+
+Find out more here:
 
 * Project: https://docs.paperless-ngx.com
 * REST API: https://docs.paperless-ngx.com/api/
