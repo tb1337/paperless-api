@@ -21,12 +21,21 @@ async def test_list_and_get(paperless: Paperless, data):
 
         assert isinstance(result, list)
         assert len(result) > 0
+        for item in result:
+            assert isinstance(item, int)
 
         page = await paperless.correspondents.get()
 
         assert isinstance(page, PaginatedResult)
         assert len(page.items) > 0
         assert isinstance(page.items.pop(), Correspondent)
+
+
+async def test_iterate(paperless: Paperless, data):
+    """Test iterate."""
+    with patch.object(paperless, "request", return_value=data["correspondents"]):
+        async for item in paperless.correspondents.iterate():
+            assert isinstance(item, Correspondent)
 
 
 async def test_one(paperless: Paperless, data):
