@@ -28,6 +28,13 @@ async def test_list_and_get(paperless: Paperless, data):
         assert isinstance(tasks[0], Task)
 
 
+async def test_iterate(paperless: Paperless, data):
+    """Test iterate."""
+    with patch.object(paperless, "request", return_value=data["tasks"]):
+        async for item in paperless.tasks.iterate():
+            assert isinstance(item, Task)
+
+
 async def test_one(paperless: Paperless, data):
     """Test one."""
     with patch.object(paperless, "request", return_value=data["tasks"]):

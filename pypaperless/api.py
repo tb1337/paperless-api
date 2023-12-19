@@ -290,6 +290,15 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
         res = await self._paperless.request("get", self._endpoint, params=kwargs)
         return [dataclass_from_dict(self.endpoint_cls, item) for item in res]
 
+    async def iterate(
+        self,
+        **kwargs: dict[str, Any],
+    ) -> Generator[Task, None, None]:
+        """Iterate pages and yield every entity."""
+        res = await self.get(**kwargs)
+        for item in res:
+            yield item
+
     async def one(self, idx: str) -> T:
         """Request exactly one entity by id."""
         res = await self._paperless.request("get", self._endpoint, params={"task_id": idx})
