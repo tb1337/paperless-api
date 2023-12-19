@@ -90,7 +90,8 @@ new_correspondent = CorrespondentPost(
 )
 # watch out, the result is a Correspondent object...
 created_correspondent = paperless.correspondents.create(new_correspondent)
-print(created_correspondent.id) # >> 1337
+print(created_correspondent.id)
+# >> 1337
 ```
 
 ### And delete that salty guy again, including all of his god damn documents!

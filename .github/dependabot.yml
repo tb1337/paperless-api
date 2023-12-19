@@ -4,7 +4,11 @@ updates:
     directory: "/"
     schedule:
       interval: daily
+    labels:
+      - chore
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: weekly
+    labels:
+      - chore
