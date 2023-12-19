@@ -18,7 +18,7 @@
     },
     "correspondents": {
         "count": 89,
-        "next": "http://localhost:8000/api/correspondents/?page=2",
+        "next": null,
         "previous": null,
         "all": [
             49,
@@ -191,7 +191,7 @@
     },
     "custom_fields": {
         "count": 8,
-        "next": "dummy next page for tests :P",
+        "next": null,
         "previous": null,
         "all": [
             8,
