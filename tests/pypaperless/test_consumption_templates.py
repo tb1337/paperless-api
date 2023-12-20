@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import ConsumptionTemplatesEndpoint, EndpointCUDMixin, PaginatedResult
+from pypaperless.api import ConsumptionTemplatesEndpoint, EnableCRUDMixin, PaginatedResult
 from pypaperless.models import ConsumptionTemplate
 from pypaperless.models.shared import ConsumptionTemplateSource
 
@@ -11,7 +11,7 @@ from pypaperless.models.shared import ConsumptionTemplateSource
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.consumption_templates, ConsumptionTemplatesEndpoint)
-    assert not isinstance(paperless.consumption_templates, EndpointCUDMixin)
+    assert not isinstance(paperless.consumption_templates, EnableCRUDMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):

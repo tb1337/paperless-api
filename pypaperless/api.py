@@ -102,23 +102,29 @@ class BaseEndpoint(Generic[T]):
         return dataclass_from_dict(self.endpoint_cls, res)
 
 
-class EndpointCUDMixin:
-    """Mixin that adds basic CUD features to endpoints."""
+class EnableCRUDMixin:
+    """Mixin that adds CRUD features to endpoints."""
 
-    async def create(self, item: PaperlessPost) -> T:
+    async def create(self: BaseEndpoint, item: PaperlessPost) -> T:
         """Create a new entity. Raise on failure."""
-        res = await self._paperless.request("post", self._endpoint, json=dataclass_to_dict(item))
-        return dataclass_from_dict(self._cls, res)
+        res = await self._paperless.request(
+            "post",
+            self._endpoint,
+            json=dataclass_to_dict(item),
+        )
+        return dataclass_from_dict(self.endpoint_cls, res)
 
-    async def update(self, item: T) -> T:
+    async def update(self: BaseEndpoint, item: T) -> T:
         """Update an existing entity. Raise on failure."""
         endpoint = f"{self._endpoint}{item.id}/"
         res = await self._paperless.request(
-            "put", endpoint, json=dataclass_to_dict(item, skip_none=False)
+            "put",
+            endpoint,
+            json=dataclass_to_dict(item, skip_none=False),
         )
-        return dataclass_from_dict(self._cls, res)
+        return dataclass_from_dict(self.endpoint_cls, res)
 
-    async def delete(self, item: T) -> bool:
+    async def delete(self: BaseEndpoint, item: T) -> bool:
         """Delete an existing entity. Raise on failure."""
         endpoint = f"{self._endpoint}{item.id}/"
         await self._paperless.request("delete", endpoint)
@@ -132,28 +138,28 @@ class ConsumptionTemplatesEndpoint(BaseEndpoint[type[ConsumptionTemplate]]):
     endpoint_type = ResourceType.CONSUMPTION_TEMPLATES
 
 
-class CorrespondentsEndpoint(BaseEndpoint[type[Correspondent]], EndpointCUDMixin):
+class CorrespondentsEndpoint(BaseEndpoint[type[Correspondent]], EnableCRUDMixin):
     """Represent Paperless correspondents."""
 
     endpoint_cls = Correspondent
     endpoint_type = ResourceType.CORRESPONDENTS
 
 
-class CustomFieldEndpoint(BaseEndpoint[type[CustomField]], EndpointCUDMixin):
+class CustomFieldEndpoint(BaseEndpoint[type[CustomField]], EnableCRUDMixin):
     """Represent Paperless custom_fields resource endpoint."""
 
     endpoint_cls = CustomField
     endpoint_type = ResourceType.CUSTOM_FIELDS
 
 
-class DocumentTypesEndpoint(BaseEndpoint[type[DocumentType]], EndpointCUDMixin):
+class DocumentTypesEndpoint(BaseEndpoint[type[DocumentType]], EnableCRUDMixin):
     """Represent Paperless doctype resource endpoint."""
 
     endpoint_cls = DocumentType
     endpoint_type = ResourceType.DOCUMENT_TYPES
 
 
-class DocumentsEndpoint(BaseEndpoint[type[Document]], EndpointCUDMixin):
+class DocumentsEndpoint(BaseEndpoint[type[Document]], EnableCRUDMixin):
     """Represent Paperless document resource endpoint."""
 
     endpoint_cls = Document
@@ -253,21 +259,21 @@ class SavedViewsEndpoint(BaseEndpoint[type[SavedView]]):
     endpoint_type = ResourceType.SAVED_VIEWS
 
 
-class ShareLinkEndpoint(BaseEndpoint[type[ShareLink]], EndpointCUDMixin):
+class ShareLinkEndpoint(BaseEndpoint[type[ShareLink]], EnableCRUDMixin):
     """Represent Paperless share links."""
 
     endpoint_cls = ShareLink
     endpoint_type = ResourceType.SHARE_LINKS
 
 
-class StoragePathsEndpoint(BaseEndpoint[type[StoragePath]], EndpointCUDMixin):
+class StoragePathsEndpoint(BaseEndpoint[type[StoragePath]], EnableCRUDMixin):
     """Represent Paperless storage paths."""
 
     endpoint_cls = StoragePath
     endpoint_type = ResourceType.STORAGE_PATHS
 
 
-class TagsEndpoint(BaseEndpoint[type[Tag]], EndpointCUDMixin):
+class TagsEndpoint(BaseEndpoint[type[Tag]], EnableCRUDMixin):
     """Represent Paperless tags."""
 
     endpoint_cls = Tag
