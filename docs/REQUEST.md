@@ -64,7 +64,7 @@ If you are requesting the last page, the `next_page` property would be `None`.
 
 Sometimes, dealing with pages makes no sense for you, so you may want to iterate over all items at once.
 
-> ![NOTE]
+> [!NOTE]
 > Iterating over all documents could take some time, depending on how many items you have stored in your database.
 
 ```python
@@ -109,7 +109,7 @@ async for item in paperless.documents.iterate(**filters):
     #>>> 'Invoice for yummy cheeseburgers'
 ```
 
-> ![NOTE]
+> [!NOTE]
 > Paperless simply ignores filters which don't exist. You could end up iterating over all of your documents, which will take time in the worst case. Use filters carefully and check twice.
 
 ## Further information
