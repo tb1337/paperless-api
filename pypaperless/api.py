@@ -108,7 +108,7 @@ class EndpointCUDMixin:
     async def create(self, item: PaperlessPost) -> T:
         """Create a new entity. Raise on failure."""
         res = await self._paperless.request("post", self._endpoint, json=dataclass_to_dict(item))
-        return dataclass_from_dict(self._cls, res)
+        return dataclass_from_dict(self.endpoint_cls, res)
 
     async def update(self, item: T) -> T:
         """Update an existing entity. Raise on failure."""
@@ -116,7 +116,7 @@ class EndpointCUDMixin:
         res = await self._paperless.request(
             "put", endpoint, json=dataclass_to_dict(item, skip_none=False)
         )
-        return dataclass_from_dict(self._cls, res)
+        return dataclass_from_dict(self.endpoint_cls, res)
 
     async def delete(self, item: T) -> bool:
         """Delete an existing entity. Raise on failure."""
