@@ -3,14 +3,14 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import EndpointCUDMixin, MailRulesEndpoint, PaginatedResult
+from pypaperless.api import EnableCRUDMixin, MailRulesEndpoint, PaginatedResult
 from pypaperless.models import MailRule
 
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.mail_rules, MailRulesEndpoint)
-    assert not isinstance(paperless.mail_rules, EndpointCUDMixin)
+    assert not isinstance(paperless.mail_rules, EnableCRUDMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):

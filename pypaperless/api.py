@@ -102,7 +102,7 @@ class BaseEndpoint(Generic[T]):
         return dataclass_from_dict(self.endpoint_cls, res)
 
 
-class EndpointCUDMixin:
+class EnableCRUDMixin:
     """Mixin that adds basic CUD features to endpoints."""
 
     async def create(self, item: PaperlessPost) -> T:
@@ -132,28 +132,28 @@ class ConsumptionTemplatesEndpoint(BaseEndpoint[type[ConsumptionTemplate]]):
     endpoint_type = ResourceType.CONSUMPTION_TEMPLATES
 
 
-class CorrespondentsEndpoint(BaseEndpoint[type[Correspondent]], EndpointCUDMixin):
+class CorrespondentsEndpoint(BaseEndpoint[type[Correspondent]], EnableCRUDMixin):
     """Represent Paperless correspondents."""
 
     endpoint_cls = Correspondent
     endpoint_type = ResourceType.CORRESPONDENTS
 
 
-class CustomFieldEndpoint(BaseEndpoint[type[CustomField]], EndpointCUDMixin):
+class CustomFieldEndpoint(BaseEndpoint[type[CustomField]], EnableCRUDMixin):
     """Represent Paperless custom_fields resource endpoint."""
 
     endpoint_cls = CustomField
     endpoint_type = ResourceType.CUSTOM_FIELDS
 
 
-class DocumentTypesEndpoint(BaseEndpoint[type[DocumentType]], EndpointCUDMixin):
+class DocumentTypesEndpoint(BaseEndpoint[type[DocumentType]], EnableCRUDMixin):
     """Represent Paperless doctype resource endpoint."""
 
     endpoint_cls = DocumentType
     endpoint_type = ResourceType.DOCUMENT_TYPES
 
 
-class DocumentsEndpoint(BaseEndpoint[type[Document]], EndpointCUDMixin):
+class DocumentsEndpoint(BaseEndpoint[type[Document]], EnableCRUDMixin):
     """Represent Paperless document resource endpoint."""
 
     endpoint_cls = Document
@@ -253,21 +253,21 @@ class SavedViewsEndpoint(BaseEndpoint[type[SavedView]]):
     endpoint_type = ResourceType.SAVED_VIEWS
 
 
-class ShareLinkEndpoint(BaseEndpoint[type[ShareLink]], EndpointCUDMixin):
+class ShareLinkEndpoint(BaseEndpoint[type[ShareLink]], EnableCRUDMixin):
     """Represent Paperless share links."""
 
     endpoint_cls = ShareLink
     endpoint_type = ResourceType.SHARE_LINKS
 
 
-class StoragePathsEndpoint(BaseEndpoint[type[StoragePath]], EndpointCUDMixin):
+class StoragePathsEndpoint(BaseEndpoint[type[StoragePath]], EnableCRUDMixin):
     """Represent Paperless storage paths."""
 
     endpoint_cls = StoragePath
     endpoint_type = ResourceType.STORAGE_PATHS
 
 
-class TagsEndpoint(BaseEndpoint[type[Tag]], EndpointCUDMixin):
+class TagsEndpoint(BaseEndpoint[type[Tag]], EnableCRUDMixin):
     """Represent Paperless tags."""
 
     endpoint_cls = Tag
