@@ -103,22 +103,28 @@ class BaseEndpoint(Generic[T]):
 
 
 class EnableCRUDMixin:
-    """Mixin that adds basic CUD features to endpoints."""
+    """Mixin that adds CRUD features to endpoints."""
 
-    async def create(self, item: PaperlessPost) -> T:
+    async def create(self: BaseEndpoint, item: PaperlessPost) -> T:
         """Create a new entity. Raise on failure."""
-        res = await self._paperless.request("post", self._endpoint, json=dataclass_to_dict(item))
-        return dataclass_from_dict(self.endpoint_cls, res)
-
-    async def update(self, item: T) -> T:
-        """Update an existing entity. Raise on failure."""
-        endpoint = f"{self._endpoint}{item.id}/"
         res = await self._paperless.request(
-            "put", endpoint, json=dataclass_to_dict(item, skip_none=False)
+            "post",
+            self._endpoint,
+            json=dataclass_to_dict(item),
         )
         return dataclass_from_dict(self.endpoint_cls, res)
 
-    async def delete(self, item: T) -> bool:
+    async def update(self: BaseEndpoint, item: T) -> T:
+        """Update an existing entity. Raise on failure."""
+        endpoint = f"{self._endpoint}{item.id}/"
+        res = await self._paperless.request(
+            "put",
+            endpoint,
+            json=dataclass_to_dict(item, skip_none=False),
+        )
+        return dataclass_from_dict(self.endpoint_cls, res)
+
+    async def delete(self: BaseEndpoint, item: T) -> bool:
         """Delete an existing entity. Raise on failure."""
         endpoint = f"{self._endpoint}{item.id}/"
         await self._paperless.request("delete", endpoint)
