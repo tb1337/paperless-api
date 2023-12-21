@@ -36,8 +36,7 @@ async def paperless() -> Paperless:
         d = load_fixture_data("data.json")
         return d["endpoints"]
 
-    with patch.object(api, "request", return_value=endpoints_data()):
+    with patch.object(api, "request_json", return_value=endpoints_data()):
         await api.initialize()
-
     yield api
     await api.close()

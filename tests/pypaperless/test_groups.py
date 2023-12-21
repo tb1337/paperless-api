@@ -16,7 +16,7 @@ async def test_endpoint(paperless: Paperless) -> None:
 
 async def test_list_and_get(paperless: Paperless, data):
     """Test list."""
-    with patch.object(paperless, "request", return_value=data["groups"]):
+    with patch.object(paperless, "request_json", return_value=data["groups"]):
         result = await paperless.groups.list()
 
         assert isinstance(result, list)
@@ -33,14 +33,14 @@ async def test_list_and_get(paperless: Paperless, data):
 
 async def test_iterate(paperless: Paperless, data):
     """Test iterate."""
-    with patch.object(paperless, "request", return_value=data["groups"]):
+    with patch.object(paperless, "request_json", return_value=data["groups"]):
         async for item in paperless.groups.iterate():
             assert isinstance(item, Group)
 
 
 async def test_one(paperless: Paperless, data):
     """Test one."""
-    with patch.object(paperless, "request", return_value=data["groups"]["results"][0]):
+    with patch.object(paperless, "request_json", return_value=data["groups"]["results"][0]):
         item = await paperless.groups.one(72)
 
         assert isinstance(item, Group)
