@@ -215,7 +215,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     ) -> dict[str, Any]:
         """Make a request to the api and parse response json to dict."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
-            self.logger.debug("Request %s (%d): %s", method.upper(), res.status, res.url)
+            self.logger.debug("Json-Request %s (%d): %s", method.upper(), res.status, res.url)
 
             # bad request
             if res.status == 400:
@@ -238,7 +238,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     ) -> bytes:
         """Make a request to the api and return response as bytes."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
-            self.logger.debug("Download %s (%d): %s", method.upper(), res.status, res.url)
+            self.logger.debug("File-Request %s (%d): %s", method.upper(), res.status, res.url)
 
             # bad request
             if res.status == 400:
