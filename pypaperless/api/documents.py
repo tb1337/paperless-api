@@ -96,9 +96,12 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
     endpoint_cls = Document
     endpoint_type = ResourceType.DOCUMENTS
 
+    request_page_size = 100
+
     def __init__(self, paperless: "Paperless", endpoint: ResourceType) -> None:
         """Initialize sub endpoint services."""
         super().__init__(paperless, endpoint)
+
         self.notes = DocumentNotesService(self)
         self.files = DocumentFilesService(self)
 
@@ -122,8 +125,8 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
             for tag in obj.tags:
                 form.add_field("tags", f"{tag}")
 
-        endpoint = f"{self.endpoint}/post_document/"
-        res = await self._paperless.request("post", endpoint, data=form)
+        url = f"{self.endpoint}/post_document/"
+        res = await self._paperless.request("post", url, data=form)
         return str(res)
 
     async def meta(self, obj: DocumentOrIdType) -> RT:

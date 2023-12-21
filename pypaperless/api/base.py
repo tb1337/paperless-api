@@ -1,5 +1,6 @@
 """Base endpoints for Paperless resources."""
 
+import math
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar
 
@@ -18,6 +19,7 @@ class PaginatedResult(NamedTuple, Generic[RT]):
 
     current_page: int
     next_page: int | None
+    last_page: int
     items: list[RT]
 
 
@@ -26,6 +28,8 @@ class BaseEndpoint(Generic[RT]):
 
     endpoint_type: ResourceType | None = None
     endpoint_cls: RT | None = None
+
+    request_page_size: int = 50
 
     def __init__(self, paperless: "Paperless", endpoint: str) -> None:
         """Initialize endpoint."""
@@ -38,13 +42,14 @@ class BaseEndpoint(Generic[RT]):
         """Return the endpoint url."""
         return self._endpoint.rstrip("/")
 
-    async def list(self) -> list[int] | None:
+    async def list(self) -> list[int]:
         """Return a list of all entity ids, if applicable."""
         res = await self._paperless.request("get", self.endpoint)
         if "all" in res:
             return res["all"]
 
         self._logger.debug("List result is empty.")
+        return []
 
     async def get(
         self,
@@ -62,10 +67,14 @@ class BaseEndpoint(Generic[RT]):
         """
         if "page" not in kwargs:
             kwargs["page"] = 1
+        if "page_size" not in kwargs:
+            kwargs["page_size"] = self.request_page_size
+
         res = await self._paperless.request("get", self.endpoint, params=kwargs)
         return PaginatedResult(
             kwargs["page"],
             kwargs["page"] + 1 if res["next"] else None,
+            math.ceil(res["count"] / kwargs["page_size"]),
             [dataclass_from_dict(self.endpoint_cls, item) for item in res["results"]],
         )
 

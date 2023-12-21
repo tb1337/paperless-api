@@ -22,7 +22,8 @@ async def test_list_and_get(paperless: Paperless, data):
 
         # tasks have no list-all attribute...
         # TODO: we have to do something with it
-        assert result is None
+        assert isinstance(result, list)
+        assert len(result) == 0
 
         tasks = await paperless.tasks.get()
 
