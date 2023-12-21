@@ -18,7 +18,7 @@ class DocumentMetadata(PaperlessModel):
 
 
 @dataclass(kw_only=True)
-class DocumentMetaInformation(PaperlessModel):
+class DocumentMetaInformation(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a document metadata information resource on the Paperless api."""
 
     id: int | None = None
@@ -56,7 +56,7 @@ class DocumentNotePost(PaperlessPost):
 
 
 @dataclass(kw_only=True)
-class Document(PaperlessModel):
+class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a document resource on the Paperless api."""
 
     id: int | None = None

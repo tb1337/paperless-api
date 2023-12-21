@@ -7,7 +7,7 @@ from .shared import ConsumptionTemplateSource
 
 
 @dataclass(kw_only=True)
-class ConsumptionTemplate(PaperlessModel):
+class ConsumptionTemplate(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a consumption template resource on the Paperless api."""
 
     id: int | None = None

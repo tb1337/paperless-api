@@ -16,8 +16,6 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
     endpoint_cls = Task
     endpoint_type = ResourceType.TASKS
 
-    # this endpoint inherits list() from BaseEndpoint
-    # TODO: we have to do something about it, as tasks have no all-attribute in result json
     async def get(
         self,
         **kwargs: dict[str, Any],

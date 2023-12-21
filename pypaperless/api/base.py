@@ -113,7 +113,7 @@ class BaseEndpointCrudMixin:
         return True
 
 
-class BaseService:
+class BaseService:  # pylint: disable=too-few-public-methods
     """Handle requests for sub-endpoints or special tasks."""
 
     def __init__(self, ep: BaseEndpoint) -> None:

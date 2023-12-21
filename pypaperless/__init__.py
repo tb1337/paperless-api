@@ -25,7 +25,7 @@ from .errors import BadRequestException
 from .models.shared import ResourceType
 
 
-class Paperless:
+class Paperless:  # pylint: disable=too-many-instance-attributes
     """Retrieves and manipulates data from and to paperless via REST."""
 
     def __init__(

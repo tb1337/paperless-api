@@ -7,7 +7,7 @@ from .base import PaperlessModel
 
 
 @dataclass(kw_only=True)
-class User(PaperlessModel):
+class User(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a user resource on the Paperless api."""
 
     id: int | None = None

@@ -7,7 +7,7 @@ from .shared import TaskStatus
 
 
 @dataclass(kw_only=True)
-class Task(PaperlessModel):
+class Task(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a task resource in the Paperless api."""
 
     id: int | None = None
