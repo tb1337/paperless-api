@@ -143,6 +143,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
     async def initialize(self):
         """Initialize the connection to the api and fetch the endpoints."""
+        self.logger.info("Fetching api endpoints.")
+
         res = await self.request("get", "")
 
         self._consumption_templates = ConsumptionTemplatesEndpoint(
@@ -163,14 +165,14 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._users = UsersEndpoint(self, res.pop(ResourceType.USERS))
 
         self._initialized = True
-        self.logger.info("Paperless initialized.")
-        self.logger.debug(" - Unused endpoints: %s", ", ".join(res))
+        self.logger.info("Initialized.")
+        self.logger.debug("Unused endpoints: %s", ", ".join(res))
 
     async def close(self):
         """Clean up connection."""
         if self._session:
             await self._session.close()
-        self.logger.info("Paperless closed.")
+        self.logger.info("Closed.")
 
     async def request(self, method: str, endpoint: str, **kwargs):
         """Make request on the api and return response data."""
