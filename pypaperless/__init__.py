@@ -163,7 +163,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._users = UsersEndpoint(self, res.pop(ResourceType.USERS))
 
         self._initialized = True
-        self.logger.info("Paperless initialized. Unused endpoints: %s", ", ".join(res))
+        self.logger.info("Paperless initialized.")
+        self.logger.debug(" - Unused endpoints: %s", ", ".join(res))
 
     async def close(self):
         """Clean up connection."""
