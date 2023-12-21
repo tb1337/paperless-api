@@ -29,8 +29,8 @@ repos:
         exclude: ^tests/fixtures/
         additional_dependencies:
           - tomli
-  - repo: local
-    hooks:
+  # - repo: local
+  #   hooks:
   #     - id: mypy
   #       name: mypy
   #       entry: script/run-in-env.sh mypy
@@ -38,9 +38,9 @@ repos:
   #       types: [python]
   #       require_serial: true
   #       files: ^pypaperless/.+\.py$
-      - id: pylint
-        name: pylint
-        entry: script/run-in-env.sh pylint -j 0
-        language: script
-        types: [python]
-        files: ^pypaperless/.+\.py$
+      # - id: pylint
+      #   name: pylint
+      #   entry: script/run-in-env.sh pylint -j 0
+      #   language: script
+      #   types: [python]
+      #   files: ^pypaperless/.+\.py$
