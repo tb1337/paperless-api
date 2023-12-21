@@ -1,6 +1,8 @@
 """PyPaperless."""
 
 import logging
+from collections.abc import Generator
+from contextlib import asynccontextmanager
 from typing import Any
 
 import aiohttp
@@ -21,7 +23,7 @@ from .api import (
     TasksEndpoint,
     UsersEndpoint,
 )
-from .errors import BadRequestException
+from .errors import BadRequestException, DataNotExpectedException
 from .models.shared import ResourceType
 
 
@@ -145,7 +147,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
-        res = await self.request("get", "")
+        res = await self.request_json("get", "")
 
         self._consumption_templates = ConsumptionTemplatesEndpoint(
             self, res.pop(ResourceType.CONSUMPTION_TEMPLATES)
@@ -165,8 +167,10 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._users = UsersEndpoint(self, res.pop(ResourceType.USERS))
 
         self._initialized = True
+
+        if len(res) > 0:
+            self.logger.debug("Unused endpoints: %s", ", ".join(res))
         self.logger.info("Initialized.")
-        self.logger.debug("Unused endpoints: %s", ", ".join(res))
 
     async def close(self):
         """Clean up connection."""
@@ -174,15 +178,19 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
             await self._session.close()
         self.logger.info("Closed.")
 
-    async def request(self, method: str, endpoint: str, **kwargs):
-        """Make request on the api and return response data."""
+    @asynccontextmanager
+    async def generate_request(
+        self,
+        method: str,
+        endpoint: str,
+        **kwargs,
+    ) -> Generator[aiohttp.ClientResponse, None, None]:
+        """Create a client response object for further use."""
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
 
         url = endpoint if endpoint.startswith("http") else f"http://{self.host}/api/{endpoint}"
-
-        # check and add trailing slash
-        url = url.rstrip("/") + "/"
+        url = url.rstrip("/") + "/"  # check and add trailing slash
 
         kwargs.update(self._request_opts)
 
@@ -197,16 +205,46 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         )
 
         async with self._session.request(method, url, **kwargs) as res:
-            self.logger.debug("Request %s (%d): %s", method, res.status, res.url)
+            yield res
+
+    async def request_json(
+        self,
+        method: str,
+        endpoint: str,
+        **kwargs,
+    ) -> dict[str, Any]:
+        """Make a request to the api and parse response json to dict."""
+        async with self.generate_request(method, endpoint, **kwargs) as res:
+            self.logger.debug("Request %s (%d): %s", method.upper(), res.status, res.url)
+
             # bad request
             if res.status == 400:
                 raise BadRequestException(f"{await res.text()}")
-            # no content
+            # no content, in most cases on DELETE method
             if res.status == 204:
                 return {}
             res.raise_for_status()
-            if res.content_type == "application/json":
-                return await res.json()
+
+            if res.content_type != "application/json":
+                raise DataNotExpectedException(f"Content-type is not json! {res.content_type}")
+
+            return await res.json()
+
+    async def request_file(
+        self,
+        method: str,
+        endpoint: str,
+        **kwargs,
+    ) -> bytes:
+        """Make a request to the api and return response as bytes."""
+        async with self.generate_request(method, endpoint, **kwargs) as res:
+            self.logger.debug("Download %s (%d): %s", method.upper(), res.status, res.url)
+
+            # bad request
+            if res.status == 400:
+                raise BadRequestException(f"{await res.text()}")
+            res.raise_for_status()
+
             return await res.read()
 
     async def __aenter__(self) -> "Paperless":

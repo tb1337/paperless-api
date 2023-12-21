@@ -36,7 +36,7 @@ class DocumentNotesService(BaseService):
         """Request document notes of given document."""
         idx = _get_document_id_helper(obj)
         url = f"{self.endpoint}/{idx}/notes"
-        res = await self._paperless.request("get", url)
+        res = await self._paperless.request_json("get", url)
 
         # We have to transform data here slightly.
         # There are two major differences in the data depending on which endpoint is requested.
@@ -54,7 +54,7 @@ class DocumentNotesService(BaseService):
     async def create(self, obj: DocumentNotePost) -> None:
         """Create a new document note. Raises on failure."""
         url = f"{self.endpoint}/{obj.document}/notes"
-        await self._paperless.request("post", url, json=dataclass_to_dict(obj))
+        await self._paperless.request_json("post", url, json=dataclass_to_dict(obj))
 
     async def delete(self, obj: DocumentNote) -> None:
         """Delete an existing document note. Raises on failure."""
@@ -62,7 +62,7 @@ class DocumentNotesService(BaseService):
         params = {
             "id": obj.id,
         }
-        await self._paperless.request("delete", url, params=params)
+        await self._paperless.request_json("delete", url, params=params)
 
 
 class DocumentFilesService(BaseService):
@@ -75,7 +75,7 @@ class DocumentFilesService(BaseService):
     ) -> bytes:
         """Request a child endpoint."""
         url = f"{self.endpoint}/{idx}/{path}"
-        return await self._paperless.request("get", url)
+        return await self._paperless.request_file("get", url)
 
     async def download(self, obj: DocumentOrIdType) -> bytes:
         """Request document endpoint for downloading the actual file."""
@@ -126,12 +126,12 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
                 form.add_field("tags", f"{tag}")
 
         url = f"{self.endpoint}/post_document/"
-        res = await self._paperless.request("post", url, data=form)
+        res = await self._paperless.request_json("post", url, data=form)
         return str(res)
 
     async def meta(self, obj: DocumentOrIdType) -> RT:
         """Request document metadata of given document."""
         idx = _get_document_id_helper(obj)
         url = f"{self.endpoint}/{idx}/metadata"
-        res = await self._paperless.request("get", url)
+        res = await self._paperless.request_json("get", url)
         return dataclass_from_dict(DocumentMetaInformation, res)

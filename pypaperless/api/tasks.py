@@ -21,7 +21,7 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
         **kwargs: dict[str, Any],
     ) -> list[RT]:
         """Request entities."""
-        res = await self._paperless.request("get", self.endpoint, params=kwargs)
+        res = await self._paperless.request_json("get", self.endpoint, params=kwargs)
         return [dataclass_from_dict(self.endpoint_cls, item) for item in res]
 
     async def iterate(
@@ -38,5 +38,5 @@ class TasksEndpoint(BaseEndpoint[type[Task]]):
         params = {
             "task_id": idx,
         }
-        res = await self._paperless.request("get", self.endpoint, params=params)
+        res = await self._paperless.request_json("get", self.endpoint, params=params)
         return dataclass_from_dict(self.endpoint_cls, res.pop())
