@@ -8,22 +8,6 @@ from .custom_fields import CustomFieldValue
 
 
 @dataclass(kw_only=True)
-class DocumentNote(PaperlessModel):
-    """Represent a document note resource on the Paperless api."""
-
-    id: int | None = None
-    note: str | None = None
-    created: datetime | None = None
-    document: int | None = None
-    user: int | None = None
-
-    def __post_init__(self):
-        """Set user attribute to dict id when user is a dict."""
-        if isinstance(self.user, dict) and "id" in self.user:
-            self.user = self.user["id"]
-
-
-@dataclass(kw_only=True)
 class DocumentMetadata(PaperlessModel):
     """Represent a document metadata resource on the Paperless api."""
 
@@ -34,7 +18,7 @@ class DocumentMetadata(PaperlessModel):
 
 
 @dataclass(kw_only=True)
-class DocumentMetaInformation(PaperlessModel):
+class DocumentMetaInformation(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a document metadata information resource on the Paperless api."""
 
     id: int | None = None
@@ -53,7 +37,26 @@ class DocumentMetaInformation(PaperlessModel):
 
 
 @dataclass(kw_only=True)
-class Document(PaperlessModel):
+class DocumentNote(PaperlessModel):
+    """Represent a document note resource on the Paperless api."""
+
+    id: int | None = None
+    note: str | None = None
+    created: datetime | None = None
+    document: int | None = None
+    user: int | None = None
+
+
+@dataclass(kw_only=True)
+class DocumentNotePost(PaperlessPost):
+    """Attributes to send when creating a document note on the Paperless api."""
+
+    note: str
+    document: int
+
+
+@dataclass(kw_only=True)
+class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a document resource on the Paperless api."""
 
     id: int | None = None
@@ -80,9 +83,9 @@ class Document(PaperlessModel):
 class DocumentPost(PaperlessPost):
     """Attributes to send when creating a document on the Paperless api."""
 
-    document: bytearray
-    title: str
-    created: datetime
+    document: bytes
+    title: str | None = None
+    created: datetime | None = None
     correspondent: int | None = None
     document_type: int | None = None
     tags: list[int] | None = None

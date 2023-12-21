@@ -6,7 +6,7 @@ from .base import PaperlessModel
 
 
 @dataclass(kw_only=True)
-class MailAccount(PaperlessModel):
+class MailAccount(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a mail account resource on the Paperless api."""
 
     id: int | None = None

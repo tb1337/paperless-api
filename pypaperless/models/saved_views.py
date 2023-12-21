@@ -14,7 +14,7 @@ class SavedViewFilterRule(PaperlessModel):
 
 
 @dataclass(kw_only=True)
-class SavedView(PaperlessModel):
+class SavedView(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a saved view resource on the Paperless api."""
 
     id: int | None = None

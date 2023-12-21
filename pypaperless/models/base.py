@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from .shared import MatchingAlgorithm
 
 
-class PaperlessModel:
+class PaperlessModel:  # pylint: disable=too-few-public-methods
     """Base class that represents a Paperless model."""
 
 
-class PaperlessPost(PaperlessModel):
+class PaperlessPost(PaperlessModel):  # pylint: disable=too-few-public-methods
     """Base class that represents a Paperless POST model."""
 
 

@@ -6,7 +6,9 @@ from .base import PaperlessModel, PaperlessModelMatchingMixin, PaperlessPost
 
 
 @dataclass(kw_only=True)
-class Tag(PaperlessModel, PaperlessModelMatchingMixin):
+class Tag(
+    PaperlessModel, PaperlessModelMatchingMixin
+):  # pylint: disable=too-many-instance-attributes
     """Represent a tag resource on the Paperless api."""
 
     id: int | None = None

@@ -9,6 +9,7 @@ from .documents import (
     DocumentMetadata,
     DocumentMetaInformation,
     DocumentNote,
+    DocumentNotePost,
     DocumentPost,
 )
 from .groups import Group
@@ -32,6 +33,7 @@ __all__ = [
     "DocumentMetadata",
     "DocumentMetaInformation",
     "DocumentNote",
+    "DocumentNotePost",
     "DocumentType",
     "DocumentTypePost",
     "Group",

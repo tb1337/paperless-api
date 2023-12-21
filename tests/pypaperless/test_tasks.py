@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import EnableCRUDMixin, TasksEndpoint
+from pypaperless.api import TasksEndpoint
+from pypaperless.api.base import BaseEndpointCrudMixin
 from pypaperless.models import Task
 from pypaperless.models.shared import TaskStatus
 
@@ -11,7 +12,7 @@ from pypaperless.models.shared import TaskStatus
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.tasks, TasksEndpoint)
-    assert not isinstance(paperless.tasks, EnableCRUDMixin)
+    assert not isinstance(paperless.tasks, BaseEndpointCrudMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):

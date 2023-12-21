@@ -6,7 +6,7 @@ from .base import PaperlessModel
 
 
 @dataclass(kw_only=True)
-class MailRule(PaperlessModel):
+class MailRule(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a mail rule resource on the Paperless api."""
 
     id: int | None = None

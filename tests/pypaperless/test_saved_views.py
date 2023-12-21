@@ -3,14 +3,15 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import EnableCRUDMixin, PaginatedResult, SavedViewsEndpoint
+from pypaperless.api import SavedViewsEndpoint
+from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
 from pypaperless.models import SavedView, SavedViewFilterRule
 
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.saved_views, SavedViewsEndpoint)
-    assert not isinstance(paperless.saved_views, EnableCRUDMixin)
+    assert not isinstance(paperless.saved_views, BaseEndpointCrudMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):

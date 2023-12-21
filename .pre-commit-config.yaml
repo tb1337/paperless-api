@@ -38,9 +38,9 @@ repos:
   #       types: [python]
   #       require_serial: true
   #       files: ^pypaperless/.+\.py$
-  #     - id: pylint
-  #       name: pylint
-  #       entry: script/run-in-env.sh pylint -j 0
-  #       language: script
-  #       types: [python]
-  #       files: ^pypaperless/.+\.py$
+      # - id: pylint
+      #   name: pylint
+      #   entry: script/run-in-env.sh pylint -j 0
+      #   language: script
+      #   types: [python]
+      #   files: ^pypaperless/.+\.py$
