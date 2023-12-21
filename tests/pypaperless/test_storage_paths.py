@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import EnableCRUDMixin, PaginatedResult, StoragePathsEndpoint
+from pypaperless.api import StoragePathsEndpoint
+from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
 from pypaperless.models import StoragePath
 from pypaperless.models.shared import MatchingAlgorithm
 
@@ -11,7 +12,7 @@ from pypaperless.models.shared import MatchingAlgorithm
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.storage_paths, StoragePathsEndpoint)
-    assert isinstance(paperless.storage_paths, EnableCRUDMixin)
+    assert isinstance(paperless.storage_paths, BaseEndpointCrudMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):

@@ -3,7 +3,8 @@
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.api import CustomFieldEndpoint, EnableCRUDMixin, PaginatedResult
+from pypaperless.api import CustomFieldEndpoint
+from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
 from pypaperless.models import CustomField
 from pypaperless.models.shared import CustomFieldType
 
@@ -11,7 +12,7 @@ from pypaperless.models.shared import CustomFieldType
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
     assert isinstance(paperless.custom_fields, CustomFieldEndpoint)
-    assert isinstance(paperless.custom_fields, EnableCRUDMixin)
+    assert isinstance(paperless.custom_fields, BaseEndpointCrudMixin)
 
 
 async def test_list_and_get(paperless: Paperless, data):
