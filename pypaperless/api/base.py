@@ -44,7 +44,7 @@ class BaseEndpoint(Generic[RT]):
 
     async def list(self) -> list[int]:
         """Return a list of all entity ids, if applicable."""
-        res = await self._paperless.request("get", self.endpoint)
+        res = await self._paperless.request_json("get", self.endpoint)
         if "all" in res:
             return res["all"]
 
@@ -70,7 +70,7 @@ class BaseEndpoint(Generic[RT]):
         if "page_size" not in kwargs:
             kwargs["page_size"] = self.request_page_size
 
-        res = await self._paperless.request("get", self.endpoint, params=kwargs)
+        res = await self._paperless.request_json("get", self.endpoint, params=kwargs)
         return PaginatedResult(
             kwargs["page"],
             kwargs["page"] + 1 if res["next"] else None,
@@ -91,7 +91,7 @@ class BaseEndpoint(Generic[RT]):
     async def one(self, idx: int) -> RT:
         """Request exactly one entity by id."""
         url = f"{self.endpoint}/{idx}"
-        res = await self._paperless.request("get", url)
+        res = await self._paperless.request_json("get", url)
         return dataclass_from_dict(self.endpoint_cls, res)
 
 
@@ -100,7 +100,7 @@ class BaseEndpointCrudMixin:
 
     async def create(self: BaseEndpoint, obj: PaperlessPost) -> RT:
         """Create a new entity. Raise on failure."""
-        res = await self._paperless.request(
+        res = await self._paperless.request_json(
             "post",
             self.endpoint,
             json=dataclass_to_dict(obj),
@@ -110,7 +110,7 @@ class BaseEndpointCrudMixin:
     async def update(self: BaseEndpoint, obj: RT) -> RT:
         """Update an existing entity. Raise on failure."""
         url = f"{self.endpoint}/{obj.id}"
-        res = await self._paperless.request(
+        res = await self._paperless.request_json(
             "put", url, json=dataclass_to_dict(obj, skip_none=False)
         )
         return dataclass_from_dict(self.endpoint_cls, res)
@@ -118,7 +118,7 @@ class BaseEndpointCrudMixin:
     async def delete(self: BaseEndpoint, obj: RT) -> bool:
         """Delete an existing entity. Raise on failure."""
         url = f"{self.endpoint}/{obj.id}"
-        await self._paperless.request("delete", url)
+        await self._paperless.request_json("delete", url)
         return True
 
 

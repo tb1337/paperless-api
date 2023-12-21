@@ -17,7 +17,7 @@ async def test_endpoint(paperless: Paperless) -> None:
 
 async def test_list_and_get(paperless: Paperless, data):
     """Test list."""
-    with patch.object(paperless, "request", return_value=data["document_types"]):
+    with patch.object(paperless, "request_json", return_value=data["document_types"]):
         result = await paperless.document_types.list()
 
         assert isinstance(result, list)
@@ -34,14 +34,14 @@ async def test_list_and_get(paperless: Paperless, data):
 
 async def test_iterate(paperless: Paperless, data):
     """Test iterate."""
-    with patch.object(paperless, "request", return_value=data["document_types"]):
+    with patch.object(paperless, "request_json", return_value=data["document_types"]):
         async for item in paperless.document_types.iterate():
             assert isinstance(item, DocumentType)
 
 
 async def test_one(paperless: Paperless, data):
     """Test one."""
-    with patch.object(paperless, "request", return_value=data["document_types"]["results"][0]):
+    with patch.object(paperless, "request_json", return_value=data["document_types"]["results"][0]):
         item = await paperless.document_types.one(72)
 
         assert isinstance(item, DocumentType)

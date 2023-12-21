@@ -2,8 +2,12 @@
 
 
 class PaperlessException(Exception):
-    """Base exception for paperless."""
+    """Base exception for PyPaperless."""
 
 
 class BadRequestException(PaperlessException):
-    """Raised when requesting wrong data."""
+    """Raise when requesting wrong data."""
+
+
+class DataNotExpectedException(PaperlessException):
+    """Raise when expecting a type and receiving something else."""
