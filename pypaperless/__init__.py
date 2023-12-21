@@ -143,27 +143,27 @@ class Paperless:
 
     async def initialize(self):
         """Initialize the connection to the api and fetch the endpoints."""
-        result = await self.request("get", "")
+        res = await self.request("get", "")
 
         self._consumption_templates = ConsumptionTemplatesEndpoint(
-            self, result.pop(ResourceType.CONSUMPTION_TEMPLATES)
+            self, res.pop(ResourceType.CONSUMPTION_TEMPLATES)
         )
-        self._correspondents = CorrespondentsEndpoint(self, result.pop(ResourceType.CORRESPONDENTS))
-        self._custom_fields = CustomFieldEndpoint(self, result.pop(ResourceType.CUSTOM_FIELDS))
-        self._documents = DocumentsEndpoint(self, result.pop(ResourceType.DOCUMENTS))
-        self._document_types = DocumentTypesEndpoint(self, result.pop(ResourceType.DOCUMENT_TYPES))
-        self._groups = GroupsEndpoint(self, result.pop(ResourceType.GROUPS))
-        self._mail_accounts = MailAccountsEndpoint(self, result.pop(ResourceType.MAIL_ACCOUNTS))
-        self._mail_rules = MailRulesEndpoint(self, result.pop(ResourceType.MAIL_RULES))
-        self._saved_views = SavedViewsEndpoint(self, result.pop(ResourceType.SAVED_VIEWS))
-        self._share_links = ShareLinkEndpoint(self, result.pop(ResourceType.SHARE_LINKS))
-        self._storage_paths = StoragePathsEndpoint(self, result.pop(ResourceType.STORAGE_PATHS))
-        self._tags = TagsEndpoint(self, result.pop(ResourceType.TAGS))
-        self._tasks = TasksEndpoint(self, result.pop(ResourceType.TASKS))
-        self._users = UsersEndpoint(self, result.pop(ResourceType.USERS))
+        self._correspondents = CorrespondentsEndpoint(self, res.pop(ResourceType.CORRESPONDENTS))
+        self._custom_fields = CustomFieldEndpoint(self, res.pop(ResourceType.CUSTOM_FIELDS))
+        self._documents = DocumentsEndpoint(self, res.pop(ResourceType.DOCUMENTS))
+        self._document_types = DocumentTypesEndpoint(self, res.pop(ResourceType.DOCUMENT_TYPES))
+        self._groups = GroupsEndpoint(self, res.pop(ResourceType.GROUPS))
+        self._mail_accounts = MailAccountsEndpoint(self, res.pop(ResourceType.MAIL_ACCOUNTS))
+        self._mail_rules = MailRulesEndpoint(self, res.pop(ResourceType.MAIL_RULES))
+        self._saved_views = SavedViewsEndpoint(self, res.pop(ResourceType.SAVED_VIEWS))
+        self._share_links = ShareLinkEndpoint(self, res.pop(ResourceType.SHARE_LINKS))
+        self._storage_paths = StoragePathsEndpoint(self, res.pop(ResourceType.STORAGE_PATHS))
+        self._tags = TagsEndpoint(self, res.pop(ResourceType.TAGS))
+        self._tasks = TasksEndpoint(self, res.pop(ResourceType.TASKS))
+        self._users = UsersEndpoint(self, res.pop(ResourceType.USERS))
 
         self._initialized = True
-        self.logger.info("Paperless initialized. Unused endpoints: %s", ", ".join(result))
+        self.logger.info("Paperless initialized. Unused endpoints: %s", ", ".join(res))
 
     async def close(self):
         """Clean up connection."""
@@ -177,6 +177,9 @@ class Paperless:
             self._session = aiohttp.ClientSession()
 
         url = endpoint if endpoint.startswith("http") else f"http://{self.host}/api/{endpoint}"
+
+        # check and add trailing slash
+        url = url.rstrip("/") + "/"
 
         kwargs.update(self._request_opts)
 
