@@ -2,10 +2,18 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from pypaperless import Paperless
 from pypaperless.api import SavedViewsEndpoint
 from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
 from pypaperless.models import SavedView, SavedViewFilterRule
+
+
+@pytest.fixture(scope="module")
+def dataset(data):
+    """Represent current data."""
+    return data["saved_views"]
 
 
 async def test_endpoint(paperless: Paperless) -> None:
@@ -14,9 +22,9 @@ async def test_endpoint(paperless: Paperless) -> None:
     assert not isinstance(paperless.saved_views, BaseEndpointCrudMixin)
 
 
-async def test_list_and_get(paperless: Paperless, data):
+async def test_list_and_get(paperless: Paperless, dataset):
     """Test list."""
-    with patch.object(paperless, "request_json", return_value=data["saved_views"]):
+    with patch.object(paperless, "request_json", return_value=dataset):
         result = await paperless.saved_views.list()
 
         assert isinstance(result, list)
@@ -31,16 +39,16 @@ async def test_list_and_get(paperless: Paperless, data):
         assert isinstance(page.items.pop(), SavedView)
 
 
-async def test_iterate(paperless: Paperless, data):
+async def test_iterate(paperless: Paperless, dataset):
     """Test iterate."""
-    with patch.object(paperless, "request_json", return_value=data["saved_views"]):
+    with patch.object(paperless, "request_json", return_value=dataset):
         async for item in paperless.saved_views.iterate():
             assert isinstance(item, SavedView)
 
 
-async def test_one(paperless: Paperless, data):
+async def test_one(paperless: Paperless, dataset):
     """Test one."""
-    with patch.object(paperless, "request_json", return_value=data["saved_views"]["results"][0]):
+    with patch.object(paperless, "request_json", return_value=dataset["results"][0]):
         item = await paperless.saved_views.one(72)
 
         assert isinstance(item, SavedView)
