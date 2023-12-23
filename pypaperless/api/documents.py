@@ -14,7 +14,7 @@ from pypaperless.models import (
 from pypaperless.models.shared import ResourceType
 from pypaperless.util import dataclass_from_dict, dataclass_to_dict
 
-from .base import RT, BaseEndpoint, BaseEndpointCrudMixin, BaseService
+from .base import BaseEndpoint, BaseEndpointCrudMixin, BaseService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -129,7 +129,7 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
         res = await self._paperless.request_json("post", url, data=form)
         return str(res)
 
-    async def meta(self, obj: DocumentOrIdType) -> RT:
+    async def meta(self, obj: DocumentOrIdType) -> DocumentMetaInformation:
         """Request document metadata of given document."""
         idx = _get_document_id_helper(obj)
         url = f"{self.endpoint}/{idx}/metadata"
