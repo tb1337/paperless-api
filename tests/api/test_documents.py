@@ -12,7 +12,13 @@ from pypaperless.api.documents import (
     DocumentNotesService,
     _get_document_id_helper,
 )
-from pypaperless.models import Document, DocumentNote, DocumentNotePost
+from pypaperless.models import (
+    Document,
+    DocumentMetadata,
+    DocumentMetaInformation,
+    DocumentNote,
+    DocumentNotePost,
+)
 from pypaperless.models.custom_fields import CustomFieldValue
 from pypaperless.util import dataclass_from_dict
 
@@ -27,6 +33,12 @@ def document_dataset(data):
 def notes_dataset(data):
     """Represent notes data."""
     return data["document_notes"]
+
+
+@pytest.fixture(scope="module")
+def meta_dataset(data):
+    """Represent notes data."""
+    return data["document_metadata"]
 
 
 async def test_endpoint(paperless: Paperless) -> None:
@@ -152,3 +164,26 @@ async def test_files_service(paperless: Paperless, document_dataset):
 
     # well...
     assert download == preview == thumbnail
+
+
+async def test_metadata(paperless: Paperless, document_dataset, meta_dataset):
+    """Test metadata."""
+    data = document_dataset["results"][1]  # document id 226
+    item = dataclass_from_dict(Document, data)
+
+    assert isinstance(item, Document)
+
+    with patch.object(paperless, "request_json", return_value=meta_dataset):
+        meta = await paperless.documents.meta(item.id)
+        meta_by_item = await paperless.documents.meta(item)
+
+    # results by pk and object must be the same
+    assert meta == meta_by_item
+
+    assert isinstance(meta, DocumentMetaInformation)
+
+    assert isinstance(meta.original_metadata, list)
+    assert isinstance(meta.archive_metadata, list)
+    assert isinstance(meta.archive_metadata.pop(), DocumentMetadata)
+
+    assert meta.original_filename is None
