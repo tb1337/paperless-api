@@ -23,9 +23,9 @@ class ResourceType(StrEnum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "ResourceType":  # noqa ARG003
         """Set default member on unknown value."""
-        return cls.UNKNOWN
+        return ResourceType.UNKNOWN
 
 
 class MatchingAlgorithm(Enum):
@@ -41,7 +41,7 @@ class MatchingAlgorithm(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "MatchingAlgorithm":  # noqa ARG003
         """Set default member on unknown value."""
         return MatchingAlgorithm.UNKNOWN
 
@@ -60,7 +60,7 @@ class CustomFieldType(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "CustomFieldType":  # noqa ARG003
         """Set default member on unknown value."""
         return CustomFieldType.UNKNOWN
 
@@ -73,7 +73,7 @@ class FileVersion(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "FileVersion":  # noqa ARG003
         """Set default member on unknown value."""
         return FileVersion.UNKNOWN
 
@@ -87,7 +87,7 @@ class TaskStatus(Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "TaskStatus":  # noqa ARG003
         """Set default member on unknown value."""
         return TaskStatus.UNKNOWN
 
@@ -101,6 +101,6 @@ class ConsumptionTemplateSource(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object):  # noqa ARG003
+    def _missing_(cls: type, value: object) -> "ConsumptionTemplateSource":  # noqa ARG003
         """Set default member on unknown value."""
         return ConsumptionTemplateSource.UNKNOWN

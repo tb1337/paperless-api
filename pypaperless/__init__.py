@@ -1,7 +1,7 @@
 """PyPaperless."""
 
 import logging
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -143,7 +143,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Gateway to users."""
         return self._users
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
@@ -172,7 +172,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
             self.logger.debug("Unused endpoints: %s", ", ".join(res))
         self.logger.info("Initialized.")
 
-    async def close(self):
+    async def close(self) -> None:
         """Clean up connection."""
         if self._session:
             await self._session.close()
@@ -183,8 +183,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self,
         method: str,
         endpoint: str,
-        **kwargs,
-    ) -> Generator[aiohttp.ClientResponse, None, None]:
+        **kwargs: Any,
+    ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
         """Create a client response object for further use."""
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
@@ -212,8 +212,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self,
         method: str,
         endpoint: str,
-        **kwargs,
-    ) -> dict[str, Any]:
+        **kwargs: Any,
+    ) -> Any:
         """Make a request to the api and parse response json to dict."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
             self.logger.debug("Json-Request %s (%d): %s", method.upper(), res.status, res.url)
@@ -235,7 +235,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self,
         method: str,
         endpoint: str,
-        **kwargs,
+        **kwargs: Any,
     ) -> bytes:
         """Make a request to the api and return response as bytes."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
@@ -253,7 +253,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type, exc, exc_tb) -> bool | None:
+    async def __aexit__(self, exc_type: Any, exc: Any, exc_tb: Any) -> Any | None:
         """Exit context manager."""
         await self.close()
         if exc:

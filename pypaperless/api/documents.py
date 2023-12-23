@@ -105,7 +105,7 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
         self.notes = DocumentNotesService(self)
         self.files = DocumentFilesService(self)
 
-    async def create(self, obj: DocumentPost) -> str:
+    async def create(self, obj: DocumentPost) -> str:  # type: ignore[override]
         """Create a new document. Raise on failure."""
         form = FormData()
 
@@ -126,12 +126,15 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
                 form.add_field("tags", f"{tag}")
 
         url = f"{self.endpoint}/post_document/"
-        res = await self._paperless.request_json("post", url, data=form)
-        return str(res)
+
+        # result is a string in this case
+        res = str(await self._paperless.request_json("post", url, data=form))
+        return res
 
     async def meta(self, obj: DocumentOrIdType) -> DocumentMetaInformation:
         """Request document metadata of given document."""
         idx = _get_document_id_helper(obj)
         url = f"{self.endpoint}/{idx}/metadata"
         res = await self._paperless.request_json("get", url)
-        return dataclass_from_dict(DocumentMetaInformation, res)
+        data: DocumentMetaInformation = dataclass_from_dict(DocumentMetaInformation, res)
+        return data

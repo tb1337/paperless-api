@@ -55,11 +55,11 @@ line-length = 100
 [tool.mypy]
 python_version = "3.11"
 check_untyped_defs = true
-#disallow_any_generics = true
+disallow_any_generics = false
 disallow_incomplete_defs = true
 disallow_untyped_calls = false
 disallow_untyped_defs = true
-mypy_path = "aiohue/"
+mypy_path = "pypaperless/"
 no_implicit_optional = true
 show_error_codes = true
 warn_incomplete_stub = true

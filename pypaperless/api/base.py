@@ -1,7 +1,7 @@
 """Base endpoints for Paperless resources."""
 
 import math
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any, Generic, NamedTuple, TypeVar
 
 from pypaperless.models.base import PaperlessPost
@@ -26,8 +26,8 @@ class PaginatedResult(NamedTuple, Generic[RT]):
 class BaseEndpoint(Generic[RT]):
     """Represent a read-only Paperless endpoint."""
 
-    endpoint_type: ResourceType | None = None
-    endpoint_cls: RT | None = None
+    endpoint_type: ResourceType
+    endpoint_cls: RT
 
     request_page_size: int = 50
 
@@ -38,7 +38,7 @@ class BaseEndpoint(Generic[RT]):
         self._logger = paperless.logger.getChild(self.endpoint_type)
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> str:
         """Return the endpoint url."""
         return self._endpoint.rstrip("/")
 
@@ -46,14 +46,15 @@ class BaseEndpoint(Generic[RT]):
         """Return a list of all entity ids, if applicable."""
         res = await self._paperless.request_json("get", self.endpoint)
         if "all" in res:
-            return res["all"]
+            data: list[int] = res["all"]
+            return data
 
         self._logger.debug("List result is empty.")
         return []
 
     async def get(
         self,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> PaginatedResult[RT]:
         """
         Request api pages as list.
@@ -78,9 +79,9 @@ class BaseEndpoint(Generic[RT]):
             [dataclass_from_dict(self.endpoint_cls, item) for item in res["results"]],
         )
 
-    async def iterate(self, **kwargs: dict[str, Any]) -> Generator[RT, None, None]:
+    async def iterate(self, **kwargs: Any) -> AsyncGenerator[RT, None]:
         """Iterate pages and yield every entity."""
-        page = 1
+        page: int | None = 1
         while page:
             kwargs["page"] = page
             res = await self.get(**kwargs)
@@ -92,13 +93,14 @@ class BaseEndpoint(Generic[RT]):
         """Request exactly one entity by id."""
         url = f"{self.endpoint}/{idx}"
         res = await self._paperless.request_json("get", url)
-        return dataclass_from_dict(self.endpoint_cls, res)
+        data: RT = dataclass_from_dict(self.endpoint_cls, res)
+        return data
 
 
 class BaseEndpointCrudMixin:
     """Mixin that adds CRUD features to endpoints."""
 
-    async def create(self: BaseEndpoint, obj: PaperlessPost) -> RT:
+    async def create(self: BaseEndpoint, obj: PaperlessPost) -> RT:  # type: ignore[misc]
         """Create a new entity. Raise on failure."""
         res = await self._paperless.request_json(
             "post",
@@ -107,7 +109,7 @@ class BaseEndpointCrudMixin:
         )
         return dataclass_from_dict(self.endpoint_cls, res)
 
-    async def update(self: BaseEndpoint, obj: RT) -> RT:
+    async def update(self: BaseEndpoint, obj: RT) -> RT:  # type: ignore[misc]
         """Update an existing entity. Raise on failure."""
         url = f"{self.endpoint}/{obj.id}"
         res = await self._paperless.request_json(
@@ -115,7 +117,7 @@ class BaseEndpointCrudMixin:
         )
         return dataclass_from_dict(self.endpoint_cls, res)
 
-    async def delete(self: BaseEndpoint, obj: RT) -> bool:
+    async def delete(self: BaseEndpoint, obj: RT) -> bool:  # type: ignore[misc]
         """Delete an existing entity. Raise on failure."""
         url = f"{self.endpoint}/{obj.id}"
         await self._paperless.request_json("delete", url)
