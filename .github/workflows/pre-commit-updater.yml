@@ -28,4 +28,4 @@ jobs:
           body: |
             Update versions of tools in pre-commit
             configs to latest version
-          labels: dependencies
+          labels: chore
