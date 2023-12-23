@@ -118,8 +118,8 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
             "document_type",
             "archive_serial_number",
         ):
-            if obj[field]:
-                form.add_field(field, obj[field])
+            if getattr(obj, field):
+                form.add_field(field, getattr(obj, field))
 
         if obj.tags and isinstance(obj.tags, list):
             for tag in obj.tags:

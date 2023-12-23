@@ -192,7 +192,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         url = endpoint if endpoint.startswith("http") else f"http://{self.host}/api/{endpoint}"
         url = url.rstrip("/") + "/"  # check and add trailing slash
 
-        kwargs.update(self._request_opts)
+        if isinstance(self._request_opts, dict):
+            kwargs.update(self._request_opts)
 
         if "headers" not in kwargs:
             kwargs["headers"] = {}

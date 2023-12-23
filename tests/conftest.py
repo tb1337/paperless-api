@@ -30,11 +30,12 @@ def data():
 @pytest.fixture
 async def paperless() -> Paperless:
     """Create and yield client."""
-    api = Paperless("localhost:8000", "secret-key")
 
     def endpoints_data():
         d = load_fixture_data("data.json")
         return d["endpoints"]
+
+    api = Paperless("local.test:1337", "secret-key")
 
     with patch.object(api, "request_json", return_value=endpoints_data()):
         await api.initialize()

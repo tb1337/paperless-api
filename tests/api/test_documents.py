@@ -2,11 +2,19 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from pypaperless import Paperless
 from pypaperless.api import DocumentsEndpoint
 from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
 from pypaperless.models import Document, DocumentNote
 from pypaperless.models.custom_fields import CustomFieldValue
+
+
+@pytest.fixture(scope="module")
+def dataset(data):
+    """Represent current data."""
+    return data["documents"]
 
 
 async def test_endpoint(paperless: Paperless) -> None:
@@ -15,9 +23,9 @@ async def test_endpoint(paperless: Paperless) -> None:
     assert isinstance(paperless.documents, BaseEndpointCrudMixin)
 
 
-async def test_list_and_get(paperless: Paperless, data):
+async def test_list_and_get(paperless: Paperless, dataset):
     """Test list."""
-    with patch.object(paperless, "request_json", return_value=data["documents"]):
+    with patch.object(paperless, "request_json", return_value=dataset):
         result = await paperless.documents.list()
 
         assert isinstance(result, list)
@@ -32,16 +40,16 @@ async def test_list_and_get(paperless: Paperless, data):
         assert isinstance(page.items.pop(), Document)
 
 
-async def test_iterate(paperless: Paperless, data):
+async def test_iterate(paperless: Paperless, dataset):
     """Test iterate."""
-    with patch.object(paperless, "request_json", return_value=data["documents"]):
+    with patch.object(paperless, "request_json", return_value=dataset):
         async for item in paperless.documents.iterate():
             assert isinstance(item, Document)
 
 
-async def test_one(paperless: Paperless, data):
+async def test_one(paperless: Paperless, dataset):
     """Test one."""
-    with patch.object(paperless, "request_json", return_value=data["documents"]["results"][0]):
+    with patch.object(paperless, "request_json", return_value=dataset["results"][0]):
         item = await paperless.documents.one(72)
 
         assert isinstance(item, Document)

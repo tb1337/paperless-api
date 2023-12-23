@@ -578,7 +578,8 @@
                 ]
             }
         ]
-    }, "groups": {
+    },
+    "groups": {
         "count": 1,
         "next": null,
         "previous": null,
@@ -628,7 +629,8 @@
                 ]
             }
         ]
-    },"users":{
+    },
+    "users": {
         "count": 4,
         "next": null,
         "previous": null,
@@ -903,7 +905,8 @@
                 ]
             }
         ]
-    },"mail_accounts":{
+    },
+    "mail_accounts": {
         "count": 1,
         "next": null,
         "previous": null,
@@ -925,7 +928,8 @@
                 "user_can_change": true
             }
         ]
-    },"mail_rules":{
+    },
+    "mail_rules": {
         "count": 1,
         "next": null,
         "previous": null,
@@ -960,7 +964,8 @@
                 "user_can_change": true
             }
         ]
-    },"saved_views":{
+    },
+    "saved_views": {
         "count": 5,
         "next": null,
         "previous": null,
@@ -1061,7 +1066,8 @@
                 "user_can_change": true
             }
         ]
-    },"storage_paths":{
+    },
+    "storage_paths": {
         "count": 3,
         "next": null,
         "previous": null,
@@ -1108,7 +1114,8 @@
                 "user_can_change": true
             }
         ]
-    },"tags":{
+    },
+    "tags": {
         "count": 11,
         "next": null,
         "previous": null,
@@ -1132,7 +1139,8 @@
                 "document_count": 20,
                 "owner": null,
                 "user_can_change": true
-            },{
+            },
+            {
                 "id": 10,
                 "slug": "inbox",
                 "name": "Inbox",
@@ -1147,7 +1155,8 @@
                 "user_can_change": true
             }
         ]
-    },"tasks":[
+    },
+    "tasks": [
         {
             "id": 2134,
             "task_id": "bd2de639-5ecd-4bc1-ab3d-106908ef00e1",
