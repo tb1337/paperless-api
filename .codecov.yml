@@ -1,13 +1,17 @@
 codecov:
   branch: master
   notify:
-    after_n_builds: 4
+    after_n_builds: 2
 
 coverage:
   range: "95..100"
 
   status:
     project: no
+
+comment:
+  layout: "diff, files"
+  require_changes: true
 
 flags:
   library:
