@@ -6,7 +6,8 @@ build-backend = "setuptools.build_meta"
 name = "pypaperless"
 # The version is set by GH action on release
 version = "0.0.0"
-license = {text = "MIT"}
+url = "https://github.com/tb1337/paperless-api"
+license = {text = "MIT License"}
 description = "Little api wrapper for the paperless(-ngx) dms."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -24,6 +25,11 @@ classifiers = [
 dependencies = [
     "aiohttp"
 ]
+
+[project.urls]
+"GitHub: Source" = "https://github.com/tb1337/paperless-api"
+"GitHub: Issues" = "https://github.com/tb1337/paperless-api/issues"
+"Coverage: codecov" = "https://codecov.io/gh/tb1337/paperless-api"
 
 [project.optional-dependencies]
 test = [
