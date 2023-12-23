@@ -125,3 +125,22 @@ async def test_notes_service(paperless: Paperless, document_dataset, notes_datas
     note = notes.pop()
     with patch.object(paperless, "request_json"):
         await paperless.documents.notes.delete(note)  # nothing will happen, no returns
+
+
+async def test_files_service(paperless: Paperless, document_dataset):
+    """Test files service."""
+    data = document_dataset["results"][1]  # document id 226
+    item = dataclass_from_dict(Document, data)
+
+    assert isinstance(item, Document)
+
+    example_file = bytes("This is a file.", "utf-8")
+
+    # test all
+    with patch.object(paperless, "request_file", return_value=example_file):
+        download = await paperless.documents.files.download(item)
+        preview = await paperless.documents.files.preview(item)
+        thumbnail = await paperless.documents.files.thumb(item)
+
+    # well...
+    assert download == preview == thumbnail
