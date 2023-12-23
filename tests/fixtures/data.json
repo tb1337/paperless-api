@@ -525,16 +525,23 @@
                 "user_can_change": true,
                 "notes": [
                     {
-                        "id": 4,
-                        "note": "This is a note",
-                        "created": "2023-12-11T09:40:53.968956Z",
+                        "id": 1,
+                        "note": "Sample note 1.",
+                        "created": "2023-12-21T18:08:11.481206Z",
                         "document": 226,
                         "user": 3
                     },
                     {
-                        "id": 5,
-                        "note": "Another one",
-                        "created": "2023-12-11T09:40:58.994318Z",
+                        "id": 2,
+                        "note": "Sample note 2.",
+                        "created": "2023-12-21T08:26:33.260968Z",
+                        "document": 226,
+                        "user": 3
+                    },
+                    {
+                        "id": 3,
+                        "note": "Sample note 3.",
+                        "created": "2023-12-21T08:26:31.782811Z",
                         "document": 226,
                         "user": 3
                     }
@@ -579,6 +586,41 @@
             }
         ]
     },
+    "document_notes": [
+        {
+            "id": 1,
+            "note": "Sample note 1.",
+            "created": "2023-12-21T18:08:11.481206Z",
+            "user": {
+                "id": 3,
+                "username": "test",
+                "first_name": "Peter",
+                "last_name":"Patch"
+            }
+        },
+        {
+            "id": 2,
+            "note": "Sample note 2.",
+            "created": "2023-12-21T08:26:33.260968Z",
+            "user": {
+                "id": 3,
+                "username": "test",
+                "first_name": "Peter",
+                "last_name":"Patch"
+            }
+        },
+        {
+            "id": 3,
+            "note": "Sample note 3.",
+            "created": "2023-12-21T08:26:31.782811Z",
+            "user": {
+                "id": 3,
+                "username": "test",
+                "first_name": "Peter",
+                "last_name":"Patch"
+            }
+        }
+    ],
     "groups": {
         "count": 1,
         "next": null,
