@@ -12,6 +12,8 @@ https://github.com/home-assistant-libs/aiohue/
 Thanks for the excellent work, guys!
 """
 
+# mypy: ignore-errors
+
 import logging
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
 from datetime import date, datetime

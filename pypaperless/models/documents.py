@@ -59,7 +59,7 @@ class DocumentNotePost(PaperlessPost):
 class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a document resource on the Paperless api."""
 
-    id: int | None = None
+    id: int
     correspondent: int | None = None
     document_type: int | None = None
     storage_path: int | None = None

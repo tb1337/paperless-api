@@ -21,7 +21,7 @@ class PaperlessModelMatchingMixin:
     matching_algorithm: MatchingAlgorithm | None = None
     is_insensitive: bool | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set default values when missing. Only on `POST`."""
         if not isinstance(self, PaperlessPost):
             return
