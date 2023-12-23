@@ -7,7 +7,11 @@ import pytest
 from pypaperless import Paperless
 from pypaperless.api import DocumentsEndpoint
 from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
-from pypaperless.api.documents import _get_document_id_helper
+from pypaperless.api.documents import (
+    DocumentFilesService,
+    DocumentNotesService,
+    _get_document_id_helper,
+)
 from pypaperless.models import Document, DocumentNote, DocumentNotePost
 from pypaperless.models.custom_fields import CustomFieldValue
 from pypaperless.util import dataclass_from_dict
@@ -96,6 +100,8 @@ async def test_notes_service(paperless: Paperless, document_dataset, notes_datas
     assert isinstance(item, Document)
     assert len(item.notes) > 0
 
+    assert isinstance(paperless.documents.notes, DocumentNotesService)
+
     # test notes.get
     with patch.object(paperless, "request_json", return_value=notes_dataset):
         # get by pk and by object
@@ -133,6 +139,8 @@ async def test_files_service(paperless: Paperless, document_dataset):
     item = dataclass_from_dict(Document, data)
 
     assert isinstance(item, Document)
+
+    assert isinstance(paperless.documents.files, DocumentFilesService)
 
     example_file = bytes("This is a file.", "utf-8")
 
