@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import TasksEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin
+from pypaperless.controllers import TasksController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, UpdateMixin
 from pypaperless.models import Task
 from pypaperless.models.shared import TaskStatus
 
@@ -19,18 +19,13 @@ def dataset(data):
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.tasks, TasksEndpoint)
-    assert not isinstance(paperless.tasks, BaseEndpointCrudMixin)
+    assert isinstance(paperless.tasks, TasksController)
+    assert not isinstance(paperless.tasks, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, dataset):
     """Test list."""
     with patch.object(paperless, "request_json", return_value=dataset):
-        result = await paperless.tasks.list()
-
-        assert isinstance(result, list)
-        assert len(result) == 0
-
         tasks = await paperless.tasks.get()
 
         assert isinstance(tasks[0], Task)

@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import SavedViewsEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
+from pypaperless.controllers import SavedViewsController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, ResultPage, UpdateMixin
 from pypaperless.models import SavedView, SavedViewFilterRule
 
 
@@ -18,8 +18,8 @@ def dataset(data):
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.saved_views, SavedViewsEndpoint)
-    assert not isinstance(paperless.saved_views, BaseEndpointCrudMixin)
+    assert isinstance(paperless.saved_views, SavedViewsController)
+    assert not isinstance(paperless.saved_views, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, dataset):
@@ -34,7 +34,7 @@ async def test_list_and_get(paperless: Paperless, dataset):
 
         page = await paperless.saved_views.get()
 
-        assert isinstance(page, PaginatedResult)
+        assert isinstance(page, ResultPage)
         assert len(page.items) > 0
         assert isinstance(page.items.pop(), SavedView)
 

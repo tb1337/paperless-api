@@ -7,21 +7,21 @@ from typing import Any
 
 import aiohttp
 
-from .api import (
-    ConsumptionTemplatesEndpoint,
-    CorrespondentsEndpoint,
-    CustomFieldEndpoint,
-    DocumentsEndpoint,
-    DocumentTypesEndpoint,
-    GroupsEndpoint,
-    MailAccountsEndpoint,
-    MailRulesEndpoint,
-    SavedViewsEndpoint,
-    ShareLinkEndpoint,
-    StoragePathsEndpoint,
-    TagsEndpoint,
-    TasksEndpoint,
-    UsersEndpoint,
+from .controllers import (
+    ConsumptionTemplatesController,
+    CorrespondentsController,
+    CustomFieldsController,
+    DocumentsController,
+    DocumentTypesController,
+    GroupsController,
+    MailAccountsController,
+    MailRulesController,
+    SavedViewsController,
+    ShareLinksController,
+    StoragePathsController,
+    TagsController,
+    TasksController,
+    UsersController,
 )
 from .errors import BadRequestException, DataNotExpectedException
 from .models.shared import ResourceType
@@ -53,20 +53,20 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self.logger = logging.getLogger(f"{__package__}[{host}]")
 
         # endpoints
-        self._consumption_templates: ConsumptionTemplatesEndpoint | None = None
-        self._correspondents: CorrespondentsEndpoint | None = None
-        self._custom_fields: CustomFieldEndpoint | None = None
-        self._documents: DocumentsEndpoint | None = None
-        self._document_types: DocumentTypesEndpoint | None = None
-        self._groups: GroupsEndpoint | None = None
-        self._mail_accounts: MailAccountsEndpoint | None = None
-        self._mail_rules: MailRulesEndpoint | None = None
-        self._saved_views: SavedViewsEndpoint | None = None
-        self._share_links: ShareLinkEndpoint | None = None
-        self._storage_paths: StoragePathsEndpoint | None = None
-        self._tags: TagsEndpoint | None = None
-        self._tasks: TasksEndpoint | None = None
-        self._users: UsersEndpoint | None = None
+        self._consumption_templates: ConsumptionTemplatesController | None = None
+        self._correspondents: CorrespondentsController | None = None
+        self._custom_fields: CustomFieldsController | None = None
+        self._documents: DocumentsController | None = None
+        self._document_types: DocumentTypesController | None = None
+        self._groups: GroupsController | None = None
+        self._mail_accounts: MailAccountsController | None = None
+        self._mail_rules: MailRulesController | None = None
+        self._saved_views: SavedViewsController | None = None
+        self._share_links: ShareLinksController | None = None
+        self._storage_paths: StoragePathsController | None = None
+        self._tags: TagsController | None = None
+        self._tasks: TasksController | None = None
+        self._users: UsersController | None = None
 
     @property
     def host(self) -> str | None:
@@ -74,72 +74,77 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         return self._host
 
     @property
-    def consumption_templates(self) -> ConsumptionTemplatesEndpoint | None:
+    def is_initialized(self) -> bool:
+        """Return if connection is initialized."""
+        return self._initialized
+
+    @property
+    def consumption_templates(self) -> ConsumptionTemplatesController | None:
         """Gateway to consumption templates."""
         return self._consumption_templates
 
     @property
-    def correspondents(self) -> CorrespondentsEndpoint | None:
+    def correspondents(self) -> CorrespondentsController | None:
         """Gateway to correspondents."""
         return self._correspondents
 
     @property
-    def custom_fields(self) -> CustomFieldEndpoint | None:
+    def custom_fields(self) -> CustomFieldsController | None:
         """Gateway to custom fields."""
         return self._custom_fields
 
     @property
-    def documents(self) -> DocumentsEndpoint | None:
+    def documents(self) -> DocumentsController | None:
         """Gateway to document types."""
         return self._documents
 
     @property
-    def document_types(self) -> DocumentTypesEndpoint | None:
+    def document_types(self) -> DocumentTypesController | None:
         """Gateway to document types."""
         return self._document_types
 
     @property
-    def groups(self) -> GroupsEndpoint | None:
+    def groups(self) -> GroupsController | None:
         """Gateway to groups."""
         return self._groups
 
     @property
-    def mail_accounts(self) -> MailAccountsEndpoint | None:
+    def mail_accounts(self) -> MailAccountsController | None:
         """Gateway to mail accounts."""
         return self._mail_accounts
 
     @property
-    def mail_rules(self) -> MailRulesEndpoint | None:
+    def mail_rules(self) -> MailRulesController | None:
         """Gateway to mail rules."""
         return self._mail_rules
 
     @property
-    def saved_views(self) -> SavedViewsEndpoint | None:
+    def saved_views(self) -> SavedViewsController | None:
         """Gateway to saved views."""
         return self._saved_views
 
     @property
-    def share_links(self) -> ShareLinkEndpoint | None:
+    def share_links(self) -> ShareLinksController | None:
         """Gateway to share links."""
         return self._share_links
 
     @property
-    def storage_paths(self) -> StoragePathsEndpoint | None:
+    def storage_paths(self) -> StoragePathsController | None:
         """Gateway to storage paths."""
         return self._storage_paths
 
     @property
-    def tags(self) -> TagsEndpoint | None:
+    def tags(self) -> TagsController | None:
         """Gateway to tags."""
         return self._tags
 
     @property
-    def tasks(self) -> TasksEndpoint | None:
+    def tasks(self) -> TasksController | None:
         """Gateway to tasks."""
         return self._tasks
 
     @property
-    def users(self) -> UsersEndpoint | None:
+    def users(self) -> UsersController | None:
         """Gateway to users."""
         return self._users
 
@@ -149,22 +154,22 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
         res = await self.request_json("get", "")
 
-        self._consumption_templates = ConsumptionTemplatesEndpoint(
+        self._consumption_templates = ConsumptionTemplatesController(
             self, res.pop(ResourceType.CONSUMPTION_TEMPLATES)
         )
-        self._correspondents = CorrespondentsEndpoint(self, res.pop(ResourceType.CORRESPONDENTS))
-        self._custom_fields = CustomFieldEndpoint(self, res.pop(ResourceType.CUSTOM_FIELDS))
-        self._documents = DocumentsEndpoint(self, res.pop(ResourceType.DOCUMENTS))
-        self._document_types = DocumentTypesEndpoint(self, res.pop(ResourceType.DOCUMENT_TYPES))
-        self._groups = GroupsEndpoint(self, res.pop(ResourceType.GROUPS))
-        self._mail_accounts = MailAccountsEndpoint(self, res.pop(ResourceType.MAIL_ACCOUNTS))
-        self._mail_rules = MailRulesEndpoint(self, res.pop(ResourceType.MAIL_RULES))
-        self._saved_views = SavedViewsEndpoint(self, res.pop(ResourceType.SAVED_VIEWS))
-        self._share_links = ShareLinkEndpoint(self, res.pop(ResourceType.SHARE_LINKS))
-        self._storage_paths = StoragePathsEndpoint(self, res.pop(ResourceType.STORAGE_PATHS))
-        self._tags = TagsEndpoint(self, res.pop(ResourceType.TAGS))
-        self._tasks = TasksEndpoint(self, res.pop(ResourceType.TASKS))
-        self._users = UsersEndpoint(self, res.pop(ResourceType.USERS))
+        self._correspondents = CorrespondentsController(self, res.pop(ResourceType.CORRESPONDENTS))
+        self._custom_fields = CustomFieldsController(self, res.pop(ResourceType.CUSTOM_FIELDS))
+        self._documents = DocumentsController(self, res.pop(ResourceType.DOCUMENTS))
+        self._document_types = DocumentTypesController(self, res.pop(ResourceType.DOCUMENT_TYPES))
+        self._groups = GroupsController(self, res.pop(ResourceType.GROUPS))
+        self._mail_accounts = MailAccountsController(self, res.pop(ResourceType.MAIL_ACCOUNTS))
+        self._mail_rules = MailRulesController(self, res.pop(ResourceType.MAIL_RULES))
+        self._saved_views = SavedViewsController(self, res.pop(ResourceType.SAVED_VIEWS))
+        self._share_links = ShareLinksController(self, res.pop(ResourceType.SHARE_LINKS))
+        self._storage_paths = StoragePathsController(self, res.pop(ResourceType.STORAGE_PATHS))
+        self._tags = TagsController(self, res.pop(ResourceType.TAGS))
+        self._tasks = TasksController(self, res.pop(ResourceType.TASKS))
+        self._users = UsersController(self, res.pop(ResourceType.USERS))
 
         self._initialized = True
 
@@ -182,22 +187,20 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     async def generate_request(
         self,
         method: str,
-        endpoint: str,
+        path: str,
         **kwargs: Any,
     ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
         """Create a client response object for further use."""
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
 
-        url = endpoint if endpoint.startswith("http") else f"http://{self.host}/api/{endpoint}"
+        url = path if path.startswith("http") else f"http://{self.host}/api/{path}"
         url = url.rstrip("/") + "/"  # check and add trailing slash
 
         if isinstance(self._request_opts, dict):
             kwargs.update(self._request_opts)
 
-        if "headers" not in kwargs:
-            kwargs["headers"] = {}
-
+        kwargs.setdefault("headers", {})
         kwargs["headers"].update(
             {
                 "accept": "application/json; version=2",

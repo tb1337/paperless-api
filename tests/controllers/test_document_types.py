@@ -1,56 +1,56 @@
-"""Test storage_paths."""
+"""Test document_types."""
 
 from unittest.mock import patch
 
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import StoragePathsEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
-from pypaperless.models import StoragePath
+from pypaperless.controllers import DocumentTypesController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, ResultPage, UpdateMixin
+from pypaperless.models import DocumentType
 from pypaperless.models.shared import MatchingAlgorithm
 
 
 @pytest.fixture(scope="module")
 def dataset(data):
     """Represent current data."""
-    return data["storage_paths"]
+    return data["document_types"]
 
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.storage_paths, StoragePathsEndpoint)
-    assert isinstance(paperless.storage_paths, BaseEndpointCrudMixin)
+    assert isinstance(paperless.document_types, DocumentTypesController)
+    assert isinstance(paperless.document_types, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, dataset):
     """Test list."""
     with patch.object(paperless, "request_json", return_value=dataset):
-        result = await paperless.storage_paths.list()
+        result = await paperless.document_types.list()
 
         assert isinstance(result, list)
         assert len(result) > 0
         for item in result:
             assert isinstance(item, int)
 
-        page = await paperless.storage_paths.get()
+        page = await paperless.document_types.get()
 
-        assert isinstance(page, PaginatedResult)
+        assert isinstance(page, ResultPage)
         assert len(page.items) > 0
-        assert isinstance(page.items.pop(), StoragePath)
+        assert isinstance(page.items.pop(), DocumentType)
 
 
 async def test_iterate(paperless: Paperless, dataset):
     """Test iterate."""
     with patch.object(paperless, "request_json", return_value=dataset):
-        async for item in paperless.storage_paths.iterate():
-            assert isinstance(item, StoragePath)
+        async for item in paperless.document_types.iterate():
+            assert isinstance(item, DocumentType)
 
 
 async def test_one(paperless: Paperless, dataset):
     """Test one."""
     with patch.object(paperless, "request_json", return_value=dataset["results"][0]):
-        item = await paperless.storage_paths.one(72)
+        item = await paperless.document_types.one(72)
 
-        assert isinstance(item, StoragePath)
+        assert isinstance(item, DocumentType)
         assert isinstance(item.matching_algorithm, MatchingAlgorithm)

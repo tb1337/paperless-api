@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
+from unittest.mock import patch
 
 from pypaperless import Paperless
 from pypaperless.util import dataclass_from_dict, dataclass_to_dict, update_dataclass
@@ -95,6 +96,7 @@ async def test_dataclass_conversion():
 
     assert res.status == _Status.ACTIVE
     update_dataclass(res, {"status": 100})
+    assert isinstance(res.status, _Status)
     assert res.status == _Status.UNKNOWN
 
     # back conversion
@@ -103,10 +105,26 @@ async def test_dataclass_conversion():
     assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
 
 
-async def test_paperless(paperless: Paperless):
+async def test_paperless(paperless: Paperless, data):
     """Test Paperless object."""
     assert paperless.host == "local.test:1337"
+    assert paperless.is_initialized
 
     # okay, lets make a real request
     async with paperless.generate_request("get", "https://www.google.com", ssl=True) as req:
         assert req.status == 200
+
+    # fetch an example json
+    json = await paperless.request_json("get", "https://cat-fact.herokuapp.com/facts/", ssl=False)
+    assert len(json) > 0
+
+    # fetch an example content
+    content = await paperless.request_file("get", "https://www.google.com", ssl=True)
+    assert len(content) > 0
+
+    # test another paperless in context and with request opts
+    paperless2 = Paperless("local.test:1337", "another-secret-key", request_opts={"ssl": False})
+
+    with patch.object(paperless2, "request_json", return_value=data["endpoints"]):
+        async with paperless2:
+            assert paperless2.is_initialized

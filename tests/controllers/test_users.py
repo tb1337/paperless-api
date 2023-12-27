@@ -1,56 +1,54 @@
-"""Test custom_fields."""
+"""Test users."""
 
 from unittest.mock import patch
 
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import CustomFieldEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
-from pypaperless.models import CustomField
-from pypaperless.models.shared import CustomFieldType
+from pypaperless.controllers import UsersController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, ResultPage, UpdateMixin
+from pypaperless.models import User
 
 
 @pytest.fixture(scope="module")
 def dataset(data):
     """Represent current data."""
-    return data["custom_fields"]
+    return data["users"]
 
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.custom_fields, CustomFieldEndpoint)
-    assert isinstance(paperless.custom_fields, BaseEndpointCrudMixin)
+    assert isinstance(paperless.users, UsersController)
+    assert not isinstance(paperless.users, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, dataset):
     """Test list."""
     with patch.object(paperless, "request_json", return_value=dataset):
-        result = await paperless.custom_fields.list()
+        result = await paperless.users.list()
 
         assert isinstance(result, list)
         assert len(result) > 0
         for item in result:
             assert isinstance(item, int)
 
-        page = await paperless.custom_fields.get()
+        page = await paperless.users.get()
 
-        assert isinstance(page, PaginatedResult)
+        assert isinstance(page, ResultPage)
         assert len(page.items) > 0
-        assert isinstance(page.items.pop(), CustomField)
+        assert isinstance(page.items.pop(), User)
 
 
 async def test_iterate(paperless: Paperless, dataset):
     """Test iterate."""
     with patch.object(paperless, "request_json", return_value=dataset):
-        async for item in paperless.custom_fields.iterate():
-            assert isinstance(item, CustomField)
+        async for item in paperless.users.iterate():
+            assert isinstance(item, User)
 
 
 async def test_one(paperless: Paperless, dataset):
     """Test one."""
     with patch.object(paperless, "request_json", return_value=dataset["results"][0]):
-        item = await paperless.custom_fields.one(72)
+        item = await paperless.users.one(72)
 
-        assert isinstance(item, CustomField)
-        assert isinstance(item.data_type, CustomFieldType)
+        assert isinstance(item, User)

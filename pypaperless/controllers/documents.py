@@ -1,8 +1,8 @@
-"""Customized endpoint for Paperless documents."""
+"""Controller for Paperless documents resource."""
 
 from typing import TYPE_CHECKING
 
-from aiohttp import FormData
+import aiohttp
 
 from pypaperless.models import (
     Document,
@@ -11,18 +11,25 @@ from pypaperless.models import (
     DocumentNotePost,
     DocumentPost,
 )
-from pypaperless.models.shared import ResourceType
 from pypaperless.util import dataclass_from_dict, dataclass_to_dict
 
-from .base import BaseEndpoint, BaseEndpointCrudMixin, BaseService
+from .base import (
+    BaseController,
+    BaseService,
+    DeleteMixin,
+    ListMixin,
+    OneMixin,
+    PaginationMixin,
+    UpdateMixin,
+)
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
-DocumentOrIdType = Document | int
+_DocumentOrIdType = Document | int
 
 
-def _get_document_id_helper(item: DocumentOrIdType) -> int:
+def _get_document_id_helper(item: _DocumentOrIdType) -> int:
     """Return a document id from object or int."""
     if isinstance(item, Document):
         return item.id
@@ -32,10 +39,10 @@ def _get_document_id_helper(item: DocumentOrIdType) -> int:
 class DocumentNotesService(BaseService):
     """Handle http requests for document notes sub-endpoint."""
 
-    async def get(self, obj: DocumentOrIdType) -> list[DocumentNote]:
+    async def get(self, obj: _DocumentOrIdType) -> list[DocumentNote]:
         """Request document notes of given document."""
         idx = _get_document_id_helper(obj)
-        url = f"{self.endpoint}/{idx}/notes"
+        url = f"{self.path}/{idx}/notes"
         res = await self._paperless.request_json("get", url)
 
         # We have to transform data here slightly.
@@ -52,13 +59,13 @@ class DocumentNotesService(BaseService):
         ]
 
     async def create(self, obj: DocumentNotePost) -> None:
-        """Create a new document note. Raises on failure."""
-        url = f"{self.endpoint}/{obj.document}/notes"
+        """Create a new document note. Raise on failure."""
+        url = f"{self.path}/{obj.document}/notes"
         await self._paperless.request_json("post", url, json=dataclass_to_dict(obj))
 
     async def delete(self, obj: DocumentNote) -> None:
-        """Delete an existing document note. Raises on failure."""
-        url = f"{self.endpoint}/{obj.document}/notes"
+        """Delete an existing document note. Raise on failure."""
+        url = f"{self.path}/{obj.document}/notes"
         params = {
             "id": obj.id,
         }
@@ -74,41 +81,45 @@ class DocumentFilesService(BaseService):
         idx: int,
     ) -> bytes:
         """Request a child endpoint."""
-        url = f"{self.endpoint}/{idx}/{path}"
+        url = f"{self.path}/{idx}/{path}"
         return await self._paperless.request_file("get", url)
 
-    async def download(self, obj: DocumentOrIdType) -> bytes:
+    async def download(self, obj: _DocumentOrIdType) -> bytes:
         """Request document endpoint for downloading the actual file."""
         return await self._get_data("download", _get_document_id_helper(obj))
 
-    async def preview(self, obj: DocumentOrIdType) -> bytes:
+    async def preview(self, obj: _DocumentOrIdType) -> bytes:
         """Request document endpoint for previewing the actual file."""
         return await self._get_data("preview", _get_document_id_helper(obj))
 
-    async def thumb(self, obj: DocumentOrIdType) -> bytes:
+    async def thumb(self, obj: _DocumentOrIdType) -> bytes:
         """Request document endpoint for the thumbnail file."""
         return await self._get_data("thumb", _get_document_id_helper(obj))
 
 
-class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
-    """Represent Paperless document resource endpoint."""
+class DocumentsController(  # pylint: disable=too-many-ancestors
+    BaseController[Document],
+    PaginationMixin[Document],
+    ListMixin[Document],
+    OneMixin[Document],
+    UpdateMixin[Document],
+    DeleteMixin[Document],
+):
+    """Represent Paperless documents resource."""
 
-    endpoint_cls = Document
-    endpoint_type = ResourceType.DOCUMENTS
+    _resource = Document
+    _page_size = 100
 
-    request_page_size = 100
-
-    def __init__(self, paperless: "Paperless", endpoint: ResourceType) -> None:
-        """Initialize sub endpoint services."""
-        super().__init__(paperless, endpoint)
+    def __init__(self, paperless: "Paperless", path: str) -> None:
+        """Override initialize controller. Also initialize service controllers."""
+        super().__init__(paperless, path)
 
         self.notes = DocumentNotesService(self)
         self.files = DocumentFilesService(self)
 
-    async def create(self, obj: DocumentPost) -> str:  # type: ignore[override]
+    async def create(self, obj: DocumentPost) -> str:
         """Create a new document. Raise on failure."""
-        form = FormData()
-
+        form = aiohttp.FormData()
         form.add_field("document", obj.document)
 
         for field in (
@@ -121,20 +132,20 @@ class DocumentsEndpoint(BaseEndpoint[type[Document]], BaseEndpointCrudMixin):
             if getattr(obj, field):
                 form.add_field(field, getattr(obj, field))
 
-        if obj.tags and isinstance(obj.tags, list):
+        if isinstance(obj.tags, list):
             for tag in obj.tags:
                 form.add_field("tags", f"{tag}")
 
-        url = f"{self.endpoint}/post_document/"
+        url = f"{self.path}/post_document/"
 
         # result is a string in this case
         res = str(await self._paperless.request_json("post", url, data=form))
         return res
 
-    async def meta(self, obj: DocumentOrIdType) -> DocumentMetaInformation:
+    async def meta(self, obj: _DocumentOrIdType) -> DocumentMetaInformation:
         """Request document metadata of given document."""
         idx = _get_document_id_helper(obj)
-        url = f"{self.endpoint}/{idx}/metadata"
+        url = f"{self.path}/{idx}/metadata"
         res = await self._paperless.request_json("get", url)
         data: DocumentMetaInformation = dataclass_from_dict(DocumentMetaInformation, res)
         return data

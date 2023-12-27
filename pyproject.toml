@@ -13,6 +13,9 @@ requires-python = ">=3.11"
 authors = [
     {name = "Tobias Schulz", email = "public.dev@tbsch.de"}
 ]
+keywords = [
+    "library", "async", "api-client", "python3", "paperless-ngx"
+]
 classifiers = [
     "Environment :: Console",
     "Framework :: AsyncIO",

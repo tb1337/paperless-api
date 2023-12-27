@@ -5,8 +5,8 @@ from unittest.mock import patch
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import ConsumptionTemplatesEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
+from pypaperless.controllers import ConsumptionTemplatesController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, ResultPage, UpdateMixin
 from pypaperless.models import ConsumptionTemplate
 from pypaperless.models.shared import ConsumptionTemplateSource
 
@@ -19,8 +19,8 @@ def dataset(data):
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.consumption_templates, ConsumptionTemplatesEndpoint)
-    assert not isinstance(paperless.consumption_templates, BaseEndpointCrudMixin)
+    assert isinstance(paperless.consumption_templates, ConsumptionTemplatesController)
+    assert not isinstance(paperless.consumption_templates, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, dataset):
@@ -35,7 +35,7 @@ async def test_list_and_get(paperless: Paperless, dataset):
 
         page = await paperless.consumption_templates.get()
 
-        assert isinstance(page, PaginatedResult)
+        assert isinstance(page, ResultPage)
         assert len(page.items) > 0
         assert isinstance(page.items.pop(), ConsumptionTemplate)
 

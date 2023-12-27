@@ -5,9 +5,9 @@ from unittest.mock import patch
 import pytest
 
 from pypaperless import Paperless
-from pypaperless.api import DocumentsEndpoint
-from pypaperless.api.base import BaseEndpointCrudMixin, PaginatedResult
-from pypaperless.api.documents import (
+from pypaperless.controllers import DocumentsController
+from pypaperless.controllers.base import CreateMixin, DeleteMixin, ResultPage, UpdateMixin
+from pypaperless.controllers.documents import (
     DocumentFilesService,
     DocumentNotesService,
     _get_document_id_helper,
@@ -43,8 +43,8 @@ def meta_dataset(data):
 
 async def test_endpoint(paperless: Paperless) -> None:
     """Test endpoint."""
-    assert isinstance(paperless.documents, DocumentsEndpoint)
-    assert isinstance(paperless.documents, BaseEndpointCrudMixin)
+    assert isinstance(paperless.documents, DocumentsController)
+    assert isinstance(paperless.documents, CreateMixin | UpdateMixin | DeleteMixin)
 
 
 async def test_list_and_get(paperless: Paperless, document_dataset):
@@ -59,7 +59,7 @@ async def test_list_and_get(paperless: Paperless, document_dataset):
 
         page = await paperless.documents.get()
 
-        assert isinstance(page, PaginatedResult)
+        assert isinstance(page, ResultPage)
         assert len(page.items) > 0
         assert isinstance(page.items.pop(), Document)
 
