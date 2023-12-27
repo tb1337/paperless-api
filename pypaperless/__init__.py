@@ -74,6 +74,11 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         return self._host
 
     @property
+    def is_initialized(self) -> bool:
+        """Return if connection is initialized."""
+        return self._initialized
+
+    @property
     def consumption_templates(self) -> ConsumptionTemplatesController | None:
         """Gateway to consumption templates."""
         return self._consumption_templates
