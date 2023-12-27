@@ -16,135 +16,161 @@ from pypaperless.models import (
 )
 
 from .base import (
-    ControllerCreateFeature,
-    ControllerDeleteFeature,
-    ControllerListFeature,
-    ControllerOneFeature,
-    ControllerUpdateFeature,
+    BaseController,
+    CreateMixin,
+    DeleteMixin,
+    ListMixin,
+    OneMixin,
+    PaginationMixin,
+    UpdateMixin,
 )
 
 
 class ConsumptionTemplatesController(
-    ControllerListFeature[type[ConsumptionTemplate]],
-    ControllerOneFeature[type[ConsumptionTemplate]],
+    BaseController[ConsumptionTemplate],
+    PaginationMixin[ConsumptionTemplate],
+    ListMixin[ConsumptionTemplate],
+    OneMixin[ConsumptionTemplate],
 ):
     """Represent Paperless consumption templates resource."""
 
-    resource: type[ConsumptionTemplate]
+    _resource = ConsumptionTemplate
 
 
-class CorrespondentsController(
-    ControllerListFeature[type[Correspondent]],
-    ControllerOneFeature[type[Correspondent]],
-    ControllerCreateFeature[type[Correspondent]],
-    ControllerUpdateFeature[type[Correspondent]],
-    ControllerDeleteFeature[type[Correspondent]],
+class CorrespondentsController(  # pylint: disable=too-many-ancestors
+    BaseController[Correspondent],
+    PaginationMixin[Correspondent],
+    ListMixin[Correspondent],
+    OneMixin[Correspondent],
+    CreateMixin[Correspondent],
+    UpdateMixin[Correspondent],
+    DeleteMixin[Correspondent],
 ):
     """Represent Paperless correspondents resource."""
 
-    resource: type[Correspondent]
+    _resource = Correspondent
 
 
-class CustomFieldsController(
-    ControllerListFeature[type[CustomField]],
-    ControllerOneFeature[type[CustomField]],
-    ControllerCreateFeature[type[CustomField]],
-    ControllerUpdateFeature[type[CustomField]],
-    ControllerDeleteFeature[type[CustomField]],
+class CustomFieldsController(  # pylint: disable=too-many-ancestors
+    BaseController[CustomField],
+    PaginationMixin[CustomField],
+    ListMixin[CustomField],
+    OneMixin[CustomField],
+    CreateMixin[CustomField],
+    UpdateMixin[CustomField],
+    DeleteMixin[CustomField],
 ):
     """Represent Paperless custom fields resource."""
 
-    resource: type[CustomField]
+    _resource = CustomField
 
 
-class DocumentTypesController(
-    ControllerListFeature[type[DocumentType]],
-    ControllerOneFeature[type[DocumentType]],
-    ControllerCreateFeature[type[DocumentType]],
-    ControllerUpdateFeature[type[DocumentType]],
-    ControllerDeleteFeature[type[DocumentType]],
+class DocumentTypesController(  # pylint: disable=too-many-ancestors
+    BaseController[DocumentType],
+    PaginationMixin[DocumentType],
+    ListMixin[DocumentType],
+    OneMixin[DocumentType],
+    CreateMixin[DocumentType],
+    UpdateMixin[DocumentType],
+    DeleteMixin[DocumentType],
 ):
     """Represent Paperless document types resource."""
 
-    resource: type[DocumentType]
+    _resource = DocumentType
 
 
 class GroupsController(
-    ControllerListFeature[type[Group]],
-    ControllerOneFeature[type[Group]],
+    BaseController[Group],
+    PaginationMixin[Group],
+    ListMixin[Group],
+    OneMixin[Group],
 ):
     """Represent Paperless groups resource."""
 
-    resource: type[Group]
+    _resource = Group
 
 
 class MailAccountsController(
-    ControllerListFeature[type[MailAccount]],
-    ControllerOneFeature[type[MailAccount]],
+    BaseController[MailAccount],
+    PaginationMixin[MailAccount],
+    ListMixin[MailAccount],
+    OneMixin[MailAccount],
 ):
     """Represent Paperless mail accounts resource."""
 
-    resource: type[MailAccount]
+    _resource = MailAccount
 
 
 class MailRulesController(
-    ControllerListFeature[type[MailRule]],
-    ControllerOneFeature[type[MailRule]],
+    BaseController[MailRule],
+    PaginationMixin[MailRule],
+    ListMixin[MailRule],
+    OneMixin[MailRule],
 ):
     """Represent Paperless mail rules resource."""
 
-    resource: type[MailRule]
+    _resource = MailRule
 
 
 class SavedViewsController(
-    ControllerListFeature[type[SavedView]],
-    ControllerOneFeature[type[SavedView]],
+    BaseController[SavedView],
+    PaginationMixin[SavedView],
+    ListMixin[SavedView],
+    OneMixin[SavedView],
 ):
     """Represent Paperless mail rules resource."""
 
-    resource: type[SavedView]
+    _resource = SavedView
 
 
-class ShareLinksController(
-    ControllerListFeature[type[ShareLink]],
-    ControllerOneFeature[type[ShareLink]],
-    ControllerCreateFeature[type[ShareLink]],
-    ControllerUpdateFeature[type[ShareLink]],
-    ControllerDeleteFeature[type[ShareLink]],
+class ShareLinksController(  # pylint: disable=too-many-ancestors
+    BaseController[ShareLink],
+    PaginationMixin[ShareLink],
+    ListMixin[ShareLink],
+    OneMixin[ShareLink],
+    CreateMixin[ShareLink],
+    UpdateMixin[ShareLink],
+    DeleteMixin[ShareLink],
 ):
     """Represent Paperless share links resource."""
 
-    resource: type[ShareLink]
+    _resource = ShareLink
 
 
-class StoragePathsController(
-    ControllerListFeature[type[StoragePath]],
-    ControllerOneFeature[type[StoragePath]],
-    ControllerCreateFeature[type[StoragePath]],
-    ControllerUpdateFeature[type[StoragePath]],
-    ControllerDeleteFeature[type[StoragePath]],
+class StoragePathsController(  # pylint: disable=too-many-ancestors
+    BaseController[StoragePath],
+    PaginationMixin[StoragePath],
+    ListMixin[StoragePath],
+    OneMixin[StoragePath],
+    CreateMixin[StoragePath],
+    UpdateMixin[StoragePath],
+    DeleteMixin[StoragePath],
 ):
     """Represent Paperless storage paths resource."""
 
-    resource: type[StoragePath]
+    _resource = StoragePath
 
 
-class TagsController(
-    ControllerListFeature[type[Tag]],
-    ControllerOneFeature[type[Tag]],
-    ControllerCreateFeature[type[Tag]],
-    ControllerUpdateFeature[type[Tag]],
-    ControllerDeleteFeature[type[Tag]],
+class TagsController(  # pylint: disable=too-many-ancestors
+    BaseController[Tag],
+    PaginationMixin[Tag],
+    ListMixin[Tag],
+    OneMixin[Tag],
+    CreateMixin[Tag],
+    UpdateMixin[Tag],
+    DeleteMixin[Tag],
 ):
     """Represent Paperless tags resource."""
 
-    resource: type[Tag]
+    _resource = Tag
 
 
 class UsersController(
-    ControllerListFeature[type[User]],
-    ControllerOneFeature[type[User]],
+    BaseController[User],
+    PaginationMixin[User],
+    ListMixin[User],
+    OneMixin[User],
 ):
     """Represent Paperless users resource."""
 
-    resource: type[User]
+    _resource = User
