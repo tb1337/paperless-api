@@ -107,7 +107,9 @@ async def test_dataclass_conversion():
 
 async def test_paperless(paperless: Paperless, data):
     """Test Paperless object."""
-    assert paperless.host == "local.test:1337"
+    assert paperless.url.host == "local.test"
+    assert paperless.url.port == 1337
+    assert paperless.url.name == "api"
     assert paperless.is_initialized
 
     # okay, lets make a real request

@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import aiohttp
+from yarl import URL
 
 from .controllers import (
     ConsumptionTemplatesController,
@@ -32,7 +33,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
-        host: str,
+        url: str | URL,
         token: str,
         request_opts: dict[str, Any] | None = None,
         session: aiohttp.ClientSession | None = None,
@@ -41,16 +42,29 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         Initialize the Paperless api instance.
 
         Parameters:
-        * host: the hostname or IP-address of Paperless as string.
+        * host: the hostname or IP-address of Paperless as string, or yarl.URL object.
         * token: provide an api token created in Paperless Django settings.
         * session: provide an existing aiohttp ClientSession.
         """
-        self._host = host
+        # reverse compatibility, fall back to https
+        if isinstance(url, str) and not url.startswith("http"):
+            url = f"https://{url}"
+        url = URL(url)
+
+        # scheme check. fall back to https
+        if url.scheme not in ("https", "http"):
+            url = URL(url).with_scheme("https")
+
+        # check if /api is included
+        if url.name != "api":
+            url = URL(url).with_name("api")
+
+        self._url = url
         self._token = token
         self._request_opts = request_opts
         self._session = session
         self._initialized = False
-        self.logger = logging.getLogger(f"{__package__}[{host}]")
+        self.logger = logging.getLogger(f"{__package__}[{self._url.host}]")
 
         # endpoints
         self._consumption_templates: ConsumptionTemplatesController | None = None
@@ -69,9 +83,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._users: UsersController | None = None
 
     @property
-    def host(self) -> str | None:
-        """Return the hostname of Paperless."""
-        return self._host
+    def url(self) -> URL:
+        """Return the url of Paperless."""
+        return self._url
 
     @property
     def is_initialized(self) -> bool:
@@ -152,7 +166,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
-        res = await self.request_json("get", "")
+        res = await self.request_json("get", f"{self._url}")
 
         self._consumption_templates = ConsumptionTemplatesController(
             self, res.pop(ResourceType.CONSUMPTION_TEMPLATES)
@@ -194,8 +208,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
 
-        url = path if path.startswith("http") else f"http://{self.host}/api/{path}"
-        url = url.rstrip("/") + "/"  # check and add trailing slash
+        path = path.rstrip("/") + "/"  # check and add trailing slash
 
         if isinstance(self._request_opts, dict):
             kwargs.update(self._request_opts)
@@ -208,7 +221,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
             }
         )
 
-        async with self._session.request(method, url, **kwargs) as res:
+        async with self._session.request(method, path, **kwargs) as res:
             yield res
 
     async def request_json(
