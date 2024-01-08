@@ -26,6 +26,7 @@ from .controllers import (
 )
 from .errors import BadRequestException, DataNotExpectedException
 from .models.shared import ResourceType
+from .util import create_url_from_input
 
 
 class Paperless:  # pylint: disable=too-many-instance-attributes
@@ -46,20 +47,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         * token: provide an api token created in Paperless Django settings.
         * session: provide an existing aiohttp ClientSession.
         """
-        # reverse compatibility, fall back to https
-        if isinstance(url, str) and not url.startswith("http"):
-            url = f"https://{url}"
-        url = URL(url)
-
-        # scheme check. fall back to https
-        if url.scheme not in ("https", "http"):
-            url = URL(url).with_scheme("https")
-
-        # check if /api is included
-        if url.name != "api":
-            url = URL(url).with_name("api")
-
-        self._url = url
+        self._url = create_url_from_input(url)
         self._token = token
         self._request_opts = request_opts
         self._session = session

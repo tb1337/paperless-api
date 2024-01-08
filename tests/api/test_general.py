@@ -6,7 +6,12 @@ from enum import Enum
 from unittest.mock import patch
 
 from pypaperless import Paperless
-from pypaperless.util import dataclass_from_dict, dataclass_to_dict, update_dataclass
+from pypaperless.util import (
+    create_url_from_input,
+    dataclass_from_dict,
+    dataclass_to_dict,
+    update_dataclass,
+)
 
 
 async def test_dataclass_conversion():
@@ -109,7 +114,6 @@ async def test_paperless(paperless: Paperless, data):
     """Test Paperless object."""
     assert paperless.url.host == "local.test"
     assert paperless.url.port == 1337
-    assert paperless.url.name == "api"
     assert paperless.is_initialized
 
     # okay, lets make a real request
@@ -130,3 +134,25 @@ async def test_paperless(paperless: Paperless, data):
     with patch.object(paperless2, "request_json", return_value=data["endpoints"]):
         async with paperless2:
             assert paperless2.is_initialized
+
+
+async def test_url_creation():
+    """Test url creation."""
+    # test default ssl
+    url = create_url_from_input("hostname")
+    assert url.host == "hostname"
+    assert url.port == 443
+
+    # test if api-path is added
+    assert url.name == "api"
+
+    # test full url string
+    assert f"{url}" == "https://hostname/api"
+
+    # test enforce http
+    url = create_url_from_input("http://hostname")
+    assert url.port == 80
+
+    # test with path and check if "api" is added
+    url = create_url_from_input("hostname/path/to/paperless")
+    assert f"{url}" == "https://hostname/path/to/paperless/api"
