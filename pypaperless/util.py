@@ -28,7 +28,7 @@ def create_url_from_input(url: str | URL) -> URL:
     """Create URL from string or URL and prepare for further usage."""
     # reverse compatibility, fall back to https
     if isinstance(url, str) and not url.startswith("http"):
-        url = f"https://{url}"
+        url = f"https://{url}".rstrip("/")
     url = URL(url)
 
     # scheme check. fall back to https

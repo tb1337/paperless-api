@@ -153,6 +153,14 @@ async def test_url_creation():
     url = create_url_from_input("http://hostname")
     assert url.port == 80
 
+    # should be https even on just setting a port number
+    url = create_url_from_input("hostname:80")
+    assert url.scheme == "https"
+
+    # test api/api url
+    url = create_url_from_input("hostname/api/api/")
+    assert f"{url}" == "https://hostname/api/api"
+
     # test with path and check if "api" is added
     url = create_url_from_input("hostname/path/to/paperless")
     assert f"{url}" == "https://hostname/path/to/paperless/api"
