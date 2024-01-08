@@ -21,6 +21,26 @@ from enum import Enum
 from types import NoneType, UnionType
 from typing import Any, Union, get_args, get_origin, get_type_hints
 
+from yarl import URL
+
+
+def create_url_from_input(url: str | URL) -> URL:
+    """Create URL from string or URL and prepare for further usage."""
+    # reverse compatibility, fall back to https
+    if isinstance(url, str) and not url.startswith("http"):
+        url = f"https://{url}".rstrip("/")
+    url = URL(url)
+
+    # scheme check. fall back to https
+    if url.scheme not in ("https", "http"):
+        url = URL(url).with_scheme("https")
+
+    # check if /api is included
+    if url.name != "api":
+        url = url.with_path(url.path.rstrip("/") + "/api")
+
+    return url
+
 
 def update_dataclass(cur_obj: dataclass, new_vals: dict) -> set[str]:
     """

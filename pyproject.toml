@@ -25,7 +25,8 @@ classifiers = [
     "Programming Language :: Python :: 3"
 ]
 dependencies = [
-    "aiohttp"
+    "aiohttp==3.9.1",
+    "yarl==1.9.4"
 ]
 
 [project.urls]

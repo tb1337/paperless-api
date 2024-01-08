@@ -35,7 +35,7 @@ async def paperless() -> Paperless:
         d = load_fixture_data("data.json")
         return d["endpoints"]
 
-    api = Paperless("local.test:1337", "secret-key")
+    api = Paperless("http://local.test:1337", "secret-key", request_opts={"ssl": False})
 
     with patch.object(api, "request_json", return_value=endpoints_data()):
         await api.initialize()
