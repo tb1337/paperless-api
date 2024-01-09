@@ -2,7 +2,7 @@
 
 from tests.const import PAPERLESS_TEST_URL
 
-V0_0_0_PATHS = {
+V0_0_0_GET_PATHS = {
     "correspondents": f"{PAPERLESS_TEST_URL}/api/correspondents/",
     "document_types": f"{PAPERLESS_TEST_URL}/api/document_types/",
     "documents": f"{PAPERLESS_TEST_URL}/api/documents/",
@@ -14,4 +14,73 @@ V0_0_0_PATHS = {
     "groups": f"{PAPERLESS_TEST_URL}/api/groups/",
     "mail_accounts": f"{PAPERLESS_TEST_URL}/api/mail_accounts/",
     "mail_rules": f"{PAPERLESS_TEST_URL}/api/mail_rules/",
+}
+
+V0_0_0_GET_CORRESPONDENTS = {
+    "count": 5,
+    "next": None,
+    "previous": None,
+    "all": [9, 21, 72, 18, 4],
+    "results": [
+        {
+            "id": 9,
+            "slug": "sample-correspondent",
+            "name": "Sample Correspondent",
+            "match": "",
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "document_count": 12,
+            "last_correspondence": "2022-10-18T00:00:00Z",
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 21,
+            "slug": "burger-fastfood-delivery-billing",
+            "name": "Burger FastFood Delivery Billing",
+            "match": "",
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "document_count": 6,
+            "last_correspondence": "2006-03-07T23:00:00Z",
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 72,
+            "slug": "example-company",
+            "name": "Example Company",
+            "match": "",
+            "matching_algorithm": 6,
+            "is_insensitive": True,
+            "document_count": 3,
+            "last_correspondence": "2022-03-11T00:00:00Z",
+            "owner": 3,
+            "user_can_change": True,
+        },
+        {
+            "id": 18,
+            "slug": "no-illness-more-money-health-insurance",
+            "name": "No Illness More Money Health Insurance",
+            "match": "",
+            "matching_algorithm": 1,
+            "is_insensitive": True,
+            "document_count": 6,
+            "last_correspondence": "2000-07-18T22:00:00Z",
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 4,
+            "slug": "your-cash-is-my-cash-bank",
+            "name": "Your Cash is my Cash Bank",
+            "match": "Your Cash My Bank",
+            "matching_algorithm": 2,
+            "is_insensitive": True,
+            "document_count": 20,
+            "last_correspondence": "2023-08-28T00:00:00Z",
+            "owner": None,
+            "user_can_change": True,
+        },
+    ],
 }

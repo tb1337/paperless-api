@@ -4,23 +4,27 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
+from aiohttp.web_exceptions import HTTPNotFound
+
 from pypaperless import Paperless
 
 from .const import PAPERLESS_TEST_URL
-from .data.v0_0_0 import V0_0_0_PATHS
+from .data.v0_0_0 import V0_0_0_GET_CORRESPONDENTS, V0_0_0_GET_PATHS
 
 API_DATA = {
     "0.0.0": {
-        "PATHS": V0_0_0_PATHS,
+        "GET_PATHS": V0_0_0_GET_PATHS,
+        "GET_CORRESPONDENTS": V0_0_0_GET_CORRESPONDENTS,
     },
     "1.8.0": {
-        "PATHS": V0_0_0_PATHS,
+        "GET_PATHS": V0_0_0_GET_PATHS,
     },
 }
 
 API_PATHS = {
     "get": {
-        "": "PATHS",
+        "": "GET_PATHS",
+        "correspondents": "GET_CORRESPONDENTS",
     },
 }
 
@@ -75,23 +79,49 @@ class FakeClientResponse:
 
     def __init__(self, api, method, path: str):
         """Construct fake response."""
-        self.api = api
-        path = path.replace(PAPERLESS_TEST_URL, "").rstrip("/")
+        self._api = api
+        self._url = path
+        path = path.replace(PAPERLESS_TEST_URL, "").rstrip("/").lstrip("/api/")
+        self._pathname = path
 
-        endpoint = API_PATHS[method].setdefault(path, None)
+        endpoint = API_PATHS[method].setdefault(self._pathname, None)
         if endpoint:
-            version = self.api.version if self.api.version in API_DATA else "0.0.0"
-            self.data = API_DATA[version][endpoint].copy()
+            version = self._api.version if self._api.version in API_DATA else "0.0.0"
+            self._data = API_DATA[version][endpoint].copy()
         else:
-            self.data = {}
+            self._data = None
 
     @property
     def headers(self):
         """Headers."""
         return {
-            "x-version": self.api.version,
+            "x-version": self._api.version,
         }
+
+    @property
+    def status(self):
+        """Status."""
+        if not self._data:
+            return 404
+        return 200
+
+    @property
+    def url(self):
+        """Url."""
+        return self._url
+
+    @property
+    def content_type(self):
+        """Content type."""
+        if isinstance(self._data, dict | tuple | list):
+            return "application/json"
+        return "text"
+
+    def raise_for_status(self):
+        """Raise for status."""
+        if self.status != 200:
+            raise HTTPNotFound()
 
     async def json(self):
         """Json."""
-        return self.data
+        return self._data

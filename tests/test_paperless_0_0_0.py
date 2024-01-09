@@ -1,9 +1,10 @@
 """Paperless basic tests."""
 
 from pypaperless import Paperless
+from pypaperless.controllers import CorrespondentsController
 
 
-class TestPaperlessV1x0x0:
+class TestPaperlessV00:
     """Common Paperless test cases."""
 
     async def test_init(self, api_00: Paperless):
@@ -12,8 +13,7 @@ class TestPaperlessV1x0x0:
         assert api_00._token
         assert api_00._request_opts
         assert not api_00._session
-        assert api_00._initialized is True
-        assert api_00.logger.debug("Test successful.") is None
+        assert api_00._initialized
 
     async def test_features(self, api_00: Paperless):
         """Test features."""
@@ -26,3 +26,21 @@ class TestPaperlessV1x0x0:
         assert api_00.workflows is None
         assert api_00.workflow_actions is None
         assert api_00.workflow_triggers is None
+
+    async def test_correspondents(self, api_00: Paperless):
+        """Test correspondents."""
+        assert isinstance(api_00.correspondents, CorrespondentsController)
+        # test mixins
+        assert getattr(api_00.correspondents, "list")
+        assert getattr(api_00.correspondents, "get")
+        assert getattr(api_00.correspondents, "iterate")
+        assert getattr(api_00.correspondents, "one")
+        assert getattr(api_00.correspondents, "create")
+        assert getattr(api_00.correspondents, "update")
+        assert getattr(api_00.correspondents, "delete")
+        # test list
+        items = await api_00.correspondents.list()
+        assert isinstance(items, list)
+        assert len(items) > 0
+        for item in items:
+            assert isinstance(item, int)
