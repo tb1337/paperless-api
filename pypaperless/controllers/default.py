@@ -179,7 +179,7 @@ class UsersController(
     _resource = User
 
 
-class WorkflowController(
+class WorkflowsController(
     BaseController[Workflow],
     PaginationMixin[Workflow],
     ListMixin[Workflow],
@@ -190,7 +190,7 @@ class WorkflowController(
     _resource = Workflow
 
 
-class WorkflowActionController(
+class WorkflowActionsController(
     BaseController[WorkflowAction],
     PaginationMixin[WorkflowAction],
     ListMixin[WorkflowAction],
@@ -201,7 +201,7 @@ class WorkflowActionController(
     _resource = WorkflowAction
 
 
-class WorkflowTriggerController(
+class WorkflowTriggersController(
     BaseController[WorkflowTrigger],
     PaginationMixin[WorkflowTrigger],
     ListMixin[WorkflowTrigger],

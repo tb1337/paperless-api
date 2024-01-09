@@ -31,9 +31,9 @@ from .controllers import (
     TagsController,
     TasksController,
     UsersController,
-    WorkflowActionController,
-    WorkflowController,
-    WorkflowTriggerController,
+    WorkflowActionsController,
+    WorkflowsController,
+    WorkflowTriggersController,
 )
 from .errors import BadRequestException, ControllerConfusion, DataNotExpectedException
 from .util import create_url_from_input
@@ -80,9 +80,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         self._tags: TagsController | None = None
         self._tasks: TasksController | None = None
         self._users: UsersController | None = None
-        self._workflows: WorkflowController | None = None
-        self._workflow_actions: WorkflowActionController | None = None
-        self._workflow_triggers: WorkflowTriggerController | None = None
+        self._workflows: WorkflowsController | None = None
+        self._workflow_actions: WorkflowActionsController | None = None
+        self._workflow_triggers: WorkflowTriggersController | None = None
 
     @property
     def url(self) -> URL:
@@ -164,6 +164,21 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         """Gateway to users."""
         return self._users
 
+    @property
+    def workflows(self) -> WorkflowsController | None:
+        """Gateway to workflows."""
+        return self._workflows
+
+    @property
+    def workflow_actions(self) -> WorkflowActionsController | None:
+        """Gateway to workflow actions."""
+        return self._workflow_actions
+
+    @property
+    def workflow_triggers(self) -> WorkflowTriggersController | None:
+        """Gateway to workflow triggers."""
+        return self._workflow_triggers
+
     async def initialize(self) -> None:
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
@@ -220,11 +235,11 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
                     self, paths.pop(ControllerPath.SHARE_LINKS)
                 )
             if PaperlessFeature.WORKFLOWS in self.features:
-                self._workflows = WorkflowController(self, paths.pop(ControllerPath.WORKFLOWS))
-                self._workflow_actions = WorkflowActionController(
+                self._workflows = WorkflowsController(self, paths.pop(ControllerPath.WORKFLOWS))
+                self._workflow_actions = WorkflowActionsController(
                     self, paths.pop(ControllerPath.WORKFLOW_ACTIONS)
                 )
-                self._workflow_triggers = WorkflowTriggerController(
+                self._workflow_triggers = WorkflowTriggersController(
                     self, paths.pop(ControllerPath.WORKFLOW_TRIGGERS)
                 )
         except KeyError as exc:

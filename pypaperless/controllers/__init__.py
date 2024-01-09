@@ -13,9 +13,9 @@ from .default import (
     StoragePathsController,
     TagsController,
     UsersController,
-    WorkflowActionController,
-    WorkflowController,
-    WorkflowTriggerController,
+    WorkflowActionsController,
+    WorkflowsController,
+    WorkflowTriggersController,
 )
 from .documents import DocumentsController
 from .tasks import TasksController
@@ -35,7 +35,7 @@ __all__ = [
     "TagsController",
     "TasksController",
     "UsersController",
-    "WorkflowActionController",
-    "WorkflowController",
-    "WorkflowTriggerController",
+    "WorkflowActionsController",
+    "WorkflowsController",
+    "WorkflowTriggersController",
 ]
