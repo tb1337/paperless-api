@@ -5,10 +5,7 @@ import pytest
 from pypaperless import Paperless
 
 from . import PaperlessMock
-
-PAPERLESS_TEST_URL = "local.test"
-PAPERLESS_TEST_TOKEN = "abcdef123467980"
-PAPERLESS_TEST_REQ_OPTS = {"ssl": False}
+from .const import PAPERLESS_TEST_REQ_OPTS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
 
 @pytest.fixture
@@ -22,13 +19,31 @@ def api() -> Paperless:
 
 
 @pytest.fixture
-def api_v0_0_0(api) -> Paperless:
+async def api_00(api) -> Paperless:
     """Return a basic Paperless object."""
-    return api
+    async with api:
+        yield api
 
 
 @pytest.fixture
-def api_v1_8_0(api) -> Paperless:
+async def api_18(api) -> Paperless:
     """Return a Paperless object with given version."""
     api.version = "1.8.0"
-    return api
+    async with api:
+        yield api
+
+
+@pytest.fixture
+async def api_20(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "2.0.0"
+    async with api:
+        yield api
+
+
+@pytest.fixture
+async def api_23(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "2.3.0"
+    async with api:
+        yield api

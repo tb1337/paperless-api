@@ -81,7 +81,7 @@ class FakeClientResponse:
         endpoint = API_PATHS[method].setdefault(path, None)
         if endpoint:
             version = self.api.version if self.api.version in API_DATA else "0.0.0"
-            self.data = API_DATA[version][endpoint]
+            self.data = API_DATA[version][endpoint].copy()
         else:
             self.data = {}
 
