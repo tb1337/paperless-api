@@ -1,0 +1,43 @@
+{
+	"name": "PyPaperless Dev",
+	"dockerFile": "../Dockerfile",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"containerEnv": {
+		"DEVCONTAINER": "1"
+	},
+	"postCreateCommand": "script/setup",
+	"postStartCommand": "script/bootstrap",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.black-formatter",
+				"ms-python.pylint",
+				"ms-python.vscode-pylance",
+				"visualstudioexptteam.vscodeintellicode",
+				"redhat.vscode-yaml",
+				"esbenp.prettier-vscode",
+				"GitHub.vscode-pull-request-github",
+				"ms-azuretools.vscode-docker"
+			],
+			"settings": {
+				"python.pythonPath": "/usr/local/bin/python",
+				"python.testing.pytestArgs": [
+					"--no-cov"
+				],
+				"python.testing.pytestEnabled": false,
+				"editor.formatOnPaste": false,
+				"editor.formatOnSave": true,
+				"editor.formatOnType": true,
+				"files.trimTrailingWhitespace": true,
+				"terminal.integrated.profiles.linux": {
+					"zsh": {
+						"path": "/usr/bin/zsh"
+					}
+				},
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			}
+		}
+	}
+}
