@@ -26,6 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp==3.9.1",
+    "awesomeversion==23.11.0",
     "yarl==1.9.4"
 ]
 

@@ -13,6 +13,9 @@ from pypaperless.models import (
     StoragePath,
     Tag,
     User,
+    Workflow,
+    WorkflowAction,
+    WorkflowTrigger,
 )
 
 from .base import (
@@ -174,3 +177,36 @@ class UsersController(
     """Represent Paperless users resource."""
 
     _resource = User
+
+
+class WorkflowController(
+    BaseController[Workflow],
+    PaginationMixin[Workflow],
+    ListMixin[Workflow],
+    OneMixin[Workflow],
+):
+    """Represent Paperless workflows resource."""
+
+    _resource = Workflow
+
+
+class WorkflowActionController(
+    BaseController[WorkflowAction],
+    PaginationMixin[WorkflowAction],
+    ListMixin[WorkflowAction],
+    OneMixin[WorkflowAction],
+):
+    """Represent Paperless workflow actions resource."""
+
+    _resource = WorkflowAction
+
+
+class WorkflowTriggerController(
+    BaseController[WorkflowTrigger],
+    PaginationMixin[WorkflowTrigger],
+    ListMixin[WorkflowTrigger],
+    OneMixin[WorkflowTrigger],
+):
+    """Represent Paperless workflow triggers resource."""
+
+    _resource = WorkflowTrigger

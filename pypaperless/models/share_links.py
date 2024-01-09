@@ -2,9 +2,22 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 from .base import PaperlessModel, PaperlessPost
-from .shared import FileVersion
+
+
+class FileVersion(Enum):
+    """Enum with file version."""
+
+    ARCHIVE = "archive"
+    ORIGINAL = "original"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "FileVersion":  # noqa ARG003
+        """Set default member on unknown value."""
+        return FileVersion.UNKNOWN
 
 
 @dataclass(kw_only=True)

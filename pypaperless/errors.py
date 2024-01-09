@@ -11,3 +11,7 @@ class BadRequestException(PaperlessException):
 
 class DataNotExpectedException(PaperlessException):
     """Raise when expecting a type and receiving something else."""
+
+
+class ControllerConfusion(PaperlessException):
+    """Raise when Paperless version does not match to controllers."""
