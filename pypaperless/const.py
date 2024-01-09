@@ -1,4 +1,4 @@
-"""PyPaperless const values."""
+"""PyPaperless constants."""
 
 from enum import IntFlag, StrEnum
 

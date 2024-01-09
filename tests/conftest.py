@@ -1,43 +1,34 @@
-"""Setup pytest helpers and fixtures."""
-
-import json
-import pathlib
-from unittest.mock import patch
+"""Setup pytest."""
 
 import pytest
 
 from pypaperless import Paperless
 
+from . import PaperlessMock
 
-def load_fixture_data(name: str):
-    """Load a fixture from disk."""
-    path = pathlib.Path(__file__).parent / "fixtures" / name
-
-    content = path.read_text()
-
-    if name.endswith(".json"):
-        return json.loads(content)
-
-    return content
-
-
-@pytest.fixture(scope="session")
-def data():
-    """Load data."""
-    return load_fixture_data("data.json")
+PAPERLESS_TEST_URL = "local.test"
+PAPERLESS_TEST_TOKEN = "abcdef123467980"
+PAPERLESS_TEST_REQ_OPTS = {"ssl": False}
 
 
 @pytest.fixture
-async def paperless() -> Paperless:
-    """Create and yield client."""
+def api() -> Paperless:
+    """Return a mock Paperless."""
+    return PaperlessMock(
+        PAPERLESS_TEST_URL,
+        PAPERLESS_TEST_TOKEN,
+        request_opts=PAPERLESS_TEST_REQ_OPTS,
+    )
 
-    def endpoints_data():
-        d = load_fixture_data("data.json")
-        return d["endpoints"]
 
-    api = Paperless("http://local.test:1337", "secret-key", request_opts={"ssl": False})
+@pytest.fixture
+def api_v0_0_0(api) -> Paperless:
+    """Return a basic Paperless object."""
+    return api
 
-    with patch.object(api, "request_json", return_value=endpoints_data()):
-        await api.initialize()
-    yield api
-    await api.close()
+
+@pytest.fixture
+def api_v1_8_0(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "1.8.0"
+    return api

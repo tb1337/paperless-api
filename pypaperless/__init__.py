@@ -170,7 +170,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
 
         async with self.generate_request("get", f"{self._url}") as res:
             version = AwesomeVersion(
-                res.headers.getone("x-version") if "x-version" in res.headers else "0.0.0"
+                res.headers.get("x-version") if "x-version" in res.headers else "0.0.0"
             )
 
             if version >= PAPERLESS_V1_8_0:
