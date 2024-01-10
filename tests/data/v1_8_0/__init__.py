@@ -2,6 +2,6 @@
 
 from tests.const import PAPERLESS_TEST_URL
 
-V1_8_0_GET_PATHS = {
+V1_8_0_PATHS = {
     "storage_paths": f"{PAPERLESS_TEST_URL}/api/storage_paths/",
 }

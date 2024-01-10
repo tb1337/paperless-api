@@ -2,7 +2,7 @@
 
 from tests.const import PAPERLESS_TEST_URL
 
-V0_0_0_GET_PATHS = {
+V0_0_0_PATHS = {
     "correspondents": f"{PAPERLESS_TEST_URL}/api/correspondents/",
     "document_types": f"{PAPERLESS_TEST_URL}/api/document_types/",
     "documents": f"{PAPERLESS_TEST_URL}/api/documents/",
@@ -16,14 +16,14 @@ V0_0_0_GET_PATHS = {
     "mail_rules": f"{PAPERLESS_TEST_URL}/api/mail_rules/",
 }
 
-V0_0_0_GET_CORRESPONDENTS = {
+V0_0_0_CORRESPONDENTS = {
     "count": 5,
     "next": None,
     "previous": None,
-    "all": [9, 21, 72, 18, 4],
+    "all": [1, 2, 3, 4, 5],
     "results": [
         {
-            "id": 9,
+            "id": 1,
             "slug": "sample-correspondent",
             "name": "Sample Correspondent",
             "match": "",
@@ -35,7 +35,7 @@ V0_0_0_GET_CORRESPONDENTS = {
             "user_can_change": True,
         },
         {
-            "id": 21,
+            "id": 2,
             "slug": "burger-fastfood-delivery-billing",
             "name": "Burger FastFood Delivery Billing",
             "match": "",
@@ -47,7 +47,7 @@ V0_0_0_GET_CORRESPONDENTS = {
             "user_can_change": True,
         },
         {
-            "id": 72,
+            "id": 3,
             "slug": "example-company",
             "name": "Example Company",
             "match": "",
@@ -59,7 +59,7 @@ V0_0_0_GET_CORRESPONDENTS = {
             "user_can_change": True,
         },
         {
-            "id": 18,
+            "id": 4,
             "slug": "no-illness-more-money-health-insurance",
             "name": "No Illness More Money Health Insurance",
             "match": "",
@@ -71,7 +71,7 @@ V0_0_0_GET_CORRESPONDENTS = {
             "user_can_change": True,
         },
         {
-            "id": 4,
+            "id": 5,
             "slug": "your-cash-is-my-cash-bank",
             "name": "Your Cash is my Cash Bank",
             "match": "Your Cash My Bank",
