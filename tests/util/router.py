@@ -3,12 +3,13 @@
 from aiohttp.web_exceptions import HTTPNotFound
 from fastapi import FastAPI, Request
 
-from tests.data.v0_0_0 import V0_0_0_CORRESPONDENTS, V0_0_0_PATHS
+from tests.data.v0_0_0 import V0_0_0_CORRESPONDENTS, V0_0_0_DOCUMENT_TYPES, V0_0_0_PATHS
 
 PATCHWORK = {
     "0.0.0": {
         "PATHS": V0_0_0_PATHS,
         "CORRESPONDENTS": V0_0_0_CORRESPONDENTS,
+        "DOCUMENT_TYPES": V0_0_0_DOCUMENT_TYPES,
     },
     "1.8.0": {
         "PATHS": V0_0_0_PATHS,
