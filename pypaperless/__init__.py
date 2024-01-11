@@ -289,9 +289,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         # convert form to FormData
         if "form" in kwargs:
             form = aiohttp.FormData()
-            form.add_fields(
-                list(kwargs.pop("form")),
-            )
+            for item in kwargs.pop("form"):
+                form.add_field(item[0], item[1])
             kwargs["data"] = form
 
         async with self._session.request(method, path, **kwargs) as res:

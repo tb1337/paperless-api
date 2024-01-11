@@ -4,7 +4,7 @@ import datetime
 import uuid
 
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 
 from tests.data.v0_0_0 import (
     V0_0_0_CORRESPONDENTS,
@@ -95,6 +95,19 @@ FakePaperlessAPI = FastAPI()
 async def get_index(req: Request):
     """Index page."""
     return _api_switcher(req, "PATHS")
+
+
+# bad request route
+@FakePaperlessAPI.get("/_bad_request/")
+async def get_bad_request():
+    """Get bad request."""
+    return Response(status_code=400)
+
+
+@FakePaperlessAPI.get("/_no_json/")
+async def get_no_json():
+    """Get no JSON."""
+    return Response(headers={"content-type": "text/text"})
 
 
 # static routes for special cases
@@ -257,5 +270,5 @@ async def delete_resource_item(req: Request, resource: str, item: int):
     for idx, result in enumerate(data["results"]):
         if result["id"] == item:
             data["results"].pop(idx)
-            break
+            return Response(status_code=204)
     return HTTPNotFound()

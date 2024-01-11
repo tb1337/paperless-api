@@ -112,6 +112,10 @@ class FakeClientResponse:
         """Json."""
         return self.res.json()
 
+    async def text(self):
+        """Text."""
+        return self.res.content
+
     async def read(self):
         """Read."""
         return self.res.content
