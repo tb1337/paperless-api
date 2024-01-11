@@ -5,6 +5,7 @@ from enum import IntFlag, StrEnum
 from awesomeversion import AwesomeVersion
 
 PAPERLESS_V1_8_0 = AwesomeVersion("1.8.0")
+PAPERLESS_V1_17_0 = AwesomeVersion("1.17.0")
 PAPERLESS_V2_0_0 = AwesomeVersion("2.0.0")
 PAPERLESS_V2_3_0 = AwesomeVersion("2.3.0")
 
@@ -30,14 +31,15 @@ CTRL_UNKNOWN = "unknown"
 
 
 class PaperlessFeature(IntFlag):
-    """Supported controllers."""
+    """Supported features."""
 
-    STORAGE_PATHS = 1
-    SHARE_LINKS = 2
-    CUSTOM_FIELDS = 4
-    CONSUMPTION_TEMPLATES = 8
-    WORKFLOWS = 16
-    CONFIGS = 32
+    CONTROLLER_STORAGE_PATHS = 1
+    FEATURE_DOCUMENT_NOTES = 2
+    CONTROLLER_SHARE_LINKS = 4
+    CONTROLLER_CUSTOM_FIELDS = 8
+    CONTROLLER_CONSUMPTION_TEMPLATES = 16
+    CONTROLLER_WORKFLOWS = 32
+    CONTROLLER_CONFIGS = 64
 
 
 class ControllerPath(StrEnum):
