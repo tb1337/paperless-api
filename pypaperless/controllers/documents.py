@@ -1,9 +1,9 @@
 """Controller for Paperless documents resource."""
 
+from dataclasses import fields
 from typing import TYPE_CHECKING
 
-import aiohttp
-
+from pypaperless.const import PaperlessFeature
 from pypaperless.models import (
     Document,
     DocumentMetaInformation,
@@ -114,32 +114,30 @@ class DocumentsController(  # pylint: disable=too-many-ancestors
         """Override initialize controller. Also initialize service controllers."""
         super().__init__(paperless, path)
 
-        self.notes = DocumentNotesService(self)
         self.files = DocumentFilesService(self)
+        self.notes: DocumentNotesService | None = None
+
+        if PaperlessFeature.FEATURE_DOCUMENT_NOTES in self._paperless.features:
+            self.notes = DocumentNotesService(self)
 
     async def create(self, obj: DocumentPost) -> str:
         """Create a new document. Raise on failure."""
-        form = aiohttp.FormData()
-        form.add_field("document", obj.document)
+        form_data = set()
+        for field in fields(obj):
+            value = getattr(obj, field.name)
+            if not value:
+                continue
 
-        for field in (
-            "title",
-            "created",
-            "correspondent",
-            "document_type",
-            "archive_serial_number",
-        ):
-            if getattr(obj, field):
-                form.add_field(field, getattr(obj, field))
-
-        if isinstance(obj.tags, list):
-            for tag in obj.tags:
-                form.add_field("tags", f"{tag}")
+            if field.name == "tags" and isinstance(value, list):
+                while value:
+                    form_data.add((field.name, value.pop(0)))
+            else:
+                form_data.add((field.name, value))
 
         url = f"{self.path}/post_document/"
 
         # result is a string in this case
-        res = str(await self._paperless.request_json("post", url, data=form))
+        res = await self._paperless.request_json("post", url, form=form_data)
         return res
 
     async def meta(self, obj: _DocumentOrIdType) -> DocumentMetaInformation:

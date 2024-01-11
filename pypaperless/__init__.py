@@ -11,6 +11,7 @@ from yarl import URL
 
 from .const import (
     PAPERLESS_V1_8_0,
+    PAPERLESS_V1_17_0,
     PAPERLESS_V2_0_0,
     PAPERLESS_V2_3_0,
     ControllerPath,
@@ -189,16 +190,20 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
             )
 
             if version >= PAPERLESS_V1_8_0:
-                self.features |= PaperlessFeature.STORAGE_PATHS
+                self.features |= PaperlessFeature.CONTROLLER_STORAGE_PATHS
+            if version >= PAPERLESS_V1_17_0:
+                self.features |= PaperlessFeature.FEATURE_DOCUMENT_NOTES
             if version >= PAPERLESS_V2_0_0:
                 self.features |= (
-                    PaperlessFeature.SHARE_LINKS
-                    | PaperlessFeature.CONSUMPTION_TEMPLATES
-                    | PaperlessFeature.CUSTOM_FIELDS
+                    PaperlessFeature.CONTROLLER_SHARE_LINKS
+                    | PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
+                    | PaperlessFeature.CONTROLLER_CUSTOM_FIELDS
                 )
             if version >= PAPERLESS_V2_3_0:
-                self.features |= PaperlessFeature.CONFIGS | PaperlessFeature.WORKFLOWS
-                self.features ^= PaperlessFeature.CONSUMPTION_TEMPLATES
+                self.features |= (
+                    PaperlessFeature.CONTROLLER_CONFIGS | PaperlessFeature.CONTROLLER_WORKFLOWS
+                )
+                self.features ^= PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
 
             paths = await res.json()
 
@@ -218,23 +223,23 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         self._users = UsersController(self, paths.pop(ControllerPath.USERS))
 
         try:
-            if PaperlessFeature.STORAGE_PATHS in self.features:
+            if PaperlessFeature.CONTROLLER_STORAGE_PATHS in self.features:
                 self._storage_paths = StoragePathsController(
                     self, paths.pop(ControllerPath.STORAGE_PATHS)
                 )
-            if PaperlessFeature.CONSUMPTION_TEMPLATES in self.features:
+            if PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES in self.features:
                 self._consumption_templates = ConsumptionTemplatesController(
                     self, paths.pop(ControllerPath.CONSUMPTION_TEMPLATES)
                 )
-            if PaperlessFeature.CUSTOM_FIELDS in self.features:
+            if PaperlessFeature.CONTROLLER_CUSTOM_FIELDS in self.features:
                 self._custom_fields = CustomFieldsController(
                     self, paths.pop(ControllerPath.CUSTOM_FIELDS)
                 )
-            if PaperlessFeature.SHARE_LINKS in self.features:
+            if PaperlessFeature.CONTROLLER_SHARE_LINKS in self.features:
                 self._share_links = ShareLinksController(
                     self, paths.pop(ControllerPath.SHARE_LINKS)
                 )
-            if PaperlessFeature.WORKFLOWS in self.features:
+            if PaperlessFeature.CONTROLLER_WORKFLOWS in self.features:
                 self._workflows = WorkflowsController(self, paths.pop(ControllerPath.WORKFLOWS))
                 self._workflow_actions = WorkflowActionsController(
                     self, paths.pop(ControllerPath.WORKFLOW_ACTIONS)
@@ -280,6 +285,14 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
                 "authorization": f"Token {self._token}",
             }
         )
+
+        # convert form to FormData
+        if "form" in kwargs:
+            form = aiohttp.FormData()
+            form.add_fields(
+                list(kwargs.pop("form")),
+            )
+            kwargs["data"] = form
 
         async with self._session.request(method, path, **kwargs) as res:
             yield res
