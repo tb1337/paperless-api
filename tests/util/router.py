@@ -22,6 +22,7 @@ from tests.data.v0_0_0 import (
 )
 from tests.data.v1_8_0 import V1_8_0_PATHS, V1_8_0_STORAGE_PATHS
 from tests.data.v1_17_0 import V1_17_0_DOCUMENT_NOTES
+from tests.data.v2_0_0 import V2_0_0_CONSUMPTION_TEMPLATES, V2_0_0_CUSTOM_FIELDS, V2_0_0_PATHS
 
 PATCHWORK = {
     "0.0.0": {
@@ -46,6 +47,11 @@ PATCHWORK = {
         "PATHS": "1.8.0",
         "DOCUMENTS": V0_0_0_DOCUMENTS,
         "DOCUMENT_NOTES": V1_17_0_DOCUMENT_NOTES,
+    },
+    "2.0.0": {
+        "PATHS": V0_0_0_PATHS | V1_8_0_PATHS | V2_0_0_PATHS,
+        "CONSUMPTION_TEMPLATES": V2_0_0_CONSUMPTION_TEMPLATES,
+        "CUSTOM_FIELDS": V2_0_0_CUSTOM_FIELDS,
     },
 }
 

@@ -48,6 +48,9 @@ class TestBeginPaperless:
         assert api_00._request_opts
         assert not api_00._session
         assert api_00._initialized
+        # test properties
+        assert api_00.url
+        assert api_00.is_initialized
 
     async def test_features(self, api_00: Paperless):
         """Test features."""
