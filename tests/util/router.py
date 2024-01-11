@@ -28,6 +28,12 @@ from tests.data.v2_0_0 import (
     V2_0_0_PATHS,
     V2_0_0_SHARE_LINKS,
 )
+from tests.data.v2_3_0 import (
+    V2_3_0_PATHS,
+    V2_3_0_WORKFLOW_ACTIONS,
+    V2_3_0_WORKFLOW_TRIGGERS,
+    V2_3_0_WORKFLOWS,
+)
 
 PATCHWORK = {
     "0.0.0": {
@@ -58,6 +64,12 @@ PATCHWORK = {
         "CONSUMPTION_TEMPLATES": V2_0_0_CONSUMPTION_TEMPLATES,
         "CUSTOM_FIELDS": V2_0_0_CUSTOM_FIELDS,
         "SHARE_LINKS": V2_0_0_SHARE_LINKS,
+    },
+    "2.3.0": {
+        "PATHS": V0_0_0_PATHS | V1_8_0_PATHS | V2_0_0_PATHS | V2_3_0_PATHS,
+        "WORKFLOWS": V2_3_0_WORKFLOWS,
+        "WORKFLOW_ACTIONS": V2_3_0_WORKFLOW_ACTIONS,
+        "WORKFLOW_TRIGGERS": V2_3_0_WORKFLOW_TRIGGERS,
     },
 }
 

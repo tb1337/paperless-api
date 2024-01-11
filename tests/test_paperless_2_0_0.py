@@ -25,7 +25,7 @@ from pypaperless.models.share_links import FileVersion
 
 
 class TestBeginPaperless:
-    """Paperless v1.17.0 test cases."""
+    """Paperless v2.0.0 test cases."""
 
     async def test_init(self, api_20: Paperless):
         """Test init."""
