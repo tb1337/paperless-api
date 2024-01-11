@@ -21,6 +21,7 @@ from tests.data.v0_0_0 import (
     V0_0_0_USERS,
 )
 from tests.data.v1_8_0 import V1_8_0_PATHS, V1_8_0_STORAGE_PATHS
+from tests.data.v1_17_0 import V1_17_0_DOCUMENT_NOTES
 
 PATCHWORK = {
     "0.0.0": {
@@ -41,12 +42,25 @@ PATCHWORK = {
         "PATHS": V0_0_0_PATHS | V1_8_0_PATHS,
         "STORAGE_PATHS": V1_8_0_STORAGE_PATHS,
     },
+    "1.17.0": {
+        "PATHS": "1.8.0",
+        "DOCUMENTS": V0_0_0_DOCUMENTS,
+        "DOCUMENT_NOTES": V1_17_0_DOCUMENT_NOTES,
+    },
 }
 
 
 def _api_switcher(req: Request, key: str):
     """Get data from patchwork."""
-    return PATCHWORK.setdefault(req.headers["x-test-ver"], "0.0.0")[key]
+    version = req.headers["x-test-ver"]
+    if version not in PATCHWORK:
+        version = "0.0.0"
+    if key not in PATCHWORK[version]:
+        return PATCHWORK["0.0.0"][key]
+    value = PATCHWORK[version][key]
+    if isinstance(value, str):
+        return PATCHWORK[value][key]
+    return value
 
 
 FakePaperlessAPI = FastAPI()
@@ -136,6 +150,24 @@ async def get_documents_files(req: Request, pk: int):
     if not data["all"].count(pk):
         raise HTTPNotFound()
     return b"This is a file."
+
+
+@FakePaperlessAPI.get("/api/documents/{pk:int}/notes/")
+async def get_documents_notes(
+    req: Request, pk: int  # pylint: disable=unused-argument # noqa: ARG001
+):
+    """Get documents notes."""
+    data = _api_switcher(req, "DOCUMENT_NOTES")
+    return data
+
+
+@FakePaperlessAPI.post("/api/documents/{pk:int}/notes/")
+@FakePaperlessAPI.delete("/api/documents/{pk:int}/notes/")
+async def post_delete_documents_notes(
+    req: Request, pk: int  # pylint: disable=unused-argument # noqa: ARG001
+):
+    """Get documents notes."""
+    return True
 
 
 @FakePaperlessAPI.get("/api/tasks/")

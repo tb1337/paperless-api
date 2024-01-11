@@ -34,6 +34,14 @@ async def api_18(api) -> Paperless:
 
 
 @pytest.fixture
+async def api_117(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "1.17.0"
+    async with api:
+        yield api
+
+
+@pytest.fixture
 async def api_20(api) -> Paperless:
     """Return a Paperless object with given version."""
     api.version = "2.0.0"
