@@ -5,15 +5,10 @@ from aiohttp.web_exceptions import HTTPNotFound
 
 from pypaperless import Paperless
 from pypaperless.const import PaperlessFeature
-from pypaperless.controllers import (
-    ConsumptionTemplatesController,
-    CustomFieldsController,
-)
+from pypaperless.controllers import ConsumptionTemplatesController, CustomFieldsController
 from pypaperless.controllers.base import ResultPage
-from pypaperless.models import (
-    ConsumptionTemplate,
-    CustomField,
-)
+from pypaperless.models import ConsumptionTemplate, CustomField, CustomFieldPost
+from pypaperless.models.custom_fields import CustomFieldType
 
 
 class TestBeginPaperless:
@@ -144,40 +139,29 @@ class TestCustomFields:
         with pytest.raises(HTTPNotFound):
             await api_20.custom_fields.one(1337)
 
-    # async def test_create(self, api_20: Paperless):
-    #     """Test create."""
-    #     new_name = "Created Correspondent"
-    #     to_create = CorrespondentPost(name=new_name)
-    #     # test mixins, and their defaults
-    #     assert to_create.is_insensitive is True
-    #     assert to_create.match == ""
-    #     assert to_create.matching_algorithm == MatchingAlgorithm.NONE
-    #     # test default override
-    #     to_create = CorrespondentPost(
-    #         name=new_name,
-    #         matching_algorithm=MatchingAlgorithm.FUZZY,
-    #     )
-    #     assert to_create.matching_algorithm == MatchingAlgorithm.FUZZY
-    #     # actually call the create endpoint
-    #     created = await api_20.custom_fields.create(to_create)
-    #     assert isinstance(created, Correspondent)
-    #     assert created.id == 6
-    #     assert created.matching_algorithm == MatchingAlgorithm.FUZZY
+    async def test_create(self, api_20: Paperless):
+        """Test create."""
+        new_name = "Created Custom Field"
+        to_create = CustomFieldPost(name=new_name, data_type=CustomFieldType.BOOLEAN)
+        created = await api_20.custom_fields.create(to_create)
+        assert isinstance(created, CustomField)
+        assert created.id == 9
+        assert created.data_type == CustomFieldType.BOOLEAN
 
-    # async def test_udpate(self, api_20: Paperless):
-    #     """Test update."""
-    #     new_name = "Created Correspondent Update"
-    #     to_update = await api_20.custom_fields.one(6)
-    #     to_update.name = new_name
-    #     updated = await api_20.custom_fields.update(to_update)
-    #     assert isinstance(updated, Correspondent)
-    #     assert updated.name == new_name
+    async def test_udpate(self, api_20: Paperless):
+        """Test update."""
+        new_name = "Created Custom Field Update"
+        to_update = await api_20.custom_fields.one(9)
+        to_update.name = new_name
+        updated = await api_20.custom_fields.update(to_update)
+        assert isinstance(updated, CustomField)
+        assert updated.name == new_name
 
-    # async def test_delete(self, api_20: Paperless):
-    #     """Test delete."""
-    #     to_delete = await api_20.custom_fields.one(6)
-    #     deleted = await api_20.custom_fields.delete(to_delete)
-    #     assert deleted
-    #     # must raise as we deleted 6
-    #     with pytest.raises(HTTPNotFound):
-    #         await api_20.custom_fields.one(6)
+    async def test_delete(self, api_20: Paperless):
+        """Test delete."""
+        to_delete = await api_20.custom_fields.one(9)
+        deleted = await api_20.custom_fields.delete(to_delete)
+        assert deleted
+        # must raise as we deleted 9
+        with pytest.raises(HTTPNotFound):
+            await api_20.custom_fields.one(9)
