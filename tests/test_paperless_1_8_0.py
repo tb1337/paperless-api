@@ -11,7 +11,7 @@ from pypaperless.models import StoragePath, StoragePathPost
 from pypaperless.models.matching import MatchingAlgorithm
 
 
-class TestPaperlessV18:
+class TestBeginPaperless:
     """Paperless v1.8.0 test cases."""
 
     async def test_init(self, api_18: Paperless):
@@ -25,7 +25,7 @@ class TestPaperlessV18:
     async def test_features(self, api_18: Paperless):
         """Test features."""
         # basic class has no features
-        assert PaperlessFeature.STORAGE_PATHS in api_18.features
+        assert PaperlessFeature.CONTROLLER_STORAGE_PATHS in api_18.features
         assert api_18.storage_paths
         assert not api_18.consumption_templates
         assert not api_18.custom_fields
@@ -34,28 +34,32 @@ class TestPaperlessV18:
         assert not api_18.workflow_actions
         assert not api_18.workflow_triggers
 
-    async def test_storage_paths(self, api_18: Paperless):
-        """Test storage_paths."""
+
+class TestStoragePaths:
+    """Storage Paths test cases."""
+
+    async def test_controller(self, api_18: Paperless):
+        """Test controller."""
         assert isinstance(api_18.storage_paths, StoragePathsController)
         # test mixins
-        assert getattr(api_18.storage_paths, "list")
-        assert getattr(api_18.storage_paths, "get")
-        assert getattr(api_18.storage_paths, "iterate")
-        assert getattr(api_18.storage_paths, "one")
-        assert getattr(api_18.storage_paths, "create")
-        assert getattr(api_18.storage_paths, "update")
-        assert getattr(api_18.storage_paths, "delete")
+        assert hasattr(api_18.storage_paths, "list")
+        assert hasattr(api_18.storage_paths, "get")
+        assert hasattr(api_18.storage_paths, "iterate")
+        assert hasattr(api_18.storage_paths, "one")
+        assert hasattr(api_18.storage_paths, "create")
+        assert hasattr(api_18.storage_paths, "update")
+        assert hasattr(api_18.storage_paths, "delete")
 
-    async def test_storage_paths_list(self, api_18: Paperless):
-        """Test storage_paths list."""
+    async def test_list(self, api_18: Paperless):
+        """Test list."""
         items = await api_18.storage_paths.list()
         assert isinstance(items, list)
         assert len(items) > 0
         for item in items:
             assert isinstance(item, int)
 
-    async def test_storage_paths_get(self, api_18: Paperless):
-        """Test storage_paths get."""
+    async def test_get(self, api_18: Paperless):
+        """Test get."""
         results = await api_18.storage_paths.get()
         assert isinstance(results, ResultPage)
         assert results.current_page == 1
@@ -65,13 +69,13 @@ class TestPaperlessV18:
         for item in results.items:
             assert isinstance(item, StoragePath)
 
-    async def test_storage_paths_iterate(self, api_18: Paperless):
-        """Test storage_paths iterate."""
+    async def test_iterate(self, api_18: Paperless):
+        """Test iterate."""
         async for item in api_18.storage_paths.iterate():
             assert isinstance(item, StoragePath)
 
-    async def test_storage_paths_one(self, api_18: Paperless):
-        """Test storage_paths one."""
+    async def test_one(self, api_18: Paperless):
+        """Test one."""
         item = await api_18.storage_paths.one(1)
         assert item
         assert isinstance(item, StoragePath)
@@ -79,8 +83,8 @@ class TestPaperlessV18:
         with pytest.raises(HTTPNotFound):
             await api_18.storage_paths.one(1337)
 
-    async def test_storage_paths_create(self, api_18: Paperless):
-        """Test storage_paths create."""
+    async def test_create(self, api_18: Paperless):
+        """Test create."""
         new_name = "Created Storage Path"
         new_path = "test/test/{doc_pk}"
         to_create = StoragePathPost(name=new_name, path=new_path)
@@ -101,8 +105,8 @@ class TestPaperlessV18:
         assert created.id == 4
         assert created.matching_algorithm == MatchingAlgorithm.FUZZY
 
-    async def test_storage_paths_udpate(self, api_18: Paperless):
-        """Test storage_paths update."""
+    async def test_udpate(self, api_18: Paperless):
+        """Test update."""
         new_name = "Created Storage Path Update"
         to_update = await api_18.storage_paths.one(4)
         to_update.name = new_name
@@ -110,8 +114,8 @@ class TestPaperlessV18:
         assert isinstance(updated, StoragePath)
         assert updated.name == new_name
 
-    async def test_storage_paths_delete(self, api_18: Paperless):
-        """Test storage_paths delete."""
+    async def test_delete(self, api_18: Paperless):
+        """Test delete."""
         to_delete = await api_18.storage_paths.one(4)
         deleted = await api_18.storage_paths.delete(to_delete)
         assert deleted

@@ -55,6 +55,18 @@ class PaperlessMock(Paperless):
             }
         )
 
+        # we fake form data to json payload as we don't want to mess with FastAPI forms
+        if "form" in kwargs:
+            json = {}
+            for item in kwargs.pop("form"):
+                if item[0] == "tags":
+                    json.setdefault("tags", [])
+                    json["tags"].append(item[1])
+                else:
+                    json[item[0]] = item[1].decode() if isinstance(item[1], bytes) else item[1]
+            kwargs["json"] = json
+
+        # finally, request
         async with AsyncClient(
             app=FakePaperlessAPI,
             base_url=PAPERLESS_TEST_URL,
@@ -99,3 +111,7 @@ class FakeClientResponse:
     async def json(self):
         """Json."""
         return self.res.json()
+
+    async def read(self):
+        """Read."""
+        return self.res.content
