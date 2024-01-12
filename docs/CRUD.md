@@ -6,26 +6,27 @@ In the following examples, we assume you already have initialized the `Paperless
 
 - [Supported resources](#supported-resources)
 - [Default operations](#default-operations)
-    - [Update items](#update-items)
-    - [Create items](#create-items)
-    - [Delete items](#delete-items)
+  - [Update items](#update-items)
+  - [Create items](#create-items)
+  - [Delete items](#delete-items)
 - [Special cases](#special-cases)
-    - [Document Notes](#document-notes)
+  - [Document Notes](#document-notes)
+  - [Document Custom Fields](#document-custom-fields)
 
 ## Supported resources
 
-*PyPaperless* enables create/update/delete wherever it makes sense:
+_PyPaperless_ enables create/update/delete wherever it makes sense:
 
-* correspondents
-* custom_fields
-* document_types
-* documents
-    * custom_fields
-    * notes
-    * *metadata* is not supported
-* share_links
-* storage_paths
-* tags
+- correspondents
+- custom_fields
+- document_types
+- documents
+  - custom_fields
+  - notes
+  - _metadata_ is not supported
+- share_links
+- storage_paths
+- tags
 
 ## Default operations
 
@@ -66,7 +67,7 @@ Every `update()` call will send a `PUT` http request to Paperless, containing th
 
 ### Create items
 
-It absolutely makes sense to create new data in the Paperless database, especially documents. Therefore, item creation is implemented for many resources. It differs slightly from `update()` and `delete()`. *PyPaperless* doesn't validate data, its meant to be the transportation layer between your code and Paperless only. To reduce common mistakes, it provides special classes for creating new items. Use them.
+It absolutely makes sense to create new data in the Paperless database, especially documents. Therefore, item creation is implemented for many resources. It differs slightly from `update()` and `delete()`. _PyPaperless_ doesn't validate data, its meant to be the transportation layer between your code and Paperless only. To reduce common mistakes, it provides special classes for creating new items. Use them.
 
 For every creatable resource exists a *Resource*Post class. Instantiate that class with some data and call the `create()` method of your endpoint. There you go.
 
@@ -168,4 +169,37 @@ await p.documents.notes.create(note)  # we defined the document id in the Post m
 # DocumentNote object for it, which will be a very rare case
 document_note = (await p.documents.notes.get(23)).pop()
 await p.documents.notes.delete(document_note)
+```
+
+### Document Custom Fields
+
+Custom Fields are managed in the Paperless configuration. _PyPaperless_ enables you to attach values for them to your documents. Currently, they are of _Any_ type, so you must pay attention to their actual values.
+
+On calling the persistence method, the complete list of CustomFieldValues will replace the current one. That could lead to unintended changes: if you persist an empty list, all fields are removed from the document.
+
+> [!CAUTION]
+> You could overwrite or delete all of your Custom Field attachments to a document, so be careful. I want to overhaul the Custom Field feature somewhere in the future.
+
+```python
+# request a document and access its custom fields
+document = await paperless.documents.one(42)
+#>>> Document(..., custom_fields=[
+#>>>    CustomFieldValue(field=1, value="I am a field value"),
+#>>>    CustomFieldValue(field=2, value=True),
+#>>>    ...
+#>>> ], ...)
+
+# you can do everything with that list, append, pop, etc.
+# as long as list values are of type CustomFieldValue
+fields = document.custom_fields
+fields.pop()
+fields.append(CustomFieldValue(field=2, value=False))
+
+# persist changes. the list is taken as-is and replaces the current one
+document = paperless.documents.custom_fields(document, fields)
+#>>> Document(..., custom_fields=[ ...
+#>>>    CustomFieldValue(field=2, value=False),
+#>>>    ...
+#>>> ], ...)
+
 ```
