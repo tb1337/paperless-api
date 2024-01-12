@@ -88,5 +88,6 @@ class DocumentPost(PaperlessPost):
     created: datetime | None = None
     correspondent: int | None = None
     document_type: int | None = None
+    storage_path: int | None = None
     tags: list[int] | None = None
     archive_serial_number: int | None = None
