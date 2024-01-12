@@ -10,6 +10,7 @@ from pypaperless.models import (
     DocumentNotePost,
     DocumentPost,
 )
+from pypaperless.models.custom_fields import CustomFieldValue
 from pypaperless.util import dataclass_from_dict, dataclass_to_dict
 
 from .base import (
@@ -35,13 +36,32 @@ def _get_document_id_helper(item: _DocumentOrIdType) -> int:
     return int(item)
 
 
+class DocumentCustomFieldsService(BaseService):  # pylint: disable=too-few-public-methods
+    """Handle manipulation of custom field value instances."""
+
+    async def __call__(
+        self,
+        obj: _DocumentOrIdType,
+        cf: list[CustomFieldValue],
+    ) -> Document:
+        """Add or change custom field value."""
+        idx = _get_document_id_helper(obj)
+        url = f"{self._path}/{idx}/"
+        payload = {
+            "custom_fields": [dataclass_to_dict(item) for item in cf],
+        }
+        res = await self._paperless.request_json("patch", url, json=payload)
+        data: Document = dataclass_from_dict(Document, res)
+        return data
+
+
 class DocumentNotesService(BaseService):
     """Handle http requests for document notes sub-endpoint."""
 
     async def get(self, obj: _DocumentOrIdType) -> list[DocumentNote]:
         """Request document notes of given document."""
         idx = _get_document_id_helper(obj)
-        url = f"{self.path}/{idx}/notes"
+        url = f"{self._path}/{idx}/notes"
         res = await self._paperless.request_json("get", url)
 
         # We have to transform data here slightly.
@@ -59,12 +79,12 @@ class DocumentNotesService(BaseService):
 
     async def create(self, obj: DocumentNotePost) -> None:
         """Create a new document note. Raise on failure."""
-        url = f"{self.path}/{obj.document}/notes"
+        url = f"{self._path}/{obj.document}/notes"
         await self._paperless.request_json("post", url, json=dataclass_to_dict(obj))
 
     async def delete(self, obj: DocumentNote) -> None:
         """Delete an existing document note. Raise on failure."""
-        url = f"{self.path}/{obj.document}/notes"
+        url = f"{self._path}/{obj.document}/notes"
         params = {
             "id": obj.id,
         }
@@ -80,7 +100,7 @@ class DocumentFilesService(BaseService):
         idx: int,
     ) -> bytes:
         """Request a child endpoint."""
-        url = f"{self.path}/{idx}/{path}"
+        url = f"{self._path}/{idx}/{path}"
         return await self._paperless.request_file("get", url)
 
     async def download(self, obj: _DocumentOrIdType) -> bytes:
@@ -115,9 +135,12 @@ class DocumentsController(  # pylint: disable=too-many-ancestors
 
         self.files = DocumentFilesService(self)
         self.notes: DocumentNotesService | None = None
+        self.custom_fields: DocumentCustomFieldsService | None = None
 
         if PaperlessFeature.FEATURE_DOCUMENT_NOTES in self._paperless.features:
             self.notes = DocumentNotesService(self)
+        if PaperlessFeature.CONTROLLER_CUSTOM_FIELDS in self._paperless.features:
+            self.custom_fields = DocumentCustomFieldsService(self)
 
     async def create(self, obj: DocumentPost) -> str:
         """Create a new document. Raise on failure."""

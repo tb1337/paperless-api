@@ -17,10 +17,11 @@ from pypaperless.models import (
     ConsumptionTemplate,
     CustomField,
     CustomFieldPost,
+    Document,
     ShareLink,
     ShareLinkPost,
 )
-from pypaperless.models.custom_fields import CustomFieldType
+from pypaperless.models.custom_fields import CustomFieldType, CustomFieldValue
 from pypaperless.models.share_links import ShareLinkFileVersion
 
 
@@ -29,11 +30,9 @@ class TestBeginPaperless:
 
     async def test_init(self, api_20: Paperless):
         """Test init."""
-        assert api_20._url
         assert api_20._token
         assert api_20._request_opts
         assert not api_20._session
-        assert api_20._initialized
         # test properties
         assert api_20.url
         assert api_20.is_initialized
@@ -183,6 +182,30 @@ class TestCustomFields:
         # must raise as we deleted 9
         with pytest.raises(HTTPNotFound):
             await api_20.custom_fields.one(9)
+
+
+class TestCustomFieldValues:
+    """Custom Field Values test cases."""
+
+    async def test_set(self, api_20: Paperless):
+        """Test set."""
+        document = await api_20.documents.one(2)
+        assert isinstance(document, Document)
+        assert isinstance(document.custom_fields, list)
+        assert len(document.custom_fields) > 0
+        for item in document.custom_fields:
+            assert isinstance(item, CustomFieldValue)
+        # manipulate custom fields
+        fields = document.custom_fields
+        new_field = CustomFieldValue(field=1, value=False)
+        fields.append(new_field)
+        document = await api_20.documents.custom_fields(document, fields)
+        assert isinstance(document.custom_fields, list)
+        for item in document.custom_fields:
+            assert isinstance(item, CustomFieldValue)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(HTTPNotFound):
+            await api_20.documents.custom_fields(1337, fields)
 
 
 class TestShareLinks:

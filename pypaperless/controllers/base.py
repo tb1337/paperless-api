@@ -174,7 +174,7 @@ class DeleteMixin(BaseControllerProtocol[ResourceT]):
             raise exc
 
 
-class BaseService:
+class BaseService:  # pylint: disable=too-few-public-methods
     """Handle requests to sub-endpoints or special tasks."""
 
     def __init__(self, controller: BaseController) -> None:
@@ -183,13 +183,3 @@ class BaseService:
         self._controller = controller
         self._path = controller.path
         self._logger = controller._logger
-
-    @property
-    def controller(self) -> BaseController:
-        """Get the controller."""
-        return self._controller
-
-    @property
-    def path(self) -> str:
-        """Return the url path."""
-        return self._path

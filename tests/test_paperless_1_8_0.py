@@ -16,11 +16,12 @@ class TestBeginPaperless:
 
     async def test_init(self, api_18: Paperless):
         """Test init."""
-        assert api_18._url
         assert api_18._token
         assert api_18._request_opts
         assert not api_18._session
-        assert api_18._initialized
+        # test properties
+        assert api_18.url
+        assert api_18.is_initialized
 
     async def test_features(self, api_18: Paperless):
         """Test features."""

@@ -13,11 +13,9 @@ class TestBeginPaperless:
 
     async def test_init(self, api_117: Paperless):
         """Test init."""
-        assert api_117._url
         assert api_117._token
         assert api_117._request_opts
         assert not api_117._session
-        assert api_117._initialized
         # test properties
         assert api_117.url
         assert api_117.is_initialized
