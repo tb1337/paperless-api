@@ -26,6 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp==3.9.1",
+    "awesomeversion==23.11.0",
     "yarl==1.9.4"
 ]
 
@@ -46,7 +47,9 @@ test = [
     "pytest-aiohttp==1.0.5",
     "pytest-cov==4.1.0",
     "pre-commit==3.6.0",
-    "pylint==3.0.3"
+    "pylint==3.0.3",
+    "fastapi==0.108.0",
+    "httpx==0.26.0"
 ]
 
 [tool.codespell]

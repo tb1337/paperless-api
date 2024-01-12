@@ -1,9 +1,23 @@
 """Model for task resource."""
 
 from dataclasses import dataclass
+from enum import Enum
 
 from .base import PaperlessModel
-from .shared import TaskStatus
+
+
+class TaskStatus(Enum):
+    """Enum with task states."""
+
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "TaskStatus":  # noqa ARG003
+        """Set default member on unknown value."""
+        return TaskStatus.UNKNOWN
 
 
 @dataclass(kw_only=True)

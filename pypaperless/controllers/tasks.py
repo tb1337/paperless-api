@@ -29,11 +29,13 @@ class TasksController(BaseController[Task]):
         for item in res:
             yield item
 
-    async def one(self, idx: str) -> Task:
+    async def one(self, idx: str) -> Task | None:
         """Request exactly one task item by pk."""
         params = {
             "task_id": idx,
         }
         res = await self._paperless.request_json("get", self.path, params=params)
-        data: Task = dataclass_from_dict(self.resource, res.pop())
-        return data
+        if len(res) > 0:
+            data: Task = dataclass_from_dict(self.resource, res.pop())
+            return data
+        return None

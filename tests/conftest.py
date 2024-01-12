@@ -1,43 +1,57 @@
-"""Setup pytest helpers and fixtures."""
-
-import json
-import pathlib
-from unittest.mock import patch
+"""Setup pytest."""
 
 import pytest
 
 from pypaperless import Paperless
 
-
-def load_fixture_data(name: str):
-    """Load a fixture from disk."""
-    path = pathlib.Path(__file__).parent / "fixtures" / name
-
-    content = path.read_text()
-
-    if name.endswith(".json"):
-        return json.loads(content)
-
-    return content
-
-
-@pytest.fixture(scope="session")
-def data():
-    """Load data."""
-    return load_fixture_data("data.json")
+from . import PaperlessMock
+from .const import PAPERLESS_TEST_REQ_OPTS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
 
 @pytest.fixture
-async def paperless() -> Paperless:
-    """Create and yield client."""
+def api() -> Paperless:
+    """Return a mock Paperless."""
+    return PaperlessMock(
+        PAPERLESS_TEST_URL,
+        PAPERLESS_TEST_TOKEN,
+        request_opts=PAPERLESS_TEST_REQ_OPTS,
+    )
 
-    def endpoints_data():
-        d = load_fixture_data("data.json")
-        return d["endpoints"]
 
-    api = Paperless("http://local.test:1337", "secret-key", request_opts={"ssl": False})
+@pytest.fixture
+async def api_00(api) -> Paperless:
+    """Return a basic Paperless object."""
+    async with api:
+        yield api
 
-    with patch.object(api, "request_json", return_value=endpoints_data()):
-        await api.initialize()
-    yield api
-    await api.close()
+
+@pytest.fixture
+async def api_18(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "1.8.0"
+    async with api:
+        yield api
+
+
+@pytest.fixture
+async def api_117(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "1.17.0"
+    async with api:
+        yield api
+
+
+@pytest.fixture
+async def api_20(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "2.0.0"
+    async with api:
+        yield api
+
+
+@pytest.fixture
+async def api_23(api) -> Paperless:
+    """Return a Paperless object with given version."""
+    api.version = "2.3.0"
+    async with api:
+        yield api

@@ -13,6 +13,7 @@ Thanks for the excellent work, guys!
 """
 
 # mypy: ignore-errors
+# pylint: disable=all
 
 import logging
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass
@@ -27,7 +28,7 @@ from yarl import URL
 def create_url_from_input(url: str | URL) -> URL:
     """Create URL from string or URL and prepare for further usage."""
     # reverse compatibility, fall back to https
-    if isinstance(url, str) and not url.startswith("http"):
+    if isinstance(url, str) and "://" not in url:
         url = f"https://{url}".rstrip("/")
     url = URL(url)
 

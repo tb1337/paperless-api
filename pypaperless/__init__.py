@@ -6,8 +6,17 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 from yarl import URL
 
+from .const import (
+    PAPERLESS_V1_8_0,
+    PAPERLESS_V1_17_0,
+    PAPERLESS_V2_0_0,
+    PAPERLESS_V2_3_0,
+    ControllerPath,
+    PaperlessFeature,
+)
 from .controllers import (
     ConsumptionTemplatesController,
     CorrespondentsController,
@@ -23,13 +32,15 @@ from .controllers import (
     TagsController,
     TasksController,
     UsersController,
+    WorkflowActionsController,
+    WorkflowsController,
+    WorkflowTriggersController,
 )
-from .errors import BadRequestException, DataNotExpectedException
-from .models.shared import ResourceType
+from .errors import BadRequestException, ControllerConfusion, DataNotExpectedException
 from .util import create_url_from_input
 
 
-class Paperless:  # pylint: disable=too-many-instance-attributes
+class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
     """Retrieves and manipulates data from and to paperless via REST."""
 
     def __init__(
@@ -54,7 +65,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._initialized = False
         self.logger = logging.getLogger(f"{__package__}[{self._url.host}]")
 
-        # endpoints
+        self.features: PaperlessFeature = PaperlessFeature(0)
+        # api controllers
         self._consumption_templates: ConsumptionTemplatesController | None = None
         self._correspondents: CorrespondentsController | None = None
         self._custom_fields: CustomFieldsController | None = None
@@ -69,6 +81,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._tags: TagsController | None = None
         self._tasks: TasksController | None = None
         self._users: UsersController | None = None
+        self._workflows: WorkflowsController | None = None
+        self._workflow_actions: WorkflowActionsController | None = None
+        self._workflow_triggers: WorkflowTriggersController | None = None
 
     @property
     def url(self) -> URL:
@@ -150,33 +165,95 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Gateway to users."""
         return self._users
 
+    @property
+    def workflows(self) -> WorkflowsController | None:
+        """Gateway to workflows."""
+        return self._workflows
+
+    @property
+    def workflow_actions(self) -> WorkflowActionsController | None:
+        """Gateway to workflow actions."""
+        return self._workflow_actions
+
+    @property
+    def workflow_triggers(self) -> WorkflowTriggersController | None:
+        """Gateway to workflow triggers."""
+        return self._workflow_triggers
+
     async def initialize(self) -> None:
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
-        res = await self.request_json("get", f"{self._url}")
+        async with self.generate_request("get", f"{self._url}") as res:
+            version = AwesomeVersion(
+                res.headers.get("x-version") if "x-version" in res.headers else "0.0.0"
+            )
 
-        self._consumption_templates = ConsumptionTemplatesController(
-            self, res.pop(ResourceType.CONSUMPTION_TEMPLATES)
+            if version >= PAPERLESS_V1_8_0:
+                self.features |= PaperlessFeature.CONTROLLER_STORAGE_PATHS
+            if version >= PAPERLESS_V1_17_0:
+                self.features |= PaperlessFeature.FEATURE_DOCUMENT_NOTES
+            if version >= PAPERLESS_V2_0_0:
+                self.features |= (
+                    PaperlessFeature.CONTROLLER_SHARE_LINKS
+                    | PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
+                    | PaperlessFeature.CONTROLLER_CUSTOM_FIELDS
+                )
+            if version >= PAPERLESS_V2_3_0:
+                self.features |= (
+                    PaperlessFeature.CONTROLLER_CONFIGS | PaperlessFeature.CONTROLLER_WORKFLOWS
+                )
+                self.features ^= PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
+
+            paths = await res.json()
+
+        self._correspondents = CorrespondentsController(
+            self, paths.pop(ControllerPath.CORRESPONDENTS)
         )
-        self._correspondents = CorrespondentsController(self, res.pop(ResourceType.CORRESPONDENTS))
-        self._custom_fields = CustomFieldsController(self, res.pop(ResourceType.CUSTOM_FIELDS))
-        self._documents = DocumentsController(self, res.pop(ResourceType.DOCUMENTS))
-        self._document_types = DocumentTypesController(self, res.pop(ResourceType.DOCUMENT_TYPES))
-        self._groups = GroupsController(self, res.pop(ResourceType.GROUPS))
-        self._mail_accounts = MailAccountsController(self, res.pop(ResourceType.MAIL_ACCOUNTS))
-        self._mail_rules = MailRulesController(self, res.pop(ResourceType.MAIL_RULES))
-        self._saved_views = SavedViewsController(self, res.pop(ResourceType.SAVED_VIEWS))
-        self._share_links = ShareLinksController(self, res.pop(ResourceType.SHARE_LINKS))
-        self._storage_paths = StoragePathsController(self, res.pop(ResourceType.STORAGE_PATHS))
-        self._tags = TagsController(self, res.pop(ResourceType.TAGS))
-        self._tasks = TasksController(self, res.pop(ResourceType.TASKS))
-        self._users = UsersController(self, res.pop(ResourceType.USERS))
+        self._documents = DocumentsController(self, paths.pop(ControllerPath.DOCUMENTS))
+        self._document_types = DocumentTypesController(
+            self, paths.pop(ControllerPath.DOCUMENT_TYPES)
+        )
+        self._groups = GroupsController(self, paths.pop(ControllerPath.GROUPS))
+        self._mail_accounts = MailAccountsController(self, paths.pop(ControllerPath.MAIL_ACCOUNTS))
+        self._mail_rules = MailRulesController(self, paths.pop(ControllerPath.MAIL_RULES))
+        self._saved_views = SavedViewsController(self, paths.pop(ControllerPath.SAVED_VIEWS))
+        self._tags = TagsController(self, paths.pop(ControllerPath.TAGS))
+        self._tasks = TasksController(self, paths.pop(ControllerPath.TASKS))
+        self._users = UsersController(self, paths.pop(ControllerPath.USERS))
+
+        try:
+            if PaperlessFeature.CONTROLLER_STORAGE_PATHS in self.features:
+                self._storage_paths = StoragePathsController(
+                    self, paths.pop(ControllerPath.STORAGE_PATHS)
+                )
+            if PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES in self.features:
+                self._consumption_templates = ConsumptionTemplatesController(
+                    self, paths.pop(ControllerPath.CONSUMPTION_TEMPLATES)
+                )
+            if PaperlessFeature.CONTROLLER_CUSTOM_FIELDS in self.features:
+                self._custom_fields = CustomFieldsController(
+                    self, paths.pop(ControllerPath.CUSTOM_FIELDS)
+                )
+            if PaperlessFeature.CONTROLLER_SHARE_LINKS in self.features:
+                self._share_links = ShareLinksController(
+                    self, paths.pop(ControllerPath.SHARE_LINKS)
+                )
+            if PaperlessFeature.CONTROLLER_WORKFLOWS in self.features:
+                self._workflows = WorkflowsController(self, paths.pop(ControllerPath.WORKFLOWS))
+                self._workflow_actions = WorkflowActionsController(
+                    self, paths.pop(ControllerPath.WORKFLOW_ACTIONS)
+                )
+                self._workflow_triggers = WorkflowTriggersController(
+                    self, paths.pop(ControllerPath.WORKFLOW_TRIGGERS)
+                )
+        except KeyError as exc:
+            raise ControllerConfusion(exc) from exc
 
         self._initialized = True
 
-        if len(res) > 0:
-            self.logger.debug("Unused endpoints: %s", ", ".join(res))
+        if len(paths) > 0:
+            self.logger.debug("Unused paths: %s", ", ".join(paths))
         self.logger.info("Initialized.")
 
     async def close(self) -> None:
@@ -209,6 +286,26 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
             }
         )
 
+        # convert form to FormData, if dict
+        if "form" in kwargs:
+            payload = kwargs.pop("form")
+            if not isinstance(payload, dict):
+                raise TypeError()
+            form = aiohttp.FormData()
+
+            # we just convert data, no nesting dicts
+            for key, value in payload.items():
+                if isinstance(value, str | bytes):
+                    form.add_field(key, value)
+                elif isinstance(value, list):
+                    for list_value in value:
+                        form.add_field(key, f"{list_value}")
+                else:
+                    form.add_field(key, f"{value}")
+
+            kwargs["data"] = form
+
+        # request data
         async with self._session.request(method, path, **kwargs) as res:
             yield res
 

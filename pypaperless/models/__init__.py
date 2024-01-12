@@ -1,9 +1,6 @@
 """Models for Paperless resources."""
 
-from .consumption_templates import ConsumptionTemplate
-from .correspondents import Correspondent, CorrespondentPost
 from .custom_fields import CustomField, CustomFieldPost
-from .document_types import DocumentType, DocumentTypePost
 from .documents import (
     Document,
     DocumentMetadata,
@@ -13,14 +10,22 @@ from .documents import (
     DocumentPost,
 )
 from .groups import Group
-from .mail_accounts import MailAccount
-from .mail_rules import MailRule
+from .mails import MailAccount, MailRule
+from .matching import (
+    Correspondent,
+    CorrespondentPost,
+    DocumentType,
+    DocumentTypePost,
+    StoragePath,
+    StoragePathPost,
+    Tag,
+    TagPost,
+)
 from .saved_views import SavedView, SavedViewFilterRule
 from .share_links import ShareLink, ShareLinkPost
-from .storage_paths import StoragePath, StoragePathPost
-from .tags import Tag, TagPost
 from .tasks import Task
 from .users import User
+from .workflows import ConsumptionTemplate, Workflow, WorkflowAction, WorkflowTrigger
 
 __all__ = [
     "ConsumptionTemplate",
@@ -49,4 +54,7 @@ __all__ = [
     "TagPost",
     "Task",
     "User",
+    "Workflow",
+    "WorkflowAction",
+    "WorkflowTrigger",
 ]

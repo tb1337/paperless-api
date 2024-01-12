@@ -1,10 +1,29 @@
 """Model for custom field resource."""
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 from .base import PaperlessModel, PaperlessPost
-from .shared import CustomFieldType
+
+
+class CustomFieldType(Enum):
+    """Enum with custom field types."""
+
+    STRING = "string"
+    BOOLEAN = "boolean"
+    INTEGER = "integer"
+    FLOAT = "float"
+    MONETARY = "monetary"
+    DATE = "date"
+    URL = "url"
+    DOCUMENT_LINK = "documentlink"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "CustomFieldType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return CustomFieldType.UNKNOWN
 
 
 @dataclass(kw_only=True)
