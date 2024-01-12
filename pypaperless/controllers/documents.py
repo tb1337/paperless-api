@@ -1,6 +1,5 @@
 """Controller for Paperless documents resource."""
 
-from dataclasses import fields
 from typing import TYPE_CHECKING
 
 from pypaperless.const import PaperlessFeature
@@ -122,22 +121,9 @@ class DocumentsController(  # pylint: disable=too-many-ancestors
 
     async def create(self, obj: DocumentPost) -> str:
         """Create a new document. Raise on failure."""
-        form_data = set()
-        for field in fields(obj):
-            value = getattr(obj, field.name)
-            if not value:
-                continue
-
-            if field.name == "tags" and isinstance(value, list):
-                while value:
-                    form_data.add((field.name, value.pop(0)))
-            else:
-                form_data.add((field.name, value))
-
         url = f"{self.path}/post_document/"
-
         # result is a string in this case
-        res = await self._paperless.request_json("post", url, form=form_data)
+        res = await self._paperless.request_json("post", url, form=dataclass_to_dict(obj))
         return res
 
     async def meta(self, obj: _DocumentOrIdType) -> DocumentMetaInformation:

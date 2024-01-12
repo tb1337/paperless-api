@@ -1,5 +1,6 @@
 """Paperless common tests."""
 
+
 import pytest
 
 from pypaperless import Paperless
@@ -60,9 +61,12 @@ class TestPaperless:
 
         # last but not least, we test sending a form
         form_data = {
-            ("a", 1),
-            ("b", 2),
-            ("c", 3),
+            "string": "Hello Bytes!",
+            "bytes": b"Hello String!",
+            "int": 23,
+            "float": 13.37,
+            "list": [1, 1, 2, 3, 5, 8, 13],
+            "dict": {"str": "str", "int": 2},
         }
-        async with api.generate_request("get", "https://example.org", form=form_data) as res:
+        async with api.generate_request("post", "https://example.org", form=form_data) as res:
             assert res.status

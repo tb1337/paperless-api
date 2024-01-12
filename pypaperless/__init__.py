@@ -286,13 +286,26 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
             }
         )
 
-        # convert form to FormData
+        # convert form to FormData, if dict
         if "form" in kwargs:
+            payload = kwargs.pop("form")
+            if not isinstance(payload, dict):
+                raise TypeError()
             form = aiohttp.FormData()
-            for item in kwargs.pop("form"):
-                form.add_field(item[0], item[1])
+
+            # we just convert data, no nesting dicts
+            for key, value in payload.items():
+                if isinstance(value, str | bytes):
+                    form.add_field(key, value)
+                elif isinstance(value, list):
+                    for list_value in value:
+                        form.add_field(key, f"{list_value}")
+                else:
+                    form.add_field(key, f"{value}")
+
             kwargs["data"] = form
 
+        # request data
         async with self._session.request(method, path, **kwargs) as res:
             yield res
 
