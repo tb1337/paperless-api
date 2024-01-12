@@ -57,14 +57,13 @@ class PaperlessMock(Paperless):
 
         # we fake form data to json payload as we don't want to mess with FastAPI forms
         if "form" in kwargs:
-            json = {}
-            for item in kwargs.pop("form"):
-                if item[0] == "tags":
-                    json.setdefault("tags", [])
-                    json["tags"].append(item[1])
+            payload = {}
+            for key, value in kwargs.pop("form").items():
+                if isinstance(value, bytes):
+                    payload[key] = value.decode()
                 else:
-                    json[item[0]] = item[1].decode() if isinstance(item[1], bytes) else item[1]
-            kwargs["json"] = json
+                    payload[key] = value
+            kwargs["json"] = payload
 
         # finally, request
         async with AsyncClient(

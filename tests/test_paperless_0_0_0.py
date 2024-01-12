@@ -1,5 +1,7 @@
 """Paperless basic tests."""
 
+import datetime
+
 import pytest
 from aiohttp.web_exceptions import HTTPNotFound
 
@@ -205,9 +207,24 @@ class TestDocuments:
 
     async def test_create(self, api_00: Paperless):
         """Test create."""
-        new_document = bytes("example content", "utf-8")
+        new_document = b"example content"
         new_tags = [1, 2, 3]
-        to_create = DocumentPost(document=new_document, tags=new_tags)
+        new_correspondent = 1
+        new_document_type = 1
+        new_storage_path = 1
+        title = "New Document"
+        created = datetime.datetime.now()
+        new_asn = 1
+        to_create = DocumentPost(
+            document=new_document,
+            tags=new_tags,
+            title=title,
+            correspondent=new_correspondent,
+            document_type=new_document_type,
+            storage_path=new_storage_path,
+            created=created,
+            archive_serial_number=new_asn,
+        )
         # actually call the create endpoint
         task_id = await api_00.documents.create(to_create)
         assert isinstance(task_id, str)

@@ -59,7 +59,7 @@ class TestPaperless:
         async with api.generate_request("get", "https://example.org") as res:
             assert res.status
 
-        # last but not least, we test sending a form
+        # last but not least, we test sending a form to test the converter
         form_data = {
             "string": "Hello Bytes!",
             "bytes": b"Hello String!",
