@@ -1,6 +1,7 @@
 """Paperless basic tests."""
 
 import datetime
+from unittest.mock import patch
 
 import pytest
 from aiohttp.web_exceptions import HTTPNotFound
@@ -65,6 +66,10 @@ class TestBeginPaperless:
         assert not api_00.workflows
         assert not api_00.workflow_actions
         assert not api_00.workflow_triggers
+
+    async def test_enums(self):
+        """Test enums."""
+        assert MatchingAlgorithm(999) == MatchingAlgorithm.UNKNOWN
 
 
 class TestCorrespondents:
@@ -179,6 +184,13 @@ class TestDocuments:
         assert len(items) > 0
         for item in items:
             assert isinstance(item, int)
+
+    async def test_empty_list(self, api_00: Paperless):
+        """Test empty controller list."""
+        with patch.object(api_00, "request_json", return_value={}):
+            # list must be empty because "all" key is omitted in return value
+            items = await api_00.documents.list()
+            assert items == []
 
     async def test_get(self, api_00: Paperless):
         """Test get."""

@@ -12,6 +12,11 @@ from pypaperless.controllers import (
 )
 from pypaperless.controllers.base import ResultPage
 from pypaperless.models import Workflow, WorkflowAction, WorkflowTrigger
+from pypaperless.models.workflows import (
+    WorkflowActionType,
+    WorkflowTriggerSource,
+    WorkflowTriggerType,
+)
 
 
 class TestBeginPaperless:
@@ -46,6 +51,12 @@ class TestBeginPaperless:
         assert api_23.workflow_actions
         assert api_23.workflow_triggers
         assert not api_23.consumption_templates  # got removed again
+
+    async def test_enums(self):
+        """Test enums."""
+        assert WorkflowActionType(999) == WorkflowActionType.UNKNOWN
+        assert WorkflowTriggerSource(999) == WorkflowTriggerSource.UNKNOWN
+        assert WorkflowTriggerType(999) == WorkflowTriggerType.UNKNOWN
 
 
 class TestWorkflows:

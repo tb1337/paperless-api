@@ -21,7 +21,7 @@ from pypaperless.models import (
     ShareLinkPost,
 )
 from pypaperless.models.custom_fields import CustomFieldType
-from pypaperless.models.share_links import FileVersion
+from pypaperless.models.share_links import ShareLinkFileVersion
 
 
 class TestBeginPaperless:
@@ -53,6 +53,11 @@ class TestBeginPaperless:
         assert not api_20.workflows
         assert not api_20.workflow_actions
         assert not api_20.workflow_triggers
+
+    async def test_enums(self):
+        """Test enums."""
+        assert CustomFieldType(999) == CustomFieldType.UNKNOWN
+        assert ShareLinkFileVersion("nope") == ShareLinkFileVersion.UNKNOWN
 
 
 class TestConsumptionTemplates:
@@ -232,7 +237,7 @@ class TestShareLinks:
         """Test create."""
         new_document = 1
         new_expiration = datetime.datetime.now() + datetime.timedelta(30)
-        new_file_version = FileVersion.ORIGINAL
+        new_file_version = ShareLinkFileVersion.ORIGINAL
         to_create = ShareLinkPost(
             document=new_document,
             expiration=new_expiration,
@@ -242,7 +247,7 @@ class TestShareLinks:
         assert isinstance(created, ShareLink)
         assert created.id == 6
         assert isinstance(created.expiration, datetime.datetime)
-        assert created.file_version == FileVersion.ORIGINAL
+        assert created.file_version == ShareLinkFileVersion.ORIGINAL
 
     async def test_udpate(self, api_20: Paperless):
         """Test update."""
