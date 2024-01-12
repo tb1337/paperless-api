@@ -123,7 +123,7 @@ class DocumentsController(  # pylint: disable=too-many-ancestors
         """Create a new document. Raise on failure."""
         url = f"{self.path}/post_document/"
         # result is a string in this case
-        res = await self._paperless.request_json("post", url, form=dataclass_to_dict(obj))
+        res: str = await self._paperless.request_json("post", url, form=dataclass_to_dict(obj))
         return res
 
     async def meta(self, obj: _DocumentOrIdType) -> DocumentMetaInformation:

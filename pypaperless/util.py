@@ -13,6 +13,7 @@ Thanks for the excellent work, guys!
 """
 
 # mypy: ignore-errors
+# pylint: disable=all
 
 import logging
 from dataclasses import MISSING, asdict, dataclass, fields, is_dataclass

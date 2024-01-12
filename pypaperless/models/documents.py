@@ -80,7 +80,7 @@ class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
 
 
 @dataclass(kw_only=True)
-class DocumentPost(PaperlessPost):
+class DocumentPost(PaperlessPost):  # pylint: disable=too-many-instance-attributes
     """Attributes to send when creating a document on the Paperless api."""
 
     document: bytes

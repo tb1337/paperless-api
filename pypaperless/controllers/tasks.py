@@ -38,3 +38,4 @@ class TasksController(BaseController[Task]):
         if len(res) > 0:
             data: Task = dataclass_from_dict(self.resource, res.pop())
             return data
+        return None
