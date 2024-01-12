@@ -203,6 +203,9 @@ class TestCustomFieldValues:
         assert isinstance(document.custom_fields, list)
         for item in document.custom_fields:
             assert isinstance(item, CustomFieldValue)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(HTTPNotFound):
+            await api_20.documents.custom_fields(1337, fields)
 
 
 class TestShareLinks:

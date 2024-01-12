@@ -260,7 +260,7 @@ async def put_resource_item(req: Request, resource: str, item: int):
         if result["id"] == item:
             result = payload  # noqa: PLW2901
             return result
-    return HTTPNotFound()
+    raise HTTPNotFound()
 
 
 @FakePaperlessAPI.patch("/api/{resource}/{item:int}/")
@@ -273,7 +273,7 @@ async def patch_resource_item(req: Request, resource: str, item: int):
             for k, v in payload.items():
                 result[k] = v
             return result
-    return HTTPNotFound()
+    raise HTTPNotFound()
 
 
 @FakePaperlessAPI.delete("/api/{resource}/{item:int}/")
@@ -284,4 +284,4 @@ async def delete_resource_item(req: Request, resource: str, item: int):
         if result["id"] == item:
             data["results"].pop(idx)
             return Response(status_code=204)
-    return HTTPNotFound()
+    raise HTTPNotFound()
