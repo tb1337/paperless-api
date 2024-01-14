@@ -9,35 +9,15 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from . import model
+from . import models
 from .const import (
     PAPERLESS_V1_8_0,
     PAPERLESS_V1_17_0,
     PAPERLESS_V2_0_0,
     PAPERLESS_V2_3_0,
-    ControllerPath,
     PaperlessFeature,
 )
-from .controllers import (
-    ConsumptionTemplatesController,
-    CorrespondentsController,
-    CustomFieldsController,
-    DocumentsController,
-    DocumentTypesController,
-    GroupsController,
-    MailAccountsController,
-    MailRulesController,
-    SavedViewsController,
-    ShareLinksController,
-    StoragePathsController,
-    TagsController,
-    TasksController,
-    UsersController,
-    WorkflowActionsController,
-    WorkflowsController,
-    WorkflowTriggersController,
-)
-from .errors import BadRequestException, ControllerConfusion, DataNotExpectedException
+from .errors import BadRequestException, DataNotExpectedException
 from .util import create_url_from_input
 
 
@@ -67,27 +47,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         self.logger = logging.getLogger(f"{__package__}[{self._url.host}]")
 
         self.features: PaperlessFeature = PaperlessFeature(0)
-        # api controllers
-        self._consumption_templates: ConsumptionTemplatesController | None = None
-        self._correspondents: CorrespondentsController | None = None
-        self._custom_fields: CustomFieldsController | None = None
-        self._documents: DocumentsController | None = None
-        self._document_types: DocumentTypesController | None = None
-        self._groups: GroupsController | None = None
-        self._mail_accounts: MailAccountsController | None = None
-        self._mail_rules: MailRulesController | None = None
-        self._saved_views: SavedViewsController | None = None
-        self._share_links: ShareLinksController | None = None
-        self._storage_paths: StoragePathsController | None = None
-        self._tags: TagsController | None = None
-        self._tasks: TasksController | None = None
-        self._users: UsersController | None = None
-        self._workflows: WorkflowsController | None = None
-        self._workflow_actions: WorkflowActionsController | None = None
-        self._workflow_triggers: WorkflowTriggersController | None = None
 
-        # poc
-        self.documentx = model.DocumentHelper(self, {})
+        # apis
+        self.documents = models.DocumentFactory(self)
 
     @property
     def url(self) -> URL:
@@ -98,91 +60,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
     def is_initialized(self) -> bool:
         """Return if connection is initialized."""
         return self._initialized
-
-    @property
-    def consumption_templates(self) -> ConsumptionTemplatesController | None:
-        """Gateway to consumption templates."""
-        return self._consumption_templates
-
-    @property
-    def correspondents(self) -> CorrespondentsController | None:
-        """Gateway to correspondents."""
-        return self._correspondents
-
-    @property
-    def custom_fields(self) -> CustomFieldsController | None:
-        """Gateway to custom fields."""
-        return self._custom_fields
-
-    @property
-    def documents(self) -> DocumentsController | None:
-        """Gateway to document types."""
-        return self._documents
-
-    @property
-    def document_types(self) -> DocumentTypesController | None:
-        """Gateway to document types."""
-        return self._document_types
-
-    @property
-    def groups(self) -> GroupsController | None:
-        """Gateway to groups."""
-        return self._groups
-
-    @property
-    def mail_accounts(self) -> MailAccountsController | None:
-        """Gateway to mail accounts."""
-        return self._mail_accounts
-
-    @property
-    def mail_rules(self) -> MailRulesController | None:
-        """Gateway to mail rules."""
-        return self._mail_rules
-
-    @property
-    def saved_views(self) -> SavedViewsController | None:
-        """Gateway to saved views."""
-        return self._saved_views
-
-    @property
-    def share_links(self) -> ShareLinksController | None:
-        """Gateway to share links."""
-        return self._share_links
-
-    @property
-    def storage_paths(self) -> StoragePathsController | None:
-        """Gateway to storage paths."""
-        return self._storage_paths
-
-    @property
-    def tags(self) -> TagsController | None:
-        """Gateway to tags."""
-        return self._tags
-
-    @property
-    def tasks(self) -> TasksController | None:
-        """Gateway to tasks."""
-        return self._tasks
-
-    @property
-    def users(self) -> UsersController | None:
-        """Gateway to users."""
-        return self._users
-
-    @property
-    def workflows(self) -> WorkflowsController | None:
-        """Gateway to workflows."""
-        return self._workflows
-
-    @property
-    def workflow_actions(self) -> WorkflowActionsController | None:
-        """Gateway to workflow actions."""
-        return self._workflow_actions
-
-    @property
-    def workflow_triggers(self) -> WorkflowTriggersController | None:
-        """Gateway to workflow triggers."""
-        return self._workflow_triggers
 
     async def initialize(self) -> None:
         """Initialize the connection to the api and fetch the endpoints."""
@@ -211,49 +88,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
 
             paths = await res.json()
 
-        self._correspondents = CorrespondentsController(
-            self, paths.pop(ControllerPath.CORRESPONDENTS)
-        )
-        self._documents = DocumentsController(self, paths.pop(ControllerPath.DOCUMENTS))
-        self._document_types = DocumentTypesController(
-            self, paths.pop(ControllerPath.DOCUMENT_TYPES)
-        )
-        self._groups = GroupsController(self, paths.pop(ControllerPath.GROUPS))
-        self._mail_accounts = MailAccountsController(self, paths.pop(ControllerPath.MAIL_ACCOUNTS))
-        self._mail_rules = MailRulesController(self, paths.pop(ControllerPath.MAIL_RULES))
-        self._saved_views = SavedViewsController(self, paths.pop(ControllerPath.SAVED_VIEWS))
-        self._tags = TagsController(self, paths.pop(ControllerPath.TAGS))
-        self._tasks = TasksController(self, paths.pop(ControllerPath.TASKS))
-        self._users = UsersController(self, paths.pop(ControllerPath.USERS))
-
-        try:
-            if PaperlessFeature.CONTROLLER_STORAGE_PATHS in self.features:
-                self._storage_paths = StoragePathsController(
-                    self, paths.pop(ControllerPath.STORAGE_PATHS)
-                )
-            if PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES in self.features:
-                self._consumption_templates = ConsumptionTemplatesController(
-                    self, paths.pop(ControllerPath.CONSUMPTION_TEMPLATES)
-                )
-            if PaperlessFeature.CONTROLLER_CUSTOM_FIELDS in self.features:
-                self._custom_fields = CustomFieldsController(
-                    self, paths.pop(ControllerPath.CUSTOM_FIELDS)
-                )
-            if PaperlessFeature.CONTROLLER_SHARE_LINKS in self.features:
-                self._share_links = ShareLinksController(
-                    self, paths.pop(ControllerPath.SHARE_LINKS)
-                )
-            if PaperlessFeature.CONTROLLER_WORKFLOWS in self.features:
-                self._workflows = WorkflowsController(self, paths.pop(ControllerPath.WORKFLOWS))
-                self._workflow_actions = WorkflowActionsController(
-                    self, paths.pop(ControllerPath.WORKFLOW_ACTIONS)
-                )
-                self._workflow_triggers = WorkflowTriggersController(
-                    self, paths.pop(ControllerPath.WORKFLOW_TRIGGERS)
-                )
-        except KeyError as exc:
-            raise ControllerConfusion(exc) from exc
-
         self._initialized = True
 
         if len(paths) > 0:
@@ -277,7 +111,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
 
-        path = path.rstrip("/") + "/"  # check and add trailing slash
+        # check for trailing slash if needed
+        if URL(path).query_string == "":
+            path = path.rstrip("/") + "/"
 
         if isinstance(self._request_opts, dict):
             kwargs.update(self._request_opts)
