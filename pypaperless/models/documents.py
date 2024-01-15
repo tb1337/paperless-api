@@ -2,22 +2,19 @@
 
 from typing import TYPE_CHECKING, Any
 
-from .base import PaperlessBase
+from pypaperless.const import API_PATH
+
+from .base import PaperlessModel
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class Document(PaperlessBase):
+class Document(PaperlessModel):
     """Documents provides various methods for handling Paperless Documents."""
 
-    def __call__(self, pk: int) -> "Document":
-        """Call."""
-        return self.parse({"id": pk}, self._api)
+    api_path = API_PATH["documents_single"]
 
     def __init__(self, api: "Paperless", _data: dict[str, Any] | None = None):
         """Initialize a `Documents` instance."""
         super().__init__(api, _data)
-
-        # Have to remove that
-        self.nothing = True

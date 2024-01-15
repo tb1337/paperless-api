@@ -1,25 +1,30 @@
-"""Generator."""
+"""Provide the ResourceIterator class."""
 
 from collections.abc import AsyncIterator
 from copy import deepcopy
-from typing import TYPE_CHECKING, Generic
+from typing import TYPE_CHECKING, Any
 
-from pypaperless.const import ResourceT
 from pypaperless.models.base import PaperlessBase
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class ResourceIterator(PaperlessBase, AsyncIterator, Generic[ResourceT]):
-    """Listing."""
+class ResourceGenerator(PaperlessBase, AsyncIterator):
+    """Iterator for DRF paginated endpoints.
 
-    def __aiter__(self) -> AsyncIterator[ResourceT]:
+    `api`: An instance of :class:`Paperless`.
+    `url`: A url returning DRF page contents.
+    `limit`: The limit of items to return. If `None`, return all.
+    `params`: Optional dict of query string parameters.
+    """
+
+    def __aiter__(self) -> AsyncIterator:
         """Return self as iterator."""
         return self
 
-    async def __anext__(self) -> ResourceT:
-        """Next."""
+    async def __anext__(self) -> dict[str, Any]:
+        """Return next item from the current batch."""
         if self.limit is not None and self.yielded >= self.limit:
             raise StopAsyncIteration
 
@@ -28,22 +33,20 @@ class ResourceIterator(PaperlessBase, AsyncIterator, Generic[ResourceT]):
 
         self._ix += 1
         self.yielded += 1
-        return self._cls.parse(self._list[self._ix - 1], self._api)
+        return self._list[self._ix - 1]
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(
         self,
-        cls: type[ResourceT],
         api: "Paperless",
         url: str,
         limit: int | None = None,
         params: dict[str, int | str] | None = None,
     ):
-        """Init."""
-        super().__init__(api, None)
+        """Initialize `ResourceIterator` class instance."""
+        super().__init__(api)
 
-        self._cls = cls
         self._ix: int = 0
-        self._list: list = []
+        self._list: list[dict[str, Any]] = []
         self._url = url
         self.limit = limit
         self.params = deepcopy(params) if params else {}
@@ -53,11 +56,9 @@ class ResourceIterator(PaperlessBase, AsyncIterator, Generic[ResourceT]):
         self.params.setdefault("page_size", 150)
 
     async def _request_batch(self) -> None:
-        """Get next batch."""
+        """Request a single page from DRF and store it result in `self._list`."""
         if self.exhausted:
             raise StopAsyncIteration
-
-        print(f"Requesting batch, current yielded: {self.yielded}")
 
         res = await self._api.request_json("get", self._url, params=self.params)
         self._url = res["next"]
@@ -69,5 +70,5 @@ class ResourceIterator(PaperlessBase, AsyncIterator, Generic[ResourceT]):
 
     @property
     def exhausted(self) -> bool:
-        """Is Exhausted."""
+        """Return whether there is a `next` url or not."""
         return self._url is None

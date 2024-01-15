@@ -9,8 +9,8 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from . import models
 from .const import (
+    API_PATH,
     PAPERLESS_V1_8_0,
     PAPERLESS_V1_17_0,
     PAPERLESS_V2_0_0,
@@ -18,6 +18,7 @@ from .const import (
     PaperlessFeature,
 )
 from .errors import BadRequestException, DataNotExpectedException
+from .models import factories
 from .util import create_url_from_input
 
 
@@ -39,22 +40,22 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         * token: provide an api token created in Paperless Django settings.
         * session: provide an existing aiohttp ClientSession.
         """
-        self._url = create_url_from_input(url)
+        self._base_url = create_url_from_input(url)
         self._token = token
         self._request_opts = request_opts
         self._session = session
         self._initialized = False
-        self.logger = logging.getLogger(f"{__package__}[{self._url.host}]")
+        self.logger = logging.getLogger(f"{__package__}[{self.base_url.host}]")
 
         self.features: PaperlessFeature = PaperlessFeature(0)
 
         # apis
-        self.documents = models.DocumentFactory(self)
+        self.documents = factories.DocumentFactory(self)
 
     @property
-    def url(self) -> URL:
-        """Return the url of Paperless."""
-        return self._url
+    def base_url(self) -> URL:
+        """Return the base surl of Paperless."""
+        return self._base_url
 
     @property
     def is_initialized(self) -> bool:
@@ -65,7 +66,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         """Initialize the connection to the api and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
-        async with self.generate_request("get", f"{self._url}") as res:
+        async with self.generate_request("get", API_PATH["index"]) as res:
             version = AwesomeVersion(
                 res.headers.get("x-version") if "x-version" in res.headers else "0.0.0"
             )
@@ -111,10 +112,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         if not isinstance(self._session, aiohttp.ClientSession):
             self._session = aiohttp.ClientSession()
 
-        # check for trailing slash if needed
-        if URL(path).query_string == "":
-            path = path.rstrip("/") + "/"
-
         if isinstance(self._request_opts, dict):
             kwargs.update(self._request_opts)
 
@@ -145,8 +142,13 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
 
             kwargs["data"] = form
 
+        # check for trailing slash if needed
+        url = f"{self.base_url}{path}" if not path.startswith("http") else path
+        if URL(url).query_string == "":
+            url = url.rstrip("/") + "/"
+
         # request data
-        async with self._session.request(method, path, **kwargs) as res:
+        async with self._session.request(method, url, **kwargs) as res:
             yield res
 
     async def request_json(

@@ -6,14 +6,20 @@ from typing import TYPE_CHECKING, TypeVar
 from awesomeversion import AwesomeVersion
 
 if TYPE_CHECKING:
-    from .models.base import PaperlessBase
+    from .models.base import PaperlessModel
 
-ResourceT = TypeVar("ResourceT", bound="PaperlessBase")
+ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 PAPERLESS_V1_8_0 = AwesomeVersion("1.8.0")
 PAPERLESS_V1_17_0 = AwesomeVersion("1.17.0")
 PAPERLESS_V2_0_0 = AwesomeVersion("2.0.0")
 PAPERLESS_V2_3_0 = AwesomeVersion("2.3.0")
+
+API_PATH = {
+    "index": "/api/",
+    "documents": "/api/documents/",
+    "documents_single": "/api/documents/{pk}/",
+}
 
 
 CTRL_CONSUMPTION_TEMPLATES = "consumption_templates"

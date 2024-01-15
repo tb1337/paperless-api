@@ -1,1 +1,0 @@
-"""Endpoints of Paperless api."""

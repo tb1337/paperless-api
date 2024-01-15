@@ -37,8 +37,8 @@ def create_url_from_input(url: str | URL) -> URL:
         url = URL(url).with_scheme("https")
 
     # check if /api is included
-    if url.name != "api":
-        url = url.with_path(url.path.rstrip("/") + "/api")
+    # if url.name != "api":
+    #     url = url.with_path(url.path.rstrip("/") + "/api")
 
     return url
 
