@@ -1,6 +1,8 @@
 """Provide the documents class."""
 
-from typing import TYPE_CHECKING, Any
+import datetime
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, final
 
 from pypaperless.const import API_PATH
 
@@ -10,11 +12,39 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class Document(PaperlessModel):
-    """Documents provides various methods for handling Paperless Documents."""
+@final
+@dataclass(init=False)
+class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+    """Represent a Paperless `Document`."""
 
-    api_path = API_PATH["documents_single"]
+    _api_path = API_PATH["documents_single"]
 
-    def __init__(self, api: "Paperless", _data: dict[str, Any] | None = None):
+    id: int
+    correspondent: int | None = None
+    document_type: int | None = None
+    storage_path: int | None = None
+    title: str | None = None
+    content: str | None = None
+    tags: list[int] | None = None
+    created: datetime.datetime | None = None
+    created_date: datetime.date | None = None
+    modified: datetime.datetime | None = None
+    added: datetime.datetime | None = None
+    archive_serial_number: int | None = None
+    original_file_name: str | None = None
+    archived_file_name: str | None = None
+    owner: int | None = None
+    user_can_change: bool | None = None
+    notes: list[dict[str, Any]] | None = None
+    custom_fields: list[dict[str, Any]] | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `Documents` instance."""
-        super().__init__(api, _data)
+        super().__init__(api, data)
+
+        print("Init")
+
+    @property
+    def api_path(self) -> str:
+        """Return the api path."""
+        return self._api_path.format(pk=self.id)

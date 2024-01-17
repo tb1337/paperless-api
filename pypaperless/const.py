@@ -1,14 +1,8 @@
 """PyPaperless constants."""
 
 from enum import IntFlag, StrEnum
-from typing import TYPE_CHECKING, TypeVar
 
 from awesomeversion import AwesomeVersion
-
-if TYPE_CHECKING:
-    from .models.base import PaperlessModel
-
-ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 PAPERLESS_V1_8_0 = AwesomeVersion("1.8.0")
 PAPERLESS_V1_17_0 = AwesomeVersion("1.17.0")

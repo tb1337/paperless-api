@@ -1,49 +1,88 @@
 """Provide base classes."""
 
-from typing import TYPE_CHECKING, Any
+import dataclasses
+from typing import TYPE_CHECKING, Any, TypeVar, final
 
-from pypaperless.const import ResourceT
+from pypaperless.const import API_PATH
+from pypaperless.util import dict_value_to_object
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
+
+ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
 class PaperlessBase:
     """Superclass for all classes in PyPaperless."""
 
+    _api_path = API_PATH["index"]
+
     def __init__(self, api: "Paperless"):
         """Initialize a `PaperlessBase` instance."""
         self._api = api
+
+    @property
+    def api_path(self) -> str:
+        """Return the api path."""
+        return self._api_path
 
 
 class PaperlessModel(PaperlessBase):
     """Base class for all models in PyPaperless."""
 
-    api_path = ""
-
     def __getattr__(self, attribute: str) -> Any:
-        """Get an attribute from `self._data`."""
-        if attribute.startswith("_"):
-            raise KeyError()
+        """Get an attribute from `PaperlessModel`."""
         return self._data.get(attribute, None)
 
-    def __init__(self, api: "Paperless", _data: dict[str, Any] | None = None):
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `PaperlessModel` instance."""
         super().__init__(api)
         self._data = {}
         self._fetched = False
 
-        if _data:
-            self._data.update(_data)
+        self._data.update(data)
 
+    @final
     @classmethod
-    def parse_from_data(cls: type[ResourceT], api: "Paperless", data: dict[str, Any]) -> ResourceT:
-        """Return an instance of `cls` from `data`."""
-        item = cls(api, _data=data)
-        item._fetched = True
+    def create_with_data(
+        cls: type[ResourceT],
+        api: "Paperless",
+        data: dict[str, Any],
+        fetched: bool = False,
+    ) -> ResourceT:
+        """Return a new instance of `cls` from `data`.
+
+        Primarily used by class factories to create new model instances.
+
+        Example: `document = Document.create_with_data(...)`
+        """
+        item = cls(api, data=data)
+        item._fetched = fetched
         return item
 
+    @final
+    def _set_dataclass_fields(self) -> None:
+        """Set the dataclass fields from `self._data`."""
+        if not dataclasses.is_dataclass(self):
+            raise ValueError("Class is no dataclass.")
+
+        for field in dataclasses.fields(self):
+            value = dict_value_to_object(
+                f"{self.__class__.__name__}.{field.name}",
+                self._data.get(field.name),  # type: ignore[union-attr]
+                field.type,
+                field.default,
+            )
+            setattr(self, field.name, value)
+
+    @final
     async def load(self) -> None:
-        """Request `model data` from DRF."""
+        """Get `model data` from DRF."""
         self._data = await self._api.request_json("get", self.api_path.format(pk=self.id))
+        self._set_dataclass_fields()
         self._fetched = True
+
+    @final
+    async def update(self) -> None:
+        """Write `model data` to DRF."""
+        # updated_fields = {}

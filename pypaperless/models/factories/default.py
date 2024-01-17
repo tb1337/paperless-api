@@ -1,14 +1,16 @@
 """Provide default factory classes."""
 
+from typing import final
+
 from pypaperless.const import API_PATH
 from pypaperless.models import Document
 
 from .base import FactoryBase
 
 
-class DocumentFactory(FactoryBase[Document]):
-    """DocumentFactory instantiates the FactoryBase class."""
+@final
+class DocumentFactory(FactoryBase[type[Document]]):  # type: ignore[type-var]
+    """Represent a factory for Paperless `Document` models."""
 
-    _resource = type[Document]
-
-    api_path = API_PATH["documents"]
+    _api_path = API_PATH["documents"]
+    _resource = Document
