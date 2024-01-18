@@ -3,9 +3,8 @@
 from collections.abc import AsyncIterator
 from typing import TYPE_CHECKING, Generic, final
 
-# from pypaperless.const import ResourceT
 from pypaperless.models.base import PaperlessBase, ResourceT
-from pypaperless.utils.generators import ResourceGenerator
+from pypaperless.models.generators import ResourceGenerator
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -15,7 +14,7 @@ class FactoryBase(PaperlessBase, Generic[ResourceT]):
     """Base class for all factories in PyPaperless."""
 
     _api_path = ""
-    _resource: ResourceT
+    _resource: type[ResourceT]
 
     @final
     async def __aiter__(self) -> AsyncIterator[ResourceT]:

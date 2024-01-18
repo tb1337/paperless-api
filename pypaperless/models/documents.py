@@ -42,8 +42,6 @@ class Document(PaperlessModel):  # pylint: disable=too-many-instance-attributes
         """Initialize a `Documents` instance."""
         super().__init__(api, data)
 
-        print("Init")
-
     @property
     def api_path(self) -> str:
         """Return the api path."""

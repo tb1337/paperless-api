@@ -1,5 +1,5 @@
 """PyPaperless utils."""
 
-from .generators import ResourceGenerator
+from .resource import ResourceGenerator
 
 __all__ = ("ResourceGenerator",)
