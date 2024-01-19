@@ -18,7 +18,7 @@ from .const import (
     PaperlessFeature,
 )
 from .errors import BadRequestException, DataNotExpectedException
-from .models import factories
+from .models import helpers
 from .util import create_url_from_input
 
 
@@ -50,7 +50,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         self.features: PaperlessFeature = PaperlessFeature(0)
 
         # apis
-        self.documents = factories.DocumentFactory(self)
+        self.documents = helpers.DocumentHelper(self)
 
     @property
     def base_url(self) -> URL:

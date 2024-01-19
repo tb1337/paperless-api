@@ -1,4 +1,4 @@
-"""Provide the documents class."""
+"""Provide the `Documents` class."""
 
 import datetime
 from dataclasses import dataclass

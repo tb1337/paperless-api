@@ -58,6 +58,8 @@ class PaperlessModel(PaperlessBase):
         """
         item = cls(api, data=data)
         item._fetched = fetched
+        if fetched:
+            item._set_dataclass_fields()
         return item
 
     @final
