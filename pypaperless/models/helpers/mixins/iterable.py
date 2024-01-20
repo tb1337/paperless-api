@@ -26,7 +26,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
         """
         items = ResourceGenerator(
             self._api,
-            self.api_path,
+            self._api_path,
             params=getattr(self, "_aiter_filters", None),
         )
         async for data in items:

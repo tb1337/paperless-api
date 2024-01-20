@@ -15,10 +15,6 @@ class HelperProtocol(Protocol, Generic[ResourceT]):
     _api_path: str
     _resource: type[ResourceT]
 
-    @property
-    def api_path(self) -> str:  # noqa
-        ...
-
 
 class HelperBase(PaperlessBase, Generic[ResourceT]):
     """Base class for all helpers in PyPaperless."""
