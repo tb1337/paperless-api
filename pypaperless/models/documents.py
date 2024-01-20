@@ -19,7 +19,6 @@ class Document(PaperlessModel, UpdatableMixin):  # pylint: disable=too-many-inst
     """Represent a Paperless `Document`."""
 
     _api_path = API_PATH["documents_single"]
-    _rw_props = ""
 
     id: int
     correspondent: int | None = None

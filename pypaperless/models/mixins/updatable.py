@@ -12,7 +12,7 @@ class UpdatableMixin(PaperlessModelProtocol):
 
     @final
     async def update(self) -> bool:
-        """Write `model data` to DRF. Actually changed attributes will get patched only.
+        """Send actually changed `model data` to DRF.
 
         Return `True` when any attribute was updated.
 
@@ -28,9 +28,7 @@ class UpdatableMixin(PaperlessModelProtocol):
         """
 
         changed = {}
-        for field in fields(self):
-            if field.name.startswith("_"):
-                continue
+        for field in self._get_dataclass_fields():
             new_value = object_to_dict_value(getattr(self, field.name))
 
             if new_value != self._data[field.name]:

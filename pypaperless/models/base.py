@@ -1,6 +1,6 @@
 """Provide base classes."""
 
-from dataclasses import dataclass, fields
+from dataclasses import Field, dataclass, fields
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, final
 
 from pypaperless.const import API_PATH
@@ -31,6 +31,9 @@ class PaperlessModelProtocol(Protocol):
     _api_path: str
     _data: dict[str, Any]
     _fetched: bool
+
+    def _get_dataclass_fields(self) -> list[Field]:
+        ...
 
     def _set_dataclass_fields(self) -> None:
         ...
@@ -68,15 +71,15 @@ class PaperlessModel(PaperlessBase, PaperlessModelProtocol):
         return item
 
     @final
+    def _get_dataclass_fields(self) -> list[Field]:
+        """Get the dataclass fields."""
+        return [field for field in fields(self) if not field.name.startswith("_")]
+
+    @final
     def _set_dataclass_fields(self) -> None:
         """Set the dataclass fields from `self._data`."""
-        # if not dataclasses.is_dataclass(self):
-        #     raise ValueError("Class is no dataclass.")
 
-        for field in fields(self):
-            if field.name.startswith("_"):
-                continue
-
+        for field in self._get_dataclass_fields():
             value = dict_value_to_object(
                 f"{self.__class__.__name__}.{field.name}",
                 self._data.get(field.name),
