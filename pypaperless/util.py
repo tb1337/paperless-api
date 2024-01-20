@@ -43,19 +43,37 @@ def create_url_from_input(url: str | URL) -> URL:
     return url
 
 
+def _str_to_datetime(datetimestr: str):
+    """Parse datetime from string."""
+    return datetime.fromisoformat(datetimestr.replace("Z", "+00:00"))
+
+
+def _str_to_date(datestr: str):
+    """Parse date from string."""
+    return date.fromisoformat(datestr)
+
+
+def _dateobj_to_str(value: date | datetime):
+    """Parse string from date objects."""
+    result = value.isoformat().replace("+00:00", "Z")
+    if isinstance(value, datetime):
+        result = result.rstrip("Z") + "Z"
+    return result
+
+
 def object_to_dict_value(value: Any) -> Any:
     """Convert object values to their correspondending json values."""
 
     def _clean_value(_value_obj: Any) -> Any:
-        if isinstance(value, list):
-            value = _clean_list(value)
-        if isinstance(value, dict):
-            value = _clean_dict(value)
-        if isinstance(value, Enum):
-            value = value.value
-        if isinstance(value, date | datetime):
-            value = value.isoformat()
-        return value
+        if isinstance(_value_obj, list):
+            _value_obj = _clean_list(value)
+        if isinstance(_value_obj, dict):
+            _value_obj = _clean_dict(value)
+        if isinstance(_value_obj, Enum):
+            _value_obj = value.value
+        if isinstance(_value_obj, date | datetime):
+            _value_obj = _dateobj_to_str(value)
+        return _value_obj
 
     def _clean_list(_list_obj: list) -> list[Any]:
         final = []
@@ -70,16 +88,6 @@ def object_to_dict_value(value: Any) -> Any:
         return final
 
     return _clean_value(value)
-
-
-def _parse_utc_timestamp(datetimestr: str):
-    """Parse datetime from string."""
-    return datetime.fromisoformat(datetimestr.replace("Z", "+00:00"))
-
-
-def _parse_date(datestr: str):
-    """Parse date from string."""
-    return date.fromisoformat(datestr)
 
 
 def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = MISSING) -> Any:
@@ -166,9 +174,9 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
         if issubclass(value_type, Enum):
             return value_type(value)
         if issubclass(value_type, datetime):
-            return _parse_utc_timestamp(value)
+            return _str_to_datetime(value)
         if issubclass(value_type, date):
-            return _parse_date(value)
+            return _str_to_date(value)
     except TypeError:
         # happens if value_type is not a class
         pass
