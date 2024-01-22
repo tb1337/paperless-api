@@ -6,7 +6,7 @@ from pypaperless.models.base import ResourceT
 from pypaperless.models.helpers.base import HelperProtocol
 
 
-class CallableMixin(HelperProtocol[ResourceT]):
+class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods
     """Provide methods for calling a specific resource item."""
 
     @final

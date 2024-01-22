@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, final
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
-from .mixins import UpdatableMixin
+from .mixins import CreatableMixin, DeletableMixin, UpdatableMixin
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -15,7 +15,11 @@ if TYPE_CHECKING:
 
 @final
 @dataclass(init=False)
-class Document(PaperlessModel, UpdatableMixin):  # pylint: disable=too-many-instance-attributes
+class Document(
+    PaperlessModel,
+    UpdatableMixin,
+    DeletableMixin,
+):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `Document`."""
 
     _api_path = API_PATH["documents_single"]
@@ -44,3 +48,25 @@ class Document(PaperlessModel, UpdatableMixin):  # pylint: disable=too-many-inst
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
+
+
+@final
+@dataclass(init=False)
+class DocumentDraft(
+    PaperlessModel,
+    CreatableMixin,
+):  # pylint: disable=too-many-instance-attributes
+    """Represent a new Paperless `Document`, which is not stored in Paperless."""
+
+    _api_path = API_PATH["documents_post"]
+
+    _create_required_fields = {"document"}
+
+    document: bytes | None = None
+    title: str | None = None
+    created: datetime.datetime | None = None
+    correspondent: int | None = None
+    document_type: int | None = None
+    storage_path: int | None = None
+    tags: list[int] | None = None
+    archive_serial_number: int | None = None

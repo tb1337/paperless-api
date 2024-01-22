@@ -19,9 +19,6 @@ class HelperProtocol(Protocol, Generic[ResourceT]):
 class HelperBase(PaperlessBase, Generic[ResourceT]):
     """Base class for all helpers in PyPaperless."""
 
-    _api_path = ""
-    _resource: type[ResourceT]
-
     def __init__(self, api: "Paperless"):
         """Initialize a `HelperBase` instance."""
         super().__init__(api)

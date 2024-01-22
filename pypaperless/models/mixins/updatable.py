@@ -6,8 +6,8 @@ from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.util import object_to_dict_value
 
 
-class UpdatableMixin(PaperlessModelProtocol):
-    """Provide the `update` method for models."""
+class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods
+    """Provide the `update` method for PyPaperless models."""
 
     _data: dict[str, Any]
 
@@ -15,7 +15,7 @@ class UpdatableMixin(PaperlessModelProtocol):
     async def update(self, only_changed: bool = True) -> bool:
         """Send actually changed `model data` to DRF.
 
-        Return `True` when any attribute was updated.
+        Return `True` when any attribute was updated, `False` otherwise.
 
         Example:
         ```python

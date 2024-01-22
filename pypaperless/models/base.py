@@ -40,7 +40,7 @@ class PaperlessModelProtocol(Protocol):
 
 
 @dataclass(init=False)
-class PaperlessModel(PaperlessBase, PaperlessModelProtocol):
+class PaperlessModel(PaperlessBase):
     """Base class for all models in PyPaperless."""
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
@@ -78,7 +78,6 @@ class PaperlessModel(PaperlessBase, PaperlessModelProtocol):
     @final
     def _set_dataclass_fields(self) -> None:
         """Set the dataclass fields from `self._data`."""
-
         for field in self._get_dataclass_fields():
             value = dict_value_to_object(
                 f"{self.__class__.__name__}.{field.name}",
