@@ -134,7 +134,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
             for key, value in payload.items():
                 if value is None:
                     continue
-                elif isinstance(value, str | bytes):
+                if isinstance(value, str | bytes):
                     form.add_field(key, value)
                 elif isinstance(value, list):
                     for list_value in value:

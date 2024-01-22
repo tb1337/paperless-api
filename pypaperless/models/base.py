@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
-class PaperlessBase:
+class PaperlessBase:  # pylint: disable=too-few-public-methods
     """Superclass for all classes in PyPaperless."""
 
     _api_path = API_PATH["index"]

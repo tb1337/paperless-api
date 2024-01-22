@@ -10,7 +10,7 @@ from .mixins import CallableMixin, DraftableMixin, IterableMixin
 
 
 @final
-class DocumentHelper(
+class DocumentHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Document],
     CallableMixin[Document],
     DraftableMixin[DocumentDraft],

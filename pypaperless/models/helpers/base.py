@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class HelperProtocol(Protocol, Generic[ResourceT]):
+class HelperProtocol(Protocol, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
     """Protocol for any `HelperBase` instances and its ancestors."""
 
     _api: "Paperless"
@@ -16,11 +16,9 @@ class HelperProtocol(Protocol, Generic[ResourceT]):
     _resource: type[ResourceT]
 
 
-class HelperBase(PaperlessBase, Generic[ResourceT]):
+class HelperBase(PaperlessBase, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
     """Base class for all helpers in PyPaperless."""
 
-    def __init__(self, api: "Paperless"):
-        """Initialize a `HelperBase` instance."""
-        super().__init__(api)
-
-        # TODO: implement basic fetch
+    # def __init__(self, api: "Paperless"):
+    #     """Initialize a `HelperBase` instance."""
+    #     super().__init__(api)
