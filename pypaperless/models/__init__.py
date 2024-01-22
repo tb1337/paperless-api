@@ -1,9 +1,9 @@
 """PyPaperless models."""
 
 from .documents import Document
-from .page import Page
+from .result_page import ResultPage
 
 __all__ = (
     "Document",
-    "Page",
+    "ResultPage",
 )

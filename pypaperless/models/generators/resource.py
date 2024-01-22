@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
-from pypaperless.models import Page
+from pypaperless.models import ResultPage
 from pypaperless.models.base import PaperlessBase
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ class ResourceGenerator(PaperlessBase, AsyncIterator):
         super().__init__(api)
 
         self._ix: int = 0
-        self._page: Page | None = None
+        self._page: ResultPage | None = None
         self._url = url
         self.limit = limit
         self.params = deepcopy(params) if params else {}
@@ -68,7 +68,7 @@ class ResourceGenerator(PaperlessBase, AsyncIterator):
             raise StopAsyncIteration
 
         res = await self._api.request_json("get", url, params=self.params)
-        page = Page.create_with_data(self._api, res, fetched=True)
+        page = ResultPage.create_with_data(self._api, res, fetched=True)
 
         self._page = page
         self._ix = 0
