@@ -1,6 +1,5 @@
 """UpdatableMixin for PyPaperless models."""
 
-from dataclasses import fields
 from typing import Any, final
 
 from pypaperless.models.base import PaperlessModelProtocol
@@ -8,10 +7,12 @@ from pypaperless.util import object_to_dict_value
 
 
 class UpdatableMixin(PaperlessModelProtocol):
-    """Provide methods for calling a specific resource item."""
+    """Provide the `update` method for models."""
+
+    _data: dict[str, Any]
 
     @final
-    async def update(self) -> bool:
+    async def update(self, only_changed: bool = True) -> bool:
         """Send actually changed `model data` to DRF.
 
         Return `True` when any attribute was updated.
@@ -26,8 +27,21 @@ class UpdatableMixin(PaperlessModelProtocol):
             print("Successfully updated a field!")
         ```
         """
+        updated = False
 
+        if only_changed:
+            updated = await self._patch_fields()
+        else:
+            updated = await self._put_fields()
+
+        self._set_dataclass_fields()
+        return updated
+
+    @final
+    async def _patch_fields(self) -> bool:
+        """Use the http `PATCH` method for updating only changed fields."""
         changed = {}
+
         for field in self._get_dataclass_fields():
             new_value = object_to_dict_value(getattr(self, field.name))
 
@@ -37,9 +51,19 @@ class UpdatableMixin(PaperlessModelProtocol):
         if len(changed) == 0:
             return False
 
-        self._data: dict[str, Any] = await self._api.request_json(
-            "patch", self._api_path, json=changed
+        self._data = await self._api.request_json(
+            "patch",
+            self._api_path,
+            json=changed,
         )
-        self._set_dataclass_fields()
+        return True
 
+    @final
+    async def _put_fields(self) -> bool:
+        """Use the http `PUT` method to replace all fields."""
+        data = {
+            field.name: object_to_dict_value(getattr(self, field.name))
+            for field in self._get_dataclass_fields()
+        }
+        self._data = await self._api.request_json("put", self._api_path, json=data)
         return True
