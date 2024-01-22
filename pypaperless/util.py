@@ -65,26 +65,26 @@ def object_to_dict_value(value: Any) -> Any:
     """Convert object values to their correspondending json values."""
 
     def _clean_value(_value_obj: Any) -> Any:
-        if isinstance(_value_obj, list):
-            _value_obj = _clean_list(value)
         if isinstance(_value_obj, dict):
-            _value_obj = _clean_dict(value)
+            _value_obj = _clean_dict(_value_obj)
+        if isinstance(_value_obj, list):
+            _value_obj = _clean_list(_value_obj)
         if isinstance(_value_obj, Enum):
-            _value_obj = value.value
+            _value_obj = _value_obj.value
         if isinstance(_value_obj, date | datetime):
-            _value_obj = _dateobj_to_str(value)
+            _value_obj = _dateobj_to_str(_value_obj)
         return _value_obj
 
     def _clean_list(_list_obj: list) -> list[Any]:
         final = []
-        for value in _list_obj:
-            final.append(value)
+        for list_value in _list_obj:
+            final.append(_clean_value(list_value))
         return final
 
     def _clean_dict(_dict_obj: dict) -> dict[str, Any]:
         final = {}
-        for key, value in _dict_obj.items():
-            final[key] = _clean_value(value)
+        for dict_key, dict_value in _dict_obj.items():
+            final[dict_key] = _clean_value(dict_value)
         return final
 
     return _clean_value(value)
