@@ -1,5 +1,5 @@
-"""PyPaperless utils."""
+"""PyPaperless generators."""
 
-from .resource import ResourceGenerator
+from .page import PageGenerator
 
-__all__ = ("ResourceGenerator",)
+__all__ = ("PageGenerator",)

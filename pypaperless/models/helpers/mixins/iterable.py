@@ -1,11 +1,12 @@
-"""Iterable mixin for PyPaperless helpers."""
+"""IterableMixin for PyPaperless helpers."""
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Self, final
 
+from pypaperless.models import ResultPage
 from pypaperless.models.base import ResourceT
-from pypaperless.models.generators import ResourceGenerator
+from pypaperless.models.generators import PageGenerator
 from pypaperless.models.helpers.base import HelperProtocol
 
 
@@ -24,29 +25,60 @@ class IterableMixin(HelperProtocol[ResourceT]):
             # do something
         ```
         """
-        items = ResourceGenerator(
-            self._api,
-            self._api_path,
-            params=getattr(self, "_aiter_filters", None),
-        )
-        async for data in items:
-            yield self._resource.create_with_data(self._api, data, fetched=True)
+        async for page in self.pages():
+            for item in page:
+                yield item
 
     @final
     @asynccontextmanager
-    async def filter_iteration(
+    async def reduce(
         self: Self,
         **kwargs: str | int,
     ) -> AsyncGenerator[Self, None]:
         """Provide context for iterating over resource items with query parameters.
 
+        `kwargs`: Insert any Paperless api supported filter keywords here.
+        You can provide `page` and `page_size` parameters, as well.
+
         Example:
         ```python
-        async with paperless.documents.filter_iteration(**filters):
+        filters = {
+            "page_size": 1337,
+            "title__icontains": "2023",
+        }
+
+        async with paperless.documents.reduce(**filters):
+            # iterate over resource items ...
             async for item in paperless.documents:
-                # do something
+                ...
+
+            # ... or iterate pages as-is
+            async for page in paperless.documents.pages():
+                ...
         ```
         """
         self._aiter_filters = kwargs
         yield self
         self._aiter_filters = None
+
+    def pages(
+        self,
+        page: int = 1,
+        page_size: int = 150,
+    ) -> AsyncIterator[ResultPage[ResourceT]]:
+        """Iterate over resource pages.
+
+        `page`: A page number to start with.
+        `page_size`: The page size for each requested batch.
+
+        Example:
+        ```python
+        async for item in paperless.documents.pages():
+            # do something
+        ```
+        """
+        params = getattr(self, "_aiter_filters", {})
+        params.setdefault("page", page)
+        params.setdefault("page_size", page_size)
+
+        return PageGenerator(self._api, self._api_path, self._resource, params=params)
