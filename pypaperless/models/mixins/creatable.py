@@ -49,8 +49,10 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
     @final
     def validate(self) -> None:
         """Check required fields before persisting the item to Paperless."""
-        for field in self._create_required_fields:
-            if getattr(self, field) is None:
-                raise DraftFieldRequired(
-                    f"Field `{field}` is required for saving a `{self.__class__.__name__}`."
-                )
+        missing = [field for field in self._create_required_fields if getattr(self, field) is None]
+
+        if len(missing) == 0:
+            return
+        raise DraftFieldRequired(
+            f"Missing fields for saving a `{self.__class__.__name__}`: {', '.join(missing)}."
+        )

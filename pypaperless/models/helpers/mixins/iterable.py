@@ -61,6 +61,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
         yield self
         self._aiter_filters = None
 
+    @final
     def pages(
         self,
         page: int = 1,

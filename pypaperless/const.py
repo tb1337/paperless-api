@@ -12,6 +12,7 @@ PAPERLESS_V2_3_0 = AwesomeVersion("2.3.0")
 API_PATH = {
     "index": "/api/",
     "documents": "/api/documents/",
+    "documents_meta": "/api/documents/{pk}/metadata/",
     "documents_post": "/api/documents/post_document/",
     "documents_single": "/api/documents/{pk}/",
 }

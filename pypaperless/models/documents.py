@@ -44,10 +44,15 @@ class Document(
     custom_fields: list[dict[str, Any]] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
-        """Initialize a `Documents` instance."""
+        """Initialize a `Document` instance."""
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
+        self._meta_helper: Any = None
+
+    async def get_metadata(self) -> "DocumentMeta":
+        """Return the documents `DocumentMeta` class."""
+        return await self._api.document_meta(self.id)
 
 
 @final
@@ -70,3 +75,42 @@ class DocumentDraft(
     storage_path: int | None = None
     tags: list[int] | None = None
     archive_serial_number: int | None = None
+
+
+@final
+@dataclass(kw_only=True)
+class DocumentMetadata:
+    """Represent a subtype of `DocumentMeta`."""
+
+    namespace: str | None = None
+    prefix: str | None = None
+    key: str | None = None
+    value: str | None = None
+
+
+@final
+@dataclass(init=False)
+class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+    """Represent a Paperless `Document`s metadata."""
+
+    _api_path = API_PATH["documents_meta"]
+
+    id: int
+    original_checksum: str | None = None
+    original_size: int | None = None
+    original_mime_type: str | None = None
+    media_filename: str | None = None
+    has_archive_version: bool | None = None
+    original_metadata: list[DocumentMetadata] | None = None
+    archive_checksum: str | None = None
+    archive_media_filename: str | None = None
+    original_filename: str | None = None
+    lang: str | None = None
+    archive_size: int | None = None
+    archive_metadata: list[DocumentMetadata] | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `DocumentMeta` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))

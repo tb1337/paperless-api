@@ -19,11 +19,22 @@ from .const import (
 )
 from .errors import BadRequestException, DataNotExpectedException
 from .models import helpers
-from .util import create_url_from_input
 
 
-class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public-methods
-    """Retrieves and manipulates data from and to paperless via REST."""
+class Paperless:  # pylint: disable=too-many-instance-attributes
+    """Retrieves and manipulates data from and to Paperless via REST."""
+
+    async def __aenter__(self) -> "Paperless":
+        """Return context manager."""
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc: Any, exc_tb: Any) -> Any | None:
+        """Exit context manager."""
+        await self.close()
+        if exc:
+            raise exc
+        return exc_type
 
     def __init__(
         self,
@@ -32,15 +43,14 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         request_opts: dict[str, Any] | None = None,
         session: aiohttp.ClientSession | None = None,
     ):
-        """
-        Initialize the Paperless api instance.
+        """Initialize a `Paperless` instance.
 
-        Parameters:
-        * host: the hostname or IP-address of Paperless as string, or yarl.URL object.
-        * token: provide an api token created in Paperless Django settings.
-        * session: provide an existing aiohttp ClientSession.
+        `url`: A hostname or IP-address as string, or yarl.URL object.
+        `token`: An api token created in Paperless Django settings, or via the helper function.
+        `request_opts`: Optional request options for the `aiohttp.ClientSession.request` method.
+        `session`: An existing `aiohttp.ClientSession` if existing.
         """
-        self._base_url = create_url_from_input(url)
+        self._base_url = self.create_url_from_input(url)
         self._token = token
         self._request_opts = request_opts
         self._session = session
@@ -51,19 +61,40 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
 
         # apis
         self.documents = helpers.DocumentHelper(self)
+        self.document_meta = helpers.DocumentMetaHelper(self)
 
     @property
     def base_url(self) -> URL:
-        """Return the base surl of Paperless."""
+        """Return the base url of Paperless."""
         return self._base_url
 
     @property
     def is_initialized(self) -> bool:
-        """Return if connection is initialized."""
+        """Return `True` if connection is initialized."""
         return self._initialized
 
+    @staticmethod
+    def create_url_from_input(url: str | URL) -> URL:
+        """Create URL from string or URL and prepare for further use."""
+        # reverse compatibility, fall back to https
+        if isinstance(url, str) and "://" not in url:
+            url = f"https://{url}".rstrip("/")
+        url = URL(url)
+
+        # scheme check. fall back to https
+        if url.scheme not in ("https", "http"):
+            url = URL(url).with_scheme("https")
+
+        return url
+
+    async def close(self) -> None:
+        """Clean up connection."""
+        if self._session:
+            await self._session.close()
+        self.logger.info("Closed.")
+
     async def initialize(self) -> None:
-        """Initialize the connection to the api and fetch the endpoints."""
+        """Initialize the connection to DRF and fetch the endpoints."""
         self.logger.info("Fetching api endpoints.")
 
         async with self.generate_request("get", API_PATH["index"]) as res:
@@ -94,12 +125,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
         if len(paths) > 0:
             self.logger.debug("Unused paths: %s", ", ".join(paths))
         self.logger.info("Initialized.")
-
-    async def close(self) -> None:
-        """Clean up connection."""
-        if self._session:
-            await self._session.close()
-        self.logger.info("Closed.")
 
     @asynccontextmanager
     async def generate_request(
@@ -192,15 +217,3 @@ class Paperless:  # pylint: disable=too-many-instance-attributes,too-many-public
             res.raise_for_status()
 
             return await res.read()
-
-    async def __aenter__(self) -> "Paperless":
-        """Return context manager."""
-        await self.initialize()
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc: Any, exc_tb: Any) -> Any | None:
-        """Exit context manager."""
-        await self.close()
-        if exc:
-            raise exc
-        return exc_type

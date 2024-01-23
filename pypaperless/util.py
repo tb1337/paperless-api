@@ -16,31 +16,11 @@ Thanks for the excellent work, guys!
 # pylint: disable=all
 
 import logging
-from dataclasses import MISSING, is_dataclass
+from dataclasses import MISSING, fields, is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from types import NoneType, UnionType
 from typing import Any, Union, get_args, get_origin, get_type_hints
-
-from yarl import URL
-
-
-def create_url_from_input(url: str | URL) -> URL:
-    """Create URL from string or URL and prepare for further usage."""
-    # reverse compatibility, fall back to https
-    if isinstance(url, str) and "://" not in url:
-        url = f"https://{url}".rstrip("/")
-    url = URL(url)
-
-    # scheme check. fall back to https
-    if url.scheme not in ("https", "http"):
-        url = URL(url).with_scheme("https")
-
-    # check if /api is included
-    # if url.name != "api":
-    #     url = url.with_path(url.path.rstrip("/") + "/api")
-
-    return url
 
 
 def _str_to_datetime(datetimestr: str):
@@ -115,7 +95,17 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
     if value is None and value_type is NoneType:
         return None
     if is_dataclass(value_type) and isinstance(value, dict):
-        return dict_value_to_object(value_type, value)
+        return value_type(
+            **{
+                field.name: dict_value_to_object(
+                    f"{value_type.__name__}.{field.name}",
+                    value.get(field.name),
+                    field.type,
+                    field.default,
+                )
+                for field in fields(value_type)
+            }
+        )
     # get origin value type and inspect one-by-one
     origin: Any = get_origin(value_type)
     if origin in (list, tuple, set) and isinstance(value, list | tuple | set):
@@ -124,6 +114,7 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
             for subvalue in value
             if subvalue is not None
         )
+
     # handle dictionary where we should inspect all values
     if origin is dict:
         subkey_type = get_args(value_type)[0]
