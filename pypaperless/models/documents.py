@@ -48,11 +48,10 @@ class Document(
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
-        self._meta_helper: Any = None
 
     async def get_metadata(self) -> "DocumentMeta":
         """Return the documents `DocumentMeta` class."""
-        return await self._api.document_meta(self.id)
+        return await self._api.documents.metadata(self.id)
 
 
 @final

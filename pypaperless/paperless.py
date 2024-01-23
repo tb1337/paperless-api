@@ -61,7 +61,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
         # apis
         self.documents = helpers.DocumentHelper(self)
-        self.document_meta = helpers.DocumentMetaHelper(self)
 
     @property
     def base_url(self) -> URL:
