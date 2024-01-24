@@ -9,7 +9,9 @@ from .documents import (
     DocumentNote,
     DocumentNoteDraft,
 )
+from .mails import MailAccount, MailRule
 from .pages import Page
+from .permissions import Group, User
 
 __all__ = (
     "CustomField",
@@ -22,5 +24,9 @@ __all__ = (
     "DocumentMetadataType",
     "DocumentNote",
     "DocumentNoteDraft",
+    "Group",
+    "MailAccount",
+    "MailRule",
     "Page",
+    "User",
 )

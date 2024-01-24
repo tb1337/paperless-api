@@ -11,6 +11,14 @@ API_PATH = {
     "documents_notes": "/api/documents/{pk}/notes/",
     "documents_post": "/api/documents/post_document/",
     "documents_single": "/api/documents/{pk}/",
+    "groups": "/api/groups/",
+    "groups_single": "/api/groups/{pk}/",
+    "mail_accounts": "/api/mail_accounts/",
+    "mail_accounts_single": "/api/mail_accounts/{pk}/",
+    "mail_rules": "/api/mail_rules/",
+    "mail_rules_single": "/api/mail_rules/{pk}/",
+    "users": "/api/users/",
+    "users_single": "/api/users/{pk}/",
 }
 
 

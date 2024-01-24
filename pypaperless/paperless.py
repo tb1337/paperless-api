@@ -19,10 +19,18 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     _class_map: set[tuple[str, type]] = {
         (PaperlessEndpoints.CUSTOM_FIELDS, helpers.CustomFieldHelper),
         (PaperlessEndpoints.DOCUMENTS, helpers.DocumentHelper),
+        (PaperlessEndpoints.GROUPS, helpers.GroupHelper),
+        (PaperlessEndpoints.MAIL_ACCOUNTS, helpers.MailAccountHelper),
+        (PaperlessEndpoints.MAIL_RULES, helpers.MailRuleHelper),
+        (PaperlessEndpoints.USERS, helpers.UserHelper),
     }
 
     custom_fields: helpers.CustomFieldHelper
     documents: helpers.DocumentHelper
+    groups: helpers.GroupHelper
+    mail_accounts: helpers.MailAccountHelper
+    mail_rules: helpers.MailRuleHelper
+    users: helpers.UserHelper
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
