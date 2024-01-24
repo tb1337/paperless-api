@@ -12,6 +12,8 @@ from .documents import (
 from .mails import MailAccount, MailRule
 from .pages import Page
 from .permissions import Group, User
+from .saved_views import SavedView, SavedViewFilterRuleType
+from .share_links import ShareLink, ShareLinkDraft, ShareLinkFileVersionType
 
 __all__ = (
     "CustomField",
@@ -28,5 +30,10 @@ __all__ = (
     "MailAccount",
     "MailRule",
     "Page",
+    "SavedView",
+    "SavedViewFilterRuleType",
+    "ShareLink",
+    "ShareLinkDraft",
+    "ShareLinkFileVersionType",
     "User",
 )

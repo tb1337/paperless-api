@@ -22,6 +22,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         (PaperlessEndpoints.GROUPS, helpers.GroupHelper),
         (PaperlessEndpoints.MAIL_ACCOUNTS, helpers.MailAccountHelper),
         (PaperlessEndpoints.MAIL_RULES, helpers.MailRuleHelper),
+        (PaperlessEndpoints.SAVED_VIEWS, helpers.SavedViewHelper),
+        (PaperlessEndpoints.SHARE_LINKS, helpers.ShareLinkHelper),
         (PaperlessEndpoints.USERS, helpers.UserHelper),
     }
 
@@ -30,6 +32,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     groups: helpers.GroupHelper
     mail_accounts: helpers.MailAccountHelper
     mail_rules: helpers.MailRuleHelper
+    saved_views: helpers.SavedViewHelper
+    share_links: helpers.ShareLinkHelper
     users: helpers.UserHelper
 
     async def __aenter__(self) -> "Paperless":

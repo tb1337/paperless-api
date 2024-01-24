@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, final
 from pypaperless.const import API_PATH
 
 from .base import HelperBase, PaperlessModel
-from .mixins import helpers
+from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -14,12 +14,15 @@ if TYPE_CHECKING:
 
 @final
 @dataclass(init=False)
-class MailAccount(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+class MailAccount(
+    PaperlessModel,
+    models.PermissionFieldsMixin,
+):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `MailAccount`."""
 
     _api_path = API_PATH["mail_accounts_single"]
 
-    id: int
+    id: int | None = None
     name: str | None = None
     imap_server: str | None = None
     imap_port: int | None = None
@@ -29,8 +32,6 @@ class MailAccount(PaperlessModel):  # pylint: disable=too-many-instance-attribut
     # password: str | None = None
     character_set: str | None = None
     is_token: bool | None = None
-    owner: int | None = None
-    user_can_change: bool | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `MailAccount` instance."""
@@ -41,12 +42,15 @@ class MailAccount(PaperlessModel):  # pylint: disable=too-many-instance-attribut
 
 @final
 @dataclass(init=False)
-class MailRule(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+class MailRule(
+    PaperlessModel,
+    models.PermissionFieldsMixin,
+):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `MailRule`."""
 
     _api_path = API_PATH["mail_rules_single"]
 
-    id: int
+    id: int | None = None
     name: str | None = None
     account: int | None = None
     folder: str | None = None
@@ -68,8 +72,6 @@ class MailRule(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     order: int | None = None
     attachment_type: int | None = None
     consumption_scope: int | None = None
-    owner: int | None = None
-    user_can_change: bool | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `MailRule` instance."""

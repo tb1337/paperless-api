@@ -19,14 +19,15 @@ if TYPE_CHECKING:
 @dataclass(init=False)
 class Document(
     PaperlessModel,
+    models.PermissionFieldsMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
-):  # pylint: disable=too-many-instance-attributes
+):  # pylint: disable=too-many-instance-attributes, too-many-ancestors
     """Represent a Paperless `Document`."""
 
     _api_path = API_PATH["documents_single"]
 
-    id: int
+    id: int | None = None
     correspondent: int | None = None
     document_type: int | None = None
     storage_path: int | None = None
@@ -40,8 +41,6 @@ class Document(
     archive_serial_number: int | None = None
     original_file_name: str | None = None
     archived_file_name: str | None = None
-    owner: int | None = None
-    user_can_change: bool | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: list[CustomFieldValueType] | None = None
 
@@ -54,7 +53,7 @@ class Document(
 
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
-        item = await self._api.documents.metadata(self.id)
+        item = await self._api.documents.metadata(cast(int, self.id))
         return item
 
 
@@ -163,7 +162,7 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
 
     _api_path = API_PATH["documents_meta"]
 
-    id: int
+    id: int | None = None
     original_checksum: str | None = None
     original_size: int | None = None
     original_mime_type: str | None = None

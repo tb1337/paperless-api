@@ -17,6 +17,10 @@ API_PATH = {
     "mail_accounts_single": "/api/mail_accounts/{pk}/",
     "mail_rules": "/api/mail_rules/",
     "mail_rules_single": "/api/mail_rules/{pk}/",
+    "saved_views": "/api/saved_views/",
+    "saved_views_single": "/api/saved_views/{pk}/",
+    "share_links": "/api/share_links/",
+    "share_links_single": "/api/share_links/{pk}/",
     "users": "/api/users/",
     "users_single": "/api/users/{pk}/",
 }
