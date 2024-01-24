@@ -2,30 +2,6 @@
 
 from enum import StrEnum
 
-API_PATH = {
-    "index": "/api/",
-    "custom_fields": "/api/custom_fields/",
-    "custom_fields_single": "/api/custom_fields/{pk}/",
-    "documents": "/api/documents/",
-    "documents_meta": "/api/documents/{pk}/metadata/",
-    "documents_notes": "/api/documents/{pk}/notes/",
-    "documents_post": "/api/documents/post_document/",
-    "documents_single": "/api/documents/{pk}/",
-    "groups": "/api/groups/",
-    "groups_single": "/api/groups/{pk}/",
-    "mail_accounts": "/api/mail_accounts/",
-    "mail_accounts_single": "/api/mail_accounts/{pk}/",
-    "mail_rules": "/api/mail_rules/",
-    "mail_rules_single": "/api/mail_rules/{pk}/",
-    "saved_views": "/api/saved_views/",
-    "saved_views_single": "/api/saved_views/{pk}/",
-    "share_links": "/api/share_links/",
-    "share_links_single": "/api/share_links/{pk}/",
-    "users": "/api/users/",
-    "users_single": "/api/users/{pk}/",
-}
-
-
 CONSUMPTION_TEMPLATES = "consumption_templates"
 CORRESPONDENTS = "correspondents"
 CUSTOM_FIELDS = "custom_fields"
@@ -44,6 +20,29 @@ WORKFLOW_ACTIONS = "workflow_actions"
 WORKFLOWS = "workflows"
 WORKFLOW_TRIGGERS = "workflow_triggers"
 UNKNOWN = "unknown"
+
+API_PATH = {
+    "index": "/api/",
+    f"{CUSTOM_FIELDS}": f"/api/{CUSTOM_FIELDS}/",
+    f"{CUSTOM_FIELDS}_single": f"/api/{CUSTOM_FIELDS}/{{pk}}/",
+    f"{DOCUMENTS}": f"/api/{DOCUMENTS}/",
+    f"{DOCUMENTS}_meta": f"/api/{DOCUMENTS}/{{pk}}/metadata/",
+    f"{DOCUMENTS}_notes": f"/api/{DOCUMENTS}/{{pk}}/notes/",
+    f"{DOCUMENTS}_post": f"/api/{DOCUMENTS}/post_document/",
+    f"{DOCUMENTS}_single": f"/api/{DOCUMENTS}/{{pk}}/",
+    f"{GROUPS}": f"/api/{GROUPS}/",
+    f"{GROUPS}_single": f"/api/{GROUPS}/{{pk}}/",
+    f"{MAIL_ACCOUNTS}": f"/api/{MAIL_ACCOUNTS}/",
+    f"{MAIL_ACCOUNTS}_single": f"/api/{MAIL_ACCOUNTS}/{{pk}}/",
+    f"{MAIL_RULES}": f"/api/{MAIL_RULES}/",
+    f"{MAIL_RULES}_single": f"/api/{MAIL_RULES}/{{pk}}/",
+    f"{SAVED_VIEWS}": f"/api/{SAVED_VIEWS}/",
+    f"{SAVED_VIEWS}_single": f"/api/{SAVED_VIEWS}/{{pk}}/",
+    f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
+    f"{SHARE_LINKS}_single": f"/api/{SHARE_LINKS}/{{pk}}/",
+    f"{USERS}": f"/api/{USERS}/",
+    f"{USERS}_single": f"/api/{USERS}/{{pk}}/",
+}
 
 
 class PaperlessEndpoints(StrEnum):
