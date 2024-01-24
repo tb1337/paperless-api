@@ -13,6 +13,10 @@ class DraftFieldRequired(PaperlessException):
     """Raise when trying to save models with missing required fields."""
 
 
+class PrimaryKeyRequired(PaperlessException):
+    """Raise when trying to access model data without supplying a pk."""
+
+
 class BadRequestException(PaperlessException):
     """Raise when requesting wrong data."""
 

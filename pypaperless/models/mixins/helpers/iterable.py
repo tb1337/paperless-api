@@ -2,12 +2,13 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Self, final
+from typing import TYPE_CHECKING, Self, final
 
-from pypaperless.models import ResultPage
-from pypaperless.models.base import ResourceT
+from pypaperless.models.base import HelperProtocol, ResourceT
 from pypaperless.models.generators import PageGenerator
-from pypaperless.models.helpers.base import HelperProtocol
+
+if TYPE_CHECKING:
+    from pypaperless.models import ResultPage
 
 
 class IterableMixin(HelperProtocol[ResourceT]):
@@ -66,7 +67,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
         self,
         page: int = 1,
         page_size: int = 150,
-    ) -> AsyncIterator[ResultPage[ResourceT]]:
+    ) -> "AsyncIterator[ResultPage[ResourceT]]":
         """Iterate over resource pages.
 
         `page`: A page number to start with.

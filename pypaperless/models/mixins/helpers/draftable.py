@@ -3,8 +3,7 @@
 from typing import Any, final
 
 from pypaperless.errors import DraftNotSupported
-from pypaperless.models.base import ResourceT
-from pypaperless.models.helpers.base import HelperProtocol
+from pypaperless.models.base import HelperProtocol, ResourceT
 
 
 class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods

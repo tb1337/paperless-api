@@ -2,12 +2,13 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, cast, final
 
 from pypaperless.const import API_PATH
+from pypaperless.errors import PrimaryKeyRequired
 
-from .base import PaperlessModel
-from .mixins import CreatableMixin, DeletableMixin, UpdatableMixin
+from .base import HelperBase, PaperlessModel
+from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -17,8 +18,8 @@ if TYPE_CHECKING:
 @dataclass(init=False)
 class Document(
     PaperlessModel,
-    UpdatableMixin,
-    DeletableMixin,
+    models.UpdatableMixin,
+    models.DeletableMixin,
 ):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `Document`."""
 
@@ -40,7 +41,7 @@ class Document(
     archived_file_name: str | None = None
     owner: int | None = None
     user_can_change: bool | None = None
-    notes: list[dict[str, Any]] | None = None
+    # notes: list[dict[str, Any]] | None = None
     custom_fields: list[dict[str, Any]] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
@@ -48,17 +49,19 @@ class Document(
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
+        self.notes = DocumentNoteHelper(api, data.get("id"))
 
     async def get_metadata(self) -> "DocumentMeta":
-        """Return the documents `DocumentMeta` class."""
-        return await self._api.documents.metadata(self.id)
+        """Request and return the documents `DocumentMeta` class."""
+        item = await self._api.documents.metadata(self.id)
+        return item
 
 
 @final
 @dataclass(init=False)
 class DocumentDraft(
     PaperlessModel,
-    CreatableMixin,
+    models.CreatableMixin,
 ):  # pylint: disable=too-many-instance-attributes
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
@@ -74,6 +77,71 @@ class DocumentDraft(
     storage_path: int | None = None
     tags: list[int] | None = None
     archive_serial_number: int | None = None
+
+
+@final
+@dataclass(init=False)
+class DocumentNote(PaperlessModel):
+    """Represent a Paperless `DocumentNote`."""
+
+    _api_path = API_PATH["documents_notes"]
+
+    id: int | None = None
+    note: str | None = None
+    created: datetime.datetime | None = None
+    document: int | None = None
+    user: int | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `DocumentNote` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("document"))
+
+    async def delete(self) -> bool:
+        """Delete a `resource item` from DRF. There is no point of return.
+
+        Return `True` when deletion was successful, `False` otherwise.
+
+        Example:
+        ```python
+        # request document notes
+        notes = await paperless.documents.notes(42)
+
+        for note in notes:
+            if await note.delete():
+                print("Successfully deleted the note!")
+        ```
+        """
+        params = {
+            "id": self.id,
+        }
+        async with self._api.generate_request("delete", self._api_path, params=params) as res:
+            success = res.status == 204
+
+        return success
+
+
+@final
+@dataclass(kw_only=True)
+class DocumentNoteDraft(
+    PaperlessModel,
+    models.CreatableMixin,
+):
+    """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
+
+    _api_path = API_PATH["documents_notes"]
+
+    _create_required_fields = {"note", "document"}
+
+    note: str | None = None
+    document: int | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `DocumentNote` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("document"))
 
 
 @final
@@ -113,3 +181,128 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
+
+
+@final
+class DocumentMetaHelper(  # pylint: disable=too-few-public-methods
+    HelperBase[DocumentMeta],
+    helpers.CallableMixin[DocumentMeta],
+):
+    """Represent a factory for Paperless `DocumentMeta` models."""
+
+    _api_path = API_PATH["documents_meta"]
+
+    _resource = DocumentMeta
+
+
+@final
+class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-public-methods
+    """Represent a factory for Paperless `DocumentNote` models."""
+
+    _api_path = API_PATH["documents_notes"]
+
+    _resource = DocumentNote
+
+    def __init__(self, api: "Paperless", attached_to: int | None = None) -> None:
+        """Initialize a `DocumentHelper` instance."""
+        super().__init__(api)
+
+        self._attached_to = attached_to
+
+    async def __call__(
+        self,
+        pk: int | None = None,
+    ) -> list[DocumentNote]:
+        """Request and return the documents `DocumentNote` list."""
+        doc_pk = self._get_document_pk(pk)
+        res = await self._api.request_json("get", self._get_api_path(doc_pk))
+
+        # We have to transform data here slightly.
+        # There are two major differences in the data depending on which endpoint is requested.
+        # url: documents/{:pk}/ ->
+        #       .document -> int
+        #       .user -> int
+        # url: documents/{:pk}/notes/ ->
+        #       .document -> does not exist (so we add it here)
+        #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
+        return [
+            self._resource.create_with_data(
+                self._api,
+                {
+                    **item,
+                    "document": doc_pk,
+                    "user": item["user"]["id"],
+                },
+                fetched=True,
+            )
+            for item in res
+        ]
+
+    def _get_document_pk(self, pk: int | None = None) -> int:
+        """Get."""
+        if not any((self._attached_to, pk)):
+            raise PrimaryKeyRequired(f"Accessing {type(self).__name__} data without a primary key.")
+        return cast(int, self._attached_to or pk)
+
+    def _get_api_path(self, pk: int) -> str:
+        """Return the formatted api path."""
+        return self._api_path.format(pk=pk)
+
+    def draft(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
+        """Return a fresh and empty `DocumentNoteDraft` instance.
+
+        Example:
+        ```python
+        draft = paperless.documents.draft(document=bytes(...), title="New Document")
+        # do something
+        ```
+        """
+        kwargs.update({"document": self._get_document_pk(pk)})
+        return DocumentNoteDraft.create_with_data(
+            self._api,
+            data=kwargs,
+            fetched=True,
+        )
+
+
+@final
+class DocumentHelper(  # pylint: disable=too-many-ancestors
+    HelperBase[Document],
+    helpers.CallableMixin[Document],
+    helpers.DraftableMixin[DocumentDraft],
+    helpers.IterableMixin[Document],
+):
+    """Represent a factory for Paperless `Document` models."""
+
+    _api_path = API_PATH["documents"]
+
+    _draft = DocumentDraft
+    _resource = Document
+
+    def __init__(self, api: "Paperless") -> None:
+        """Initialize a `DocumentHelper` instance."""
+        super().__init__(api)
+
+        self._meta = DocumentMetaHelper(api)
+        self._notes = DocumentNoteHelper(api)
+
+    @property
+    def metadata(self) -> DocumentMetaHelper:
+        """Return the attached `DocumentMetaHelper` instance.
+
+        Example:
+        ```python
+        # request metadata of a document directly...
+        metadata = await paperless.documents.metadata(1337)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+        metadata = await doc.get_metadata()
+        ```
+        """
+        return self._meta
+
+    @property
+    def notes(self) -> DocumentNoteHelper:
+        """Return the attached `DocumentNoteHelper` instance."""
+        return self._notes

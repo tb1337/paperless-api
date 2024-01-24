@@ -2,8 +2,7 @@
 
 from typing import final
 
-from pypaperless.models.base import ResourceT
-from pypaperless.models.helpers.base import HelperProtocol
+from pypaperless.models.base import HelperProtocol, ResourceT
 
 
 class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods

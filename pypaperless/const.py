@@ -13,6 +13,7 @@ API_PATH = {
     "index": "/api/",
     "documents": "/api/documents/",
     "documents_meta": "/api/documents/{pk}/metadata/",
+    "documents_notes": "/api/documents/{pk}/notes/",
     "documents_post": "/api/documents/post_document/",
     "documents_single": "/api/documents/{pk}/",
 }

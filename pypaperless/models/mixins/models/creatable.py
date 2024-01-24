@@ -1,6 +1,6 @@
 """CreatableMixin for PyPaperless models."""
 
-from typing import final
+from typing import cast, final
 
 from pypaperless.errors import DraftFieldRequired
 from pypaperless.models.base import PaperlessModelProtocol
@@ -13,7 +13,7 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
     _create_required_fields: set[str]
 
     @final
-    async def save(self) -> int | str:
+    async def save(self) -> int | str | tuple[int, int]:
         """Create a new `resource item` in Paperless.
 
         Return the created item `id`, or a `task_id` in case of documents.
@@ -42,6 +42,11 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         }
         res = await self._api.request_json("post", self._api_path, **kwargs)
 
+        if type(self).__name__ == "DocumentNoteDraft":
+            return (
+                cast(int, max(item.get("id") for item in res)),
+                cast(int, kwargs["json"]["document"]),
+            )
         if isinstance(res, dict):
             return int(res["id"])
         return str(res)

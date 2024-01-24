@@ -18,7 +18,7 @@ from .const import (
     PaperlessFeature,
 )
 from .errors import BadRequestException, DataNotExpectedException
-from .models import helpers
+from .models import DocumentHelper
 
 
 class Paperless:  # pylint: disable=too-many-instance-attributes
@@ -60,7 +60,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self.features: PaperlessFeature = PaperlessFeature(0)
 
         # apis
-        self.documents = helpers.DocumentHelper(self)
+        self.documents = DocumentHelper(self)
 
     @property
     def base_url(self) -> URL:

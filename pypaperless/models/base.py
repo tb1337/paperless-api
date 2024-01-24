@@ -1,7 +1,7 @@
 """Provide base classes."""
 
 from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, final
+from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, final
 
 from pypaperless.const import API_PATH
 from pypaperless.util import dict_value_to_object
@@ -21,6 +21,22 @@ class PaperlessBase:  # pylint: disable=too-few-public-methods
     def __init__(self, api: "Paperless"):
         """Initialize a `PaperlessBase` instance."""
         self._api = api
+
+
+class HelperProtocol(Protocol, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
+    """Protocol for any `HelperBase` instances and its ancestors."""
+
+    _api: "Paperless"
+    _api_path: str
+    _resource: type[ResourceT]
+
+
+class HelperBase(PaperlessBase, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
+    """Base class for all helpers in PyPaperless."""
+
+    # def __init__(self, api: "Paperless"):
+    #     """Initialize a `HelperBase` instance."""
+    #     super().__init__(api)
 
 
 @dataclass(init=False)
@@ -87,7 +103,6 @@ class PaperlessModel(PaperlessBase):
             )
             setattr(self, field.name, value)
 
-    @final
     async def load(self) -> None:
         """Get `model data` from DRF."""
         self._data.update(await self._api.request_json("get", self._api_path))
