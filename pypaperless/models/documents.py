@@ -1,4 +1,4 @@
-"""Provide the `Documents` class."""
+"""Provide `Document` related models and helpers."""
 
 import datetime
 from dataclasses import dataclass
@@ -8,6 +8,7 @@ from pypaperless.const import API_PATH
 from pypaperless.errors import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
+from .custom_fields import CustomFieldValueType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -41,8 +42,8 @@ class Document(
     archived_file_name: str | None = None
     owner: int | None = None
     user_can_change: bool | None = None
-    # notes: list[dict[str, Any]] | None = None
-    custom_fields: list[dict[str, Any]] | None = None
+    is_shared_by_requester: bool | None = None
+    custom_fields: list[CustomFieldValueType] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `Document` instance."""
@@ -146,7 +147,7 @@ class DocumentNoteDraft(
 
 @final
 @dataclass(kw_only=True)
-class DocumentMetadata:
+class DocumentMetadataType:
     """Represent a subtype of `DocumentMeta`."""
 
     namespace: str | None = None
@@ -168,13 +169,13 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
     original_mime_type: str | None = None
     media_filename: str | None = None
     has_archive_version: bool | None = None
-    original_metadata: list[DocumentMetadata] | None = None
+    original_metadata: list[DocumentMetadataType] | None = None
     archive_checksum: str | None = None
     archive_media_filename: str | None = None
     original_filename: str | None = None
     lang: str | None = None
     archive_size: int | None = None
-    archive_metadata: list[DocumentMetadata] | None = None
+    archive_metadata: list[DocumentMetadataType] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `DocumentMeta` instance."""
@@ -239,7 +240,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
         ]
 
     def _get_document_pk(self, pk: int | None = None) -> int:
-        """Get."""
+        """Return the attached document pk, or the parameter."""
         if not any((self._attached_to, pk)):
             raise PrimaryKeyRequired(f"Accessing {type(self).__name__} data without a primary key.")
         return cast(int, self._attached_to or pk)
@@ -253,7 +254,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
 
         Example:
         ```python
-        draft = paperless.documents.draft(document=bytes(...), title="New Document")
+        draft = paperless.documents.notes.draft(...)
         # do something
         ```
         """
@@ -293,7 +294,7 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         Example:
         ```python
         # request metadata of a document directly...
-        metadata = await paperless.documents.metadata(1337)
+        metadata = await paperless.documents.metadata(42)
 
         # ... or by using an already fetched document
         doc = await paperless.documents(42)
@@ -304,5 +305,16 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
 
     @property
     def notes(self) -> DocumentNoteHelper:
-        """Return the attached `DocumentNoteHelper` instance."""
+        """Return the attached `DocumentNoteHelper` instance.
+
+        Example:
+        ```python
+        # request document notes directly...
+        notes = await paperless.documents.notes(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+        notes = await doc.notes()
+        ```
+        """
         return self._notes

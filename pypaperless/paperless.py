@@ -6,23 +6,23 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 import aiohttp
-from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from .const import (
-    API_PATH,
-    PAPERLESS_V1_8_0,
-    PAPERLESS_V1_17_0,
-    PAPERLESS_V2_0_0,
-    PAPERLESS_V2_3_0,
-    PaperlessFeature,
-)
+from . import helpers
+from .const import API_PATH, PaperlessEndpoints
 from .errors import BadRequestException, DataNotExpectedException
-from .models import DocumentHelper
 
 
 class Paperless:  # pylint: disable=too-many-instance-attributes
     """Retrieves and manipulates data from and to Paperless via REST."""
+
+    _class_map: set[tuple[str, type]] = {
+        (PaperlessEndpoints.CUSTOM_FIELDS, helpers.CustomFieldHelper),
+        (PaperlessEndpoints.DOCUMENTS, helpers.DocumentHelper),
+    }
+
+    custom_fields: helpers.CustomFieldHelper
+    documents: helpers.DocumentHelper
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
@@ -51,16 +51,13 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         `session`: An existing `aiohttp.ClientSession` if existing.
         """
         self._base_url = self.create_url_from_input(url)
-        self._token = token
+        self._initialized = False
         self._request_opts = request_opts
         self._session = session
-        self._initialized = False
+        self._token = token
+        self._version: str | None = None
+
         self.logger = logging.getLogger(f"{__package__}[{self.base_url.host}]")
-
-        self.features: PaperlessFeature = PaperlessFeature(0)
-
-        # apis
-        self.documents = DocumentHelper(self)
 
     @property
     def base_url(self) -> URL:
@@ -71,6 +68,11 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     def is_initialized(self) -> bool:
         """Return `True` if connection is initialized."""
         return self._initialized
+
+    @property
+    def host_version(self) -> str | None:
+        """Return the version object of the Paperless host."""
+        return self._version
 
     @staticmethod
     def create_url_from_input(url: str | URL) -> URL:
@@ -94,36 +96,31 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
     async def initialize(self) -> None:
         """Initialize the connection to DRF and fetch the endpoints."""
-        self.logger.info("Fetching api endpoints.")
+        self.logger.debug("Fetching features...")
 
         async with self.generate_request("get", API_PATH["index"]) as res:
-            version = AwesomeVersion(
-                res.headers.get("x-version") if "x-version" in res.headers else "0.0.0"
-            )
-
-            if version >= PAPERLESS_V1_8_0:
-                self.features |= PaperlessFeature.CONTROLLER_STORAGE_PATHS
-            if version >= PAPERLESS_V1_17_0:
-                self.features |= PaperlessFeature.FEATURE_DOCUMENT_NOTES
-            if version >= PAPERLESS_V2_0_0:
-                self.features |= (
-                    PaperlessFeature.CONTROLLER_SHARE_LINKS
-                    | PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
-                    | PaperlessFeature.CONTROLLER_CUSTOM_FIELDS
-                )
-            if version >= PAPERLESS_V2_3_0:
-                self.features |= (
-                    PaperlessFeature.CONTROLLER_CONFIGS | PaperlessFeature.CONTROLLER_WORKFLOWS
-                )
-                self.features ^= PaperlessFeature.CONTROLLER_CONSUMPTION_TEMPLATES
-
+            self._version = res.headers.get("x-version", None)
             paths = await res.json()
 
-        self._initialized = True
+        missing = []
+        for endpoint, cls in self._class_map:
+            try:
+                paths.pop(endpoint)  # check if endpoint exists
+            except KeyError:
+                missing.append(endpoint)
+            finally:
+                setattr(self, f"{endpoint}", cls(self))
 
         if len(paths) > 0:
-            self.logger.debug("Unused paths: %s", ", ".join(paths))
+            self.logger.debug("Unused: %s", ", ".join(paths))
+
+        if len(missing) > 0:
+            self.logger.warning("Outdated version detected: v%s", self._version)
+            self.logger.warning("Missing features: %s", ", ".join(missing))
+            self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
+
         self.logger.info("Initialized.")
+        self._initialized = True
 
     @asynccontextmanager
     async def generate_request(
@@ -175,6 +172,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
         # request data
         async with self._session.request(method, url, **kwargs) as res:
+            self.logger.debug("HTTP %s -> %d: %s", method.upper(), res.status, res.url)
             yield res
 
     async def request_json(
@@ -185,8 +183,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
-            self.logger.debug("Json-Request %s (%d): %s", method.upper(), res.status, res.url)
-
             # bad request
             if res.status == 400:
                 raise BadRequestException(f"{await res.text()}")
@@ -208,8 +204,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     ) -> bytes:
         """Make a request to the api and return response as bytes."""
         async with self.generate_request(method, endpoint, **kwargs) as res:
-            self.logger.debug("File-Request %s (%d): %s", method.upper(), res.status, res.url)
-
             # bad request
             if res.status == 400:
                 raise BadRequestException(f"{await res.text()}")

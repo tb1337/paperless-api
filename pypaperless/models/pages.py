@@ -1,4 +1,4 @@
-"""Provide the `ResultPage` class."""
+"""Provide the `Paginated` class."""
 
 import math
 from collections.abc import Iterator
@@ -12,11 +12,11 @@ from .base import PaperlessModel
 
 
 @dataclass(init=False)
-class ResultPage(
+class Page(
     PaperlessModel,
     Generic[ResourceT],
 ):  # pylint: disable=too-many-instance-attributes
-    """Represent a Paperless DRF `ResultPage`."""
+    """Represent a Paperless DRF `Paginated`."""
 
     _api_path = API_PATH["index"]
     _resource: type[ResourceT]

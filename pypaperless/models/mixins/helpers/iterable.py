@@ -8,7 +8,7 @@ from pypaperless.models.base import HelperProtocol, ResourceT
 from pypaperless.models.generators import PageGenerator
 
 if TYPE_CHECKING:
-    from pypaperless.models import ResultPage
+    from pypaperless.models import Page
 
 
 class IterableMixin(HelperProtocol[ResourceT]):
@@ -67,7 +67,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
         self,
         page: int = 1,
         page_size: int = 150,
-    ) -> "AsyncIterator[ResultPage[ResourceT]]":
+    ) -> "AsyncIterator[Page[ResourceT]]":
         """Iterate over resource pages.
 
         `page`: A page number to start with.

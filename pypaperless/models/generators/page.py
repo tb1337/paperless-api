@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from pypaperless.models.base import PaperlessBase
-from pypaperless.models.result_page import ResultPage
+from pypaperless.models.pages import Page
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -20,13 +20,13 @@ class PageGenerator(PaperlessBase, AsyncIterator):
     `params`: Optional dict of query string parameters.
     """
 
-    _page: ResultPage | None
+    _page: Page | None
 
     def __aiter__(self) -> AsyncIterator:
         """Return self as iterator."""
         return self
 
-    async def __anext__(self) -> ResultPage:
+    async def __anext__(self) -> Page:
         """Return next item from the current batch."""
         if self._page is not None and self._page.is_last_page:
             raise StopAsyncIteration
@@ -38,7 +38,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }
-        self._page = ResultPage.create_with_data(self._api, data, fetched=True)
+        self._page = Page.create_with_data(self._api, data, fetched=True)
         self._page._resource = self._resource  # attach the resource to the data class
 
         # rise page by one to request next page on next iteration

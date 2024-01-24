@@ -1,16 +1,11 @@
 """PyPaperless constants."""
 
-from enum import IntFlag, StrEnum
-
-from awesomeversion import AwesomeVersion
-
-PAPERLESS_V1_8_0 = AwesomeVersion("1.8.0")
-PAPERLESS_V1_17_0 = AwesomeVersion("1.17.0")
-PAPERLESS_V2_0_0 = AwesomeVersion("2.0.0")
-PAPERLESS_V2_3_0 = AwesomeVersion("2.3.0")
+from enum import StrEnum
 
 API_PATH = {
     "index": "/api/",
+    "custom_fields": "/api/custom_fields/",
+    "custom_fields_single": "/api/custom_fields/{pk}/",
     "documents": "/api/documents/",
     "documents_meta": "/api/documents/{pk}/metadata/",
     "documents_notes": "/api/documents/{pk}/notes/",
@@ -19,56 +14,44 @@ API_PATH = {
 }
 
 
-CTRL_CONSUMPTION_TEMPLATES = "consumption_templates"
-CTRL_CORRESPONDENTS = "correspondents"
-CTRL_CUSTOM_FIELDS = "custom_fields"
-CTRL_DOCUMENTS = "documents"
-CTRL_DOCUMENT_TYPES = "document_types"
-CTRL_GROUPS = "groups"
-CTRL_MAIL_ACCOUNTS = "mail_accounts"
-CTRL_MAIL_RULES = "mail_rules"
-CTRL_SAVED_VIEWS = "saved_views"
-CTRL_SHARE_LINKS = "share_links"
-CTRL_STORAGE_PATHS = "storage_paths"
-CTRL_TAGS = "tags"
-CTRL_TASKS = "tasks"
-CTRL_USERS = "users"
-CTRL_WORKFLOW_ACTIONS = "workflow_actions"
-CTRL_WORKFLOWS = "workflows"
-CTRL_WORKFLOW_TRIGGERS = "workflow_triggers"
-CTRL_UNKNOWN = "unknown"
+CONSUMPTION_TEMPLATES = "consumption_templates"
+CORRESPONDENTS = "correspondents"
+CUSTOM_FIELDS = "custom_fields"
+DOCUMENTS = "documents"
+DOCUMENT_TYPES = "document_types"
+GROUPS = "groups"
+MAIL_ACCOUNTS = "mail_accounts"
+MAIL_RULES = "mail_rules"
+SAVED_VIEWS = "saved_views"
+SHARE_LINKS = "share_links"
+STORAGE_PATHS = "storage_paths"
+TAGS = "tags"
+TASKS = "tasks"
+USERS = "users"
+WORKFLOW_ACTIONS = "workflow_actions"
+WORKFLOWS = "workflows"
+WORKFLOW_TRIGGERS = "workflow_triggers"
+UNKNOWN = "unknown"
 
 
-class PaperlessFeature(IntFlag):
-    """Supported features."""
-
-    CONTROLLER_STORAGE_PATHS = 1
-    FEATURE_DOCUMENT_NOTES = 2
-    CONTROLLER_SHARE_LINKS = 4
-    CONTROLLER_CUSTOM_FIELDS = 8
-    CONTROLLER_CONSUMPTION_TEMPLATES = 16
-    CONTROLLER_WORKFLOWS = 32
-    CONTROLLER_CONFIGS = 64
-
-
-class ControllerPath(StrEnum):
+class PaperlessEndpoints(StrEnum):
     """Represent paths of api endpoints."""
 
-    CONSUMPTION_TEMPLATES = CTRL_CONSUMPTION_TEMPLATES
-    CORRESPONDENTS = CTRL_CORRESPONDENTS
-    CUSTOM_FIELDS = CTRL_CUSTOM_FIELDS
-    DOCUMENTS = CTRL_DOCUMENTS
-    DOCUMENT_TYPES = CTRL_DOCUMENT_TYPES
-    GROUPS = CTRL_GROUPS
-    MAIL_ACCOUNTS = CTRL_MAIL_ACCOUNTS
-    MAIL_RULES = CTRL_MAIL_RULES
-    SAVED_VIEWS = CTRL_SAVED_VIEWS
-    SHARE_LINKS = CTRL_SHARE_LINKS
-    STORAGE_PATHS = CTRL_STORAGE_PATHS
-    TAGS = CTRL_TAGS
-    TASKS = CTRL_TASKS
-    USERS = CTRL_USERS
-    WORKFLOWS = CTRL_WORKFLOWS
-    WORKFLOW_ACTIONS = CTRL_WORKFLOW_ACTIONS
-    WORKFLOW_TRIGGERS = CTRL_WORKFLOW_TRIGGERS
-    UNKNOWN = CTRL_UNKNOWN
+    CONSUMPTION_TEMPLATES = CONSUMPTION_TEMPLATES
+    CORRESPONDENTS = CORRESPONDENTS
+    CUSTOM_FIELDS = CUSTOM_FIELDS
+    DOCUMENTS = DOCUMENTS
+    DOCUMENT_TYPES = DOCUMENT_TYPES
+    GROUPS = GROUPS
+    MAIL_ACCOUNTS = MAIL_ACCOUNTS
+    MAIL_RULES = MAIL_RULES
+    SAVED_VIEWS = SAVED_VIEWS
+    SHARE_LINKS = SHARE_LINKS
+    STORAGE_PATHS = STORAGE_PATHS
+    TAGS = TAGS
+    TASKS = TASKS
+    USERS = USERS
+    WORKFLOWS = WORKFLOWS
+    WORKFLOW_ACTIONS = WORKFLOW_ACTIONS
+    WORKFLOW_TRIGGERS = WORKFLOW_TRIGGERS
+    UNKNOWN = UNKNOWN
