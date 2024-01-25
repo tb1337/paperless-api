@@ -2,29 +2,16 @@
 
 import datetime
 from dataclasses import dataclass
-from enum import Enum
 from typing import TYPE_CHECKING, Any, final
 
 from pypaperless.const import API_PATH
 
 from .base import HelperBase, PaperlessModel
+from .common import ShareLinkFileVersionType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
-
-
-class ShareLinkFileVersionType(Enum):
-    """Enum with file version."""
-
-    ARCHIVE = "archive"
-    ORIGINAL = "original"
-    UNKNOWN = "unknown"
-
-    @classmethod
-    def _missing_(cls: type, value: object) -> "ShareLinkFileVersionType":  # noqa ARG003
-        """Set default member on unknown value."""
-        return ShareLinkFileVersionType.UNKNOWN
 
 
 @final

@@ -23,6 +23,8 @@ UNKNOWN = "unknown"
 
 API_PATH = {
     "index": "/api/",
+    f"{CORRESPONDENTS}": f"/api/{CORRESPONDENTS}/",
+    f"{CORRESPONDENTS}_single": f"/api/{CORRESPONDENTS}/{{pk}}/",
     f"{CUSTOM_FIELDS}": f"/api/{CUSTOM_FIELDS}/",
     f"{CUSTOM_FIELDS}_single": f"/api/{CUSTOM_FIELDS}/{{pk}}/",
     f"{DOCUMENTS}": f"/api/{DOCUMENTS}/",

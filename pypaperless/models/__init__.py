@@ -1,29 +1,22 @@
 """PyPaperless models."""
 
-from .custom_fields import CustomField, CustomFieldDraft, CustomFieldType, CustomFieldValueType
-from .documents import (
-    Document,
-    DocumentDraft,
-    DocumentMeta,
-    DocumentMetadataType,
-    DocumentNote,
-    DocumentNoteDraft,
-)
+from .classifiers import Correspondent, CorrespondentDraft
+from .custom_fields import CustomField, CustomFieldDraft
+from .documents import Document, DocumentDraft, DocumentMeta, DocumentNote, DocumentNoteDraft
 from .mails import MailAccount, MailRule
 from .pages import Page
 from .permissions import Group, User
-from .saved_views import SavedView, SavedViewFilterRuleType
-from .share_links import ShareLink, ShareLinkDraft, ShareLinkFileVersionType
+from .saved_views import SavedView
+from .share_links import ShareLink, ShareLinkDraft
 
 __all__ = (
+    "Correspondent",
+    "CorrespondentDraft",
     "CustomField",
     "CustomFieldDraft",
-    "CustomFieldType",
-    "CustomFieldValueType",
     "Document",
     "DocumentDraft",
     "DocumentMeta",
-    "DocumentMetadataType",
     "DocumentNote",
     "DocumentNoteDraft",
     "Group",
@@ -31,9 +24,7 @@ __all__ = (
     "MailRule",
     "Page",
     "SavedView",
-    "SavedViewFilterRuleType",
     "ShareLink",
     "ShareLinkDraft",
-    "ShareLinkFileVersionType",
     "User",
 )

@@ -6,19 +6,11 @@ from typing import TYPE_CHECKING, Any, final
 from pypaperless.const import API_PATH
 
 from .base import HelperBase, PaperlessModel
+from .common import SavedViewFilterRuleType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
-
-
-@final
-@dataclass(kw_only=True)
-class SavedViewFilterRuleType(PaperlessModel):
-    """Represent a subtype of `SavedView`."""
-
-    rule_type: int | None = None
-    value: str | None = None
 
 
 @final

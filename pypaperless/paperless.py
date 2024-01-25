@@ -17,6 +17,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     """Retrieves and manipulates data from and to Paperless via REST."""
 
     _class_map: set[tuple[str, type]] = {
+        (PaperlessEndpoints.CORRESPONDENTS, helpers.CorrespondentHelper),
         (PaperlessEndpoints.CUSTOM_FIELDS, helpers.CustomFieldHelper),
         (PaperlessEndpoints.DOCUMENTS, helpers.DocumentHelper),
         (PaperlessEndpoints.GROUPS, helpers.GroupHelper),
@@ -27,6 +28,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         (PaperlessEndpoints.USERS, helpers.UserHelper),
     }
 
+    correspondents: helpers.CorrespondentHelper
     custom_fields: helpers.CustomFieldHelper
     documents: helpers.DocumentHelper
     groups: helpers.GroupHelper

@@ -1,5 +1,6 @@
 """Provide `Correspondent`, `DocumentType`, `StoragePath` and `Tag` related models and helpers."""
 
+import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
@@ -14,40 +15,56 @@ if TYPE_CHECKING:
 
 @final
 @dataclass(init=False)
-class MailAccount(
+class Correspondent(  # pylint: disable=too-many-ancestors
     PaperlessModel,
+    models.MatchingFieldsMixin,
     models.PermissionFieldsMixin,
-):  # pylint: disable=too-many-instance-attributes
-    """Represent a Paperless `MailAccount`."""
+    models.UpdatableMixin,
+    models.DeletableMixin,
+):
+    """Represent a Paperless `Correspondent`."""
 
-    _api_path = API_PATH["mail_accounts_single"]
+    _api_path = API_PATH["correspondents_single"]
 
     id: int | None = None
+    slug: str | None = None
     name: str | None = None
-    imap_server: str | None = None
-    imap_port: int | None = None
-    imap_security: int | None = None
-    username: str | None = None
-    # exclude that from the dataclass
-    # password: str | None = None
-    character_set: str | None = None
-    is_token: bool | None = None
+    document_count: int | None = None
+    last_correspondence: datetime.datetime | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
-        """Initialize a `MailAccount` instance."""
+        """Initialize a `Correspondent` instance."""
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
 @final
-class MailAccountHelper(
-    HelperBase[MailAccount],
-    helpers.CallableMixin[MailAccount],
-    helpers.IterableMixin[MailAccount],
+@dataclass(kw_only=True)
+class CorrespondentDraft(
+    PaperlessModel,
+    models.MatchingFieldsMixin,
+    models.CreatableMixin,
 ):
-    """Represent a factory for Paperless `MailAccount` models."""
+    """Represent a new Paperless `Correspondent`, which is not stored in Paperless."""
 
-    _api_path = API_PATH["mail_accounts"]
+    _api_path = API_PATH["correspondents"]
 
-    _resource = MailAccount
+    _create_required_fields = {"name", "match", "matching_algorithm", "is_insensitive"}
+
+    name: str | None = None
+    owner: int | None = None
+
+
+@final
+class CorrespondentHelper(  # pylint: disable=too-many-ancestors
+    HelperBase[Correspondent],
+    helpers.CallableMixin[Correspondent],
+    helpers.DraftableMixin[CorrespondentDraft],
+    helpers.IterableMixin[Correspondent],
+):
+    """Represent a factory for Paperless `Correspondent` models."""
+
+    _api_path = API_PATH["correspondents"]
+
+    _resource = Correspondent

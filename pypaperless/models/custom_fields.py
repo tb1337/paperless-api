@@ -1,36 +1,16 @@
 """Provide `CustomField` related models and helpers."""
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import TYPE_CHECKING, Any, final
 
 from pypaperless.const import API_PATH
 
 from .base import HelperBase, PaperlessModel
+from .common import CustomFieldType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
-
-
-@final
-class CustomFieldType(Enum):
-    """Represent a subtype of `CustomField`."""
-
-    STRING = "string"
-    BOOLEAN = "boolean"
-    INTEGER = "integer"
-    FLOAT = "float"
-    MONETARY = "monetary"
-    DATE = "date"
-    URL = "url"
-    DOCUMENT_LINK = "documentlink"
-    UNKNOWN = "unknown"
-
-    @classmethod
-    def _missing_(cls: type, value: object) -> "CustomFieldType":  # noqa ARG003
-        """Set default member on unknown value."""
-        return CustomFieldType.UNKNOWN
 
 
 @final
@@ -69,15 +49,6 @@ class CustomFieldDraft(
 
     name: str | None = None
     data_type: CustomFieldType | None = None
-
-
-@final
-@dataclass(kw_only=True)
-class CustomFieldValueType:
-    """Represent a subtype of `Document`."""
-
-    field: int | None = None
-    value: Any | None = None
 
 
 @final

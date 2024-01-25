@@ -8,7 +8,7 @@ from pypaperless.const import API_PATH
 from pypaperless.errors import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
-from .custom_fields import CustomFieldValueType
+from .common import CustomFieldValueType, DocumentMetadataType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -17,12 +17,12 @@ if TYPE_CHECKING:
 
 @final
 @dataclass(init=False)
-class Document(
+class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancestors
     PaperlessModel,
     models.PermissionFieldsMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
-):  # pylint: disable=too-many-instance-attributes, too-many-ancestors
+):
     """Represent a Paperless `Document`."""
 
     _api_path = API_PATH["documents_single"]
@@ -142,17 +142,6 @@ class DocumentNoteDraft(
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("document"))
-
-
-@final
-@dataclass(kw_only=True)
-class DocumentMetadataType:
-    """Represent a subtype of `DocumentMeta`."""
-
-    namespace: str | None = None
-    prefix: str | None = None
-    key: str | None = None
-    value: str | None = None
 
 
 @final
