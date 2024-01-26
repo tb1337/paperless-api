@@ -66,7 +66,7 @@ API_PATH = {
 class PaperlessResource(StrEnum):
     """Represent paths of api endpoints."""
 
-    # CONFIG = CONFIG
+    CONFIG = CONFIG
     CONSUMPTION_TEMPLATES = CONSUMPTION_TEMPLATES
     CORRESPONDENTS = CORRESPONDENTS
     CUSTOM_FIELDS = CUSTOM_FIELDS
@@ -88,9 +88,6 @@ class PaperlessResource(StrEnum):
     UNKNOWN = UNKNOWN
 
     @classmethod
-    def _missing_(
-        cls: type[PaperlessResource],
-        value: object,  # noqa ARG003
-    ) -> PaperlessResource:
+    def _missing_(cls: type[PaperlessResource], value: object) -> PaperlessResource:  # noqa ARG003
         """Set default member on unknown value."""
         return cls.UNKNOWN
