@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 from .mixins import helpers, models
@@ -89,8 +89,9 @@ class MailAccountHelper(
     """Represent a factory for Paperless `MailAccount` models."""
 
     _api_path = API_PATH["mail_accounts"]
+    _resource = PaperlessResource.MAIL_ACCOUNTS
 
-    _resource = MailAccount
+    _resource_cls = MailAccount
 
 
 @final
@@ -102,5 +103,6 @@ class MailRuleHelper(
     """Represent a factory for Paperless `MailRule` models."""
 
     _api_path = API_PATH["mail_rules"]
+    _resource = PaperlessResource.MAIL_RULES
 
-    _resource = MailRule
+    _resource_cls = MailRule

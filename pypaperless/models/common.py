@@ -1,4 +1,4 @@
-"""PyPaperless common non-model types."""
+"""PyPaperless common types."""
 
 from dataclasses import dataclass
 from enum import Enum
@@ -81,7 +81,7 @@ class SavedViewFilterRuleType:
 # share_links
 @final
 class ShareLinkFileVersionType(Enum):
-    """Enum with file version."""
+    """Represent a subtype of `ShareLink`."""
 
     ARCHIVE = "archive"
     ORIGINAL = "original"
@@ -91,3 +91,49 @@ class ShareLinkFileVersionType(Enum):
     def _missing_(cls: type, value: object) -> "ShareLinkFileVersionType":  # noqa ARG003
         """Set default member on unknown value."""
         return ShareLinkFileVersionType.UNKNOWN
+
+
+# workflows
+@final
+class WorkflowActionType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    ASSIGNMENT = 1
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "WorkflowActionType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return WorkflowActionType.UNKNOWN
+
+
+# workflows
+@final
+class WorkflowTriggerType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUMPTION = 1
+    DOCUMENT_ADDED = 2
+    DOCUMENT_UPDATED = 3
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "WorkflowTriggerType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return WorkflowTriggerType.UNKNOWN
+
+
+# workflows
+@final
+class WorkflowTriggerSourceType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUME_FOLDER = 1
+    API_UPLOAD = 2
+    MAIL_FETCH = 3
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "WorkflowTriggerSourceType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return WorkflowTriggerSourceType.UNKNOWN

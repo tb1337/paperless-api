@@ -17,6 +17,7 @@ from .pages import Page
 from .permissions import Group, User
 from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
+from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
 __all__ = (
     "Correspondent",
@@ -42,4 +43,7 @@ __all__ = (
     "Tag",
     "TagDraft",
     "User",
+    "Workflow",
+    "WorkflowAction",
+    "WorkflowTrigger",
 )

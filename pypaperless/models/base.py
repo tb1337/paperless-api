@@ -3,7 +3,7 @@
 from dataclasses import Field, dataclass, fields
 from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.util import dict_value_to_object
 
 if TYPE_CHECKING:
@@ -28,15 +28,20 @@ class HelperProtocol(Protocol, Generic[ResourceT]):  # pylint: disable=too-few-p
 
     _api: "Paperless"
     _api_path: str
-    _resource: type[ResourceT]
+    _resource: PaperlessResource
+    _resource_cls: type[ResourceT]
 
 
 class HelperBase(PaperlessBase, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
     """Base class for all helpers in PyPaperless."""
 
-    # def __init__(self, api: "Paperless"):
-    #     """Initialize a `HelperBase` instance."""
-    #     super().__init__(api)
+    _resource: PaperlessResource
+
+    def __init__(self, api: "Paperless"):
+        """Initialize a `HelperBase` instance."""
+        super().__init__(api)
+
+        self._api._paths.add(self._resource)
 
 
 @dataclass(init=False)
@@ -100,6 +105,7 @@ class PaperlessModel(PaperlessBase):
                 self._data.get(field.name),
                 field.type,
                 field.default,
+                self._api,
             )
             setattr(self, field.name, value)
 

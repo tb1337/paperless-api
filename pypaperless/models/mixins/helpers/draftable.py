@@ -9,7 +9,7 @@ from pypaperless.models.base import HelperProtocol, ResourceT
 class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods
     """Provide the `draft` method for PyPaperless helpers."""
 
-    _draft: type[ResourceT]
+    _draft_cls: type[ResourceT]
 
     @final
     def draft(self, **kwargs: Any) -> ResourceT:
@@ -21,8 +21,8 @@ class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-publ
         # do something
         ```
         """
-        if not hasattr(self, "_draft"):
-            raise DraftNotSupported("Helper class has no _draft attribute.")
+        if not hasattr(self, "_draft_cls"):
+            raise DraftNotSupported("Helper class has no _draft_cls attribute.")
         kwargs.update({"id": -1})
 
-        return self._draft.create_with_data(self._api, data=kwargs, fetched=True)
+        return self._draft_cls.create_with_data(self._api, data=kwargs, fetched=True)

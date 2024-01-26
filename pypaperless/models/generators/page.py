@@ -39,7 +39,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
             "page_size": self.params["page_size"],
         }
         self._page = Page.create_with_data(self._api, data, fetched=True)
-        self._page._resource = self._resource  # attach the resource to the data class
+        self._page._resource_cls = self._resource_cls  # attach the resource to the data class
 
         # rise page by one to request next page on next iteration
         self.params["page"] += 1
@@ -51,14 +51,14 @@ class PageGenerator(PaperlessBase, AsyncIterator):
         self,
         api: "Paperless",
         url: str,
-        resource: type,
+        resource_cls: type,
         params: dict[str, Any] | None = None,
     ):
         """Initialize `ResourceIterator` class instance."""
         super().__init__(api)
 
         self._page = None
-        self._resource = resource
+        self._resource_cls = resource_cls
         self._url = url
 
         self.params = deepcopy(params) if params else {}

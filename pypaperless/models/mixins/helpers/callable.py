@@ -28,7 +28,7 @@ class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-publi
         data = {
             "id": pk,
         }
-        item = self._resource.create_with_data(self._api, data)
+        item = self._resource_cls.create_with_data(self._api, data)
         if not lazy:
             await item.load()
         return item

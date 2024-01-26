@@ -9,7 +9,7 @@ import aiohttp
 from yarl import URL
 
 from . import helpers
-from .const import API_PATH, PaperlessEndpoints
+from .const import API_PATH, PaperlessResource
 from .exceptions import BadJsonResponse, JsonResponseWithError
 from .sessions import PaperlessSession
 
@@ -18,18 +18,19 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     """Retrieves and manipulates data from and to Paperless via REST."""
 
     _class_map: set[tuple[str, type]] = {
-        (PaperlessEndpoints.CORRESPONDENTS, helpers.CorrespondentHelper),
-        (PaperlessEndpoints.CUSTOM_FIELDS, helpers.CustomFieldHelper),
-        (PaperlessEndpoints.DOCUMENTS, helpers.DocumentHelper),
-        (PaperlessEndpoints.DOCUMENT_TYPES, helpers.DocumentTypeHelper),
-        (PaperlessEndpoints.GROUPS, helpers.GroupHelper),
-        (PaperlessEndpoints.MAIL_ACCOUNTS, helpers.MailAccountHelper),
-        (PaperlessEndpoints.MAIL_RULES, helpers.MailRuleHelper),
-        (PaperlessEndpoints.SAVED_VIEWS, helpers.SavedViewHelper),
-        (PaperlessEndpoints.SHARE_LINKS, helpers.ShareLinkHelper),
-        (PaperlessEndpoints.STORAGE_PATHS, helpers.StoragePathHelper),
-        (PaperlessEndpoints.TAGS, helpers.TagHelper),
-        (PaperlessEndpoints.USERS, helpers.UserHelper),
+        (PaperlessResource.CORRESPONDENTS, helpers.CorrespondentHelper),
+        (PaperlessResource.CUSTOM_FIELDS, helpers.CustomFieldHelper),
+        (PaperlessResource.DOCUMENTS, helpers.DocumentHelper),
+        (PaperlessResource.DOCUMENT_TYPES, helpers.DocumentTypeHelper),
+        (PaperlessResource.GROUPS, helpers.GroupHelper),
+        (PaperlessResource.MAIL_ACCOUNTS, helpers.MailAccountHelper),
+        (PaperlessResource.MAIL_RULES, helpers.MailRuleHelper),
+        (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
+        (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
+        (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
+        (PaperlessResource.TAGS, helpers.TagHelper),
+        (PaperlessResource.USERS, helpers.UserHelper),
+        (PaperlessResource.WORKFLOWS, helpers.WorkflowHelper),
     }
 
     correspondents: helpers.CorrespondentHelper
@@ -44,6 +45,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     storage_paths: helpers.StoragePathHelper
     tags: helpers.TagHelper
     users: helpers.UserHelper
+    workflows: helpers.WorkflowHelper
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
@@ -67,6 +69,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         `request_opts`: Optional request options for the `aiohttp.ClientSession.request` method.
         `session`: An existing `aiohttp.ClientSession` if existing.
         """
+        self._paths: set[PaperlessResource] = set()
         self._initialized = False
         self._session = session or PaperlessSession(url, token)
         self._version: str | None = None
@@ -91,30 +94,26 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
     async def initialize(self) -> None:
         """Initialize the connection to DRF and fetch the endpoints."""
-        self.logger.debug("Fetching features...")
-
         async with self.request("get", API_PATH["index"]) as res:
             self._version = res.headers.get("x-version", None)
-            paths = await res.json()
+            paths = set(map(PaperlessResource, await res.json()))
 
-        missing = []
         for endpoint, cls in self._class_map:
-            try:
-                paths.pop(endpoint)  # check if endpoint exists
-            except KeyError:
-                missing.append(endpoint)
-            finally:
-                setattr(self, f"{endpoint}", cls(self))
+            setattr(self, f"{endpoint}", cls(self))
 
-        if len(paths) > 0:
-            self.logger.debug("Unused: %s", ", ".join(paths))
+        unused = paths.difference(self._paths)
+        missing = self._paths.difference(paths)
+
+        if len(unused) > 0:
+            self.logger.debug("Unused features: %s", ", ".join(unused))
 
         if len(missing) > 0:
             self.logger.warning("Outdated version detected: v%s", self._version)
             self.logger.warning("Missing features: %s", ", ".join(missing))
             self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
 
-        self.logger.info("Initialized%s.", " partly" if len(missing) > 0 else "")
+        self.logger.info("Initialized.")
+
         self._initialized = True
 
     @asynccontextmanager

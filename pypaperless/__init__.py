@@ -1,5 +1,9 @@
 """PyPaperless."""
 
-from .paperless import Paperless
+from .api import Paperless
+from .sessions import PaperlessSession
 
-__all__ = ("Paperless",)
+__all__ = (
+    "Paperless",
+    "PaperlessSession",
+)

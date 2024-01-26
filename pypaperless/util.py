@@ -20,7 +20,12 @@ from dataclasses import MISSING, fields, is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from types import NoneType, UnionType
-from typing import Any, Union, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
+
+import pypaperless.models.base as paperless_base
+
+if TYPE_CHECKING:
+    from pypaperless import Paperless
 
 
 def _str_to_datetime(datetimestr: str):
@@ -70,7 +75,13 @@ def object_to_dict_value(value: Any) -> Any:
     return _clean_value(value)
 
 
-def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = MISSING) -> Any:
+def dict_value_to_object(
+    name: str,
+    value: Any,
+    value_type: Any,
+    default: Any = MISSING,
+    _api: "Paperless | None" = None,
+) -> Any:
     """Try to parse a value from raw (json) data and type annotations.
 
     Since there are common use-cases in transforming dicts to dataclass et vice-versa,
@@ -94,7 +105,9 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
         return default
     if value is None and value_type is NoneType:
         return None
-    if is_dataclass(value_type) and isinstance(value, dict):
+    if is_dataclass(value_type) and isinstance(value, dict) and _api is not None:
+        if paperless_base.PaperlessModel in value_type.__mro__:
+            return value_type.create_with_data(api=_api, data=value, fetched=True)
         return value_type(
             **{
                 field.name: dict_value_to_object(
@@ -102,6 +115,7 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
                     value.get(field.name),
                     field.type,
                     field.default,
+                    _api,
                 )
                 for field in fields(value_type)
             }
@@ -110,7 +124,7 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
     origin: Any = get_origin(value_type)
     if origin in (list, tuple, set) and isinstance(value, list | tuple | set):
         return origin(
-            dict_value_to_object(name, subvalue, get_args(value_type)[0])
+            dict_value_to_object(name, subvalue, get_args(value_type)[0], _api=_api)
             for subvalue in value
             if subvalue is not None
         )
@@ -120,8 +134,8 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
         subkey_type = get_args(value_type)[0]
         subvalue_type = get_args(value_type)[1]
         return {
-            dict_value_to_object(subkey, subkey, subkey_type): dict_value_to_object(
-                f"{subkey}.value", subvalue, subvalue_type
+            dict_value_to_object(subkey, subkey, subkey_type, _api=_api): dict_value_to_object(
+                f"{subkey}.value", subvalue, subvalue_type, _api=_api
             )
             for subkey, subvalue in value.items()
         }
@@ -137,7 +151,7 @@ def dict_value_to_object(name: str, value: Any, value_type: Any, default: Any = 
                 return None
             # try them all until one succeeds
             try:
-                return dict_value_to_object(name, value, sub_arg_type)
+                return dict_value_to_object(name, value, sub_arg_type, _api=_api)
             except (KeyError, TypeError, ValueError):
                 pass
         # if we get to this point, all possibilities failed

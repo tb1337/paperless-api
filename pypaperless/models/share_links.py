@@ -4,7 +4,7 @@ import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 from .common import ShareLinkFileVersionType
@@ -62,6 +62,7 @@ class ShareLinkHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `ShareLink` models."""
 
     _api_path = API_PATH["share_links"]
+    _resource = PaperlessResource.SHARE_LINKS
 
-    _draft = ShareLinkDraft
-    _resource = ShareLink
+    _draft_cls = ShareLinkDraft
+    _resource_cls = ShareLink

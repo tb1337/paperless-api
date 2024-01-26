@@ -83,4 +83,4 @@ class IterableMixin(HelperProtocol[ResourceT]):
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)
 
-        return PageGenerator(self._api, self._api_path, self._resource, params=params)
+        return PageGenerator(self._api, self._api_path, self._resource_cls, params=params)

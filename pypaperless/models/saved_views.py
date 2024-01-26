@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 from .common import SavedViewFilterRuleType
@@ -47,5 +47,6 @@ class SavedViewHelper(
     """Represent a factory for Paperless `SavedView` models."""
 
     _api_path = API_PATH["saved_views"]
+    _resource = PaperlessResource.SAVED_VIEWS
 
-    _resource = SavedView
+    _resource_cls = SavedView

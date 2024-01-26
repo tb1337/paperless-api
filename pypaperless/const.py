@@ -1,13 +1,17 @@
 """PyPaperless constants."""
 
+from __future__ import annotations
+
 from enum import StrEnum
 
+CONFIG = "config"
 CONSUMPTION_TEMPLATES = "consumption_templates"
 CORRESPONDENTS = "correspondents"
 CUSTOM_FIELDS = "custom_fields"
 DOCUMENTS = "documents"
 DOCUMENT_TYPES = "document_types"
 GROUPS = "groups"
+LOGS = "logs"
 MAIL_ACCOUNTS = "mail_accounts"
 MAIL_RULES = "mail_rules"
 SAVED_VIEWS = "saved_views"
@@ -50,18 +54,26 @@ API_PATH = {
     f"{TAGS}_single": f"/api/{TAGS}/{{pk}}/",
     f"{USERS}": f"/api/{USERS}/",
     f"{USERS}_single": f"/api/{USERS}/{{pk}}/",
+    f"{WORKFLOWS}": f"/api/{WORKFLOWS}/",
+    f"{WORKFLOWS}_single": f"/api/{WORKFLOWS}/{{pk}}/",
+    f"{WORKFLOW_ACTIONS}": f"/api/{WORKFLOW_ACTIONS}/",
+    f"{WORKFLOW_ACTIONS}_single": f"/api/{WORKFLOW_ACTIONS}/{{pk}}/",
+    f"{WORKFLOW_TRIGGERS}": f"/api/{WORKFLOW_TRIGGERS}/",
+    f"{WORKFLOW_TRIGGERS}_single": f"/api/{WORKFLOW_TRIGGERS}/{{pk}}/",
 }
 
 
-class PaperlessEndpoints(StrEnum):
+class PaperlessResource(StrEnum):
     """Represent paths of api endpoints."""
 
+    # CONFIG = CONFIG
     CONSUMPTION_TEMPLATES = CONSUMPTION_TEMPLATES
     CORRESPONDENTS = CORRESPONDENTS
     CUSTOM_FIELDS = CUSTOM_FIELDS
     DOCUMENTS = DOCUMENTS
     DOCUMENT_TYPES = DOCUMENT_TYPES
     GROUPS = GROUPS
+    LOGS = LOGS
     MAIL_ACCOUNTS = MAIL_ACCOUNTS
     MAIL_RULES = MAIL_RULES
     SAVED_VIEWS = SAVED_VIEWS
@@ -74,3 +86,11 @@ class PaperlessEndpoints(StrEnum):
     WORKFLOW_ACTIONS = WORKFLOW_ACTIONS
     WORKFLOW_TRIGGERS = WORKFLOW_TRIGGERS
     UNKNOWN = UNKNOWN
+
+    @classmethod
+    def _missing_(
+        cls: type[PaperlessResource],
+        value: object,  # noqa ARG003
+    ) -> PaperlessResource:
+        """Set default member on unknown value."""
+        return cls.UNKNOWN

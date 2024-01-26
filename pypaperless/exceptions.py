@@ -39,10 +39,12 @@ class JsonResponseWithError(PaperlessException):
     def __init__(self, payload: Any) -> None:
         """Initialize a `JsonResponseWithError` instance."""
         message: Any = "Unknown error"
+
         if isinstance(payload, dict) and "error" in payload:
             message = payload["error"]
             if isinstance(message, list):
                 message = "\n".join(message)
+
         super().__init__(f"Paperless: {message}")
 
 

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 from .common import CustomFieldType
@@ -61,6 +61,7 @@ class CustomFieldHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `CustomField` models."""
 
     _api_path = API_PATH["custom_fields"]
+    _resource = PaperlessResource.CUSTOM_FIELDS
 
-    _draft = CustomFieldDraft
-    _resource = CustomField
+    _draft_cls = CustomFieldDraft
+    _resource_cls = CustomField

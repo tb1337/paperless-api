@@ -4,7 +4,7 @@ import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
@@ -180,8 +180,9 @@ class DocumentMetaHelper(  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
+    _resource = PaperlessResource.DOCUMENTS
 
-    _resource = DocumentMeta
+    _resource_cls = DocumentMeta
 
 
 @final
@@ -189,8 +190,9 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = API_PATH["documents_notes"]
+    _resource = PaperlessResource.DOCUMENTS
 
-    _resource = DocumentNote
+    _resource_cls = DocumentNote
 
     def __init__(self, api: "Paperless", attached_to: int | None = None) -> None:
         """Initialize a `DocumentHelper` instance."""
@@ -215,7 +217,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
         #       .document -> does not exist (so we add it here)
         #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
         return [
-            self._resource.create_with_data(
+            self._resource_cls.create_with_data(
                 self._api,
                 {
                     **item,
@@ -264,9 +266,10 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `Document` models."""
 
     _api_path = API_PATH["documents"]
+    _resource = PaperlessResource.DOCUMENTS
 
-    _draft = DocumentDraft
-    _resource = Document
+    _draft_cls = DocumentDraft
+    _resource_cls = Document
 
     def __init__(self, api: "Paperless") -> None:
         """Initialize a `DocumentHelper` instance."""

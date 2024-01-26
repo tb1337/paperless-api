@@ -19,7 +19,7 @@ class Page(
     """Represent a Paperless DRF `Paginated`."""
 
     _api_path = API_PATH["index"]
-    _resource: type[ResourceT]
+    _resource_cls: type[ResourceT]
 
     # our fields
     current_page: int
@@ -64,7 +64,7 @@ class Page(
         """
 
         def mapper(data: dict[str, Any]) -> ResourceT:
-            return self._resource.create_with_data(self._api, data, fetched=True)
+            return self._resource_cls.create_with_data(self._api, data, fetched=True)
 
         return list(map(mapper, self._data["results"]))
 

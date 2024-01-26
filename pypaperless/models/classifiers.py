@@ -4,7 +4,7 @@ import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, final
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 from .mixins import helpers, models
@@ -208,9 +208,10 @@ class CorrespondentHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `Correspondent` models."""
 
     _api_path = API_PATH["correspondents"]
+    _resource = PaperlessResource.CORRESPONDENTS
 
-    _draft = CorrespondentDraft
-    _resource = Correspondent
+    _draft_cls = CorrespondentDraft
+    _resource_cls = Correspondent
 
 
 @final
@@ -223,9 +224,10 @@ class DocumentTypeHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `DocumentType` models."""
 
     _api_path = API_PATH["document_types"]
+    _resource = PaperlessResource.DOCUMENT_TYPES
 
-    _draft = DocumentTypeDraft
-    _resource = DocumentType
+    _draft_cls = DocumentTypeDraft
+    _resource_cls = DocumentType
 
 
 @final
@@ -238,9 +240,10 @@ class StoragePathHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `StoragePath` models."""
 
     _api_path = API_PATH["storage_paths"]
+    _resource = PaperlessResource.STORAGE_PATHS
 
-    _draft = StoragePathDraft
-    _resource = StoragePath
+    _draft_cls = StoragePathDraft
+    _resource_cls = StoragePath
 
 
 @final
@@ -253,6 +256,7 @@ class TagHelper(  # pylint: disable=too-many-ancestors
     """Represent a factory for Paperless `Tag` models."""
 
     _api_path = API_PATH["tags"]
+    _resource = PaperlessResource.TAGS
 
-    _draft = TagDraft
-    _resource = Tag
+    _draft_cls = TagDraft
+    _resource_cls = Tag
