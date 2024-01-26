@@ -1,4 +1,4 @@
-"""Paperless class."""
+"""PyPaperless."""
 
 import logging
 from collections.abc import AsyncGenerator
@@ -10,7 +10,8 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessEndpoints
-from .errors import BadRequestException, DataNotExpectedException
+from .exceptions import BadJsonResponse, JsonResponseWithError
+from .sessions import PaperlessSession
 
 
 class Paperless:  # pylint: disable=too-many-instance-attributes
@@ -20,22 +21,28 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         (PaperlessEndpoints.CORRESPONDENTS, helpers.CorrespondentHelper),
         (PaperlessEndpoints.CUSTOM_FIELDS, helpers.CustomFieldHelper),
         (PaperlessEndpoints.DOCUMENTS, helpers.DocumentHelper),
+        (PaperlessEndpoints.DOCUMENT_TYPES, helpers.DocumentTypeHelper),
         (PaperlessEndpoints.GROUPS, helpers.GroupHelper),
         (PaperlessEndpoints.MAIL_ACCOUNTS, helpers.MailAccountHelper),
         (PaperlessEndpoints.MAIL_RULES, helpers.MailRuleHelper),
         (PaperlessEndpoints.SAVED_VIEWS, helpers.SavedViewHelper),
         (PaperlessEndpoints.SHARE_LINKS, helpers.ShareLinkHelper),
+        (PaperlessEndpoints.STORAGE_PATHS, helpers.StoragePathHelper),
+        (PaperlessEndpoints.TAGS, helpers.TagHelper),
         (PaperlessEndpoints.USERS, helpers.UserHelper),
     }
 
     correspondents: helpers.CorrespondentHelper
     custom_fields: helpers.CustomFieldHelper
     documents: helpers.DocumentHelper
+    document_types: helpers.DocumentTypeHelper
     groups: helpers.GroupHelper
     mail_accounts: helpers.MailAccountHelper
     mail_rules: helpers.MailRuleHelper
     saved_views: helpers.SavedViewHelper
     share_links: helpers.ShareLinkHelper
+    storage_paths: helpers.StoragePathHelper
+    tags: helpers.TagHelper
     users: helpers.UserHelper
 
     async def __aenter__(self) -> "Paperless":
@@ -43,19 +50,15 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, exc: Any, exc_tb: Any) -> Any | None:
+    async def __aexit__(self, *_: object) -> None:
         """Exit context manager."""
         await self.close()
-        if exc:
-            raise exc
-        return exc_type
 
     def __init__(
         self,
         url: str | URL,
         token: str,
-        request_opts: dict[str, Any] | None = None,
-        session: aiohttp.ClientSession | None = None,
+        session: PaperlessSession | None = None,
     ):
         """Initialize a `Paperless` instance.
 
@@ -64,19 +67,11 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         `request_opts`: Optional request options for the `aiohttp.ClientSession.request` method.
         `session`: An existing `aiohttp.ClientSession` if existing.
         """
-        self._base_url = self.create_url_from_input(url)
         self._initialized = False
-        self._request_opts = request_opts
-        self._session = session
-        self._token = token
+        self._session = session or PaperlessSession(url, token)
         self._version: str | None = None
 
-        self.logger = logging.getLogger(f"{__package__}[{self.base_url.host}]")
-
-    @property
-    def base_url(self) -> URL:
-        """Return the base url of Paperless."""
-        return self._base_url
+        self.logger = logging.getLogger(f"{__package__}[{self._session}]")
 
     @property
     def is_initialized(self) -> bool:
@@ -88,20 +83,6 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Return the version object of the Paperless host."""
         return self._version
 
-    @staticmethod
-    def create_url_from_input(url: str | URL) -> URL:
-        """Create URL from string or URL and prepare for further use."""
-        # reverse compatibility, fall back to https
-        if isinstance(url, str) and "://" not in url:
-            url = f"https://{url}".rstrip("/")
-        url = URL(url)
-
-        # scheme check. fall back to https
-        if url.scheme not in ("https", "http"):
-            url = URL(url).with_scheme("https")
-
-        return url
-
     async def close(self) -> None:
         """Clean up connection."""
         if self._session:
@@ -112,7 +93,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Initialize the connection to DRF and fetch the endpoints."""
         self.logger.debug("Fetching features...")
 
-        async with self.generate_request("get", API_PATH["index"]) as res:
+        async with self.request("get", API_PATH["index"]) as res:
             self._version = res.headers.get("x-version", None)
             paths = await res.json()
 
@@ -133,61 +114,32 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
             self.logger.warning("Missing features: %s", ", ".join(missing))
             self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
 
-        self.logger.info("Initialized.")
+        self.logger.info("Initialized%s.", " partly" if len(missing) > 0 else "")
         self._initialized = True
 
     @asynccontextmanager
-    async def generate_request(
+    async def request(  ## pylint: disable=too-many-arguments
         self,
         method: str,
         path: str,
+        json: dict[str, Any] | None = None,
+        data: dict[str, Any] | aiohttp.FormData | None = None,
+        form: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
-        """Create a client response object for further use."""
-        if not isinstance(self._session, aiohttp.ClientSession):
-            self._session = aiohttp.ClientSession()
-
-        if isinstance(self._request_opts, dict):
-            kwargs.update(self._request_opts)
-
-        kwargs.setdefault("headers", {})
-        kwargs["headers"].update(
-            {
-                "accept": "application/json; version=2",
-                "authorization": f"Token {self._token}",
-            }
+        """Perform a request."""
+        res = await self._session.request(
+            method,
+            path,
+            json=json,
+            data=data,
+            form=form,
+            params=params,
+            **kwargs,
         )
-
-        # convert form to FormData, if dict
-        if "form" in kwargs:
-            payload = kwargs.pop("form")
-            if not isinstance(payload, dict):
-                raise TypeError()
-            form = aiohttp.FormData()
-
-            # we just convert data, no nesting dicts
-            for key, value in payload.items():
-                if value is None:
-                    continue
-                if isinstance(value, str | bytes):
-                    form.add_field(key, value)
-                elif isinstance(value, list):
-                    for list_value in value:
-                        form.add_field(key, f"{list_value}")
-                else:
-                    form.add_field(key, f"{value}")
-
-            kwargs["data"] = form
-
-        # check for trailing slash if needed
-        url = f"{self.base_url}{path}" if not path.startswith("http") else path
-        if URL(url).query_string == "":
-            url = url.rstrip("/") + "/"
-
-        # request data
-        async with self._session.request(method, url, **kwargs) as res:
-            self.logger.debug("HTTP %s -> %d: %s", method.upper(), res.status, res.url)
-            yield res
+        self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        yield res
 
     async def request_json(
         self,
@@ -196,19 +148,17 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         **kwargs: Any,
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
-        async with self.generate_request(method, endpoint, **kwargs) as res:
-            # bad request
-            if res.status == 400:
-                raise BadRequestException(f"{await res.text()}")
-            # no content, in most cases on DELETE method
-            if res.status == 204:
-                return {}
-            res.raise_for_status()
+        async with self.request(method, endpoint, **kwargs) as res:
+            try:
+                payload = await res.json()
+            except ValueError as exc:
+                raise BadJsonResponse(res) from exc
 
-            if res.content_type != "application/json":
-                raise DataNotExpectedException(f"Content-type is not json! {res.content_type}")
+        if res.status == 400:
+            raise JsonResponseWithError(payload)
+        res.raise_for_status()
 
-            return await res.json()
+        return payload
 
     async def request_file(
         self,
@@ -217,10 +167,5 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         **kwargs: Any,
     ) -> bytes:
         """Make a request to the api and return response as bytes."""
-        async with self.generate_request(method, endpoint, **kwargs) as res:
-            # bad request
-            if res.status == 400:
-                raise BadRequestException(f"{await res.text()}")
-            res.raise_for_status()
-
+        async with self.request(method, endpoint, **kwargs) as res:
             return await res.read()

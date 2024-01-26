@@ -79,7 +79,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
             # do something
         ```
         """
-        params = getattr(self, "_aiter_filters", {})
+        params = getattr(self, "_aiter_filters", None) or {}
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)
 

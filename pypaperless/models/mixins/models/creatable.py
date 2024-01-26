@@ -2,7 +2,7 @@
 
 from typing import cast, final
 
-from pypaperless.errors import DraftFieldRequired
+from pypaperless.exceptions import DraftFieldRequired
 from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.util import object_to_dict_value
 

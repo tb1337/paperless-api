@@ -1,6 +1,15 @@
 """PyPaperless models."""
 
-from .classifiers import Correspondent, CorrespondentDraft
+from .classifiers import (
+    Correspondent,
+    CorrespondentDraft,
+    DocumentType,
+    DocumentTypeDraft,
+    StoragePath,
+    StoragePathDraft,
+    Tag,
+    TagDraft,
+)
 from .custom_fields import CustomField, CustomFieldDraft
 from .documents import Document, DocumentDraft, DocumentMeta, DocumentNote, DocumentNoteDraft
 from .mails import MailAccount, MailRule
@@ -19,6 +28,8 @@ __all__ = (
     "DocumentMeta",
     "DocumentNote",
     "DocumentNoteDraft",
+    "DocumentType",
+    "DocumentTypeDraft",
     "Group",
     "MailAccount",
     "MailRule",
@@ -26,5 +37,9 @@ __all__ = (
     "SavedView",
     "ShareLink",
     "ShareLinkDraft",
+    "StoragePath",
+    "StoragePathDraft",
+    "Tag",
+    "TagDraft",
     "User",
 )

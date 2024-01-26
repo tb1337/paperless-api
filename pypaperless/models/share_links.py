@@ -63,4 +63,5 @@ class ShareLinkHelper(  # pylint: disable=too-many-ancestors
 
     _api_path = API_PATH["share_links"]
 
+    _draft = ShareLinkDraft
     _resource = ShareLink

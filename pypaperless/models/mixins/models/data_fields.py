@@ -11,7 +11,7 @@ class MatchingFieldsMixin:
 
     match: str | None = None
     matching_algorithm: MatchingAlgorithmType | None = None
-    is_insensitivie: bool | None = None
+    is_insensitive: bool | None = None
 
 
 @dataclass

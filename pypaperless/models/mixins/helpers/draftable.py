@@ -2,7 +2,7 @@
 
 from typing import Any, final
 
-from pypaperless.errors import DraftNotSupported
+from pypaperless.exceptions import DraftNotSupported
 from pypaperless.models.base import HelperProtocol, ResourceT
 
 

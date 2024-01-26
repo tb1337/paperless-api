@@ -23,7 +23,7 @@ class DeletableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
             print("Successfully deleted the document!")
         ```
         """
-        async with self._api.generate_request("delete", self._api_path) as res:
+        async with self._api.request("delete", self._api_path) as res:
             success = res.status == 204
 
         return success

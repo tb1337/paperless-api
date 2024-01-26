@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast, final
 
 from pypaperless.const import API_PATH
-from pypaperless.errors import PrimaryKeyRequired
+from pypaperless.exceptions import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
 from .common import CustomFieldValueType, DocumentMetadataType
@@ -116,7 +116,7 @@ class DocumentNote(PaperlessModel):
         params = {
             "id": self.id,
         }
-        async with self._api.generate_request("delete", self._api_path, params=params) as res:
+        async with self._api.request("delete", self._api_path, params=params) as res:
             success = res.status == 204
 
         return success
