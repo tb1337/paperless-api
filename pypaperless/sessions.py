@@ -53,34 +53,30 @@ class PaperlessSession:
 
     def _process_form(
         self,
-        form: dict[str, Any],
+        data: dict[str, Any],
     ) -> aiohttp.FormData:
         """Process form data and create a `aiohttp.FormData` object."""
-        aioform = aiohttp.FormData()
+        form = aiohttp.FormData()
 
-        def _add_form_value(name: str, value: Any) -> Any:
+        def _add_form_value(name: str | None, value: Any) -> Any:
             if value is None:
                 return
-            if isinstance(value, list | set):
-                for list_value in value:
-                    _add_form_value(name, list_value)
-                return
+            params = {}
             if isinstance(value, dict):
                 for dict_key, dict_value in value.items():
                     _add_form_value(dict_key, dict_value)
-                return
-            if isinstance(value, tuple):
-                params = {}
+            elif isinstance(value, list | set):
+                for list_value in value:
+                    _add_form_value(name, list_value)
+            elif isinstance(value, tuple):
                 if len(value) == 2:
                     params["filename"] = value[1]
-                aioform.add_field(name, value[0], **params)
-                return
-            aioform.add_field(name, value)
+                value = value[0]
+            elif name is not None:
+                form.add_field(name, value, **params)
 
-        for name, value in form.items():
-            _add_form_value(name, value)
-
-        return aioform
+        _add_form_value(None, data)
+        return form
 
     async def close(self) -> None:
         """Clean up connection."""
