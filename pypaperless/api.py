@@ -66,8 +66,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
         `url`: A hostname or IP-address as string, or yarl.URL object.
         `token`: An api token created in Paperless Django settings, or via the helper function.
-        `request_opts`: Optional request options for the `aiohttp.ClientSession.request` method.
-        `session`: An existing `aiohttp.ClientSession` if existing.
+        `session`: A custom `PaperlessSession` object, if existing.
         """
         self._paths: set[PaperlessResource] = set()
         self._initialized = False
@@ -158,13 +157,3 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         res.raise_for_status()
 
         return payload
-
-    async def request_file(
-        self,
-        method: str,
-        endpoint: str,
-        **kwargs: Any,
-    ) -> bytes:
-        """Make a request to the api and return response as bytes."""
-        async with self.request(method, endpoint, **kwargs) as res:
-            return await res.read()

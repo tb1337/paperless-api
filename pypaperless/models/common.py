@@ -1,7 +1,7 @@
 """PyPaperless common types."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any, final
 
 
@@ -66,6 +66,16 @@ class MatchingAlgorithmType(Enum):
     def _missing_(cls: type, value: object) -> "MatchingAlgorithmType":  # noqa ARG003
         """Set default member on unknown value."""
         return MatchingAlgorithmType.UNKNOWN
+
+
+# documents
+@final
+class RetrieveFileMode(StrEnum):
+    """Represent a subtype of `DownloadedDocument`."""
+
+    DOWNLOAD = "download"
+    PREVIEW = "preview"
+    THUMBNAIL = "thumb"
 
 
 # saved_views

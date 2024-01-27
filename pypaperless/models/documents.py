@@ -8,7 +8,7 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
-from .common import CustomFieldValueType, DocumentMetadataType
+from .common import CustomFieldValueType, DocumentMetadataType, RetrieveFileMode
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -51,9 +51,24 @@ class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancest
         self._api_path = self._api_path.format(pk=data.get("id"))
         self.notes = DocumentNoteHelper(api, data.get("id"))
 
+    async def get_download(self, original: bool = False) -> "DownloadedDocument":
+        """Request and return the `DownloadedDocument` class."""
+        item = await self._api.documents.download(cast(int, self.id), original)
+        return item
+
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
         item = await self._api.documents.metadata(cast(int, self.id))
+        return item
+
+    async def get_preview(self, original: bool = False) -> "DownloadedDocument":
+        """Request and return the `DownloadedDocument` class."""
+        item = await self._api.documents.preview(cast(int, self.id), original)
+        return item
+
+    async def get_thumbnail(self, original: bool = False) -> "DownloadedDocument":
+        """Request and return the `DownloadedDocument` class."""
+        item = await self._api.documents.thumbnail(cast(int, self.id), original)
         return item
 
 
@@ -173,6 +188,124 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
 
 
 @final
+@dataclass(init=False)
+class DownloadedDocument(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+    """Bla."""
+
+    _api_path = API_PATH["documents"]
+
+    id: int | None = None
+    mode: RetrieveFileMode | None = None
+    original: bool | None = None
+    content: bytes | None = None
+    content_type: str | None = None
+    disposition_filename: str | None = None
+    disposition_type: str | None = None
+
+    async def load(self) -> None:
+        """Get `raw data` from DRF."""
+        self._api_path = self._api_path.format(pk=self._data.get("id"))
+
+        params = {
+            "original": "true" if self._data.get("original", False) else "false",
+        }
+
+        async with self._api.request("get", self._api_path, params=params) as res:
+            self._data.update(
+                {
+                    "content": await res.read(),
+                    "content_type": res.content_type,
+                }
+            )
+
+            if res.content_disposition is not None:
+                self._data.update(
+                    {
+                        "disposition_filename": res.content_disposition.filename,
+                        "disposition_type": res.content_disposition.type,
+                    }
+                )
+
+        self._set_dataclass_fields()
+        self._fetched = True
+
+
+class DocumentFileHelperBase(  # pylint: disable=too-few-public-methods
+    HelperBase[DownloadedDocument],
+):
+    """Represent a factory for Paperless `DownloadedDocument` models."""
+
+    _api_path = API_PATH["documents_single"]
+    _resource = PaperlessResource.DOCUMENTS
+
+    _resource_cls = DownloadedDocument
+
+    async def __call__(
+        self,
+        pk: int,
+        original: bool,
+        mode: RetrieveFileMode,
+        api_path: str,
+    ) -> DownloadedDocument:
+        """Request exactly one resource item."""
+        data = {
+            "id": pk,
+            "mode": mode,
+            "original": original,
+        }
+        item = self._resource_cls.create_with_data(self._api, data)
+        item._api_path = api_path
+        await item.load()
+
+        return item
+
+
+@final
+class DocumentFileDownloadHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+    """Represent a factory for Paperless `DownloadedDocument` models."""
+
+    _api_path = API_PATH["documents_download"]
+
+    async def __call__(  # type: ignore[override]
+        self,
+        pk: int,
+        original: bool = False,
+    ) -> DownloadedDocument:
+        """Request exactly one resource item."""
+        return await super().__call__(pk, original, RetrieveFileMode.DOWNLOAD, self._api_path)
+
+
+@final
+class DocumentFilePreviewHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+    """Represent a factory for Paperless `DownloadedDocument` models."""
+
+    _api_path = API_PATH["documents_preview"]
+
+    async def __call__(  # type: ignore[override]
+        self,
+        pk: int,
+        original: bool = False,
+    ) -> DownloadedDocument:
+        """Request exactly one resource item."""
+        return await super().__call__(pk, original, RetrieveFileMode.PREVIEW, self._api_path)
+
+
+@final
+class DocumentFileThumbnailHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+    """Represent a factory for Paperless `DownloadedDocument` models."""
+
+    _api_path = API_PATH["documents_thumbnail"]
+
+    async def __call__(  # type: ignore[override]
+        self,
+        pk: int,
+        original: bool = False,
+    ) -> DownloadedDocument:
+        """Request exactly one resource item."""
+        return await super().__call__(pk, original, RetrieveFileMode.THUMBNAIL, self._api_path)
+
+
+@final
 class DocumentMetaHelper(  # pylint: disable=too-few-public-methods
     HelperBase[DocumentMeta],
     helpers.CallableMixin[DocumentMeta],
@@ -275,8 +408,28 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         """Initialize a `DocumentHelper` instance."""
         super().__init__(api)
 
+        self._download = DocumentFileDownloadHelper(api)
         self._meta = DocumentMetaHelper(api)
         self._notes = DocumentNoteHelper(api)
+        self._preview = DocumentFilePreviewHelper(api)
+        self._thumbnail = DocumentFileThumbnailHelper(api)
+
+    @property
+    def download(self) -> DocumentFileDownloadHelper:
+        """Download the contents of an archived file.
+
+        Example:
+        ```python
+        # request document contents directly...
+        download = await paperless.documents.download(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+
+        download = await doc.get_download()
+        ```
+        """
+        return self._download
 
     @property
     def metadata(self) -> DocumentMetaHelper:
@@ -309,3 +462,37 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         ```
         """
         return self._notes
+
+    @property
+    def preview(self) -> DocumentFilePreviewHelper:
+        """Preview the contents of an archived file.
+
+        Example:
+        ```python
+        # request document contents directly...
+        download = await paperless.documents.preview(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+
+        download = await doc.get_preview()
+        ```
+        """
+        return self._preview
+
+    @property
+    def thumbnail(self) -> DocumentFileThumbnailHelper:
+        """Download the contents of a thumbnail file.
+
+        Example:
+        ```python
+        # request document contents directly...
+        download = await paperless.documents.thumbnail(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+
+        download = await doc.get_thumbnail()
+        ```
+        """
+        return self._thumbnail

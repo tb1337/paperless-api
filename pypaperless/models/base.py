@@ -111,6 +111,8 @@ class PaperlessModel(PaperlessBase):
 
     async def load(self) -> None:
         """Get `model data` from DRF."""
-        self._data.update(await self._api.request_json("get", self._api_path))
+        data = await self._api.request_json("get", self._api_path)
+
+        self._data.update(data)
         self._set_dataclass_fields()
         self._fetched = True
