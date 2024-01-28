@@ -4,7 +4,7 @@ from typing import cast, final
 
 from pypaperless.exceptions import DraftFieldRequired
 from pypaperless.models.base import PaperlessModelProtocol
-from pypaperless.util import object_to_dict_value
+from pypaperless.models.utils import object_to_dict_value
 
 
 class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods

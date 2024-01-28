@@ -1,5 +1,5 @@
 """
-Utils for pypaperless.
+Utils for pypaperless models.
 
 Since there are common use-cases in transforming dicts to dataclass et vice-versa,
 we borrowed some snippets from aiohue instead of re-inventing the wheel.

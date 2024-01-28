@@ -4,7 +4,7 @@ from dataclasses import Field, dataclass, fields
 from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, final
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.util import dict_value_to_object
+from pypaperless.models.utils import dict_value_to_object
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
