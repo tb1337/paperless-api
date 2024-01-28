@@ -68,8 +68,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `session`: A custom `PaperlessSession` object, if existing.
         """
-        self._paths: set[PaperlessResource] = set()
         self._initialized = False
+        self._local_resources: set[PaperlessResource] = set()
+        self._remote_resources: set[PaperlessResource] = set()
         self._session = session or PaperlessSession(url, token)
         self._version: str | None = None
 
@@ -84,6 +85,16 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     def host_version(self) -> str | None:
         """Return the version object of the Paperless host."""
         return self._version
+
+    @property
+    def local_resources(self) -> set[PaperlessResource]:
+        """Return a set of locally available resources."""
+        return self._local_resources
+
+    @property
+    def remote_resources(self) -> set[PaperlessResource]:
+        """Return a set of available resources of the Paperless host."""
+        return self._remote_resources
 
     @staticmethod
     async def generate_api_token(url: str, username: str, password: str) -> str:
@@ -132,13 +143,13 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Initialize the connection to DRF and fetch the endpoints."""
         async with self.request("get", API_PATH["index"]) as res:
             self._version = res.headers.get("x-version", None)
-            paths = set(map(PaperlessResource, await res.json()))
+            self._remote_resources = set(map(PaperlessResource, await res.json()))
 
         for endpoint, cls in self._class_map:
             setattr(self, f"{endpoint}", cls(self))
 
-        unused = paths.difference(self._paths)
-        missing = self._paths.difference(paths)
+        unused = self._remote_resources.difference(self._local_resources)
+        missing = self._local_resources.difference(self._remote_resources)
 
         if len(unused) > 0:
             self.logger.debug("Unused features: %s", ", ".join(unused))
@@ -185,8 +196,9 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Make a request to the api and parse response json to dict."""
         async with self.request(method, endpoint, **kwargs) as res:
             try:
+                assert res.content_type == "application/json"
                 payload = await res.json()
-            except ValueError as exc:
+            except (AssertionError, ValueError) as exc:
                 raise BadJsonResponse(res) from exc
 
         if res.status == 400:

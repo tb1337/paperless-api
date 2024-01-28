@@ -1,20 +1,18 @@
 """Paperless common tests."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
 
 import pytest
 
-from pypaperless import Paperless
-from pypaperless.errors import BadRequestException, ControllerConfusion, DataNotExpectedException
-from pypaperless.util import (
-    create_url_from_input,
-    dataclass_from_dict,
-    dataclass_to_dict,
-    update_dataclass,
-)
-from tests.const import PAPERLESS_TEST_REQ_OPTS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+from pypaperless import Paperless, PaperlessSession
+from pypaperless.exceptions import BadJsonResponse, JsonResponseWithError, RequestException
+from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
+from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+
+# mypy: ignore-errors
+# pylint: disable=protected-access
 
 
 class TestPaperless:
@@ -31,87 +29,95 @@ class TestPaperless:
         async with api:
             assert api.is_initialized
 
-    async def test_confusion(self, api: Paperless):
-        """Test confusion."""
-        # it is a very specific case and shouldn't ever happen
-        # set a version which doesn't exist in the router patchwork
-        api.version = "999.99.99"
-        # on that version PyPaperless expects a WorkflowsController (999 > 2.3.0)
-        # but the router will fall back to version 0.0.0 data
-        # this will result in an exception, or ControllerConfusion
-        with pytest.raises(ControllerConfusion):
-            async with api:
-                # boom
-                pass
-
-    async def test_requests(self, api: Paperless):
-        """Test requests."""
-        # request_json
-        with pytest.raises(BadRequestException):
-            await api.request_json("get", "/_bad_request/")
-        with pytest.raises(DataNotExpectedException):
-            await api.request_json("get", "/_no_json/")
-        # request_file
-        with pytest.raises(BadRequestException):
-            await api.request_file("get", "/_bad_request/")
-
-    async def test_generate_request(self):
+    async def test_request(self):
         """Test generate request."""
-        # we need to use an unmocked generate_request() method
+        # we need to use an unmocked PaperlessSession.request() method
         # simply don't initialize Paperless and everything will be fine
         api = Paperless(
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_TOKEN,
-            request_opts=PAPERLESS_TEST_REQ_OPTS,
         )
 
-        async with api.generate_request("get", "https://example.org") as res:
+        async with api.request("get", "https://example.org") as res:
             assert res.status
 
         # last but not least, we test sending a form to test the converter
         form_data = {
-            "string": "Hello Bytes!",
-            "bytes": b"Hello String!",
-            "int": 23,
-            "float": 13.37,
-            "list": [1, 1, 2, 3, 5, 8, 13],
-            "dict": {"str": "str", "int": 2},
+            "str_field": "Hello Bytes!",
+            "bytes_field": b"Hello String!",
+            "tuple_field": (b"Document Content", "filename.pdf"),
+            "int_field": 23,
+            "float_field": 13.37,
+            "int_list": [1, 1, 2, 3, 5, 8, 13],
+            "dict_field": {"dict_str_field": "str", "dict_int_field": 2},
         }
-        async with api.generate_request("post", "https://example.org", form=form_data) as res:
+        async with api.request("post", "https://example.org", form=form_data) as res:
             assert res.status
+
+        # test non-existing request
+        with pytest.raises(RequestException):
+            async with api.request("get", "does-not-exist.example") as res:
+                pass
+
+    async def test_request_json(self, api: Paperless):
+        """Test requests."""
+        # test 400 bad request with error payload
+        with pytest.raises(JsonResponseWithError):
+            await api.request_json(
+                "get",
+                "/test/http/400/",
+                params={
+                    "response_content": '{"error":"sample message"}',
+                    "content_type": "application/json",
+                },
+            )
+
+        # test 200 ok with wrong content type
+        with pytest.raises(BadJsonResponse):
+            await api.request_json(
+                "get",
+                "/test/http/200/",
+                params={
+                    "response_content": '{"error":"sample message"}',
+                    "content_type": "text/plain",
+                },
+            )
+
+        # test 200 ok with correct content type, but no json payload
+        with pytest.raises(BadJsonResponse):
+            await api.request_json(
+                "get",
+                "/test/http/200/",
+                params={
+                    "response_content": "test 1337 5 23 42 1337",
+                    "content_type": "application/json",
+                },
+            )
 
     async def test_create_url(self):
         """Test create url util."""
+        create_url = PaperlessSession._create_base_url
+
         # test default ssl
-        url = create_url_from_input("hostname")
+        url = create_url("hostname")
         assert url.host == "hostname"
         assert url.port == 443
 
-        # test if api-path is added
-        assert url.name == "api"
-
-        # test full url string
-        assert f"{url}" == "https://hostname/api"
-
         # test enforce http
-        url = create_url_from_input("http://hostname")
+        url = create_url("http://hostname")
         assert url.port == 80
 
         # test non-http scheme
-        url = create_url_from_input("ftp://hostname")
+        url = create_url("ftp://hostname")
         assert url.scheme == "https"
 
         # should be https even on just setting a port number
-        url = create_url_from_input("hostname:80")
+        url = create_url("hostname:80")
         assert url.scheme == "https"
 
         # test api/api url
-        url = create_url_from_input("hostname/api/api/")
+        url = create_url("hostname/api/api/")
         assert f"{url}" == "https://hostname/api/api"
-
-        # test with path and check if "api" is added
-        url = create_url_from_input("hostname/path/to/paperless")
-        assert f"{url}" == "https://hostname/path/to/paperless/api"
 
     async def test_dataclass_conversion(self):
         """Test dataclass utils."""
@@ -124,7 +130,7 @@ class TestPaperless:
             UNKNOWN = -1
 
             @classmethod
-            def _missing_(cls: type, value: object):  # noqa ARG003
+            def _missing_(cls: type, *_: object):
                 """Set default."""
                 return cls.UNKNOWN
 
@@ -171,7 +177,16 @@ class TestPaperless:
             "file": b"5-23-42-666-0815-1337",
         }
 
-        res = dataclass_from_dict(_Person, raw_data)
+        data = {
+            field.name: dict_value_to_object(
+                f"_Person.{__name__}.{field.name}",
+                raw_data.get(field.name),
+                field.type,
+                field.default,
+            )
+            for field in fields(_Person)
+        }
+        res = _Person(**data)
 
         assert isinstance(res.name, str)
         assert isinstance(res.age, int)
@@ -187,23 +202,7 @@ class TestPaperless:
         assert isinstance(res.status, _Status)
         assert isinstance(res.file, bytes)
 
-        update_dataclass(
-            res,
-            {
-                "deleted": datetime.now(),
-                "is_deleted": True,
-            },
-        )
-
-        assert isinstance(res.deleted, datetime)
-        assert res.is_deleted
-
-        assert res.status == _Status.ACTIVE
-        update_dataclass(res, {"status": 100})
-        assert isinstance(res.status, _Status)
-        assert res.status == _Status.UNKNOWN
-
         # back conversion
-        back = dataclass_to_dict(res)
+        back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
 
         assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict

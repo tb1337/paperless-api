@@ -16,7 +16,7 @@ Thanks for the excellent work, guys!
 # pylint: disable=all
 
 import logging
-from dataclasses import MISSING, fields, is_dataclass
+from dataclasses import MISSING, asdict, fields, is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from types import NoneType, UnionType
@@ -58,6 +58,8 @@ def object_to_dict_value(value: Any) -> Any:
             _value_obj = _value_obj.value
         if isinstance(_value_obj, date | datetime):
             _value_obj = _dateobj_to_str(_value_obj)
+        if is_dataclass(_value_obj):
+            _value_obj = _clean_dict(asdict(_value_obj))
         return _value_obj
 
     def _clean_list(_list_obj: list) -> list[Any]:
@@ -105,8 +107,8 @@ def dict_value_to_object(
         return default
     if value is None and value_type is NoneType:
         return None
-    if is_dataclass(value_type) and isinstance(value, dict) and _api is not None:
-        if paperless_base.PaperlessModel in value_type.__mro__:
+    if is_dataclass(value_type) and isinstance(value, dict):
+        if _api is not None and paperless_base.PaperlessModel in value_type.__mro__:
             return value_type.create_with_data(api=_api, data=value, fetched=True)
         return value_type(
             **{

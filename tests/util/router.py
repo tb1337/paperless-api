@@ -35,6 +35,8 @@ from tests.data.v2_3_0 import (
     V2_3_0_WORKFLOWS,
 )
 
+# mypy: ignore-errors
+
 PATCHWORK = {
     "0.0.0": {
         "PATHS": V0_0_0_PATHS,
@@ -98,16 +100,16 @@ async def get_index(req: Request):
 
 
 # bad request route
-@FakePaperlessAPI.get("/_bad_request/")
-async def get_bad_request():
+@FakePaperlessAPI.get("/test/http/{status:int}/")
+async def get_http_error(req: Request, status: int):
     """Get bad request."""
-    return Response(status_code=400)
-
-
-@FakePaperlessAPI.get("/_no_json/")
-async def get_no_json():
-    """Get no JSON."""
-    return Response(headers={"content-type": "text/text"})
+    content = req.query_params.get("response_content", f"http error {status}")
+    content_type = req.query_params.get("content_type", "application/json")
+    return Response(
+        status_code=status,
+        content=content,
+        headers={"Content-Type": content_type},
+    )
 
 
 # static routes for special cases

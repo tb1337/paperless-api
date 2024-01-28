@@ -55,7 +55,10 @@ class PaperlessSession:
         self,
         data: dict[str, Any],
     ) -> aiohttp.FormData:
-        """Process form data and create a `aiohttp.FormData` object."""
+        """Process form data and create a `aiohttp.FormData` object.
+
+        Every field item gets converted to a string-like object.
+        """
         form = aiohttp.FormData()
 
         def _add_form_value(name: str | None, value: Any) -> Any:
@@ -65,15 +68,17 @@ class PaperlessSession:
             if isinstance(value, dict):
                 for dict_key, dict_value in value.items():
                     _add_form_value(dict_key, dict_value)
-            elif isinstance(value, list | set):
+                return
+            if isinstance(value, list | set):
                 for list_value in value:
                     _add_form_value(name, list_value)
-            elif isinstance(value, tuple):
+                return
+            if isinstance(value, tuple):
                 if len(value) == 2:
-                    params["filename"] = value[1]
+                    params["filename"] = f"{value[1]}"
                 value = value[0]
-            elif name is not None:
-                form.add_field(name, value, **params)
+            if name is not None:
+                form.add_field(name, f"{value}", **params)
 
         _add_form_value(None, data)
         return form

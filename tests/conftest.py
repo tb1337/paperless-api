@@ -4,17 +4,24 @@ import pytest
 
 from pypaperless import Paperless
 
-from . import PaperlessMock
-from .const import PAPERLESS_TEST_REQ_OPTS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+from . import PaperlessSessionMock
+from .const import PAPERLESS_TEST_REQ_ARGS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+
+# mypy: ignore-errors
 
 
 @pytest.fixture
 def api() -> Paperless:
     """Return a mock Paperless."""
-    return PaperlessMock(
+    session = PaperlessSessionMock(
         PAPERLESS_TEST_URL,
         PAPERLESS_TEST_TOKEN,
-        request_opts=PAPERLESS_TEST_REQ_OPTS,
+        **PAPERLESS_TEST_REQ_ARGS,
+    )
+    return Paperless(
+        url=PAPERLESS_TEST_URL,
+        token=PAPERLESS_TEST_TOKEN,
+        session=session,
     )
 
 
