@@ -34,7 +34,7 @@ class BadJsonResponse(PaperlessException):
 
 
 class JsonResponseWithError(PaperlessException):
-    """Raise when Paperless accepted the request, but response has an error payload."""
+    """Raise when Paperless accepted the request, but responded with an error payload."""
 
     def __init__(self, payload: Any) -> None:
         """Initialize a `JsonResponseWithError` instance."""

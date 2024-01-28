@@ -85,6 +85,43 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         """Return the version object of the Paperless host."""
         return self._version
 
+    @staticmethod
+    async def generate_api_token(url: str, username: str, password: str) -> str:
+        """Request Paperless to generate an api token for the given credentials.
+
+        Warning: the request is plain and insecure. Don't use this in production
+        environments or businesses.
+
+        Warning: error handling is low for this method, as it is just a helper.
+
+        Example:
+        ```python
+        token = Paperless.generate_api_token("example.com:8000", "api_user", "secret_password")
+
+        paperless = Paperless("example.com:8000", token)
+        # do something
+        ```
+        """
+        session = aiohttp.ClientSession()
+        try:
+            url = url.rstrip("/")
+            json = {
+                "username": username,
+                "password": password,
+            }
+            res = await session.post(f"{url}{API_PATH['token']}", json=json)
+            data = await res.json()
+            res.raise_for_status()
+            return str(data["token"])
+        except KeyError as exc:
+            raise BadJsonResponse("Token is missing in response.") from exc
+        except aiohttp.ClientResponseError as exc:
+            raise JsonResponseWithError(payload={"error": data}) from exc
+        except Exception as exc:
+            raise exc
+        finally:
+            await session.close()
+
     async def close(self) -> None:
         """Clean up connection."""
         if self._session:
