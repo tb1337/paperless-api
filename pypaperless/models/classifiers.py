@@ -50,7 +50,12 @@ class CorrespondentDraft(
 
     _api_path = API_PATH["correspondents"]
 
-    _create_required_fields = {"name", "match", "matching_algorithm", "is_insensitive"}
+    _create_required_fields = {
+        "name",
+        "match",
+        "matching_algorithm",
+        "is_insensitive",
+    }
 
     name: str | None = None
     owner: int | None = None
@@ -92,7 +97,12 @@ class DocumentTypeDraft(
 
     _api_path = API_PATH["document_types"]
 
-    _create_required_fields = {"name", "match", "matching_algorithm", "is_insensitive"}
+    _create_required_fields = {
+        "name",
+        "match",
+        "matching_algorithm",
+        "is_insensitive",
+    }
 
     name: str | None = None
     owner: int | None = None
@@ -135,7 +145,13 @@ class StoragePathDraft(
 
     _api_path = API_PATH["storage_paths"]
 
-    _create_required_fields = {"name", "path", "match", "matching_algorithm", "is_insensitive"}
+    _create_required_fields = {
+        "name",
+        "path",
+        "match",
+        "matching_algorithm",
+        "is_insensitive",
+    }
 
     name: str | None = None
     path: str | None = None

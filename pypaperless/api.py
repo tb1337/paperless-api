@@ -29,6 +29,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
         (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
         (PaperlessResource.TAGS, helpers.TagHelper),
+        (PaperlessResource.TASKS, helpers.TaskHelper),
         (PaperlessResource.USERS, helpers.UserHelper),
         (PaperlessResource.WORKFLOWS, helpers.WorkflowHelper),
     }
@@ -44,6 +45,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
     share_links: helpers.ShareLinkHelper
     storage_paths: helpers.StoragePathHelper
     tags: helpers.TagHelper
+    tasks: helpers.TaskHelper
     users: helpers.UserHelper
     workflows: helpers.WorkflowHelper
 

@@ -103,6 +103,20 @@ class ShareLinkFileVersionType(Enum):
         return ShareLinkFileVersionType.UNKNOWN
 
 
+class TaskStatusType(Enum):
+    """Represent a subtype of `Task`."""
+
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "TaskStatusType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return TaskStatusType.UNKNOWN
+
+
 # workflows
 @final
 class WorkflowActionType(Enum):

@@ -123,7 +123,7 @@ async def post_document(req: Request):
     data = _api_switcher(req, "DOCUMENTS")
     task_id = uuid.uuid4()
     payload.setdefault("title", f"New Document {task_id}")
-    payload.setdefault("created", datetime.datetime.now())
+    payload.setdefault("created", datetime.datetime.now().isoformat())
     payload.setdefault("correspondent", None)
     payload.setdefault("document_type", None)
     payload.setdefault("archive_serial_number", None)
@@ -188,7 +188,14 @@ async def get_documents_files(req: Request, pk: int):
     data = _api_switcher(req, "DOCUMENTS")
     if not data["all"].count(pk):
         raise HTTPNotFound()
-    return b"This is a file."
+    return Response(
+        status_code=200,
+        content=b"This is a file.",
+        headers={
+            "Content-Type": "application/pdf",
+            "Content-Disposition": "attachment;any_filename.pdf",
+        },
+    )
 
 
 @FakePaperlessAPI.get("/api/documents/{pk:int}/notes/")
@@ -253,15 +260,14 @@ async def get_resource_item(req: Request, resource: str, item: int):
     raise HTTPNotFound()
 
 
-@FakePaperlessAPI.put("/api/{resource}/{item:int}/")
-async def put_resource_item(req: Request, resource: str, item: int):
-    """Put resource item."""
-    payload = await req.json()
+@FakePaperlessAPI.delete("/api/{resource}/{item:int}/")
+async def delete_resource_item(req: Request, resource: str, item: int):
+    """Delete resource item."""
     data = _api_switcher(req, resource.upper())
-    for result in data["results"]:
+    for idx, result in enumerate(data["results"]):
         if result["id"] == item:
-            result = payload  # noqa: PLW2901
-            return result
+            data["results"].pop(idx)
+            return Response(status_code=204)
     raise HTTPNotFound()
 
 
@@ -278,12 +284,13 @@ async def patch_resource_item(req: Request, resource: str, item: int):
     raise HTTPNotFound()
 
 
-@FakePaperlessAPI.delete("/api/{resource}/{item:int}/")
-async def delete_resource_item(req: Request, resource: str, item: int):
-    """Delete resource item."""
+@FakePaperlessAPI.put("/api/{resource}/{item:int}/")
+async def put_resource_item(req: Request, resource: str, item: int):
+    """Put resource item."""
+    payload = await req.json()
     data = _api_switcher(req, resource.upper())
-    for idx, result in enumerate(data["results"]):
+    for result in data["results"]:
         if result["id"] == item:
-            data["results"].pop(idx)
-            return Response(status_code=204)
+            result = payload  # noqa: PLW2901
+            return result
     raise HTTPNotFound()

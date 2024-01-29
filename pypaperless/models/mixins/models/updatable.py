@@ -44,7 +44,7 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         for field in self._get_dataclass_fields():
             new_value = object_to_dict_value(getattr(self, field.name))
 
-            if new_value != self._data[field.name]:
+            if field.name in self._data and new_value != self._data[field.name]:
                 changed[field.name] = new_value
 
         if len(changed) == 0:

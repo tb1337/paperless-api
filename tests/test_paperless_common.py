@@ -18,16 +18,16 @@ from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 class TestPaperless:
     """Paperless common test cases."""
 
-    async def test_init(self, api: Paperless):
+    async def test_init(self, api_obj: Paperless):
         """Test init."""
-        await api.initialize()
-        assert api.is_initialized
-        await api.close()
+        await api_obj.initialize()
+        assert api_obj.is_initialized
+        await api_obj.close()
 
-    async def test_context(self, api: Paperless):
+    async def test_context(self, api_obj: Paperless):
         """Test context."""
-        async with api:
-            assert api.is_initialized
+        async with api_obj:
+            assert api_obj.is_initialized
 
     async def test_request(self):
         """Test generate request."""
@@ -59,11 +59,11 @@ class TestPaperless:
             async with api.request("get", "does-not-exist.example") as res:
                 pass
 
-    async def test_request_json(self, api: Paperless):
+    async def test_request_json(self, api_obj: Paperless):
         """Test requests."""
         # test 400 bad request with error payload
         with pytest.raises(JsonResponseWithError):
-            await api.request_json(
+            await api_obj.request_json(
                 "get",
                 "/test/http/400/",
                 params={
@@ -74,7 +74,7 @@ class TestPaperless:
 
         # test 200 ok with wrong content type
         with pytest.raises(BadJsonResponse):
-            await api.request_json(
+            await api_obj.request_json(
                 "get",
                 "/test/http/200/",
                 params={
@@ -85,7 +85,7 @@ class TestPaperless:
 
         # test 200 ok with correct content type, but no json payload
         with pytest.raises(BadJsonResponse):
-            await api.request_json(
+            await api_obj.request_json(
                 "get",
                 "/test/http/200/",
                 params={

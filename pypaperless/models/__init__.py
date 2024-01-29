@@ -17,6 +17,7 @@ from .pages import Page
 from .permissions import Group, User
 from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
+from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
 __all__ = (
@@ -42,6 +43,7 @@ __all__ = (
     "StoragePathDraft",
     "Tag",
     "TagDraft",
+    "Task",
     "User",
     "Workflow",
     "WorkflowAction",
