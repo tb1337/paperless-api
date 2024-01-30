@@ -20,6 +20,7 @@ repos:
         args:
           - --safe
           - --quiet
+          - --check
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.6
     hooks:
