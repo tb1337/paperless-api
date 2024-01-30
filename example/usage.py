@@ -16,7 +16,7 @@ from pypaperless import Paperless  # noqa
 
 paperless = Paperless(
     "localhost:8000",
-    # replace with your own token
+    ## replace with your own token
     "17d85e03b83c4bfd9aa0e9a4e71dc3b79265d51e",
     request_opts={"ssl": False},
 )
