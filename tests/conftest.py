@@ -9,6 +9,7 @@ from . import PaperlessSessionMock
 from .const import PAPERLESS_TEST_REQ_ARGS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
 # mypy: ignore-errors
+# pylint: disable=protected-access
 
 
 @pytest.fixture
@@ -36,7 +37,7 @@ async def api_00(api_obj) -> Paperless:
 @pytest.fixture
 async def api_18(api_obj) -> Paperless:
     """Return a Paperless object with given version."""
-    api_obj.version = "1.8.0"
+    api_obj._session.version = "1.8.0"
     async with api_obj:
         yield api_obj
 
@@ -44,7 +45,7 @@ async def api_18(api_obj) -> Paperless:
 @pytest.fixture
 async def api_117(api_obj) -> Paperless:
     """Return a Paperless object with given version."""
-    api_obj.version = "1.17.0"
+    api_obj._session.version = "1.17.0"
     async with api_obj:
         yield api_obj
 
@@ -52,7 +53,7 @@ async def api_117(api_obj) -> Paperless:
 @pytest.fixture
 async def api_20(api_obj) -> Paperless:
     """Return a Paperless object with given version."""
-    api_obj.version = "2.0.0"
+    api_obj._session.version = "2.0.0"
     async with api_obj:
         yield api_obj
 
@@ -60,6 +61,6 @@ async def api_20(api_obj) -> Paperless:
 @pytest.fixture
 async def api_23(api_obj) -> Paperless:
     """Return a Paperless object with given version."""
-    api_obj.version = "2.3.0"
+    api_obj._session.version = "2.3.0"
     async with api_obj:
         yield api_obj

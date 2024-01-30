@@ -199,6 +199,7 @@ async def get_documents_files(req: Request, pk: int):
 
 
 @FakePaperlessAPI.get("/api/documents/{pk:int}/notes/")
+@FakePaperlessAPI.post("/api/documents/{pk:int}/notes/")
 async def get_documents_notes(
     req: Request, pk: int  # pylint: disable=unused-argument # noqa: ARG001
 ):
@@ -207,13 +208,12 @@ async def get_documents_notes(
     return data
 
 
-@FakePaperlessAPI.post("/api/documents/{pk:int}/notes/")
 @FakePaperlessAPI.delete("/api/documents/{pk:int}/notes/")
 async def post_delete_documents_notes(
     req: Request, pk: int  # pylint: disable=unused-argument # noqa: ARG001
 ):
     """Get documents notes."""
-    return True
+    return Response(status_code=204)
 
 
 @FakePaperlessAPI.get("/api/tasks/")

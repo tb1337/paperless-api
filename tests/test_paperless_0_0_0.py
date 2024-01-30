@@ -265,7 +265,6 @@ class TestDocuments:
         # test sub helpers
         assert isinstance(p.documents.download, doc_helpers.DocumentFileDownloadHelper)
         assert isinstance(p.documents.metadata, doc_helpers.DocumentMetaHelper)
-        assert isinstance(p.documents.notes, doc_helpers.DocumentNoteHelper)
         assert isinstance(p.documents.preview, doc_helpers.DocumentFilePreviewHelper)
         assert isinstance(p.documents.thumbnail, doc_helpers.DocumentFileThumbnailHelper)
 
