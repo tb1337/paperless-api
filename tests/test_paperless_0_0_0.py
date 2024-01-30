@@ -4,7 +4,7 @@ import pytest
 
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.const import PaperlessResource
-from pypaperless.exceptions import DraftFieldRequired, RequestException
+from pypaperless.exceptions import DraftFieldRequired, RequestException, TaskNotFound
 from pypaperless.models import DocumentMeta, Page
 from pypaperless.models import documents as doc_helpers
 from pypaperless.models.common import DocumentMetadataType, MatchingAlgorithmType, RetrieveFileMode
@@ -21,6 +21,7 @@ from . import (
     MAIL_RULE_MAP,
     SAVED_VIEW_MAP,
     TAG_MAP,
+    TASK_MAP,
     USER_MAP,
     ResourceTestMapping,
 )
@@ -200,6 +201,53 @@ class TestReadOnly:
 
 @pytest.mark.parametrize(
     "mapping",
+    [TASK_MAP],
+    scope="class",
+)
+# test models/tasks.py
+class TestTasks:
+    """Tasks test cases."""
+
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin not in mapping.helper_cls.__bases__
+
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
+
+    async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter."""
+        async for item in getattr(p, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
+
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        # by pk
+        item = await getattr(p, mapping.resource)(1)
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # by uuid
+        item = await getattr(p, mapping.resource)("abcdef12-3456-7890-abcd-ef1234567890")
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)
+        # must raise as abcdef doesn't exist
+        with pytest.raises(TaskNotFound):
+            await getattr(p, mapping.resource)("abcdef")
+
+
+@pytest.mark.parametrize(
+    "mapping",
     [DOCUMENT_MAP],
     scope="class",
 )
@@ -262,15 +310,16 @@ class TestDocuments:
         draft.document = backup
         # actually call the create endpoint
         task_id = await draft.save()
+        # get the task
         assert isinstance(task_id, str)
-        # TODO: implement task helper
-        # task = await api_00.tasks.one(task_id)
-        # assert task.related_document
-        # created = await api_00.documents.one(task.related_document)
-        # assert isinstance(created, Document)
-        # assert created.tags.count(1) == 1
-        # assert created.tags.count(2) == 1
-        # assert created.tags.count(3) == 1
+        task = await p.tasks(task_id)
+        assert task.related_document
+        # get the document
+        created = await getattr(p, mapping.resource)(task.related_document)
+        assert isinstance(created, mapping.model_cls)
+        assert created.tags.count(1) == 1
+        assert created.tags.count(2) == 1
+        assert created.tags.count(3) == 1
 
     async def test_udpate(self, p: Paperless, mapping: ResourceTestMapping):
         """Test update."""
@@ -312,38 +361,3 @@ class TestDocuments:
         thumbnail = await document.get_thumbnail()
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
-
-
-# class TestTasks:
-#     """Tasks test cases."""
-
-#     async def test_controller(self, api_00: Paperless):
-#         """Test controller."""
-#         assert isinstance(api_00.tasks, TasksController)
-#         # test mixins
-#         assert not hasattr(api_00.tasks, "list")
-#         assert hasattr(api_00.tasks, "get")
-#         assert hasattr(api_00.tasks, "iterate")
-#         assert hasattr(api_00.tasks, "one")
-#         assert not hasattr(api_00.tasks, "create")
-#         assert not hasattr(api_00.tasks, "update")
-#         assert not hasattr(api_00.tasks, "delete")
-
-#     async def test_get(self, api_00: Paperless):
-#         """Test get."""
-#         results = await api_00.tasks.get()
-#         assert isinstance(results, list)
-#         for item in results:
-#             assert isinstance(item, Task)
-
-#     async def test_iterate(self, api_00: Paperless):
-#         """Test iterate."""
-#         async for item in api_00.tasks.iterate():
-#             assert isinstance(item, Task)
-
-#     async def test_one(self, api_00: Paperless):
-#         """Test one."""
-#         item = await api_00.tasks.one("eb327ed7-b3c8-4a8c-9aa2-5385e499c74a")
-#         assert isinstance(item, Task)
-#         item = await api_00.tasks.one("non-existing-uuid")
-#         assert not item

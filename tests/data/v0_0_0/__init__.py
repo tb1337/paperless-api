@@ -569,8 +569,8 @@ V0_0_0_TAGS = {
 
 V0_0_0_TASKS = [
     {
-        "id": 2134,
-        "task_id": "bd2de639-5ecd-4bc1-ab3d-106908ef00e1",
+        "id": 1,
+        "task_id": "11112222-aaaa-bbbb-cccc-333344445555",
         "task_file_name": "a.png",
         "date_created": "2023-12-16T13:06:29.107815Z",
         "date_done": None,
@@ -581,8 +581,8 @@ V0_0_0_TASKS = [
         "related_document": None,
     },
     {
-        "id": 2133,
-        "task_id": "eb327ed7-b3c8-4a8c-9aa2-5385e499c74a",
+        "id": 2,
+        "task_id": "ffffeeee-9999-8888-7777-ddddccccbbbb",
         "task_file_name": "b.png",
         "date_created": "2023-12-16T13:06:26.117158Z",
         "date_done": "2023-12-16T13:06:29.859669Z",
@@ -593,8 +593,8 @@ V0_0_0_TASKS = [
         "related_document": "1780",
     },
     {
-        "id": 2132,
-        "task_id": "071674a5-274a-4592-8331-b3a1055d1928",
+        "id": 3,
+        "task_id": "abcdef12-3456-7890-abcd-ef1234567890",
         "task_file_name": "c.png",
         "date_created": "2023-12-16T13:04:28.175624Z",
         "date_done": "2023-12-16T13:04:32.318797Z",

@@ -57,6 +57,7 @@ API_PATH = {
     f"{TAGS}": f"/api/{TAGS}/",
     f"{TAGS}_single": f"/api/{TAGS}/{{pk}}/",
     f"{TASKS}": f"/api/{TASKS}/",
+    f"{TASKS}_single": f"/api/{TASKS}/{{pk}}/",
     f"{USERS}": f"/api/{USERS}/",
     f"{USERS}_single": f"/api/{USERS}/{{pk}}/",
     f"{WORKFLOWS}": f"/api/{WORKFLOWS}/",

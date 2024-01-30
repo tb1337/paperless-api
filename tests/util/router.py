@@ -254,7 +254,9 @@ async def post_resource(req: Request, resource: str):
 async def get_resource_item(req: Request, resource: str, item: int):
     """Get resource item."""
     data = _api_switcher(req, resource.upper())
-    for result in data["results"]:
+    # tasks is list, else dict
+    iterable = data["results"] if isinstance(data, dict) else data
+    for result in iterable:
         if result["id"] == item:
             return result
     raise HTTPNotFound()

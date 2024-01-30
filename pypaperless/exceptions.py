@@ -61,3 +61,14 @@ class DraftNotSupported(PaperlessException):
 
 class DraftFieldRequired(PaperlessException):
     """Raise when trying to save models with missing required fields."""
+
+
+# Tasks
+
+
+class TaskNotFound(PaperlessException):
+    """Raise when trying to access a task by non-existing uuid."""
+
+    def __init__(self, task_id: str) -> None:
+        """Initialize a `TaskNotFound` instance."""
+        super().__init__(f"Task with UUID {task_id} not found.")

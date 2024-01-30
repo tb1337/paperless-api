@@ -27,6 +27,7 @@ from pypaperless.models import (
     StoragePathDraft,
     Tag,
     TagDraft,
+    Task,
     User,
 )
 from pypaperless.models.common import MatchingAlgorithmType
@@ -136,6 +137,13 @@ TAG_MAP = ResourceTestMapping(
         "is_insensitive": True,
     },
 )
+
+TASK_MAP = ResourceTestMapping(
+    PaperlessResource.TASKS,
+    helpers.TaskHelper,
+    Task,
+)
+
 USER_MAP = ResourceTestMapping(
     PaperlessResource.USERS,
     helpers.UserHelper,

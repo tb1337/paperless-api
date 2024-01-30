@@ -1,4 +1,4 @@
-"""Provide the PageIterator class."""
+"""Provide the PageGenerator class."""
 
 from collections.abc import AsyncIterator
 from copy import deepcopy
@@ -54,7 +54,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
         resource_cls: type,
         params: dict[str, Any] | None = None,
     ):
-        """Initialize `ResourceIterator` class instance."""
+        """Initialize `PageGenerator` class instance."""
         super().__init__(api)
 
         self._page = None

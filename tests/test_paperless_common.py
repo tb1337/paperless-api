@@ -59,6 +59,9 @@ class TestPaperless:
             async with api.request("get", "does-not-exist.example") as res:
                 pass
 
+        # session is still open
+        await api.close()
+
     async def test_request_json(self, api_obj: Paperless):
         """Test requests."""
         # test 400 bad request with error payload
