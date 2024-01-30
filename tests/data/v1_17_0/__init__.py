@@ -1,6 +1,5 @@
 """Raw data constants for Paperless versions >= 1.17.0."""
 
-
 V1_17_0_DOCUMENT_NOTES = [
     {
         "id": 1,
