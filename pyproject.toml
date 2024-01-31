@@ -37,7 +37,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "black==23.12.1",
+    "black==24.1.1",
     "codespell==2.2.6",
     "mypy==1.8.0",
     "ruff==0.1.14",
@@ -47,7 +47,7 @@ test = [
     "pytest-cov==4.1.0",
     "pre-commit==3.6.0",
     "pylint==3.0.3",
-    "fastapi==0.108.0",
+    "fastapi==0.109.0",
     "httpx==0.26.0"
 ]
 
