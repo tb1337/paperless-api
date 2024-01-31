@@ -33,9 +33,7 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         # this is kind of dirty, but should do its job in this case
         as_form = type(self).__name__ == "DocumentDraft"
         kwargs = {
-            "form"
-            if as_form
-            else "json": {
+            "form" if as_form else "json": {
                 field.name: object_to_dict_value(getattr(self, field.name))
                 for field in self._get_dataclass_fields()
             }

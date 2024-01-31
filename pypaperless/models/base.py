@@ -58,11 +58,9 @@ class PaperlessModelProtocol(Protocol):
     _data: dict[str, Any]
     _fetched: bool
 
-    def _get_dataclass_fields(self) -> list[Field]:
-        ...
+    def _get_dataclass_fields(self) -> list[Field]: ...
 
-    def _set_dataclass_fields(self) -> None:
-        ...
+    def _set_dataclass_fields(self) -> None: ...
 
 
 @dataclass(init=False)

@@ -1,6 +1,5 @@
 """Setup pytest."""
 
-
 import pytest
 
 from pypaperless import Paperless
