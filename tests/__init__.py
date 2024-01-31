@@ -15,6 +15,8 @@ from pypaperless.exceptions import RequestException
 from pypaperless.models import (
     Correspondent,
     CorrespondentDraft,
+    CustomField,
+    CustomFieldDraft,
     Document,
     DocumentDraft,
     DocumentType,
@@ -23,14 +25,21 @@ from pypaperless.models import (
     MailAccount,
     MailRule,
     SavedView,
+    ShareLink,
+    ShareLinkDraft,
     StoragePath,
     StoragePathDraft,
     Tag,
     TagDraft,
     Task,
     User,
+    Workflow,
 )
-from pypaperless.models.common import MatchingAlgorithmType
+from pypaperless.models.common import (
+    CustomFieldType,
+    MatchingAlgorithmType,
+    ShareLinkFileVersionType,
+)
 
 from .const import PAPERLESS_TEST_URL
 from .util.router import FakePaperlessAPI
@@ -59,6 +68,16 @@ CORRESPONDENT_MAP = ResourceTestMapping(
         "match": "",
         "matching_algorithm": MatchingAlgorithmType.ANY,
         "is_insensitive": True,
+    },
+)
+CUSTOM_FIELD_MAP = ResourceTestMapping(
+    PaperlessResource.CUSTOM_FIELDS,
+    helpers.CustomFieldHelper,
+    CustomField,
+    CustomFieldDraft,
+    {
+        "name": "New Custom Field",
+        "data_type": CustomFieldType.BOOLEAN,
     },
 )
 DOCUMENT_MAP = ResourceTestMapping(
@@ -109,6 +128,17 @@ SAVED_VIEW_MAP = ResourceTestMapping(
     helpers.SavedViewHelper,
     SavedView,
 )
+SHARE_LINK_MAP = ResourceTestMapping(
+    PaperlessResource.SHARE_LINKS,
+    helpers.ShareLinkHelper,
+    ShareLink,
+    ShareLinkDraft,
+    {
+        "expiration": None,
+        "document": 1,
+        "file_version": ShareLinkFileVersionType.ORIGINAL,
+    },
+)
 STORAGE_PATH_MAP = ResourceTestMapping(
     PaperlessResource.STORAGE_PATHS,
     helpers.StoragePathHelper,
@@ -137,17 +167,21 @@ TAG_MAP = ResourceTestMapping(
         "is_insensitive": True,
     },
 )
-
 TASK_MAP = ResourceTestMapping(
     PaperlessResource.TASKS,
     helpers.TaskHelper,
     Task,
 )
-
 USER_MAP = ResourceTestMapping(
     PaperlessResource.USERS,
     helpers.UserHelper,
     User,
+)
+
+WORKFLOW_MAP = ResourceTestMapping(
+    PaperlessResource.WORKFLOWS,
+    helpers.WorkflowHelper,
+    Workflow,
 )
 
 

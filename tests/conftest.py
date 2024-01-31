@@ -9,7 +9,7 @@ from . import PaperlessSessionMock
 from .const import PAPERLESS_TEST_REQ_ARGS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
 # mypy: ignore-errors
-# pylint: disable=protected-access
+# pylint: disable=protected-access,redefined-outer-name
 
 
 @pytest.fixture

@@ -16,7 +16,11 @@ if TYPE_CHECKING:
 
 @final
 @dataclass(init=False)
-class ShareLink(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+class ShareLink(
+    PaperlessModel,
+    models.DeletableMixin,
+    models.UpdatableMixin,
+):
     """Represent a Paperless `ShareLink`."""
 
     _api_path = API_PATH["share_links_single"]
@@ -45,7 +49,7 @@ class ShareLinkDraft(
 
     _api_path = API_PATH["share_links"]
 
-    _create_required_fields = {"expiration", "document", "file_version"}
+    _create_required_fields = {"document", "file_version"}
 
     expiration: datetime.datetime | None = None
     document: int | None = None

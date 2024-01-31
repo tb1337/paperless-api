@@ -1,33 +1,33 @@
-"""Paperless v1.8.0 tests."""
+"""Paperless v2.0.0 tests."""
 
 import pytest
 
 from pypaperless import Paperless, PaperlessSession
-from pypaperless.exceptions import DraftFieldRequired, RequestException
+from pypaperless.exceptions import RequestException
 from pypaperless.models import Page
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
 
-from . import STORAGE_PATH_MAP, ResourceTestMapping
+from . import CUSTOM_FIELD_MAP, SHARE_LINK_MAP, ResourceTestMapping
 
 # mypy: ignore-errors
 # pylint: disable=protected-access,redefined-outer-name
 
 
 @pytest.fixture(scope="function")
-async def p(api_18) -> Paperless:
+async def p(api_20) -> Paperless:
     """Yield version for this test case."""
-    yield api_18
+    yield api_20
 
 
-# test api.py with extra storage paths endpoint
+# test api.py with extra custom fields and sharelinks endpoints
 class TestBeginPaperless:
-    """Paperless v1.8.0 test cases."""
+    """Paperless v2.0.0 test cases."""
 
     async def test_init(self, p: Paperless):
         """Test init."""
         assert isinstance(p._session, PaperlessSession)
-        assert p.host_version == "1.8.0"
+        assert p.host_version == "2.0.0"
         assert p.is_initialized
         assert isinstance(p.local_resources, set)
         assert isinstance(p.remote_resources, set)
@@ -35,14 +35,14 @@ class TestBeginPaperless:
     async def test_resources(self, p: Paperless):
         """Test resources."""
         assert p.correspondents.is_available
-        assert not p.custom_fields.is_available
+        assert p.custom_fields.is_available
         assert p.document_types.is_available
         assert p.documents.is_available
         assert p.groups.is_available
         assert p.mail_accounts.is_available
         assert p.mail_rules.is_available
         assert p.saved_views.is_available
-        assert not p.share_links.is_available
+        assert p.share_links.is_available
         assert p.storage_paths.is_available
         assert p.tags.is_available
         assert p.users.is_available
@@ -51,12 +51,13 @@ class TestBeginPaperless:
 
 @pytest.mark.parametrize(
     "mapping",
-    [STORAGE_PATH_MAP],
+    [CUSTOM_FIELD_MAP, SHARE_LINK_MAP],
     scope="class",
 )
-# test models/classifiers.py
-class TestClassifiers:
-    """Classifiers test cases."""
+# test models/custom_fields.py
+# test models/share_links.py
+class TestCustomFieldShareLinks:
+    """Custom fields and share links test cases."""
 
     async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
         """Test helper."""
@@ -69,8 +70,8 @@ class TestClassifiers:
     async def test_model(self, mapping: ResourceTestMapping):
         """Test model."""
         assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
-        assert model_mixins.MatchingFieldsMixin in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
         assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
 
@@ -100,21 +101,22 @@ class TestClassifiers:
         """Test create."""
         draft = getattr(p, mapping.resource).draft(**mapping.draft_defaults)
         assert isinstance(draft, mapping.draft_cls)
-        backup = draft.name
-        draft.name = None
-        with pytest.raises(DraftFieldRequired):
-            await draft.save()
-        draft.name = backup
         # actually call the create endpoint
         assert await draft.save() >= 1
 
     async def test_udpate(self, p: Paperless, mapping: ResourceTestMapping):
         """Test update."""
         to_update = await getattr(p, mapping.resource)(5)
-        new_name = f"{to_update.name} Updated"
-        to_update.name = new_name
-        await to_update.update()
-        assert to_update.name == new_name
+        if mapping.model_cls is SHARE_LINK_MAP.model_cls:
+            new_document = 3
+            to_update.document = new_document
+            await to_update.update()
+            assert to_update.document == new_document
+        else:
+            new_name = f"{to_update.name} Updated"
+            to_update.name = new_name
+            await to_update.update()
+            assert to_update.name == new_name
 
     async def test_delete(self, p: Paperless, mapping: ResourceTestMapping):
         """Test delete."""

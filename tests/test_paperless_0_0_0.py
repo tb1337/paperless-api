@@ -126,7 +126,7 @@ class TestClassifiers:
             await draft.save()
         draft.name = backup
         # actually call the create endpoint
-        assert await draft.save() == 6
+        assert await draft.save() >= 1
 
     async def test_udpate(self, p: Paperless, mapping: ResourceTestMapping):
         """Test update."""

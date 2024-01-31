@@ -24,7 +24,7 @@ async def p(api_117) -> Paperless:
 
 # test api.py with extra document notes endpoint
 class TestBeginPaperless:
-    """Paperless v1.8.0 test cases."""
+    """Paperless v1.17.0 test cases."""
 
     async def test_init(self, p: Paperless):
         """Test init."""

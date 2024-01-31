@@ -78,8 +78,8 @@ class Workflow(PaperlessModel):
     name: str | None = None
     order: int | None = None
     enabled: bool | None = None
-    triggers: list[WorkflowTrigger] | None = None
     actions: list[WorkflowAction] | None = None
+    triggers: list[WorkflowTrigger] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `Workflow` instance."""
