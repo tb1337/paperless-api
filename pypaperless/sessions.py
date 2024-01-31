@@ -22,6 +22,8 @@ class PaperlessSession:
         """Initialize a `PaperlessSession` instance.
 
         Accepts custom `aiohttp.ClientSession` instances as well.
+
+        Setting `token` to an empty string omits the Authorization header on requests.
         """
         self._initialized = False
         self._request_args = kwargs
@@ -91,12 +93,18 @@ class PaperlessSession:
     async def initialize(self) -> None:
         """Initialize session."""
         self._session = aiohttp.ClientSession()
-        self._session.headers.update(
+
+        headers = {
+            "Accept": "application/json; version=2",
+        }
+        headers.update(
             {
-                "Accept": "application/json; version=2",
                 "Authorization": f"Token {self._token}",
             }
+            if self._token
+            else {}
         )
+        self._session.headers.update(headers)
         self._initialized = True
 
     async def request(  # pylint: disable=too-many-arguments

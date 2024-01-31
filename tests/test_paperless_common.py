@@ -5,11 +5,23 @@ from datetime import date, datetime
 from enum import Enum
 
 import pytest
+from aiohttp.web_exceptions import HTTPBadRequest
 
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.exceptions import BadJsonResponse, JsonResponseWithError, RequestException
+from pypaperless.models.common import (
+    CustomFieldType,
+    MatchingAlgorithmType,
+    ShareLinkFileVersionType,
+    TaskStatusType,
+    WorkflowActionType,
+    WorkflowTriggerSourceType,
+    WorkflowTriggerType,
+)
 from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
 from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+
+from . import PaperlessSessionMock
 
 # mypy: ignore-errors
 # pylint: disable=protected-access
@@ -43,6 +55,7 @@ class TestPaperless:
 
         # last but not least, we test sending a form to test the converter
         form_data = {
+            "none_field": None,
             "str_field": "Hello Bytes!",
             "bytes_field": b"Hello String!",
             "tuple_field": (b"Document Content", "filename.pdf"),
@@ -121,6 +134,62 @@ class TestPaperless:
         # test api/api url
         url = create_url("hostname/api/api/")
         assert f"{url}" == "https://hostname/api/api"
+
+    async def test_generate_api_token(self, api_obj: Paperless):
+        """Test generate api token."""
+        test_token = "abcdef1234567890"
+
+        # test successful token creation
+        session = PaperlessSessionMock(
+            PAPERLESS_TEST_URL,
+            "",
+            params={
+                "response_content": f'{{"token":"{test_token}"}}',
+            },
+        )
+        token = await api_obj.generate_api_token(
+            PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+        )
+        assert token == test_token
+
+        # test token creation with wrong json answer
+        session = PaperlessSessionMock(
+            PAPERLESS_TEST_URL,
+            "",
+            params={
+                "response_content": '{"bla":"any string"}',
+            },
+        )
+        with pytest.raises(BadJsonResponse):
+            token = await api_obj.generate_api_token(
+                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+            )
+
+        # test error 400
+        with pytest.raises(HTTPBadRequest):
+            session = PaperlessSessionMock(
+                PAPERLESS_TEST_URL,
+                "",
+                params={
+                    "response_content": '{"non_field_errors":["Unable to log in."]}',
+                    "status": "400",
+                },
+            )
+            token = await api_obj.generate_api_token(
+                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+            )
+
+    async def test_types(self):
+        """Test types."""
+        never_str = "!never_existing_type!"
+        never_int = 99952342
+        assert CustomFieldType(never_str) == CustomFieldType.UNKNOWN
+        assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
+        assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
+        assert TaskStatusType(never_str) == TaskStatusType.UNKNOWN
+        assert WorkflowActionType(never_int) == WorkflowActionType.UNKNOWN
+        assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
+        assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
     async def test_dataclass_conversion(self):
         """Test dataclass utils."""

@@ -18,6 +18,7 @@ from tests.data.v0_0_0 import (
     V0_0_0_SAVED_VIEWS,
     V0_0_0_TAGS,
     V0_0_0_TASKS,
+    V0_0_0_TOKEN,
     V0_0_0_USERS,
 )
 from tests.data.v1_8_0 import V1_8_0_PATHS, V1_8_0_STORAGE_PATHS
@@ -50,6 +51,7 @@ PATCHWORK = {
         "SAVED_VIEWS": V0_0_0_SAVED_VIEWS,
         "TAGS": V0_0_0_TAGS,
         "TASKS": V0_0_0_TASKS,
+        "TOKEN": V0_0_0_TOKEN,
         "USERS": V0_0_0_USERS,
     },
     "1.8.0": {
@@ -92,14 +94,7 @@ def _api_switcher(req: Request, key: str):
 FakePaperlessAPI = FastAPI()
 
 
-# index route
-@FakePaperlessAPI.get("/api/")
-async def get_index(req: Request):
-    """Index page."""
-    return _api_switcher(req, "PATHS")
-
-
-# bad request route
+# test http route with parameterable content, content type and status codes
 @FakePaperlessAPI.get("/test/http/{status:int}/")
 async def get_http_error(req: Request, status: int):
     """Get bad request."""
@@ -109,6 +104,26 @@ async def get_http_error(req: Request, status: int):
         status_code=status,
         content=content,
         headers={"Content-Type": content_type},
+    )
+
+
+# index route
+@FakePaperlessAPI.get("/api/")
+async def get_index(req: Request):
+    """Index page."""
+    return _api_switcher(req, "PATHS")
+
+
+# token route
+@FakePaperlessAPI.post("/api/token/")
+async def post_token(req: Request):
+    """Post credentials to get new api token."""
+    content = req.query_params.get("response_content", "empty")
+    status = req.query_params.get("status", 200)
+    return Response(
+        status_code=int(status),
+        content=content,
+        headers={"Content-Type": "application/json"},
     )
 
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import aiohttp
-from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, Response
 from yarl import URL
@@ -192,6 +192,7 @@ class PaperlessSessionMock(PaperlessSession):
         self,
         base_url: str | URL,
         token: str,
+        params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         """Initialize PaperlessSessionMock."""
@@ -202,6 +203,7 @@ class PaperlessSessionMock(PaperlessSession):
             **kwargs,
         )
         self.client = TestClient(FakePaperlessAPI)
+        self.params = params or {}
         self.version = "0.0.0"
 
     async def request(  # pylint: disable=too-many-arguments
@@ -237,6 +239,13 @@ class PaperlessSessionMock(PaperlessSession):
         # check for trailing slash
         if URL(url).query_string == "":
             url = url.rstrip("/") + "/"
+
+        # add PaperlessSessionMock params to params
+        if len(self.params) > 0:
+            if params is None:
+                params = self.params
+            else:
+                params.update(self.params)
 
         try:
             async with AsyncClient(
@@ -297,8 +306,10 @@ class FakeClientResponse:
 
     def raise_for_status(self):
         """Raise for status."""
+        if self.status == 400:
+            raise HTTPBadRequest
         if self.status != 200:
-            raise HTTPNotFound()
+            raise HTTPNotFound
 
     async def json(self):
         """Json."""

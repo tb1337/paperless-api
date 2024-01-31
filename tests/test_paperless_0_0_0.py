@@ -7,7 +7,7 @@ from pypaperless.const import PaperlessResource
 from pypaperless.exceptions import DraftFieldRequired, RequestException, TaskNotFound
 from pypaperless.models import DocumentMeta, Page
 from pypaperless.models import documents as doc_helpers
-from pypaperless.models.common import DocumentMetadataType, MatchingAlgorithmType, RetrieveFileMode
+from pypaperless.models.common import DocumentMetadataType, RetrieveFileMode
 from pypaperless.models.documents import DownloadedDocument
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
@@ -63,10 +63,6 @@ class TestBeginPaperless:
         assert p.tags.is_available
         assert p.users.is_available
         assert not p.workflows.is_available
-
-    async def test_enums(self):
-        """Test enums."""
-        assert MatchingAlgorithmType(999) == MatchingAlgorithmType.UNKNOWN
 
 
 @pytest.mark.parametrize(

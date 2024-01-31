@@ -99,7 +99,12 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         return self._remote_resources
 
     @staticmethod
-    async def generate_api_token(url: str, username: str, password: str) -> str:
+    async def generate_api_token(
+        url: str,
+        username: str,
+        password: str,
+        session: PaperlessSession | None = None,
+    ) -> str:
         """Request Paperless to generate an api token for the given credentials.
 
         Warning: the request is plain and insecure. Don't use this in production
@@ -115,14 +120,14 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         # do something
         ```
         """
-        session = aiohttp.ClientSession()
+        session = session or PaperlessSession(url, "")
         try:
             url = url.rstrip("/")
             json = {
                 "username": username,
                 "password": password,
             }
-            res = await session.post(f"{url}{API_PATH['token']}", json=json)
+            res = await session.request("post", f"{API_PATH['token']}", json=json)
             data = await res.json()
             res.raise_for_status()
             return str(data["token"])
