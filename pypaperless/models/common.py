@@ -2,11 +2,10 @@
 
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-from typing import Any, final
+from typing import Any
 
 
 # custom_fields
-@final
 class CustomFieldType(Enum):
     """Represent a subtype of `CustomField`."""
 
@@ -27,7 +26,6 @@ class CustomFieldType(Enum):
 
 
 # documents
-@final
 @dataclass(kw_only=True)
 class CustomFieldValueType:
     """Represent a subtype of `Document`."""
@@ -37,7 +35,6 @@ class CustomFieldValueType:
 
 
 # documents
-@final
 @dataclass(kw_only=True)
 class DocumentMetadataType:
     """Represent a subtype of `DocumentMeta`."""
@@ -49,7 +46,6 @@ class DocumentMetadataType:
 
 
 # mixins/models/data_fields, used for classifiers
-@final
 class MatchingAlgorithmType(Enum):
     """Represent a subtype of `Correspondent`, `DocumentType`, `StoragePath` and `Tag`."""
 
@@ -69,7 +65,6 @@ class MatchingAlgorithmType(Enum):
 
 
 # documents
-@final
 class RetrieveFileMode(StrEnum):
     """Represent a subtype of `DownloadedDocument`."""
 
@@ -79,7 +74,6 @@ class RetrieveFileMode(StrEnum):
 
 
 # saved_views
-@final
 @dataclass(kw_only=True)
 class SavedViewFilterRuleType:
     """Represent a subtype of `SavedView`."""
@@ -89,7 +83,6 @@ class SavedViewFilterRuleType:
 
 
 # share_links
-@final
 class ShareLinkFileVersionType(Enum):
     """Represent a subtype of `ShareLink`."""
 
@@ -103,6 +96,7 @@ class ShareLinkFileVersionType(Enum):
         return ShareLinkFileVersionType.UNKNOWN
 
 
+# tasks
 class TaskStatusType(Enum):
     """Represent a subtype of `Task`."""
 
@@ -118,7 +112,6 @@ class TaskStatusType(Enum):
 
 
 # workflows
-@final
 class WorkflowActionType(Enum):
     """Represent a subtype of `Workflow`."""
 
@@ -132,7 +125,6 @@ class WorkflowActionType(Enum):
 
 
 # workflows
-@final
 class WorkflowTriggerType(Enum):
     """Represent a subtype of `Workflow`."""
 
@@ -148,7 +140,6 @@ class WorkflowTriggerType(Enum):
 
 
 # workflows
-@final
 class WorkflowTriggerSourceType(Enum):
     """Represent a subtype of `Workflow`."""
 

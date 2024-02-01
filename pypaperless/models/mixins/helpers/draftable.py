@@ -1,6 +1,6 @@
 """DraftableMixin for PyPaperless helpers."""
 
-from typing import Any, final
+from typing import Any
 
 from pypaperless.exceptions import DraftNotSupported
 from pypaperless.models.base import HelperProtocol, ResourceT
@@ -11,7 +11,6 @@ class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-publ
 
     _draft_cls: type[ResourceT]
 
-    @final
     def draft(self, **kwargs: Any) -> ResourceT:
         """Return a fresh and empty `PaperlessModel` instance.
 

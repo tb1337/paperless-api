@@ -2,7 +2,7 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class Correspondent(  # pylint: disable=too-many-ancestors
     PaperlessModel,
@@ -39,7 +38,6 @@ class Correspondent(  # pylint: disable=too-many-ancestors
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class CorrespondentDraft(
     PaperlessModel,
@@ -61,7 +59,6 @@ class CorrespondentDraft(
     owner: int | None = None
 
 
-@final
 @dataclass(init=False)
 class DocumentType(  # pylint: disable=too-many-ancestors
     PaperlessModel,
@@ -86,7 +83,6 @@ class DocumentType(  # pylint: disable=too-many-ancestors
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class DocumentTypeDraft(
     PaperlessModel,
@@ -108,7 +104,6 @@ class DocumentTypeDraft(
     owner: int | None = None
 
 
-@final
 @dataclass(init=False)
 class StoragePath(  # pylint: disable=too-many-ancestors
     PaperlessModel,
@@ -134,7 +129,6 @@ class StoragePath(  # pylint: disable=too-many-ancestors
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class StoragePathDraft(
     PaperlessModel,
@@ -158,7 +152,6 @@ class StoragePathDraft(
     owner: int | None = None
 
 
-@final
 @dataclass(init=False)
 class Tag(  # pylint: disable=too-many-ancestors,too-many-instance-attributes
     PaperlessModel,
@@ -186,7 +179,6 @@ class Tag(  # pylint: disable=too-many-ancestors,too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class TagDraft(
     PaperlessModel,
@@ -214,7 +206,6 @@ class TagDraft(
     owner: int | None = None
 
 
-@final
 class CorrespondentHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Correspondent],
     helpers.CallableMixin[Correspondent],
@@ -230,7 +221,6 @@ class CorrespondentHelper(  # pylint: disable=too-many-ancestors
     _resource_cls = Correspondent
 
 
-@final
 class DocumentTypeHelper(  # pylint: disable=too-many-ancestors
     HelperBase[DocumentType],
     helpers.CallableMixin[DocumentType],
@@ -246,7 +236,6 @@ class DocumentTypeHelper(  # pylint: disable=too-many-ancestors
     _resource_cls = DocumentType
 
 
-@final
 class StoragePathHelper(  # pylint: disable=too-many-ancestors
     HelperBase[StoragePath],
     helpers.CallableMixin[StoragePath],
@@ -262,7 +251,6 @@ class StoragePathHelper(  # pylint: disable=too-many-ancestors
     _resource_cls = StoragePath
 
 
-@final
 class TagHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Tag],
     helpers.CallableMixin[Tag],

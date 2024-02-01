@@ -1,7 +1,7 @@
 """Provide `CustomField` related models and helpers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class CustomField(
     PaperlessModel,
@@ -35,7 +34,6 @@ class CustomField(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class CustomFieldDraft(
     PaperlessModel,
@@ -51,7 +49,6 @@ class CustomFieldDraft(
     data_type: CustomFieldType | None = None
 
 
-@final
 class CustomFieldHelper(  # pylint: disable=too-many-ancestors
     HelperBase[CustomField],
     helpers.CallableMixin[CustomField],

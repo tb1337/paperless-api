@@ -1,7 +1,7 @@
 """Provide `MailRule` related models and helpers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class MailAccount(
     PaperlessModel,
@@ -40,7 +39,6 @@ class MailAccount(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class MailRule(
     PaperlessModel,
@@ -80,7 +78,6 @@ class MailRule(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 class MailAccountHelper(
     HelperBase[MailAccount],
     helpers.CallableMixin[MailAccount],
@@ -94,7 +91,6 @@ class MailAccountHelper(
     _resource_cls = MailAccount
 
 
-@final
 class MailRuleHelper(
     HelperBase[MailRule],
     helpers.CallableMixin[MailRule],

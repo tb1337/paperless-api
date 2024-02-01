@@ -1,14 +1,11 @@
 """CallableMixin for PyPaperless helpers."""
 
-from typing import final
-
 from pypaperless.models.base import HelperProtocol, ResourceT
 
 
 class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods
     """Provide methods for calling a specific resource item."""
 
-    @final
     async def __call__(
         self,
         pk: int,

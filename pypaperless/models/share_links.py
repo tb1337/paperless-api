@@ -2,7 +2,7 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class ShareLink(
     PaperlessModel,
@@ -39,7 +38,6 @@ class ShareLink(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class ShareLinkDraft(
     PaperlessModel,
@@ -56,7 +54,6 @@ class ShareLinkDraft(
     file_version: ShareLinkFileVersionType | None = None
 
 
-@final
 class ShareLinkHelper(  # pylint: disable=too-many-ancestors
     HelperBase[ShareLink],
     helpers.CallableMixin[ShareLink],

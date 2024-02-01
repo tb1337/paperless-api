@@ -2,7 +2,7 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class Group(PaperlessModel):
     """Represent a Paperless `Group`."""
@@ -31,7 +30,6 @@ class Group(PaperlessModel):
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class User(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `User`."""
@@ -60,7 +58,6 @@ class User(PaperlessModel):  # pylint: disable=too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 class GroupHelper(
     HelperBase[Group],
     helpers.CallableMixin[Group],
@@ -74,7 +71,6 @@ class GroupHelper(
     _resource_cls = Group
 
 
-@final
 class UserHelper(
     HelperBase[User],
     helpers.CallableMixin[User],

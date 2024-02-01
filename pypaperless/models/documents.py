@@ -2,7 +2,7 @@
 
 import datetime
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequired
@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancestors
     PaperlessModel,
@@ -72,7 +71,6 @@ class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancest
         return item
 
 
-@final
 @dataclass(init=False)
 class DocumentDraft(
     PaperlessModel,
@@ -94,7 +92,6 @@ class DocumentDraft(
     archive_serial_number: int | None = None
 
 
-@final
 @dataclass(init=False)
 class DocumentNote(PaperlessModel):
     """Represent a Paperless `DocumentNote`."""
@@ -137,7 +134,6 @@ class DocumentNote(PaperlessModel):
         return success
 
 
-@final
 @dataclass(kw_only=True)
 class DocumentNoteDraft(
     PaperlessModel,
@@ -159,7 +155,6 @@ class DocumentNoteDraft(
         self._api_path = self._api_path.format(pk=data.get("document"))
 
 
-@final
 @dataclass(init=False)
 class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `Document`s metadata."""
@@ -187,7 +182,6 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class DownloadedDocument(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Bla."""
@@ -260,7 +254,6 @@ class DocumentFileHelperBase(  # pylint: disable=too-few-public-methods
         return item
 
 
-@final
 class DocumentFileDownloadHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
@@ -275,7 +268,6 @@ class DocumentFileDownloadHelper(DocumentFileHelperBase):  # pylint: disable=too
         return await super().__call__(pk, original, RetrieveFileMode.DOWNLOAD, self._api_path)
 
 
-@final
 class DocumentFilePreviewHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
@@ -290,7 +282,6 @@ class DocumentFilePreviewHelper(DocumentFileHelperBase):  # pylint: disable=too-
         return await super().__call__(pk, original, RetrieveFileMode.PREVIEW, self._api_path)
 
 
-@final
 class DocumentFileThumbnailHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
@@ -305,7 +296,6 @@ class DocumentFileThumbnailHelper(DocumentFileHelperBase):  # pylint: disable=to
         return await super().__call__(pk, original, RetrieveFileMode.THUMBNAIL, self._api_path)
 
 
-@final
 class DocumentMetaHelper(  # pylint: disable=too-few-public-methods
     HelperBase[DocumentMeta],
     helpers.CallableMixin[DocumentMeta],
@@ -318,7 +308,6 @@ class DocumentMetaHelper(  # pylint: disable=too-few-public-methods
     _resource_cls = DocumentMeta
 
 
-@final
 class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DocumentNote` models."""
 
@@ -389,7 +378,6 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
         )
 
 
-@final
 class DocumentHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Document],
     helpers.CallableMixin[Document],

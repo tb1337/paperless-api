@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFound
@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class Task(  # pylint: disable=too-many-instance-attributes
     PaperlessModel,
@@ -41,7 +40,6 @@ class Task(  # pylint: disable=too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 class TaskHelper(
     HelperBase[Task],
 ):
@@ -52,7 +50,6 @@ class TaskHelper(
 
     _resource_cls = Task
 
-    @final
     async def __aiter__(self) -> AsyncIterator[Task]:
         """Iterate over task items.
 
@@ -66,7 +63,6 @@ class TaskHelper(
         for data in res:
             yield self._resource_cls.create_with_data(self._api, data, fetched=True)
 
-    @final
     async def __call__(self, task_id: int | str) -> Task:
         """Request exactly one task by id.
 

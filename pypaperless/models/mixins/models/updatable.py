@@ -1,6 +1,6 @@
 """UpdatableMixin for PyPaperless models."""
 
-from typing import Any, final
+from typing import Any
 
 from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
@@ -11,7 +11,6 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
 
     _data: dict[str, Any]
 
-    @final
     async def update(self, only_changed: bool = True) -> bool:
         """Send actually changed `model data` to DRF.
 
@@ -37,7 +36,6 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         self._set_dataclass_fields()
         return updated
 
-    @final
     async def _patch_fields(self) -> bool:
         """Use the http `PATCH` method for updating only changed fields."""
         changed = {}
@@ -57,7 +55,6 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         )
         return True
 
-    @final
     async def _put_fields(self) -> bool:
         """Use the http `PUT` method to replace all fields."""
         data = {

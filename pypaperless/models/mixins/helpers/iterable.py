@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Self, final
+from typing import TYPE_CHECKING, Self
 
 from pypaperless.models.base import HelperProtocol, ResourceT
 from pypaperless.models.generators import PageGenerator
@@ -16,7 +16,6 @@ class IterableMixin(HelperProtocol[ResourceT]):
 
     _aiter_filters: dict[str, str | int] | None
 
-    @final
     async def __aiter__(self) -> AsyncIterator[ResourceT]:
         """Iterate over resource items.
 
@@ -30,7 +29,6 @@ class IterableMixin(HelperProtocol[ResourceT]):
             for item in page:
                 yield item
 
-    @final
     @asynccontextmanager
     async def reduce(
         self: Self,
@@ -62,7 +60,6 @@ class IterableMixin(HelperProtocol[ResourceT]):
         yield self
         self._aiter_filters = None
 
-    @final
     def pages(
         self,
         page: int = 1,

@@ -1,7 +1,7 @@
-"""Provide `Task` related models and helpers."""
+"""Provide `Config` related models and helpers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -12,7 +12,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class Config(  # pylint: disable=too-many-instance-attributes
     PaperlessModel,
@@ -45,7 +44,6 @@ class Config(  # pylint: disable=too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 class ConfigHelper(  # pylint: disable=too-few-public-methods
     HelperBase[Config],
     helpers.CallableMixin[Config],

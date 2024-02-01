@@ -1,14 +1,11 @@
 """DeletableMixin for PyPaperless models."""
 
-from typing import final
-
 from pypaperless.models.base import PaperlessModelProtocol
 
 
 class DeletableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods
     """Provide the `delete` method for PyPaperless models."""
 
-    @final
     async def delete(self) -> bool:
         """Delete a `resource item` from DRF. There is no point of return.
 

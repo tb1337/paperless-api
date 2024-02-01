@@ -1,7 +1,7 @@
 """Provide `Workflow` related models and helpers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@final
 @dataclass(init=False)
 class WorkflowAction(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `WorkflowAction`."""
@@ -40,7 +39,6 @@ class WorkflowAction(PaperlessModel):  # pylint: disable=too-many-instance-attri
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class WorkflowTrigger(  # pylint: disable=too-many-instance-attributes
     PaperlessModel,
@@ -67,7 +65,6 @@ class WorkflowTrigger(  # pylint: disable=too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 @dataclass(init=False)
 class Workflow(PaperlessModel):
     """Represent a Paperless `Workflow`."""
@@ -88,7 +85,6 @@ class Workflow(PaperlessModel):
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@final
 class WorkflowActionHelper(
     HelperBase[WorkflowAction],
     helpers.CallableMixin[WorkflowAction],
@@ -102,7 +98,6 @@ class WorkflowActionHelper(
     _resource_cls = WorkflowAction
 
 
-@final
 class WorkflowTriggerHelper(
     HelperBase[WorkflowTrigger],
     helpers.CallableMixin[WorkflowTrigger],
@@ -116,7 +111,6 @@ class WorkflowTriggerHelper(
     _resource_cls = WorkflowTrigger
 
 
-@final
 class WorkflowHelper(
     HelperBase[Workflow],
     helpers.CallableMixin[Workflow],

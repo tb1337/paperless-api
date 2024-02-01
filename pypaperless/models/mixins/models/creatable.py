@@ -1,6 +1,6 @@
 """CreatableMixin for PyPaperless models."""
 
-from typing import cast, final
+from typing import cast
 
 from pypaperless.exceptions import DraftFieldRequired
 from pypaperless.models.base import PaperlessModelProtocol
@@ -12,7 +12,6 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
 
     _create_required_fields: set[str]
 
-    @final
     async def save(self) -> int | str | tuple[int, int]:
         """Create a new `resource item` in Paperless.
 
@@ -49,7 +48,6 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
             return int(res["id"])
         return str(res)
 
-    @final
     def validate(self) -> None:
         """Check required fields before persisting the item to Paperless."""
         missing = [field for field in self._create_required_fields if getattr(self, field) is None]
