@@ -1,6 +1,7 @@
 """Simple router for faking Paperless routes."""
 
 import datetime
+import random
 import uuid
 
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
@@ -8,6 +9,7 @@ from fastapi import FastAPI, Request, Response
 
 from tests.data.v0_0_0 import (
     V0_0_0_CORRESPONDENTS,
+    V0_0_0_DOCUMENT_SUGGESTIONS,
     V0_0_0_DOCUMENT_TYPES,
     V0_0_0_DOCUMENTS,
     V0_0_0_DOCUMENTS_METADATA,
@@ -45,6 +47,7 @@ PATCHWORK = {
         "CORRESPONDENTS": V0_0_0_CORRESPONDENTS,
         "DOCUMENTS": V0_0_0_DOCUMENTS,
         "DOCUMENTS_METADATA": V0_0_0_DOCUMENTS_METADATA,
+        "DOCUMENTS_SUGGESTIONS": V0_0_0_DOCUMENT_SUGGESTIONS,
         "DOCUMENT_TYPES": V0_0_0_DOCUMENT_TYPES,
         "GROUPS": V0_0_0_GROUPS,
         "MAIL_ACCOUNTS": V0_0_0_MAIL_ACCOUNTS,
@@ -186,6 +189,16 @@ async def post_document(req: Request):
     return f"{task_id}"
 
 
+@FakePaperlessAPI.get("/api/documents/next_asn/")
+async def get_documents_next_asn(req: Request):
+    """Get documents next asn."""
+    status = req.query_params.get("status", 200)
+    return Response(
+        status_code=int(status),
+        content=str(random.randint(1, 1337)),
+    )
+
+
 @FakePaperlessAPI.get("/api/documents/{pk:int}/metadata/")
 async def get_documents_meta(req: Request, pk: int):
     """Get documents meta."""
@@ -194,6 +207,16 @@ async def get_documents_meta(req: Request, pk: int):
         raise HTTPNotFound()
     data = _api_switcher(req, "DOCUMENTS_METADATA")
     data["media_filename"] = f"{pk}.pdf"
+    return data
+
+
+@FakePaperlessAPI.get("/api/documents/{pk:int}/suggestions/")
+async def get_documents_suggestions(req: Request, pk: int):
+    """Get documents suggestions."""
+    data = _api_switcher(req, "DOCUMENTS")
+    if not data["all"].count(pk):
+        raise HTTPNotFound()
+    data = _api_switcher(req, "DOCUMENTS_SUGGESTIONS")
     return data
 
 

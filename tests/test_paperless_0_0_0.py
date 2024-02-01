@@ -4,11 +4,16 @@ import pytest
 
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.const import PaperlessResource
-from pypaperless.exceptions import DraftFieldRequired, RequestException, TaskNotFound
+from pypaperless.exceptions import (
+    AsnRequestError,
+    DraftFieldRequired,
+    RequestException,
+    TaskNotFound,
+)
 from pypaperless.models import DocumentMeta, Page
 from pypaperless.models import documents as doc_helpers
 from pypaperless.models.common import DocumentMetadataType, RetrieveFileMode
-from pypaperless.models.documents import DownloadedDocument
+from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
 
@@ -23,8 +28,10 @@ from . import (
     TAG_MAP,
     TASK_MAP,
     USER_MAP,
+    PaperlessSessionMock,
     ResourceTestMapping,
 )
+from .const import PAPERLESS_TEST_URL
 
 # mypy: ignore-errors
 # pylint: disable=protected-access,redefined-outer-name
@@ -368,3 +375,36 @@ class TestDocuments:
         thumbnail = await document.get_thumbnail()
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
+
+    async def test_suggestions(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test suggestions."""
+        document = await getattr(p, mapping.resource)(1)
+        suggestions = await document.get_suggestions()
+        assert isinstance(suggestions, DocumentSuggestions)
+
+    async def test_get_next_an(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test get next asn."""
+        asn = await getattr(p, mapping.resource).get_next_asn()
+        assert isinstance(asn, int)
+        # test exception
+        session = PaperlessSessionMock(
+            PAPERLESS_TEST_URL,
+            "",
+            params={
+                "status": 400,
+            },
+        )
+        p._session = session
+        with pytest.raises(AsnRequestError):
+            await getattr(p, mapping.resource).get_next_asn()
+
+    async def test_searching(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test searching."""
+        # search
+        async for item in getattr(p, mapping.resource).search("leet"):
+            assert isinstance(item, mapping.model_cls)
+            assert item.has_search_hit
+        # more_like
+        async for item in getattr(p, mapping.resource).more_like(1337):
+            assert isinstance(item, mapping.model_cls)
+            assert item.has_search_hit

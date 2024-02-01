@@ -112,6 +112,13 @@ V0_0_0_DOCUMENTS = {
             "user_can_change": True,
             "notes": [],
             "custom_fields": [],
+            # always add that for testing purposes
+            "__search_hit__": {
+                "score": 1.0,
+                "highlights": "some neat hint",
+                "note_highlights": "",
+                "rank": 0,
+            },
         },
         {
             "id": 2,
@@ -163,6 +170,12 @@ V0_0_0_DOCUMENTS = {
                 {"value": "2099-12-31", "field": 2},
                 {"value": True, "field": 1},
             ],
+            "__search_hit__": {
+                "score": 0.87745646456,
+                "highlights": "some neat hint",
+                "note_highlights": "",
+                "rank": 1,
+            },
         },
     ],
 }
@@ -246,6 +259,24 @@ V0_0_0_DOCUMENTS_METADATA = {
             "key": "MetadataDate",
             "value": "2022-02-12T11:34:40.383718+00:00",
         },
+    ],
+}
+
+V0_0_0_DOCUMENT_SUGGESTIONS = {
+    "correspondents": [26],
+    "tags": [
+        1,
+        2,
+        3,
+    ],
+    "document_types": [4],
+    "storage_paths": [
+        3,
+        5,
+    ],
+    "dates": [
+        "2022-01-07",
+        "2023-01-07",
     ],
 }
 
