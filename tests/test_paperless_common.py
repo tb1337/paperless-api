@@ -236,6 +236,7 @@ class TestPaperless:
             is_deleted: bool
             status: _Status
             file: bytes
+            meta: dict[str, str]
 
         raw_data = {
             "name": "Lee Tobi, Sajangnim",
@@ -256,6 +257,7 @@ class TestPaperless:
             ],
             "status": 1,
             "file": b"5-23-42-666-0815-1337",
+            "meta": {"hairs": "blonde", "eyes": "blue", "loves": "Python"},
         }
 
         data = {
@@ -287,6 +289,7 @@ class TestPaperless:
         back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
 
         assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
+        assert isinstance(back["meta"], dict)
 
     async def test_pages_object(self, api_obj):
         """Test pages."""
