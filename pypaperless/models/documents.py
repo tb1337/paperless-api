@@ -1,6 +1,7 @@
 """Provide `Document` related models and helpers."""
 
 import datetime
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
@@ -8,7 +9,12 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
-from .common import CustomFieldValueType, DocumentMetadataType, RetrieveFileMode
+from .common import (
+    CustomFieldValueType,
+    DocumentMetadataType,
+    DocumentSearchHitType,
+    RetrieveFileMode,
+)
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -42,6 +48,7 @@ class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancest
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: list[CustomFieldValueType] | None = None
+    __search_hit__: DocumentSearchHitType | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]):
         """Initialize a `Document` instance."""
@@ -49,6 +56,16 @@ class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancest
 
         self._api_path = self._api_path.format(pk=data.get("id"))
         self.notes = DocumentNoteHelper(api, data.get("id"))
+
+    @property
+    def has_search_hit(self) -> bool:
+        """Return if the document has a search hit attached."""
+        return self.__search_hit__ is not None
+
+    @property
+    def search_hit(self) -> DocumentSearchHitType | None:
+        """Return the document search hit."""
+        return self.__search_hit__
 
     async def get_download(self, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
@@ -484,3 +501,25 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         ```
         """
         return self._thumbnail
+
+    async def search(self, query: str) -> AsyncGenerator[Document, None]:
+        """Lookup documents by a search query.
+
+        Shortcut function. Same behaviour is possible using `reduce()`.
+
+        Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
+        """
+        async with self.reduce(search=query):
+            async for item in self:
+                yield item
+
+    async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
+        """Lookup more documents similar to the given document pk.
+
+        Shortcut function. Same behaviour is possible using `reduce()`.
+
+        Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
+        """
+        async with self.reduce(more_like_id=pk):
+            async for item in self:
+                yield item

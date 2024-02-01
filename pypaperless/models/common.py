@@ -45,6 +45,17 @@ class DocumentMetadataType:
     value: str | None = None
 
 
+# documents
+@dataclass(kw_only=True)
+class DocumentSearchHitType:
+    """Represent a subtype of `Document`."""
+
+    score: float | None = None
+    highlights: str | None = None
+    note_highlights: str | None = None
+    rank: int | None = None
+
+
 # mixins/models/data_fields, used for classifiers
 class MatchingAlgorithmType(Enum):
     """Represent a subtype of `Correspondent`, `DocumentType`, `StoragePath` and `Tag`."""

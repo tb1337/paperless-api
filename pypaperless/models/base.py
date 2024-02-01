@@ -97,7 +97,11 @@ class PaperlessModel(PaperlessBase):
     @final
     def _get_dataclass_fields(self) -> list[Field]:
         """Get the dataclass fields."""
-        return [field for field in fields(self) if not field.name.startswith("_")]
+        return [
+            field
+            for field in fields(self)
+            if (not field.name.startswith("_") or field.name == "__search_hit__")
+        ]
 
     @final
     def _set_dataclass_fields(self) -> None:
