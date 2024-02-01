@@ -1,5 +1,7 @@
 """Raw data constants for all Paperless versions."""
 
+# mypy: ignore-errors
+
 from tests.const import PAPERLESS_TEST_URL
 
 V0_0_0_TOKEN = {"token": "abcdef1234567890987654321fedcba"}
@@ -112,13 +114,6 @@ V0_0_0_DOCUMENTS = {
             "user_can_change": True,
             "notes": [],
             "custom_fields": [],
-            # always add that for testing purposes
-            "__search_hit__": {
-                "score": 1.0,
-                "highlights": "some neat hint",
-                "note_highlights": "",
-                "rank": 0,
-            },
         },
         {
             "id": 2,
@@ -170,11 +165,40 @@ V0_0_0_DOCUMENTS = {
                 {"value": "2099-12-31", "field": 2},
                 {"value": True, "field": 1},
             ],
+        },
+    ],
+}
+
+V0_0_0_DOCUMENTS_SEARCH = {
+    "count": 1,
+    "next": None,
+    "previous": None,
+    "all": [1],
+    "results": [
+        {
+            "id": 1,
+            "correspondent": 1,
+            "document_type": 2,
+            "storage_path": None,
+            "title": "Crazy Document",
+            "content": "some OCRd text",
+            "tags": [],
+            "created": "2011-06-22T00:00:00Z",
+            "created_date": "2011-06-22",
+            "modified": "2023-08-08T06:06:35.495972Z",
+            "added": "2023-06-30T05:44:14.317925Z",
+            "archive_serial_number": None,
+            "original_file_name": "Scan_2023-06-29_113857.pdf",
+            "archived_file_name": "2011-06-22 filename.pdf",
+            "owner": 2,
+            "user_can_change": True,
+            "notes": [],
+            "custom_fields": [],
             "__search_hit__": {
-                "score": 0.87745646456,
+                "score": 1.0,
                 "highlights": "some neat hint",
                 "note_highlights": "",
-                "rank": 1,
+                "rank": 0,
             },
         },
     ],

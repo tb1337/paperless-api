@@ -591,6 +591,6 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
 
         Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
         """
-        async with self.reduce(search=query):
+        async with self.reduce(query=query):
             async for item in self:
                 yield item

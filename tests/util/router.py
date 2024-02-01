@@ -13,6 +13,7 @@ from tests.data.v0_0_0 import (
     V0_0_0_DOCUMENT_TYPES,
     V0_0_0_DOCUMENTS,
     V0_0_0_DOCUMENTS_METADATA,
+    V0_0_0_DOCUMENTS_SEARCH,
     V0_0_0_GROUPS,
     V0_0_0_MAIL_ACCOUNTS,
     V0_0_0_MAIL_RULES,
@@ -47,6 +48,7 @@ PATCHWORK = {
         "CORRESPONDENTS": V0_0_0_CORRESPONDENTS,
         "DOCUMENTS": V0_0_0_DOCUMENTS,
         "DOCUMENTS_METADATA": V0_0_0_DOCUMENTS_METADATA,
+        "DOCUMENTS_SEARCH": V0_0_0_DOCUMENTS_SEARCH,
         "DOCUMENTS_SUGGESTIONS": V0_0_0_DOCUMENT_SUGGESTIONS,
         "DOCUMENT_TYPES": V0_0_0_DOCUMENT_TYPES,
         "GROUPS": V0_0_0_GROUPS,
@@ -273,9 +275,17 @@ async def get_tasks(req: Request):
 @FakePaperlessAPI.get("/api/{resource}/")
 async def get_resource(req: Request, resource: str):
     """Get resource."""
-    data = _api_switcher(req, resource.upper())
+    if resource == "documents":
+        query = req.query_params.get("query", None)
+        more_like = req.query_params.get("more_like_id", None)
+        if query or more_like:
+            data = _api_switcher(req, f"{resource}_search".upper())
+            return data
+
     if resource == "tasks":
         return {}
+
+    data = _api_switcher(req, resource.upper())
     return data
 
 
