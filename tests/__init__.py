@@ -14,6 +14,7 @@ from pypaperless import PaperlessSession, helpers
 from pypaperless.const import PaperlessResource
 from pypaperless.exceptions import RequestException
 from pypaperless.models import (
+    Config,
     Correspondent,
     CorrespondentDraft,
     CustomField,
@@ -59,6 +60,11 @@ class ResourceTestMapping:
     draft_defaults: dict[str, Any] | None = None
 
 
+CONFIG_MAP = ResourceTestMapping(
+    PaperlessResource.CONFIG,
+    helpers.ConfigHelper,
+    Config,
+)
 CORRESPONDENT_MAP = ResourceTestMapping(
     PaperlessResource.CORRESPONDENTS,
     helpers.CorrespondentHelper,

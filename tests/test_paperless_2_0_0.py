@@ -8,7 +8,7 @@ from pypaperless.models import Page
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
 
-from . import CUSTOM_FIELD_MAP, SHARE_LINK_MAP, ResourceTestMapping
+from . import CONFIG_MAP, CUSTOM_FIELD_MAP, SHARE_LINK_MAP, ResourceTestMapping
 
 # mypy: ignore-errors
 # pylint: disable=protected-access,redefined-outer-name
@@ -34,6 +34,7 @@ class TestBeginPaperless:
 
     async def test_resources(self, p: Paperless):
         """Test resources."""
+        assert p.config.is_available
         assert p.correspondents.is_available
         assert p.custom_fields.is_available
         assert p.document_types.is_available
@@ -125,3 +126,38 @@ class TestCustomFieldShareLinks:
         # must raise as we deleted 5
         with pytest.raises(RequestException):
             await getattr(p, mapping.resource)(5)
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [CONFIG_MAP],
+    scope="class",
+)
+# test models/custom_fields.py
+# test models/share_links.py
+class TestConfig:
+    """Config test cases."""
+
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin not in mapping.helper_cls.__bases__
+
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
+
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        item = await getattr(p, mapping.resource)(1)
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)

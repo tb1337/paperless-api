@@ -10,6 +10,7 @@ from .classifiers import (
     Tag,
     TagDraft,
 )
+from .config import Config
 from .custom_fields import CustomField, CustomFieldDraft
 from .documents import Document, DocumentDraft, DocumentMeta, DocumentNote, DocumentNoteDraft
 from .mails import MailAccount, MailRule
@@ -21,6 +22,7 @@ from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
 __all__ = (
+    "Config",
     "Correspondent",
     "CorrespondentDraft",
     "CustomField",

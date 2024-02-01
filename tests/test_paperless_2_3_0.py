@@ -35,6 +35,7 @@ class TestBeginPaperless:
 
     async def test_resources(self, p: Paperless):
         """Test resources."""
+        assert p.config.is_available
         assert p.correspondents.is_available
         assert p.custom_fields.is_available
         assert p.document_types.is_available
