@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import PrimaryKeyRequired
+from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequired
 
 from .base import HelperBase, PaperlessModel
 from .common import (
@@ -80,6 +80,11 @@ class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancest
     async def get_preview(self, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
         item = await self._api.documents.preview(cast(int, self.id), original)
+        return item
+
+    async def get_suggestions(self) -> "DocumentSuggestions":
+        """Request and return the `DocumentSuggestions` class."""
+        item = await self._api.documents.suggestions(cast(int, self.id))
         return item
 
     async def get_thumbnail(self, original: bool = False) -> "DownloadedDocument":
@@ -201,7 +206,7 @@ class DocumentMeta(PaperlessModel):  # pylint: disable=too-many-instance-attribu
 
 @dataclass(init=False)
 class DownloadedDocument(PaperlessModel):  # pylint: disable=too-many-instance-attributes
-    """Bla."""
+    """Represent a Paperless `Document`s downloaded file."""
 
     _api_path = API_PATH["documents"]
 
@@ -241,12 +246,51 @@ class DownloadedDocument(PaperlessModel):  # pylint: disable=too-many-instance-a
         self._fetched = True
 
 
-class DocumentFileHelperBase(  # pylint: disable=too-few-public-methods
+@dataclass(init=False)
+class DocumentSuggestions(PaperlessModel):
+    """Represent a Paperless `Document` suggestions."""
+
+    _api_path = API_PATH["documents_suggestions"]
+
+    id: int | None = None
+    correspondents: list[int] | None = None
+    tags: list[int] | None = None
+    document_types: list[int] | None = None
+    storage_paths: list[int] | None = None
+    dates: list[datetime.date] | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `DocumentSuggestions` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))
+
+
+class DocumentSuggestionsHelper(HelperBase[DocumentSuggestions]):
+    """Represent a factory for Paperless `DocumentSuggestions` models."""
+
+    _api_path = API_PATH["documents_suggestions"]
+    _resource = PaperlessResource.DOCUMENTS
+
+    _resource_cls = DocumentSuggestions
+
+    async def __call__(self, pk: int) -> DocumentSuggestions:
+        """Request exactly one resource item."""
+        data = {
+            "id": pk,
+        }
+        item = self._resource_cls.create_with_data(self._api, data)
+        await item.load()
+
+        return item
+
+
+class DocumentSubHelperBase(  # pylint: disable=too-few-public-methods
     HelperBase[DownloadedDocument],
 ):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
-    _api_path = API_PATH["documents_single"]
+    _api_path = API_PATH["documents_suggestions"]
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DownloadedDocument
@@ -271,7 +315,7 @@ class DocumentFileHelperBase(  # pylint: disable=too-few-public-methods
         return item
 
 
-class DocumentFileDownloadHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+class DocumentFileDownloadHelper(DocumentSubHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_download"]
@@ -285,7 +329,7 @@ class DocumentFileDownloadHelper(DocumentFileHelperBase):  # pylint: disable=too
         return await super().__call__(pk, original, RetrieveFileMode.DOWNLOAD, self._api_path)
 
 
-class DocumentFilePreviewHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+class DocumentFilePreviewHelper(DocumentSubHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_preview"]
@@ -299,7 +343,7 @@ class DocumentFilePreviewHelper(DocumentFileHelperBase):  # pylint: disable=too-
         return await super().__call__(pk, original, RetrieveFileMode.PREVIEW, self._api_path)
 
 
-class DocumentFileThumbnailHelper(DocumentFileHelperBase):  # pylint: disable=too-few-public-methods
+class DocumentFileThumbnailHelper(DocumentSubHelperBase):  # pylint: disable=too-few-public-methods
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_thumbnail"]
@@ -417,6 +461,7 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         self._meta = DocumentMetaHelper(api)
         self._notes = DocumentNoteHelper(api)
         self._preview = DocumentFilePreviewHelper(api)
+        self._suggestions = DocumentSuggestionsHelper(api)
         self._thumbnail = DocumentFileThumbnailHelper(api)
 
     @property
@@ -486,6 +531,23 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         return self._preview
 
     @property
+    def suggestions(self) -> DocumentSuggestionsHelper:
+        """Return the attached `DocumentSuggestionsHelper` instance.
+
+        Example:
+        ```python
+        # request document suggestions directly...
+        suggestions = await paperless.documents.suggestions(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.suggestions(42)
+
+        suggestions = await doc.get_suggestions()
+        ```
+        """
+        return self._suggestions
+
+    @property
     def thumbnail(self) -> DocumentFileThumbnailHelper:
         """Download the contents of a thumbnail file.
 
@@ -502,16 +564,14 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         """
         return self._thumbnail
 
-    async def search(self, query: str) -> AsyncGenerator[Document, None]:
-        """Lookup documents by a search query.
-
-        Shortcut function. Same behaviour is possible using `reduce()`.
-
-        Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
-        """
-        async with self.reduce(search=query):
-            async for item in self:
-                yield item
+    async def get_next_asn(self) -> int:
+        """Request the next archive serial number from DRF."""
+        async with self._api.request("get", API_PATH["documents_next_asn"]) as res:
+            try:
+                res.raise_for_status()
+                return int(await res.text())
+            except Exception as exc:
+                raise AsnRequestError from exc
 
     async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
         """Lookup more documents similar to the given document pk.
@@ -521,5 +581,16 @@ class DocumentHelper(  # pylint: disable=too-many-ancestors
         Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
         """
         async with self.reduce(more_like_id=pk):
+            async for item in self:
+                yield item
+
+    async def search(self, query: str) -> AsyncGenerator[Document, None]:
+        """Lookup documents by a search query.
+
+        Shortcut function. Same behaviour is possible using `reduce()`.
+
+        Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
+        """
+        async with self.reduce(search=query):
             async for item in self:
                 yield item

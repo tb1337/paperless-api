@@ -51,16 +51,20 @@ class JsonResponseWithError(PaperlessException):
 # Models
 
 
-class PrimaryKeyRequired(PaperlessException):
-    """Raise when trying to access model data without supplying a pk."""
+class AsnRequestError(PaperlessException):
+    """Raise when getting an error during requesting the next asn."""
+
+
+class DraftFieldRequired(PaperlessException):
+    """Raise when trying to save models with missing required fields."""
 
 
 class DraftNotSupported(PaperlessException):
     """Raise when trying to draft unsupported models."""
 
 
-class DraftFieldRequired(PaperlessException):
-    """Raise when trying to save models with missing required fields."""
+class PrimaryKeyRequired(PaperlessException):
+    """Raise when trying to access model data without supplying a pk."""
 
 
 # Tasks
