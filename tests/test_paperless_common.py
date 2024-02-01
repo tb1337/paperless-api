@@ -5,7 +5,6 @@ from datetime import date, datetime
 from enum import Enum
 
 import pytest
-from aiohttp.web_exceptions import HTTPBadRequest
 
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.exceptions import BadJsonResponse, JsonResponseWithError, RequestException
@@ -139,42 +138,42 @@ class TestPaperless:
         """Test generate api token."""
         test_token = "abcdef1234567890"
 
+        session = PaperlessSessionMock(PAPERLESS_TEST_URL, "")
+
         # test successful token creation
-        session = PaperlessSessionMock(
-            PAPERLESS_TEST_URL,
-            "",
-            params={
-                "response_content": f'{{"token":"{test_token}"}}',
-            },
-        )
+        session.params = {
+            "response_content": f'{{"token":"{test_token}"}}',
+        }
         token = await api_obj.generate_api_token(
             PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
         )
         assert token == test_token
 
         # test token creation with wrong json answer
-        session = PaperlessSessionMock(
-            PAPERLESS_TEST_URL,
-            "",
-            params={
-                "response_content": '{"bla":"any string"}',
-            },
-        )
         with pytest.raises(BadJsonResponse):
+            session.params = {
+                "response_content": '{"bla":"any string"}',
+            }
             token = await api_obj.generate_api_token(
                 PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
             )
 
         # test error 400
-        with pytest.raises(HTTPBadRequest):
-            session = PaperlessSessionMock(
-                PAPERLESS_TEST_URL,
-                "",
-                params={
-                    "response_content": '{"non_field_errors":["Unable to log in."]}',
-                    "status": "400",
-                },
+        with pytest.raises(JsonResponseWithError):
+            session.params = {
+                "response_content": '{"non_field_errors":["Unable to log in."]}',
+                "status": "400",
+            }
+            token = await api_obj.generate_api_token(
+                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
             )
+
+        # general exception
+        with pytest.raises(Exception):
+            session.params = {
+                "response_content": "no json",
+                "status": "500",
+            }
             token = await api_obj.generate_api_token(
                 PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
             )

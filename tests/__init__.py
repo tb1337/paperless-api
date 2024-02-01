@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import aiohttp
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
+from aiohttp.client_exceptions import ClientResponseError
+from aiohttp.client_reqrep import RequestInfo
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, Response
 from yarl import URL
@@ -255,7 +256,7 @@ class PaperlessSessionMock(PaperlessSession):
                 res = await client.request(
                     method, url, json=json, data=data, params=params, **kwargs
                 )
-                return FakeClientResponse(res, self.version)
+                return FakeClientResponse(res, self.version, method)
         except Exception as exc:
             raise RequestException(exc, (method, url, params), kwargs) from None
 
@@ -271,8 +272,9 @@ class FakeContentDisposition:
 class FakeClientResponse:
     """A fake response object."""
 
-    def __init__(self, res: Response, version: str):
+    def __init__(self, res: Response, version: str, method: str):
         """Construct fake response."""
+        self.method = method
         self.res = res
         self.version = version
 
@@ -306,10 +308,10 @@ class FakeClientResponse:
 
     def raise_for_status(self):
         """Raise for status."""
-        if self.status == 400:
-            raise HTTPBadRequest
-        if self.status != 200:
-            raise HTTPNotFound
+        if self.status == 200:
+            return
+        info = RequestInfo(self.url, self.method, self.res.headers, self.url)
+        raise ClientResponseError(info, (self.res,), status=self.status)
 
     async def json(self):
         """Json."""
