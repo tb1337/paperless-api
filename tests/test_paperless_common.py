@@ -7,7 +7,15 @@ from enum import Enum
 import pytest
 
 from pypaperless import Paperless, PaperlessSession
-from pypaperless.exceptions import BadJsonResponse, JsonResponseWithError, RequestException
+from pypaperless.const import PaperlessResource
+from pypaperless.exceptions import (
+    BadJsonResponse,
+    DraftNotSupported,
+    JsonResponseWithError,
+    RequestException,
+)
+from pypaperless.models import Page
+from pypaperless.models.base import HelperBase, PaperlessModel
 from pypaperless.models.common import (
     CustomFieldType,
     MatchingAlgorithmType,
@@ -17,6 +25,7 @@ from pypaperless.models.common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
+from pypaperless.models.mixins import helpers
 from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
 from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
@@ -182,6 +191,7 @@ class TestPaperless:
         """Test types."""
         never_str = "!never_existing_type!"
         never_int = 99952342
+        assert PaperlessResource(never_str) == PaperlessResource.UNKNOWN
         assert CustomFieldType(never_str) == CustomFieldType.UNKNOWN
         assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
         assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
@@ -277,3 +287,78 @@ class TestPaperless:
         back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
 
         assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
+
+    async def test_pages_object(self, api_obj):
+        """Test pages."""
+
+        @dataclass(init=False)
+        class TestResource(PaperlessModel):
+            """Test Resource."""
+
+            id: int | None = None
+
+        data = {
+            "count": 0,
+            "current_page": 1,
+            "page_size": 25,
+            "next": "any.url",
+            "previous": None,
+            "all": [],
+            "results": [],
+        }
+
+        for i in range(1, 101):
+            data["count"] += 1
+            data["all"].append(i)
+            data["results"].append({"id": i})
+
+        page = Page.create_with_data(api_obj, data=data, fetched=True)
+        page._resource_cls = TestResource
+
+        assert isinstance(page, Page)
+        assert page.current_count == 100
+        for item in page:
+            assert isinstance(item, TestResource)
+
+        # check first page
+        assert not page.has_previous_page
+        assert page.has_next_page
+        assert not page.is_last_page
+        assert page.last_page == 4
+        assert page.next_page == 2
+        assert page.previous_page is None
+
+        # check inner page
+        page.previous = "any.url"
+        page.current_page = 3
+
+        assert page.previous_page is not None
+        assert page.next_page is not None
+        assert not page.is_last_page
+
+        # check last page
+        page.next = None
+        page.current_page = 4
+
+        assert page.next_page is None
+        assert page.is_last_page
+
+    async def test_draft_exc(self, api_00: Paperless):
+        """Test draft not supported."""
+
+        @dataclass(init=False)
+        class TestResource(PaperlessModel):
+            """Test Resource."""
+
+        class TestHelper(HelperBase, helpers.DraftableMixin):
+            """Test Helper."""
+
+            _api_path = "any.url"
+            _resource = "test"
+            # draft_cls - we "forgot" to set a draft class, which will raise an exception ...
+            _resource_cls = TestResource
+
+        helper = TestHelper(api_00)
+        with pytest.raises(DraftNotSupported):
+            # ... there it is
+            draft = helper.draft()  # noqa

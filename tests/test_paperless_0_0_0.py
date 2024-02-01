@@ -103,6 +103,12 @@ class TestClassifiers:
         async for item in getattr(p, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
+    async def test_reduce(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter with reduce."""
+        async with getattr(p, mapping.resource).reduce(any_filter_param="1") as q:
+            async for item in q:
+                assert isinstance(item, mapping.model_cls)
+
     async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
         """Test call."""
         item = await getattr(p, mapping.resource)(1)
@@ -130,6 +136,11 @@ class TestClassifiers:
         new_name = f"{to_update.name} Updated"
         to_update.name = new_name
         await to_update.update()
+        assert to_update.name == new_name
+        # force update
+        new_name = f"{to_update.name} again"
+        to_update.name = new_name
+        await to_update.update(only_changed=False)
         assert to_update.name == new_name
 
     async def test_delete(self, p: Paperless, mapping: ResourceTestMapping):

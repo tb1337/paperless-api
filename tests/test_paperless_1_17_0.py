@@ -5,7 +5,7 @@ import datetime
 import pytest
 
 from pypaperless import Paperless, PaperlessSession
-from pypaperless.exceptions import DraftFieldRequired
+from pypaperless.exceptions import DraftFieldRequired, PrimaryKeyRequired
 from pypaperless.models import documents as doc_helpers
 from pypaperless.models.documents import DocumentNote, DocumentNoteDraft
 from pypaperless.models.mixins import models as model_mixins
@@ -84,6 +84,8 @@ class TestDocumentNotes:
         for note in results:
             assert isinstance(note, DocumentNote)
             assert isinstance(note.created, datetime.datetime)
+        with pytest.raises(PrimaryKeyRequired):
+            item = await getattr(p, mapping.resource).notes()
 
     async def test_create(self, p: Paperless, mapping: ResourceTestMapping):
         """Test create."""
