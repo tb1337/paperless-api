@@ -40,12 +40,13 @@ class JsonResponseWithError(PaperlessException):
         """Initialize a `JsonResponseWithError` instance."""
         message: Any = "Unknown error"
 
-        if isinstance(payload, dict) and "error" in payload:
-            message = payload["error"]
+        if isinstance(payload, dict):
+            key = "error" if "error" in payload else set(payload.keys()).pop()
+            message = payload[key]
             if isinstance(message, list):
-                message = "\n".join(message)
+                message = message.pop()
 
-        super().__init__(f"Paperless: {message}")
+        super().__init__(f"Paperless: {key} - {message}")
 
 
 # Models

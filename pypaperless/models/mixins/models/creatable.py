@@ -1,6 +1,6 @@
 """CreatableMixin for PyPaperless models."""
 
-from typing import cast
+from typing import Any, cast
 
 from pypaperless.exceptions import DraftFieldRequired
 from pypaperless.models.base import PaperlessModelProtocol
@@ -27,26 +27,38 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         ```
         """
         self.validate()
-
+        kwdict = self._serialize()
         # in case of DocumentDraft, we want to transmit data as form
         # this is kind of dirty, but should do its job in this case
-        as_form = type(self).__name__ == "DocumentDraft"
-        kwargs = {
-            "form" if as_form else "json": {
-                field.name: object_to_dict_value(getattr(self, field.name))
-                for field in self._get_dataclass_fields()
-            }
-        }
-        res = await self._api.request_json("post", self._api_path, **kwargs)
+        # as_form = type(self).__name__ == "DocumentDraft"
+        # kwargs = {
+        #     "form"
+        #     if as_form
+        #     else "json": {
+        #         field.name: object_to_dict_value(getattr(self, field.name))
+        #         for field in self._get_dataclass_fields()
+        #     }
+        # }
+        res = await self._api.request_json("post", self._api_path, **kwdict)
 
         if type(self).__name__ == "DocumentNoteDraft":
             return (
                 cast(int, max(item.get("id") for item in res)),
-                cast(int, kwargs["json"]["document"]),
+                cast(int, kwdict["json"]["document"]),
             )
         if isinstance(res, dict):
             return int(res["id"])
         return str(res)
+
+    def _serialize(self) -> dict[str, Any]:
+        """Serialize."""
+        data = {
+            "json": {
+                field.name: object_to_dict_value(getattr(self, field.name))
+                for field in self._get_dataclass_fields()
+            }
+        }
+        return data
 
     def validate(self) -> None:
         """Check required fields before persisting the item to Paperless."""

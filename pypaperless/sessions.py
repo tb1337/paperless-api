@@ -80,7 +80,7 @@ class PaperlessSession:
                     params["filename"] = f"{value[1]}"
                 value = value[0]
             if name is not None:
-                form.add_field(name, f"{value}", **params)
+                form.add_field(name, value if isinstance(value, bytes) else f"{value}", **params)
 
         _add_form_value(None, data)
         return form

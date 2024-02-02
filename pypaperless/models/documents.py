@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequired
+from pypaperless.models.utils import object_to_dict_value
 
 from .base import HelperBase, PaperlessModel
 from .common import (
@@ -105,13 +106,32 @@ class DocumentDraft(
     _create_required_fields = {"document"}
 
     document: bytes | None = None
+    filename: str | None = None
     title: str | None = None
     created: datetime.datetime | None = None
     correspondent: int | None = None
     document_type: int | None = None
     storage_path: int | None = None
-    tags: list[int] | None = None
+    tags: int | list[int] | None = None
     archive_serial_number: int | None = None
+
+    def _serialize(self) -> dict[str, Any]:
+        """Serialize."""
+        data = {
+            "form": {
+                field.name: object_to_dict_value(getattr(self, field.name))
+                for field in self._get_dataclass_fields()
+                if field.name not in {"document", "filename"}
+            }
+        }
+        data["form"].update(
+            {
+                "document": (
+                    (self.document, self.filename) if self.filename is not None else self.document
+                )
+            }
+        )
+        return data
 
 
 @dataclass(init=False)
