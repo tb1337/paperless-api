@@ -52,6 +52,7 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
             "patch",
             self._api_path,
             json=changed,
+            params=self._params,
         )
         return True
 
@@ -61,5 +62,10 @@ class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
             field.name: object_to_dict_value(getattr(self, field.name))
             for field in self._get_dataclass_fields()
         }
-        self._data = await self._api.request_json("put", self._api_path, json=data)
+        self._data = await self._api.request_json(
+            "put",
+            self._api_path,
+            json=data,
+            params=self._params,
+        )
         return True

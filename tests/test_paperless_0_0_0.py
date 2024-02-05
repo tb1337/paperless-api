@@ -12,7 +12,7 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import DocumentMeta, Page
 from pypaperless.models import documents as doc_helpers
-from pypaperless.models.common import DocumentMetadataType, RetrieveFileMode
+from pypaperless.models.common import DocumentMetadataType, PermissionTableType, RetrieveFileMode
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
@@ -89,14 +89,17 @@ class TestClassifiers:
         assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.DraftableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
 
     async def test_model(self, mapping: ResourceTestMapping):
         """Test model."""
         assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
         assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin in mapping.draft_cls.__bases__
 
     async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
         """Test pages."""
@@ -159,6 +162,17 @@ class TestClassifiers:
         with pytest.raises(RequestException):
             await getattr(p, mapping.resource)(5)
 
+    async def test_permissions(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test permissions."""
+        getattr(p, mapping.resource).request_permissions = True
+        item = await getattr(p, mapping.resource)(1)
+        assert item.has_permissions
+        assert isinstance(item.permissions, PermissionTableType)
+        # check disabling again
+        getattr(p, mapping.resource).request_permissions = False
+        item = await getattr(p, mapping.resource)(1)
+        assert not item.has_permissions
+
 
 @pytest.mark.parametrize(
     "mapping",
@@ -179,13 +193,19 @@ class TestReadOnly:
         assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
 
+        perms = helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
+        if mapping.resource in (PaperlessResource.GROUPS, PaperlessResource.USERS):
+            assert not perms
+        else:
+            assert perms
+
     async def test_model(self, mapping: ResourceTestMapping):
         """Test model."""
         assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
 
-        perms = model_mixins.PermissionFieldsMixin in mapping.model_cls.__bases__
+        perms = model_mixins.SecurableMixin in mapping.model_cls.__bases__
         if mapping.resource in (PaperlessResource.GROUPS, PaperlessResource.USERS):
             assert not perms
         else:
@@ -230,12 +250,13 @@ class TestTasks:
         assert helper_mixins.CallableMixin not in mapping.helper_cls.__bases__
         assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin not in mapping.helper_cls.__bases__
 
     async def test_model(self, mapping: ResourceTestMapping):
         """Test model."""
         assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin not in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
 
     async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
@@ -277,6 +298,7 @@ class TestDocuments:
         assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.DraftableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
         # test sub helpers
         assert isinstance(p.documents.download, doc_helpers.DocumentFileDownloadHelper)
         assert isinstance(p.documents.metadata, doc_helpers.DocumentMetaHelper)
@@ -287,9 +309,11 @@ class TestDocuments:
         """Test model."""
         assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
         assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin not in mapping.draft_cls.__bases__
 
     async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
         """Test pages."""

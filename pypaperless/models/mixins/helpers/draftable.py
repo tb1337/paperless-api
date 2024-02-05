@@ -24,4 +24,6 @@ class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-publ
             raise DraftNotSupported("Helper class has no _draft_cls attribute.")
         kwargs.update({"id": -1})
 
-        return self._draft_cls.create_with_data(self._api, data=kwargs, fetched=True)
+        item = self._draft_cls.create_with_data(self._api, data=kwargs, fetched=True)
+
+        return item

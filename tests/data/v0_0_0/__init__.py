@@ -20,6 +20,17 @@ V0_0_0_PATHS = {
     "mail_rules": f"{PAPERLESS_TEST_URL}/api/mail_rules/",
 }
 
+V0_0_0_OBJECT_PERMISSIONS = {
+    "view": {
+        "users": [1, 2],
+        "groups": [],
+    },
+    "change": {
+        "users": [],
+        "groups": [1],
+    },
+}
+
 V0_0_0_CORRESPONDENTS = {
     "count": 5,
     "next": None,

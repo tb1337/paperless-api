@@ -67,6 +67,7 @@ class TestWorkflows:
         assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin not in mapping.helper_cls.__bases__
         # test sub helpers
         assert isinstance(p.workflows.actions, wf_helpers.WorkflowActionHelper)
         assert isinstance(p.workflows.triggers, wf_helpers.WorkflowTriggerHelper)
@@ -79,7 +80,7 @@ class TestWorkflows:
             WorkflowTrigger,
         ):
             assert model_mixins.DeletableMixin not in model_cls.__bases__
-            assert model_mixins.PermissionFieldsMixin not in model_cls.__bases__
+            assert model_mixins.SecurableMixin not in model_cls.__bases__
             assert model_mixins.UpdatableMixin not in model_cls.__bases__
 
             matching = model_mixins.MatchingFieldsMixin in model_cls.__bases__

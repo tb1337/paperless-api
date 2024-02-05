@@ -28,17 +28,6 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         """
         self.validate()
         kwdict = self._serialize()
-        # in case of DocumentDraft, we want to transmit data as form
-        # this is kind of dirty, but should do its job in this case
-        # as_form = type(self).__name__ == "DocumentDraft"
-        # kwargs = {
-        #     "form"
-        #     if as_form
-        #     else "json": {
-        #         field.name: object_to_dict_value(getattr(self, field.name))
-        #         for field in self._get_dataclass_fields()
-        #     }
-        # }
         res = await self._api.request_json("post", self._api_path, **kwdict)
 
         if type(self).__name__ == "DocumentNoteDraft":
@@ -56,8 +45,12 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
             "json": {
                 field.name: object_to_dict_value(getattr(self, field.name))
                 for field in self._get_dataclass_fields()
-            }
+            },
         }
+        # check for empty permissions as they will raise if None
+        if "set_permissions" in data["json"] and data["json"]["set_permissions"] is None:
+            del data["json"]["set_permissions"]
+
         return data
 
     def validate(self) -> None:
@@ -67,5 +60,5 @@ class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-
         if len(missing) == 0:
             return
         raise DraftFieldRequired(
-            f"Missing fields for saving a `{self.__class__.__name__}`: {', '.join(missing)}."
+            f"Missing fields for saving a `{type(self).__name__}`: {', '.join(missing)}."
         )

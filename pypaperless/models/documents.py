@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 @dataclass(init=False)
 class Document(  # pylint: disable=too-many-instance-attributes, too-many-ancestors
     PaperlessModel,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
 ):
@@ -461,6 +461,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):  # pylint: disable=too-few-p
 
 class DocumentHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Document],
+    helpers.SecurableMixin,
     helpers.CallableMixin[Document],
     helpers.DraftableMixin[DocumentDraft],
     helpers.IterableMixin[Document],

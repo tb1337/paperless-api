@@ -2,6 +2,8 @@
 
 from pypaperless.models.base import HelperProtocol, ResourceT
 
+from .securable import SecurableMixin
+
 
 class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods
     """Provide methods for calling a specific resource item."""
@@ -26,6 +28,11 @@ class CallableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-publi
             "id": pk,
         }
         item = self._resource_cls.create_with_data(self._api, data)
+
+        # set requesting full permissions
+        if SecurableMixin in type(self).__bases__ and getattr(self, "_request_full_perms", False):
+            item._params.update({"full_perms": "true"})  # pylint: disable=protected-access
+
         if not lazy:
             await item.load()
         return item

@@ -71,9 +71,11 @@ class TestClassifiers:
         """Test model."""
         assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
         assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin in mapping.draft_cls.__bases__
 
     async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
         """Test pages."""

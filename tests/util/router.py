@@ -3,6 +3,7 @@
 import datetime
 import random
 import uuid
+from copy import deepcopy
 
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
 from fastapi import FastAPI, Request, Response
@@ -17,6 +18,7 @@ from tests.data.v0_0_0 import (
     V0_0_0_GROUPS,
     V0_0_0_MAIL_ACCOUNTS,
     V0_0_0_MAIL_RULES,
+    V0_0_0_OBJECT_PERMISSIONS,
     V0_0_0_PATHS,
     V0_0_0_SAVED_VIEWS,
     V0_0_0_TAGS,
@@ -54,6 +56,7 @@ PATCHWORK = {
         "GROUPS": V0_0_0_GROUPS,
         "MAIL_ACCOUNTS": V0_0_0_MAIL_ACCOUNTS,
         "MAIL_RULES": V0_0_0_MAIL_RULES,
+        "OBJECT_PERMISSIONS": V0_0_0_OBJECT_PERMISSIONS,
         "SAVED_VIEWS": V0_0_0_SAVED_VIEWS,
         "TAGS": V0_0_0_TAGS,
         "TASKS": V0_0_0_TASKS,
@@ -282,10 +285,11 @@ async def get_resource(req: Request, resource: str):
             data = _api_switcher(req, f"{resource}_search".upper())
             return data
 
-    if resource == "tasks":
-        return {}
+    data = deepcopy(_api_switcher(req, resource.upper()))
 
-    data = _api_switcher(req, resource.upper())
+    if req.query_params.get("full_perms", "false") == "true":
+        data["permissions"] = _api_switcher(req, "OBJECT_PERMISSIONS")
+
     return data
 
 
@@ -308,7 +312,10 @@ async def get_resource_item(req: Request, resource: str, item: int):
     iterable = data["results"] if isinstance(data, dict) else data
     for result in iterable:
         if result["id"] == item:
-            return result
+            found = deepcopy(result)
+            if req.query_params.get("full_perms", "false") == "true":
+                found["permissions"] = _api_switcher(req, "OBJECT_PERMISSIONS")
+            return found
     raise HTTPNotFound()
 
 

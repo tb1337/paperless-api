@@ -12,11 +12,3 @@ class MatchingFieldsMixin:
     match: str | None = None
     matching_algorithm: MatchingAlgorithmType | None = None
     is_insensitive: bool | None = None
-
-
-@dataclass
-class PermissionFieldsMixin:
-    """Provide shared owner fields for PyPaperless models."""
-
-    owner: int | None = None
-    user_can_change: bool | None = None

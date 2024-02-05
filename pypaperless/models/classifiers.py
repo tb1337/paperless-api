@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class Correspondent(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
 ):
@@ -39,12 +39,13 @@ class Correspondent(  # pylint: disable=too-many-ancestors
 
 
 @dataclass(init=False)
-class CorrespondentDraft(
+class CorrespondentDraft(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
+    models.SecurableDraftMixin,
     models.CreatableMixin,
 ):
-    """Represent a new Paperless `Correspondent`, which is not stored in Paperless."""
+    """Represent a new `Correspondent`, which is not yet stored in Paperless."""
 
     _api_path = API_PATH["correspondents"]
 
@@ -56,14 +57,13 @@ class CorrespondentDraft(
     }
 
     name: str | None = None
-    owner: int | None = None
 
 
 @dataclass(init=False)
 class DocumentType(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
 ):
@@ -84,12 +84,13 @@ class DocumentType(  # pylint: disable=too-many-ancestors
 
 
 @dataclass(init=False)
-class DocumentTypeDraft(
+class DocumentTypeDraft(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
+    models.SecurableDraftMixin,
     models.CreatableMixin,
 ):
-    """Represent a new Paperless `DocumentType`, which is not stored in Paperless."""
+    """Represent a new `DocumentType`, which is not yet stored in Paperless."""
 
     _api_path = API_PATH["document_types"]
 
@@ -108,7 +109,7 @@ class DocumentTypeDraft(
 class StoragePath(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
 ):
@@ -130,12 +131,13 @@ class StoragePath(  # pylint: disable=too-many-ancestors
 
 
 @dataclass(init=False)
-class StoragePathDraft(
+class StoragePathDraft(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
+    models.SecurableDraftMixin,
     models.CreatableMixin,
 ):
-    """Represent a new Paperless `StoragePath`, which is not stored in Paperless."""
+    """Represent a new `StoragePath`, which is not yet stored in Paperless."""
 
     _api_path = API_PATH["storage_paths"]
 
@@ -156,7 +158,7 @@ class StoragePathDraft(
 class Tag(  # pylint: disable=too-many-ancestors,too-many-instance-attributes
     PaperlessModel,
     models.MatchingFieldsMixin,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
     models.UpdatableMixin,
     models.DeletableMixin,
 ):
@@ -180,12 +182,13 @@ class Tag(  # pylint: disable=too-many-ancestors,too-many-instance-attributes
 
 
 @dataclass(init=False)
-class TagDraft(
+class TagDraft(  # pylint: disable=too-many-ancestors
     PaperlessModel,
     models.MatchingFieldsMixin,
+    models.SecurableDraftMixin,
     models.CreatableMixin,
 ):
-    """Represent a new Paperless `Tag`, which is not stored in Paperless."""
+    """Represent a new `Tag`, which is not yet stored in Paperless."""
 
     _api_path = API_PATH["tags"]
 
@@ -208,6 +211,7 @@ class TagDraft(
 
 class CorrespondentHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Correspondent],
+    helpers.SecurableMixin,
     helpers.CallableMixin[Correspondent],
     helpers.DraftableMixin[CorrespondentDraft],
     helpers.IterableMixin[Correspondent],
@@ -223,6 +227,7 @@ class CorrespondentHelper(  # pylint: disable=too-many-ancestors
 
 class DocumentTypeHelper(  # pylint: disable=too-many-ancestors
     HelperBase[DocumentType],
+    helpers.SecurableMixin,
     helpers.CallableMixin[DocumentType],
     helpers.DraftableMixin[DocumentTypeDraft],
     helpers.IterableMixin[DocumentType],
@@ -238,6 +243,7 @@ class DocumentTypeHelper(  # pylint: disable=too-many-ancestors
 
 class StoragePathHelper(  # pylint: disable=too-many-ancestors
     HelperBase[StoragePath],
+    helpers.SecurableMixin,
     helpers.CallableMixin[StoragePath],
     helpers.DraftableMixin[StoragePathDraft],
     helpers.IterableMixin[StoragePath],
@@ -253,6 +259,7 @@ class StoragePathHelper(  # pylint: disable=too-many-ancestors
 
 class TagHelper(  # pylint: disable=too-many-ancestors
     HelperBase[Tag],
+    helpers.SecurableMixin,
     helpers.CallableMixin[Tag],
     helpers.DraftableMixin[TagDraft],
     helpers.IterableMixin[Tag],

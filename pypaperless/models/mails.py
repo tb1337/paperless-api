@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 @dataclass(init=False)
 class MailAccount(
     PaperlessModel,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
 ):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `MailAccount`."""
 
@@ -42,7 +42,7 @@ class MailAccount(
 @dataclass(init=False)
 class MailRule(
     PaperlessModel,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
 ):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `MailRule`."""
 
@@ -78,10 +78,11 @@ class MailRule(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class MailAccountHelper(
+class MailAccountHelper(  # pylint: disable=too-many-ancestors
     HelperBase[MailAccount],
     helpers.CallableMixin[MailAccount],
     helpers.IterableMixin[MailAccount],
+    helpers.SecurableMixin,
 ):
     """Represent a factory for Paperless `MailAccount` models."""
 
@@ -91,10 +92,11 @@ class MailAccountHelper(
     _resource_cls = MailAccount
 
 
-class MailRuleHelper(
+class MailRuleHelper(  # pylint: disable=too-many-ancestors
     HelperBase[MailRule],
     helpers.CallableMixin[MailRule],
     helpers.IterableMixin[MailRule],
+    helpers.SecurableMixin,
 ):
     """Represent a factory for Paperless `MailRule` models."""
 

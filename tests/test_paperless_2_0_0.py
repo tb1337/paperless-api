@@ -67,14 +67,17 @@ class TestCustomFieldShareLinks:
         assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.DraftableMixin in mapping.helper_cls.__bases__
         assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin not in mapping.helper_cls.__bases__
 
     async def test_model(self, mapping: ResourceTestMapping):
         """Test model."""
         assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin not in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
         assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin not in mapping.draft_cls.__bases__
 
     async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
         """Test pages."""
@@ -150,7 +153,7 @@ class TestConfig:
         """Test model."""
         assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
         assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
-        assert model_mixins.PermissionFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin not in mapping.model_cls.__bases__
         assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
 
     async def test_call(self, p: Paperless, mapping: ResourceTestMapping):

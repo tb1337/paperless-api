@@ -141,9 +141,6 @@ class PaperlessSession:
 
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
-        # check for trailing slash
-        if URL(url).query_string == "":
-            url = url.rstrip("/") + "/"
 
         try:
             return await self._session.request(

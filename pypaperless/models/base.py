@@ -57,6 +57,7 @@ class PaperlessModelProtocol(Protocol):
     _api_path: str
     _data: dict[str, Any]
     _fetched: bool
+    _params: dict[str, Any]
 
     def _get_dataclass_fields(self) -> list[Field]: ...
 
@@ -71,8 +72,9 @@ class PaperlessModel(PaperlessBase):
         """Initialize a `PaperlessModel` instance."""
         super().__init__(api)
         self._data = {}
-        self._fetched = False
         self._data.update(data)
+        self._fetched = False
+        self._params: dict[str, Any] = {}
 
     @final
     @classmethod
@@ -118,7 +120,7 @@ class PaperlessModel(PaperlessBase):
 
     async def load(self) -> None:
         """Get `model data` from DRF."""
-        data = await self._api.request_json("get", self._api_path)
+        data = await self._api.request_json("get", self._api_path, params=self._params)
 
         self._data.update(data)
         self._set_dataclass_fields()

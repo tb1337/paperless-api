@@ -1,6 +1,6 @@
 """PyPaperless common types."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 from typing import Any
 
@@ -73,6 +73,24 @@ class MatchingAlgorithmType(Enum):
     def _missing_(cls: type, value: object) -> "MatchingAlgorithmType":  # noqa ARG003
         """Set default member on unknown value."""
         return MatchingAlgorithmType.UNKNOWN
+
+
+# mixins/models/securable
+@dataclass(kw_only=True)
+class PermissionSetType:
+    """Represent a Paperless permission set."""
+
+    users: list[int] = field(default_factory=list)
+    groups: list[int] = field(default_factory=list)
+
+
+# mixins/models/securable
+@dataclass(kw_only=True)
+class PermissionTableType:
+    """Represent a Paperless permissions type."""
+
+    view: PermissionSetType = field(default_factory=PermissionSetType)
+    change: PermissionSetType = field(default_factory=PermissionSetType)
 
 
 # documents

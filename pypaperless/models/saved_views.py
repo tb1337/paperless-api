@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 @dataclass(init=False)
 class SavedView(
     PaperlessModel,
-    models.PermissionFieldsMixin,
+    models.SecurableMixin,
 ):  # pylint: disable=too-many-instance-attributes
     """Represent a Paperless `SavedView`."""
 
@@ -37,10 +37,11 @@ class SavedView(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class SavedViewHelper(
+class SavedViewHelper(  # pylint: disable=too-many-ancestors
     HelperBase[SavedView],
     helpers.CallableMixin[SavedView],
     helpers.IterableMixin[SavedView],
+    helpers.SecurableMixin,
 ):
     """Represent a factory for Paperless `SavedView` models."""
 

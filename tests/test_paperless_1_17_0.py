@@ -71,7 +71,7 @@ class TestDocumentNotes:
         """Test model."""
         assert model_mixins.DeletableMixin not in DocumentNote.__bases__
         assert model_mixins.MatchingFieldsMixin not in DocumentNote.__bases__
-        assert model_mixins.PermissionFieldsMixin not in DocumentNote.__bases__
+        assert model_mixins.SecurableMixin not in DocumentNote.__bases__
         assert model_mixins.UpdatableMixin not in DocumentNote.__bases__
         assert model_mixins.CreatableMixin in DocumentNoteDraft.__bases__
 

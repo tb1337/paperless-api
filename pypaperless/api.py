@@ -184,6 +184,8 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         **kwargs: Any,
     ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
         """Perform a request."""
+        if method == "post":
+            pass
         res = await self._session.request(
             method,
             path,
