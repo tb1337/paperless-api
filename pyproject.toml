@@ -25,7 +25,7 @@ classifiers = [
     "Programming Language :: Python :: 3"
 ]
 dependencies = [
-    "aiohttp==3.9.2",
+    "aiohttp==3.9.3",
     "yarl==1.9.4"
 ]
 
@@ -40,14 +40,14 @@ test = [
     "black==24.1.1",
     "codespell==2.2.6",
     "mypy==1.8.0",
-    "ruff==0.1.14",
+    "ruff==0.2.1",
     "pytest<8.0.0",
-    "pytest-asyncio==0.23.3",
+    "pytest-asyncio==0.23.4",
     "pytest-aiohttp==1.0.5",
     "pytest-cov==4.1.0",
     "pre-commit==3.6.0",
     "pylint==3.0.3",
-    "fastapi==0.109.0",
+    "fastapi==0.109.2",
     "httpx==0.26.0"
 ]
 
@@ -85,7 +85,6 @@ testpaths = [
 ]
 norecursedirs = [
     ".git",
-    "testing_config",
 ]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
@@ -103,26 +102,24 @@ pypaperless = ["py.typed"]
 [tool.ruff]
 fix = true
 show-fixes = true
-
-select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
-ignore = ["PLR2004", "N818"]
-extend-exclude = ["app_vars.py"]
-unfixable = ["F841"]
 line-length = 100
 target-version = "py311"
+lint.select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
+lint.ignore = ["PLR2004", "N818"]
+lint.unfixable = ["F841"]
 
-[tool.ruff.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 suppress-dummy-args = true
 
-[tool.ruff.flake8-builtins]
+[tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id"]
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 # Use Google-style docstrings.
 convention = "pep257"
 
-[tool.ruff.pylint]
+[tool.ruff.lint.pylint]
 max-branches=25
 max-returns=15
 max-args=10
