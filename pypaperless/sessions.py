@@ -21,9 +21,10 @@ class PaperlessSession:
     ) -> None:
         """Initialize a `PaperlessSession` instance.
 
-        Accepts custom `aiohttp.ClientSession` instances as well.
-
         Setting `token` to an empty string omits the Authorization header on requests.
+
+        `kwargs` are passed to each request method call as additional kwargs, ssl stuff for example.
+        You should read the aiohttp docs to learn more about it.
         """
         self._initialized = False
         self._request_args = kwargs
@@ -36,7 +37,7 @@ class PaperlessSession:
 
     @property
     def is_initialized(self) -> bool:
-        """Is init."""
+        """Return if the session is initialized."""
         return self._initialized
 
     @staticmethod

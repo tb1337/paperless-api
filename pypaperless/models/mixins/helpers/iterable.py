@@ -60,6 +60,14 @@ class IterableMixin(HelperProtocol[ResourceT]):
         yield self
         self._aiter_filters = None
 
+    async def all(self) -> list[int]:
+        """Return a list of all resource item primary keys.
+
+        When used within a `reduce` context, returns a list of filtered primary keys.
+        """
+        page = await anext(self.pages(page=1))
+        return page.all
+
     def pages(
         self,
         page: int = 1,

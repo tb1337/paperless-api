@@ -11,12 +11,14 @@ on:
     branches:
       - master
 
+permissions: {}
+
 jobs:
   pr_labels:
     name: Verify
     runs-on: ubuntu-latest
     steps:
-      - name: Verify PR has a valid label
+      - name: Check PR labels
         uses: ludeeus/action-require-labels@1.0.0
         with:
           labels: >-
