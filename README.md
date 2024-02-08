@@ -17,7 +17,7 @@ Find out more here:
 - Iterate over all resource items or request them page by page.
 - Create, update and delete resource items.
 - Almost feature complete.
-- _PyPaperless_ is designed to only transport data. Your code organizes it.
+- _PyPaperless_ is designed to transport data only. Your code must organize it.
 
 ## Documentation
 
@@ -25,6 +25,7 @@ Find out more here:
   - [Quickstart](#quickstart)
   - [URL rules](#url-rules)
   - [Custom session](#custom-session)
+  - [Creating a token](#creating-a-token)
 - [Resource features](#resource-features)
 - [Requesting data](#request-data)
   - [Getting one item by primary key](#getting-one-item-by-primary-key)
@@ -77,8 +78,8 @@ async def main():
 
 There are some rules for the Paperless-ngx url.
 
-1. Isn't a scheme applied to it? Use `https`.
-2. Is `http` explicitly used in it? Okay, be unsafe :dizzy_face:.
+1. Isn't a scheme applied to it? `https` is automatically used.
+2. Does the url explicitly start with `http`? Okay, be unsafe :dizzy_face:.
 3. Only use the **base url** of your Paperless-ngx. Don't add `/api` to it.
 
 #### Custom session
@@ -100,28 +101,59 @@ class MyCustomSession(PaperlessSession):
     # start overriding methods
 ```
 
+#### Creating a token
+
+_PyPaperless_ needs an API token to request and send data from and to Paperless-ngx for authentication purposes. I recommend you to create a technical user and assign a token to it via Django Admin, when you bootstrap any project with _PyPaperless_. If you need to create that token by providing credentials, _PyPaperless_ ships with a little helper for that task.
+
+```python
+token = Paperless.generate_api_token(
+  "localhost:8000",
+  "test_user",
+  "not-so-secret-password-anymore",
+)
+```
+
+This method utilizes `PaperlessSession`, so the same rules apply to it as when initiating a regular `Paperless` session. It also accepts a custom `PaperlessSession`:
+
+```python
+url = "localhost:8000"
+session = PaperlessSession(url, "") # empty token string
+
+token = Paperless.generate_api_token(
+  "localhost:8000",
+  "test_user",
+  "not-so-secret-password-anymore",
+  session=session,
+)
+```
+
+> [!CAUTION]
+> Hardcoding credentials or tokens is never a good choice. Use that with caution.
+
 ### Resource features
 
-| Resource       | Request | Iterate | Create |  Update | Delete |
-| -------------- | ------- | ------- | ------ | ------- | ------ |
-| config         | x       |         |        |         |
-| correspondents | x       | x       | x      | x       | x      |
-| custom_fields  | x       | x       | x      | x       | x      |
-| document_types | x       | x       | x      | x       | x      |
-| documents      | x       | x       | x      | x       | x      |
-| groups         | x       | x       |        |         |
-| logs           |         |         |        |         |
-| mail_accounts  | x       | x       |        |         |
-| mail_rules     | x       | x       |        |         |
-| saved_views    | x       | x       |        |         |        |
-| share_links    | x       | x       | x      | x       | x      |
-| storage_paths  | x       | x       | x      | x       | x      |
-| tags           | x       | x       | x      | x       | x      |
-| tasks          | x       | x\*     |        |         |
-| users          | x       | x       |        |         |
-| workflows      | x       | x       |        |         |
+| Resource       | Request  | Iterate | Create |  Update | Delete |
+| -------------- | -------- | ------- | ------ | ------- | ------ |
+| config         | x        |         |        |         |
+| correspondents | x        | x       | x      | x       | x      |
+| custom_fields  | x        | x       | x      | x       | x      |
+| document_types | x        | x       | x      | x       | x      |
+| documents      | x        | x       | x      | x       | x      |
+| groups         | x        | x       |        |         |
+| logs           | **n.a.** |
+| mail_accounts  | x        | x       |        |         |
+| mail_rules     | x        | x       |        |         |
+| saved_views    | x        | x       |        |         |        |
+| share_links    | x        | x       | x      | x       | x      |
+| storage_paths  | x        | x       | x      | x       | x      |
+| tags           | x        | x       | x      | x       | x      |
+| tasks          | x        | x\*     |        |         |
+| users          | x        | x       |        |         |
+| workflows      | x        | x       |        |         |
 
 \*: Only `__aiter__` is supported.
+
+`logs` are not implemented, as they return plain text. I cannot imagine any case where that could be needed by someone.
 
 ### Requesting data
 
@@ -153,6 +185,8 @@ item_keys = await paperless.documents.all()
 #-> [1, 2, 3, ...]
 ```
 
+`GET` `https://localhost:8000/api/documents/?page=1`
+
 #### Iterating over resource items
 
 Iteration enables you to execute mass operations of any kind. Like requesting single items, the iterator always returns `PaperlessModel`s.
@@ -166,7 +200,7 @@ print(f"{count} documents are currently stored for correspondent 1.")
 #-> 5 documents are currently stored for correspondent 1.
 ```
 
-The code above executes many http requests, depending on your stored documents:
+The code above executes many http requests, depending on the count of your stored documents:
 
 `GET` `https://localhost:8000/api/documents/?page=1` <br>
 `GET` `https://localhost:8000/api/documents/?page=2` <br>
@@ -181,15 +215,18 @@ Instead of iterating over resource items, you may want to iterate over paginatio
 page_iter = aiter(paperless.documents.pages())
 page = await anext(page_iter)
 #-> page.current_page == 1
+page = await anext(page_iter)
+#-> page.current_page == 2
 ```
 
-The code above executes one http request:
+The code above executes two http requests:
 
-`GET` `https://localhost:8000/api/documents/?page=1`
+`GET` `https://localhost:8000/api/documents/?page=1` <br>
+`GET` `https://localhost:8000/api/documents/?page=2`
 
 #### Reducing http requests
 
-Requesting many pages can be time-consuming, so a better way to apply the above filter is using the `reduce` context. Technically, it applies query parameters to the http request, which are interpreted as filters by Paperless-ngx.
+Requesting many pages can be time-consuming, so a better way to apply the filter (mentioned [here](#iterating-over-resource-items)) is using the `reduce` context. Technically, it applies query parameters to the http request, which are interpreted as filters by Paperless-ngx.
 
 ```python
 filters = {
@@ -202,21 +239,21 @@ async with paperless.documents.reduce(**filters) as filtered:
 #-> 5 documents are currently stored for correspondent 1.
 ```
 
-The code above executes just one http request, but achieves the same:
+The code above executes just one http request, and achieves the same:
 
 `GET` `https://localhost:8000/api/documents/?page=1&correspondent__id=1`
+
+> [!TIP]
+> The `reduce` context works with all previously mentioned methods: `__aiter__`, `all` and `pages`.
 
 > [!NOTE]
 > There are many filters available, _PyPaperless_ doesn't provide a complete list. I am working on that. At the moment, you must use the Django Rest framework http endpoint of Paperless-ngx in your browser and play around with the **Filter** button on each resource.
 >
 > Paperless-ngx simply ignores filters which don't exist and treats them as no filter instead of raising errors, be careful.
 
-> [!TIP]
-> The `reduce` context works with all previously mentioned methods: `__aiter__`, `all` and `pages`.
-
 ### Manipulating data
 
-_PyPaperless_ offers creation, update and deletion of resource items. These features are enabled where it makes sense, Paperless-ngx itself offers full CRUD functionality. Please check the [resource features](#resource-features) table at the top of this README. If you need CRUD for another resource, let me know and open an [issue](https://github.com/tb1337/paperless-api/issues) with your specific use-case.
+_PyPaperless_ offers creation, update and deletion of resource items. These features are enabled where it makes (at least for me) sense, Paperless-ngx itself offers full CRUD functionality. Please check the [resource features](#resource-features) table at the top of this README. If you need CRUD for another resource, please let me know and open an [issue](https://github.com/tb1337/paperless-api/issues) with your specific use-case.
 
 #### Creating new items
 
@@ -273,19 +310,22 @@ The code above executes two http requests:
 
 ```json
 {
-    "title": "New document title",
-    "content": ...,
-    "correspondents": [...],
-    "document_types": [...],
-    "storage_paths": [...],
-    ...
-    // and all other fields
+  "title": "New document title",
+  "content": "...",
+  "correspondents": ["..."],
+  "document_types": ["..."],
+  "storage_paths": ["..."],
+  "...": "..."
+  // and every other field
 }
 ```
 
 #### Deleting items
 
 Lust but not least, it is also possible to remove data from Paperless-ngx.
+
+> [!CAUTION]
+> This will permanently delete data from your database. There is no point of return. Be careful.
 
 ```python
 item = await paperless.documents(23)
@@ -296,9 +336,6 @@ success = await item.delete()
 The code above executes one http request:
 
 `DELETE` `http://localhost:8000/api/documents/23/`
-
-> [!CAUTION]
-> This will permanently delete data from your database. There is no point of return. Be careful
 
 ### Special cases
 
