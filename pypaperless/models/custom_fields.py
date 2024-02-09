@@ -1,51 +1,64 @@
-"""Model for custom field resource."""
+"""Provide `CustomField` related models and helpers."""
 
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .base import PaperlessModel, PaperlessPost
+from pypaperless.const import API_PATH, PaperlessResource
 
+from .base import HelperBase, PaperlessModel
+from .common import CustomFieldType
+from .mixins import helpers, models
 
-class CustomFieldType(Enum):
-    """Enum with custom field types."""
-
-    STRING = "string"
-    BOOLEAN = "boolean"
-    INTEGER = "integer"
-    FLOAT = "float"
-    MONETARY = "monetary"
-    DATE = "date"
-    URL = "url"
-    DOCUMENT_LINK = "documentlink"
-    UNKNOWN = "unknown"
-
-    @classmethod
-    def _missing_(cls: type, value: object) -> "CustomFieldType":  # noqa ARG003
-        """Set default member on unknown value."""
-        return CustomFieldType.UNKNOWN
+if TYPE_CHECKING:
+    from pypaperless import Paperless
 
 
-@dataclass(kw_only=True)
-class CustomFieldValue(PaperlessModel):
-    """Represent a custom field value mapping on the Paperless api."""
+@dataclass(init=False)
+class CustomField(
+    PaperlessModel,
+    models.UpdatableMixin,
+    models.DeletableMixin,
+):
+    """Represent a Paperless `CustomField`."""
 
-    field: int | None = None
-    value: Any | None = None
+    _api_path = API_PATH["custom_fields_single"]
+
+    id: int
+    name: str | None = None
+    data_type: CustomFieldType | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `Document` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@dataclass(kw_only=True)
-class CustomField(PaperlessModel):
-    """Represent a custom field resource on the Paperless api."""
+@dataclass(init=False)
+class CustomFieldDraft(
+    PaperlessModel,
+    models.CreatableMixin,
+):
+    """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
-    id: int | None = None
+    _api_path = API_PATH["custom_fields"]
+
+    _create_required_fields = {"name", "data_type"}
+
     name: str | None = None
     data_type: CustomFieldType | None = None
 
 
-@dataclass(kw_only=True)
-class CustomFieldPost(PaperlessPost):
-    """Attributes to send when creating a custom field on the Paperless api."""
+class CustomFieldHelper(  # pylint: disable=too-many-ancestors
+    HelperBase[CustomField],
+    helpers.CallableMixin[CustomField],
+    helpers.DraftableMixin[CustomFieldDraft],
+    helpers.IterableMixin[CustomField],
+):
+    """Represent a factory for Paperless `CustomField` models."""
 
-    name: str
-    data_type: CustomFieldType
+    _api_path = API_PATH["custom_fields"]
+    _resource = PaperlessResource.CUSTOM_FIELDS
+
+    _draft_cls = CustomFieldDraft
+    _resource_cls = CustomField

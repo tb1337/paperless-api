@@ -1,0 +1,1 @@
+"""Mixins for PyPaperless models."""

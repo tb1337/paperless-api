@@ -1,21 +1,26 @@
-"""Model for saved view resource."""
+"""Provide `SavedView` related models and helpers."""
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
-from .base import PaperlessModel
+from pypaperless.const import API_PATH, PaperlessResource
+
+from .base import HelperBase, PaperlessModel
+from .common import SavedViewFilterRuleType
+from .mixins import helpers, models
+
+if TYPE_CHECKING:
+    from pypaperless import Paperless
 
 
-@dataclass(kw_only=True)
-class SavedViewFilterRule(PaperlessModel):
-    """Represent a saved view filter rule resource on the Paperless api."""
+@dataclass(init=False)
+class SavedView(
+    PaperlessModel,
+    models.SecurableMixin,
+):  # pylint: disable=too-many-instance-attributes
+    """Represent a Paperless `SavedView`."""
 
-    rule_type: int | None = None
-    value: str | None = None
-
-
-@dataclass(kw_only=True)
-class SavedView(PaperlessModel):  # pylint: disable=too-many-instance-attributes
-    """Represent a saved view resource on the Paperless api."""
+    _api_path = API_PATH["saved_views_single"]
 
     id: int | None = None
     name: str | None = None
@@ -23,6 +28,24 @@ class SavedView(PaperlessModel):  # pylint: disable=too-many-instance-attributes
     show_in_sidebar: bool | None = None
     sort_field: str | None = None
     sort_reverse: bool | None = None
-    filter_rules: list[SavedViewFilterRule] | None = None
-    owner: int | None = None
-    user_can_change: bool | None = None
+    filter_rules: list[SavedViewFilterRuleType] | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `SavedView` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))
+
+
+class SavedViewHelper(  # pylint: disable=too-many-ancestors
+    HelperBase[SavedView],
+    helpers.CallableMixin[SavedView],
+    helpers.IterableMixin[SavedView],
+    helpers.SecurableMixin,
+):
+    """Represent a factory for Paperless `SavedView` models."""
+
+    _api_path = API_PATH["saved_views"]
+    _resource = PaperlessResource.SAVED_VIEWS
+
+    _resource_cls = SavedView

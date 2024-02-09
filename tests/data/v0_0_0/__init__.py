@@ -1,6 +1,10 @@
 """Raw data constants for all Paperless versions."""
 
+# mypy: ignore-errors
+
 from tests.const import PAPERLESS_TEST_URL
+
+V0_0_0_TOKEN = {"token": "abcdef1234567890987654321fedcba"}
 
 V0_0_0_PATHS = {
     "correspondents": f"{PAPERLESS_TEST_URL}/api/correspondents/",
@@ -14,6 +18,17 @@ V0_0_0_PATHS = {
     "groups": f"{PAPERLESS_TEST_URL}/api/groups/",
     "mail_accounts": f"{PAPERLESS_TEST_URL}/api/mail_accounts/",
     "mail_rules": f"{PAPERLESS_TEST_URL}/api/mail_rules/",
+}
+
+V0_0_0_OBJECT_PERMISSIONS = {
+    "view": {
+        "users": [1, 2],
+        "groups": [],
+    },
+    "change": {
+        "users": [],
+        "groups": [1],
+    },
 }
 
 V0_0_0_CORRESPONDENTS = {
@@ -165,6 +180,41 @@ V0_0_0_DOCUMENTS = {
     ],
 }
 
+V0_0_0_DOCUMENTS_SEARCH = {
+    "count": 1,
+    "next": None,
+    "previous": None,
+    "all": [1],
+    "results": [
+        {
+            "id": 1,
+            "correspondent": 1,
+            "document_type": 2,
+            "storage_path": None,
+            "title": "Crazy Document",
+            "content": "some OCRd text",
+            "tags": [],
+            "created": "2011-06-22T00:00:00Z",
+            "created_date": "2011-06-22",
+            "modified": "2023-08-08T06:06:35.495972Z",
+            "added": "2023-06-30T05:44:14.317925Z",
+            "archive_serial_number": None,
+            "original_file_name": "Scan_2023-06-29_113857.pdf",
+            "archived_file_name": "2011-06-22 filename.pdf",
+            "owner": 2,
+            "user_can_change": True,
+            "notes": [],
+            "custom_fields": [],
+            "__search_hit__": {
+                "score": 1.0,
+                "highlights": "some neat hint",
+                "note_highlights": "",
+                "rank": 0,
+            },
+        },
+    ],
+}
+
 V0_0_0_DOCUMENTS_METADATA = {
     "original_checksum": "18e2352cc13379d19bd9ce329428bb99",
     "original_size": 190348,
@@ -244,6 +294,24 @@ V0_0_0_DOCUMENTS_METADATA = {
             "key": "MetadataDate",
             "value": "2022-02-12T11:34:40.383718+00:00",
         },
+    ],
+}
+
+V0_0_0_DOCUMENT_SUGGESTIONS = {
+    "correspondents": [26],
+    "tags": [
+        1,
+        2,
+        3,
+    ],
+    "document_types": [4],
+    "storage_paths": [
+        3,
+        5,
+    ],
+    "dates": [
+        "2022-01-07",
+        "2023-01-07",
     ],
 }
 
@@ -489,6 +557,9 @@ V0_0_0_TAGS = {
     "all": [
         1,
         2,
+        3,
+        4,
+        5,
     ],
     "results": [
         {
@@ -512,9 +583,51 @@ V0_0_0_TAGS = {
             "color": "#ff0000",
             "text_color": "#00ff00",
             "match": "",
-            "matching_algorithm": 0,
+            "matching_algorithm": 1,
             "is_insensitive": True,
             "is_inbox_tag": True,
+            "document_count": 20,
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 3,
+            "slug": "test-3",
+            "name": "Test 3",
+            "color": "#ff0000",
+            "text_color": "#00ff00",
+            "match": "",
+            "matching_algorithm": 2,
+            "is_insensitive": True,
+            "is_inbox_tag": False,
+            "document_count": 20,
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 4,
+            "slug": "test-4",
+            "name": "Test 4",
+            "color": "#ff0000",
+            "text_color": "#00ff00",
+            "match": "",
+            "matching_algorithm": 3,
+            "is_insensitive": True,
+            "is_inbox_tag": False,
+            "document_count": 20,
+            "owner": None,
+            "user_can_change": True,
+        },
+        {
+            "id": 5,
+            "slug": "test-5",
+            "name": "Test 5",
+            "color": "#ff0000",
+            "text_color": "#00ff00",
+            "match": "",
+            "matching_algorithm": 4,
+            "is_insensitive": True,
+            "is_inbox_tag": False,
             "document_count": 20,
             "owner": None,
             "user_can_change": True,
@@ -524,8 +637,8 @@ V0_0_0_TAGS = {
 
 V0_0_0_TASKS = [
     {
-        "id": 2134,
-        "task_id": "bd2de639-5ecd-4bc1-ab3d-106908ef00e1",
+        "id": 1,
+        "task_id": "11112222-aaaa-bbbb-cccc-333344445555",
         "task_file_name": "a.png",
         "date_created": "2023-12-16T13:06:29.107815Z",
         "date_done": None,
@@ -536,8 +649,8 @@ V0_0_0_TASKS = [
         "related_document": None,
     },
     {
-        "id": 2133,
-        "task_id": "eb327ed7-b3c8-4a8c-9aa2-5385e499c74a",
+        "id": 2,
+        "task_id": "ffffeeee-9999-8888-7777-ddddccccbbbb",
         "task_file_name": "b.png",
         "date_created": "2023-12-16T13:06:26.117158Z",
         "date_done": "2023-12-16T13:06:29.859669Z",
@@ -548,8 +661,8 @@ V0_0_0_TASKS = [
         "related_document": "1780",
     },
     {
-        "id": 2132,
-        "task_id": "071674a5-274a-4592-8331-b3a1055d1928",
+        "id": 3,
+        "task_id": "abcdef12-3456-7890-abcd-ef1234567890",
         "task_file_name": "c.png",
         "date_created": "2023-12-16T13:04:28.175624Z",
         "date_done": "2023-12-16T13:04:32.318797Z",

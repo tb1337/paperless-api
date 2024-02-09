@@ -1,60 +1,53 @@
-"""Models for Paperless resources."""
+"""PyPaperless models."""
 
-from .custom_fields import CustomField, CustomFieldPost
-from .documents import (
-    Document,
-    DocumentMetadata,
-    DocumentMetaInformation,
-    DocumentNote,
-    DocumentNotePost,
-    DocumentPost,
-)
-from .groups import Group
-from .mails import MailAccount, MailRule
-from .matching import (
+from .classifiers import (
     Correspondent,
-    CorrespondentPost,
+    CorrespondentDraft,
     DocumentType,
-    DocumentTypePost,
+    DocumentTypeDraft,
     StoragePath,
-    StoragePathPost,
+    StoragePathDraft,
     Tag,
-    TagPost,
+    TagDraft,
 )
-from .saved_views import SavedView, SavedViewFilterRule
-from .share_links import ShareLink, ShareLinkPost
+from .config import Config
+from .custom_fields import CustomField, CustomFieldDraft
+from .documents import Document, DocumentDraft, DocumentMeta, DocumentNote, DocumentNoteDraft
+from .mails import MailAccount, MailRule
+from .pages import Page
+from .permissions import Group, User
+from .saved_views import SavedView
+from .share_links import ShareLink, ShareLinkDraft
 from .tasks import Task
-from .users import User
-from .workflows import ConsumptionTemplate, Workflow, WorkflowAction, WorkflowTrigger
+from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
-__all__ = [
-    "ConsumptionTemplate",
+__all__ = (
+    "Config",
     "Correspondent",
-    "CorrespondentPost",
+    "CorrespondentDraft",
     "CustomField",
-    "CustomFieldPost",
+    "CustomFieldDraft",
     "Document",
-    "DocumentPost",
-    "DocumentMetadata",
-    "DocumentMetaInformation",
+    "DocumentDraft",
+    "DocumentMeta",
     "DocumentNote",
-    "DocumentNotePost",
+    "DocumentNoteDraft",
     "DocumentType",
-    "DocumentTypePost",
+    "DocumentTypeDraft",
     "Group",
     "MailAccount",
     "MailRule",
+    "Page",
     "SavedView",
-    "SavedViewFilterRule",
     "ShareLink",
-    "ShareLinkPost",
+    "ShareLinkDraft",
     "StoragePath",
-    "StoragePathPost",
+    "StoragePathDraft",
     "Tag",
-    "TagPost",
+    "TagDraft",
     "Task",
     "User",
     "Workflow",
     "WorkflowAction",
     "WorkflowTrigger",
-]
+)

@@ -1,41 +1,69 @@
-"""Model for share link resource."""
+"""Provide `ShareLink` related models and helpers."""
 
+import datetime
 from dataclasses import dataclass
-from datetime import datetime
-from enum import Enum
+from typing import TYPE_CHECKING, Any
 
-from .base import PaperlessModel, PaperlessPost
+from pypaperless.const import API_PATH, PaperlessResource
 
+from .base import HelperBase, PaperlessModel
+from .common import ShareLinkFileVersionType
+from .mixins import helpers, models
 
-class ShareLinkFileVersion(Enum):
-    """Enum with file version."""
-
-    ARCHIVE = "archive"
-    ORIGINAL = "original"
-    UNKNOWN = "unknown"
-
-    @classmethod
-    def _missing_(cls: type, value: object) -> "ShareLinkFileVersion":  # noqa ARG003
-        """Set default member on unknown value."""
-        return ShareLinkFileVersion.UNKNOWN
+if TYPE_CHECKING:
+    from pypaperless import Paperless
 
 
-@dataclass(kw_only=True)
-class ShareLink(PaperlessModel):
-    """Represent a share link resource on the Paperless api."""
+@dataclass(init=False)
+class ShareLink(
+    PaperlessModel,
+    models.DeletableMixin,
+    models.UpdatableMixin,
+):
+    """Represent a Paperless `ShareLink`."""
 
-    id: int | None = None
-    created: datetime | None = None
-    expiration: datetime | None = None
+    _api_path = API_PATH["share_links_single"]
+
+    id: int
+    created: datetime.datetime | None = None
+    expiration: datetime.datetime | None = None
     slug: str | None = None
     document: int | None = None
-    file_version: ShareLinkFileVersion | None = None
+    file_version: ShareLinkFileVersionType | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]):
+        """Initialize a `MailAccount` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-@dataclass(kw_only=True)
-class ShareLinkPost(PaperlessPost):
-    """Attributes to send when creating a share link on the Paperless api."""
+@dataclass(init=False)
+class ShareLinkDraft(
+    PaperlessModel,
+    models.CreatableMixin,
+):
+    """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
-    expiration: datetime
-    document: int
-    file_version: ShareLinkFileVersion
+    _api_path = API_PATH["share_links"]
+
+    _create_required_fields = {"document", "file_version"}
+
+    expiration: datetime.datetime | None = None
+    document: int | None = None
+    file_version: ShareLinkFileVersionType | None = None
+
+
+class ShareLinkHelper(  # pylint: disable=too-many-ancestors
+    HelperBase[ShareLink],
+    helpers.CallableMixin[ShareLink],
+    helpers.DraftableMixin[ShareLinkDraft],
+    helpers.IterableMixin[ShareLink],
+):
+    """Represent a factory for Paperless `ShareLink` models."""
+
+    _api_path = API_PATH["share_links"]
+    _resource = PaperlessResource.SHARE_LINKS
+
+    _draft_cls = ShareLinkDraft
+    _resource_cls = ShareLink

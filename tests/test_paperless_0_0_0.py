@@ -1,752 +1,434 @@
 """Paperless basic tests."""
 
-import datetime
-from unittest.mock import patch
-
 import pytest
-from aiohttp.web_exceptions import HTTPNotFound
 
-from pypaperless import Paperless
-from pypaperless.controllers import (
-    CorrespondentsController,
-    DocumentsController,
-    DocumentTypesController,
-    GroupsController,
-    MailAccountsController,
-    MailRulesController,
-    SavedViewsController,
-    TagsController,
-    TasksController,
-    UsersController,
+from pypaperless import Paperless, PaperlessSession
+from pypaperless.const import PaperlessResource
+from pypaperless.exceptions import (
+    AsnRequestError,
+    DraftFieldRequired,
+    RequestException,
+    TaskNotFound,
 )
-from pypaperless.controllers.base import ResultPage
-from pypaperless.models import (
-    Correspondent,
-    CorrespondentPost,
-    Document,
-    DocumentMetadata,
-    DocumentMetaInformation,
-    DocumentPost,
-    DocumentType,
-    DocumentTypePost,
-    Group,
-    MailAccount,
-    MailRule,
-    SavedView,
-    Tag,
-    TagPost,
-    Task,
-    User,
+from pypaperless.models import DocumentMeta, Page
+from pypaperless.models import documents as doc_helpers
+from pypaperless.models.common import DocumentMetadataType, PermissionTableType, RetrieveFileMode
+from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
+from pypaperless.models.mixins import helpers as helper_mixins
+from pypaperless.models.mixins import models as model_mixins
+
+from . import (
+    CORRESPONDENT_MAP,
+    DOCUMENT_MAP,
+    DOCUMENT_TYPE_MAP,
+    GROUP_MAP,
+    MAIL_ACCOUNT_MAP,
+    MAIL_RULE_MAP,
+    SAVED_VIEW_MAP,
+    TAG_MAP,
+    TASK_MAP,
+    USER_MAP,
+    PaperlessSessionMock,
+    ResourceTestMapping,
 )
-from pypaperless.models.matching import MatchingAlgorithm
+from .const import PAPERLESS_TEST_URL
+
+# mypy: ignore-errors
+# pylint: disable=protected-access,redefined-outer-name
 
 
+@pytest.fixture(scope="function")
+async def p(api_00) -> Paperless:
+    """Yield version for this test case."""
+    yield api_00
+
+
+# test api.py with legacy endpoint
 class TestBeginPaperless:
     """Common Paperless test cases."""
 
-    async def test_init(self, api_00: Paperless):
+    async def test_init(self, p: Paperless):
         """Test init."""
-        assert api_00._token
-        assert api_00._request_opts
-        assert not api_00._session
-        # test properties
-        assert api_00.url
-        assert api_00.is_initialized
+        assert isinstance(p._session, PaperlessSession)
+        assert p.host_version == "0.0.0"
+        assert p.is_initialized
+        assert isinstance(p.local_resources, set)
+        assert isinstance(p.remote_resources, set)
 
-    async def test_features(self, api_00: Paperless):
-        """Test features."""
-        # basic class has no features
-        assert api_00.features == 0
-        assert not api_00.storage_paths
-        assert not api_00.consumption_templates
-        assert not api_00.custom_fields
-        assert not api_00.share_links
-        assert not api_00.workflows
-        assert not api_00.workflow_actions
-        assert not api_00.workflow_triggers
+    async def test_resources(self, p: Paperless):
+        """Test resources."""
+        assert not p.config.is_available
+        assert p.correspondents.is_available
+        assert not p.custom_fields.is_available
+        assert p.document_types.is_available
+        assert p.documents.is_available
+        assert p.groups.is_available
+        assert p.mail_accounts.is_available
+        assert p.mail_rules.is_available
+        assert p.saved_views.is_available
+        assert not p.share_links.is_available
+        assert not p.storage_paths.is_available
+        assert p.tags.is_available
+        assert p.users.is_available
+        assert not p.workflows.is_available
 
-    async def test_enums(self):
-        """Test enums."""
-        assert MatchingAlgorithm(999) == MatchingAlgorithm.UNKNOWN
 
+@pytest.mark.parametrize(
+    "mapping",
+    [CORRESPONDENT_MAP, DOCUMENT_TYPE_MAP, TAG_MAP],
+    scope="class",
+)
+# test models/classifiers.py
+class TestClassifiers:
+    """Classifiers test cases."""
 
-class TestCorrespondents:
-    """Correspondents test cases."""
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
 
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.correspondents, CorrespondentsController)
-        # test mixins
-        assert hasattr(api_00.correspondents, "list")
-        assert hasattr(api_00.correspondents, "get")
-        assert hasattr(api_00.correspondents, "iterate")
-        assert hasattr(api_00.correspondents, "one")
-        assert hasattr(api_00.correspondents, "create")
-        assert hasattr(api_00.correspondents, "update")
-        assert hasattr(api_00.correspondents, "delete")
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
+        assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin in mapping.draft_cls.__bases__
 
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.correspondents.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
+    async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test pages."""
+        page = await anext(aiter(getattr(p, mapping.resource).pages(1)))
+        assert isinstance(page, Page)
+        assert isinstance(page.items, list)
+        for item in page.items:
+            assert isinstance(item, mapping.model_cls)
 
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.correspondents.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, Correspondent)
+    async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter."""
+        async for item in getattr(p, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
 
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.correspondents.iterate():
-            assert isinstance(item, Correspondent)
+    async def test_reduce(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter with reduce."""
+        async with getattr(p, mapping.resource).reduce(any_filter_param="1") as q:
+            async for item in q:
+                assert isinstance(item, mapping.model_cls)
 
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.correspondents.one(1)
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        item = await getattr(p, mapping.resource)(1)
         assert item
-        assert isinstance(item, Correspondent)
+        assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.correspondents.one(1337)
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)
 
-    async def test_create(self, api_00: Paperless):
+    async def test_create(self, p: Paperless, mapping: ResourceTestMapping):
         """Test create."""
-        new_name = "Created Correspondent"
-        to_create = CorrespondentPost(name=new_name)
-        # test mixins, and their defaults
-        assert to_create.is_insensitive is True
-        assert to_create.match == ""
-        assert to_create.matching_algorithm == MatchingAlgorithm.NONE
-        # test default override
-        to_create = CorrespondentPost(
-            name=new_name,
-            matching_algorithm=MatchingAlgorithm.FUZZY,
-        )
-        assert to_create.matching_algorithm == MatchingAlgorithm.FUZZY
+        draft = getattr(p, mapping.resource).draft(**mapping.draft_defaults)
+        assert isinstance(draft, mapping.draft_cls)
+        backup = draft.name
+        draft.name = None
+        with pytest.raises(DraftFieldRequired):
+            await draft.save()
+        draft.name = backup
         # actually call the create endpoint
-        created = await api_00.correspondents.create(to_create)
-        assert isinstance(created, Correspondent)
-        assert created.id == 6
-        assert created.matching_algorithm == MatchingAlgorithm.FUZZY
+        assert await draft.save() >= 1
 
-    async def test_udpate(self, api_00: Paperless):
+    async def test_udpate(self, p: Paperless, mapping: ResourceTestMapping):
         """Test update."""
-        new_name = "Created Correspondent Update"
-        to_update = await api_00.correspondents.one(6)
+        to_update = await getattr(p, mapping.resource)(5)
+        new_name = f"{to_update.name} Updated"
         to_update.name = new_name
-        updated = await api_00.correspondents.update(to_update)
-        assert isinstance(updated, Correspondent)
-        assert updated.name == new_name
+        await to_update.update()
+        assert to_update.name == new_name
+        # force update
+        new_name = f"{to_update.name} again"
+        to_update.name = new_name
+        await to_update.update(only_changed=False)
+        assert to_update.name == new_name
 
-    async def test_delete(self, api_00: Paperless):
+    async def test_delete(self, p: Paperless, mapping: ResourceTestMapping):
         """Test delete."""
-        to_delete = await api_00.correspondents.one(6)
-        deleted = await api_00.correspondents.delete(to_delete)
-        assert deleted
-        # must raise as we deleted 6
-        with pytest.raises(HTTPNotFound):
-            await api_00.correspondents.one(6)
+        to_delete = await getattr(p, mapping.resource)(5)
+        assert await to_delete.delete()
+        # must raise as we deleted 5
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(5)
+
+    async def test_permissions(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test permissions."""
+        getattr(p, mapping.resource).request_permissions = True
+        item = await getattr(p, mapping.resource)(1)
+        assert item.has_permissions
+        assert isinstance(item.permissions, PermissionTableType)
+        # check disabling again
+        getattr(p, mapping.resource).request_permissions = False
+        item = await getattr(p, mapping.resource)(1)
+        assert not item.has_permissions
 
 
+@pytest.mark.parametrize(
+    "mapping",
+    [GROUP_MAP, MAIL_ACCOUNT_MAP, MAIL_RULE_MAP, SAVED_VIEW_MAP, USER_MAP],
+    scope="class",
+)
+# test models/mails.py
+# test models/permissions.py
+# test models/saved_views.py
+class TestReadOnly:
+    """Read only resources test cases."""
+
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+
+        perms = helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
+        if mapping.resource in (PaperlessResource.GROUPS, PaperlessResource.USERS):
+            assert not perms
+        else:
+            assert perms
+
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
+
+        perms = model_mixins.SecurableMixin in mapping.model_cls.__bases__
+        if mapping.resource in (PaperlessResource.GROUPS, PaperlessResource.USERS):
+            assert not perms
+        else:
+            assert perms
+
+    async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test pages."""
+        page = await anext(aiter(getattr(p, mapping.resource).pages(1)))
+        assert isinstance(page, Page)
+        assert isinstance(page.items, list)
+        for item in page.items:
+            assert isinstance(item, mapping.model_cls)
+
+    async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter."""
+        async for item in getattr(p, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
+
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        item = await getattr(p, mapping.resource)(1)
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [TASK_MAP],
+    scope="class",
+)
+# test models/tasks.py
+class TestTasks:
+    """Tasks test cases."""
+
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin not in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin not in mapping.helper_cls.__bases__
+
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin not in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin not in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin not in mapping.model_cls.__bases__
+
+    async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter."""
+        async for item in getattr(p, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
+
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        # by pk
+        item = await getattr(p, mapping.resource)(1)
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # by uuid
+        item = await getattr(p, mapping.resource)("abcdef12-3456-7890-abcd-ef1234567890")
+        assert item
+        assert isinstance(item, mapping.model_cls)
+        # must raise as 1337 doesn't exist
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)
+        # must raise as abcdef doesn't exist
+        with pytest.raises(TaskNotFound):
+            await getattr(p, mapping.resource)("abcdef")
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [DOCUMENT_MAP],
+    scope="class",
+)
+# test models/documents.py
 class TestDocuments:
     """Documents test cases."""
 
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.documents, DocumentsController)
-        # test mixins
-        assert hasattr(api_00.documents, "list")
-        assert hasattr(api_00.documents, "get")
-        assert hasattr(api_00.documents, "iterate")
-        assert hasattr(api_00.documents, "one")
-        assert hasattr(api_00.documents, "create")
-        assert hasattr(api_00.documents, "update")
-        assert hasattr(api_00.documents, "delete")
-        # test services
-        assert api_00.documents.files
-        assert not api_00.documents.notes
+    async def test_helper(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test helper."""
+        assert hasattr(p, mapping.resource)
+        assert isinstance(getattr(p, mapping.resource), mapping.helper_cls)
+        assert helper_mixins.CallableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.DraftableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.IterableMixin in mapping.helper_cls.__bases__
+        assert helper_mixins.SecurableMixin in mapping.helper_cls.__bases__
+        # test sub helpers
+        assert isinstance(p.documents.download, doc_helpers.DocumentFileDownloadHelper)
+        assert isinstance(p.documents.metadata, doc_helpers.DocumentMetaHelper)
+        assert isinstance(p.documents.preview, doc_helpers.DocumentFilePreviewHelper)
+        assert isinstance(p.documents.thumbnail, doc_helpers.DocumentFileThumbnailHelper)
 
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.documents.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
+    async def test_model(self, mapping: ResourceTestMapping):
+        """Test model."""
+        assert model_mixins.DeletableMixin in mapping.model_cls.__bases__
+        assert model_mixins.MatchingFieldsMixin not in mapping.model_cls.__bases__
+        assert model_mixins.SecurableMixin in mapping.model_cls.__bases__
+        assert model_mixins.UpdatableMixin in mapping.model_cls.__bases__
+        # draft
+        assert model_mixins.CreatableMixin in mapping.draft_cls.__bases__
+        assert model_mixins.SecurableDraftMixin not in mapping.draft_cls.__bases__
 
-    async def test_empty_list(self, api_00: Paperless):
-        """Test empty controller list."""
-        with patch.object(api_00, "request_json", return_value={}):
-            # list must be empty because "all" key is omitted in return value
-            items = await api_00.documents.list()
-            assert items == []
+    async def test_pages(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test pages."""
+        page = await anext(aiter(getattr(p, mapping.resource).pages(1)))
+        assert isinstance(page, Page)
+        assert isinstance(page.items, list)
+        for item in page.items:
+            assert isinstance(item, mapping.model_cls)
 
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.documents.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, Document)
+    async def test_iter(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test iter."""
+        async for item in getattr(p, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
 
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.documents.iterate():
-            assert isinstance(item, Document)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.documents.one(1)
+    async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test call."""
+        item = await getattr(p, mapping.resource)(1)
         assert item
-        assert isinstance(item, Document)
+        assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.documents.one(1337)
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(1337)
 
-    async def test_create(self, api_00: Paperless):
+    async def test_create(self, p: Paperless, mapping: ResourceTestMapping):
         """Test create."""
-        new_document = b"example content"
-        new_tags = [1, 2, 3]
-        new_correspondent = 1
-        new_document_type = 1
-        new_storage_path = 1
-        title = "New Document"
-        created = datetime.datetime.now()
-        new_asn = 1
-        to_create = DocumentPost(
-            document=new_document,
-            tags=new_tags,
-            title=title,
-            correspondent=new_correspondent,
-            document_type=new_document_type,
-            storage_path=new_storage_path,
-            created=created,
-            archive_serial_number=new_asn,
-        )
+        draft = getattr(p, mapping.resource).draft(**mapping.draft_defaults)
+        assert isinstance(draft, mapping.draft_cls)
+        backup = draft.document
+        draft.document = None
+        with pytest.raises(DraftFieldRequired):
+            await draft.save()
+        draft.document = backup
         # actually call the create endpoint
-        task_id = await api_00.documents.create(to_create)
+        task_id = await draft.save()
+        # get the task
         assert isinstance(task_id, str)
-        task = await api_00.tasks.one(task_id)
+        task = await p.tasks(task_id)
         assert task.related_document
-        created = await api_00.documents.one(task.related_document)
-        assert isinstance(created, Document)
+        # get the document
+        created = await getattr(p, mapping.resource)(task.related_document)
+        assert isinstance(created, mapping.model_cls)
         assert created.tags.count(1) == 1
         assert created.tags.count(2) == 1
         assert created.tags.count(3) == 1
 
-    async def test_udpate(self, api_00: Paperless):
+    async def test_udpate(self, p: Paperless, mapping: ResourceTestMapping):
         """Test update."""
-        new_name = "Created Document Update"
-        to_update = await api_00.documents.one(3)
-        to_update.title = new_name
-        updated = await api_00.documents.update(to_update)
-        assert isinstance(updated, Document)
-        assert updated.title == new_name
+        to_update = await getattr(p, mapping.resource)(2)
+        new_title = f"{to_update.title} Updated"
+        to_update.title = new_title
+        await to_update.update()
+        assert to_update.title == new_title
 
-    async def test_delete(self, api_00: Paperless):
+    async def test_delete(self, p: Paperless, mapping: ResourceTestMapping):
         """Test delete."""
-        to_delete = await api_00.documents.one(3)
-        deleted = await api_00.documents.delete(to_delete)
-        assert deleted
-        # must raise as we deleted 6
-        with pytest.raises(HTTPNotFound):
-            await api_00.documents.one(6)
+        to_delete = await getattr(p, mapping.resource)(2)
+        assert await to_delete.delete()
+        # must raise as we deleted 2
+        with pytest.raises(RequestException):
+            await getattr(p, mapping.resource)(2)
 
-    async def test_meta(self, api_00: Paperless):
+    async def test_meta(self, p: Paperless, mapping: ResourceTestMapping):
         """Test meta."""
-        # test with pk
-        meta = await api_00.documents.meta(1)
-        assert isinstance(meta, DocumentMetaInformation)
-        # test with item
-        item = await api_00.documents.one(1)
-        meta = await api_00.documents.meta(item)
+        document = await getattr(p, mapping.resource)(1)
+        meta = await document.get_metadata()
+        assert isinstance(meta, DocumentMeta)
         assert isinstance(meta.original_metadata, list)
         for item in meta.original_metadata:
-            assert isinstance(item, DocumentMetadata)
+            assert isinstance(item, DocumentMetadataType)
         assert isinstance(meta.archive_metadata, list)
         for item in meta.archive_metadata:
-            assert isinstance(item, DocumentMetadata)
+            assert isinstance(item, DocumentMetadataType)
 
-    async def test_files(self, api_00: Paperless):
+    async def test_files(self, p: Paperless, mapping: ResourceTestMapping):
         """Test files."""
-        # test with pk
-        files = await api_00.documents.files.thumb(1)
-        assert isinstance(files, bytes)
-        files = await api_00.documents.files.preview(1)
-        assert isinstance(files, bytes)
-        files = await api_00.documents.files.download(1)
-        assert isinstance(files, bytes)
-        # test with item
-        item = await api_00.documents.one(1)
-        files = await api_00.documents.files.thumb(item)
-        assert isinstance(files, bytes)
-        files = await api_00.documents.files.preview(item)
-        assert isinstance(files, bytes)
-        files = await api_00.documents.files.download(item)
-        assert isinstance(files, bytes)
+        document = await getattr(p, mapping.resource)(1)
+        download = await document.get_download()
+        assert isinstance(download, DownloadedDocument)
+        assert download.mode == RetrieveFileMode.DOWNLOAD
+        preview = await document.get_preview()
+        assert isinstance(preview, DownloadedDocument)
+        assert preview.mode == RetrieveFileMode.PREVIEW
+        thumbnail = await document.get_thumbnail()
+        assert isinstance(thumbnail, DownloadedDocument)
+        assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
 
+    async def test_suggestions(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test suggestions."""
+        document = await getattr(p, mapping.resource)(1)
+        suggestions = await document.get_suggestions()
+        assert isinstance(suggestions, DocumentSuggestions)
 
-class TestDocumentTypes:
-    """Document Types test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.document_types, DocumentTypesController)
-        # test mixins
-        assert hasattr(api_00.document_types, "list")
-        assert hasattr(api_00.document_types, "get")
-        assert hasattr(api_00.document_types, "iterate")
-        assert hasattr(api_00.document_types, "one")
-        assert hasattr(api_00.document_types, "create")
-        assert hasattr(api_00.document_types, "update")
-        assert hasattr(api_00.document_types, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.document_types.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.document_types.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, DocumentType)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.document_types.iterate():
-            assert isinstance(item, DocumentType)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.document_types.one(1)
-        assert item
-        assert isinstance(item, DocumentType)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.document_types.one(1337)
-
-    async def test_create(self, api_00: Paperless):
-        """Test create."""
-        new_name = "Created Document Type"
-        to_create = DocumentTypePost(name=new_name)
-        # test mixins, and their defaults
-        assert to_create.is_insensitive is True
-        assert to_create.match == ""
-        assert to_create.matching_algorithm == MatchingAlgorithm.NONE
-        # test default override
-        to_create = DocumentTypePost(
-            name=new_name,
-            matching_algorithm=MatchingAlgorithm.FUZZY,
+    async def test_get_next_an(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test get next asn."""
+        asn = await getattr(p, mapping.resource).get_next_asn()
+        assert isinstance(asn, int)
+        # test exception
+        session = PaperlessSessionMock(
+            PAPERLESS_TEST_URL,
+            "",
+            params={
+                "status": 400,
+            },
         )
-        assert to_create.matching_algorithm == MatchingAlgorithm.FUZZY
-        # actually call the create endpoint
-        created = await api_00.document_types.create(to_create)
-        assert isinstance(created, DocumentType)
-        assert created.id == 6
-        assert created.matching_algorithm == MatchingAlgorithm.FUZZY
+        p._session = session
+        with pytest.raises(AsnRequestError):
+            await getattr(p, mapping.resource).get_next_asn()
 
-    async def test_udpate(self, api_00: Paperless):
-        """Test update."""
-        new_name = "Created Document Type Update"
-        to_update = await api_00.document_types.one(6)
-        to_update.name = new_name
-        updated = await api_00.document_types.update(to_update)
-        assert isinstance(updated, DocumentType)
-        assert updated.name == new_name
-
-    async def test_delete(self, api_00: Paperless):
-        """Test delete."""
-        to_delete = await api_00.document_types.one(6)
-        deleted = await api_00.document_types.delete(to_delete)
-        assert deleted
-        # must raise as we deleted 6
-        with pytest.raises(HTTPNotFound):
-            await api_00.document_types.one(6)
-
-
-class TestGroups:
-    """Groups test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.groups, GroupsController)
-        # test mixins
-        assert hasattr(api_00.groups, "list")
-        assert hasattr(api_00.groups, "get")
-        assert hasattr(api_00.groups, "iterate")
-        assert hasattr(api_00.groups, "one")
-        assert not hasattr(api_00.groups, "create")
-        assert not hasattr(api_00.groups, "update")
-        assert not hasattr(api_00.groups, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.groups.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.groups.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, Group)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.groups.iterate():
-            assert isinstance(item, Group)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.groups.one(1)
-        assert item
-        assert isinstance(item, Group)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.groups.one(1337)
-
-
-class TestMailAccounts:
-    """Mail Accounts test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.mail_accounts, MailAccountsController)
-        # test mixins
-        assert hasattr(api_00.mail_accounts, "list")
-        assert hasattr(api_00.mail_accounts, "get")
-        assert hasattr(api_00.mail_accounts, "iterate")
-        assert hasattr(api_00.mail_accounts, "one")
-        assert not hasattr(api_00.mail_accounts, "create")
-        assert not hasattr(api_00.mail_accounts, "update")
-        assert not hasattr(api_00.mail_accounts, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.mail_accounts.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.mail_accounts.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, MailAccount)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.mail_accounts.iterate():
-            assert isinstance(item, MailAccount)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.mail_accounts.one(1)
-        assert item
-        assert isinstance(item, MailAccount)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.mail_accounts.one(1337)
-
-
-class TestMailRules:
-    """Mail Rules test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.mail_rules, MailRulesController)
-        # test mixins
-        assert hasattr(api_00.mail_rules, "list")
-        assert hasattr(api_00.mail_rules, "get")
-        assert hasattr(api_00.mail_rules, "iterate")
-        assert hasattr(api_00.mail_rules, "one")
-        assert not hasattr(api_00.mail_rules, "create")
-        assert not hasattr(api_00.mail_rules, "update")
-        assert not hasattr(api_00.mail_rules, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.mail_rules.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.mail_rules.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, MailRule)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.mail_rules.iterate():
-            assert isinstance(item, MailRule)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.mail_rules.one(1)
-        assert item
-        assert isinstance(item, MailRule)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.mail_rules.one(1337)
-
-
-class TestSavedViews:
-    """Saved Views test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.saved_views, SavedViewsController)
-        # test mixins
-        assert hasattr(api_00.saved_views, "list")
-        assert hasattr(api_00.saved_views, "get")
-        assert hasattr(api_00.saved_views, "iterate")
-        assert hasattr(api_00.saved_views, "one")
-        assert not hasattr(api_00.saved_views, "create")
-        assert not hasattr(api_00.saved_views, "update")
-        assert not hasattr(api_00.saved_views, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.saved_views.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test__get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.saved_views.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, SavedView)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.saved_views.iterate():
-            assert isinstance(item, SavedView)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.saved_views.one(1)
-        assert item
-        assert isinstance(item, SavedView)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.saved_views.one(1337)
-
-
-class TestTags:
-    """Tags test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.tags, TagsController)
-        # test mixins
-        assert hasattr(api_00.tags, "list")
-        assert hasattr(api_00.tags, "get")
-        assert hasattr(api_00.tags, "iterate")
-        assert hasattr(api_00.tags, "one")
-        assert hasattr(api_00.tags, "create")
-        assert hasattr(api_00.tags, "update")
-        assert hasattr(api_00.tags, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.tags.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.tags.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, Tag)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.tags.iterate():
-            assert isinstance(item, Tag)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.tags.one(1)
-        assert item
-        assert isinstance(item, Tag)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.tags.one(1337)
-
-    async def test_create(self, api_00: Paperless):
-        """Test create."""
-        new_name = "Created Tag"
-        to_create = TagPost(name=new_name)
-        # test mixins, and their defaults
-        assert to_create.is_insensitive is True
-        assert to_create.match == ""
-        assert to_create.matching_algorithm == MatchingAlgorithm.NONE
-        # test default override
-        to_create = TagPost(
-            name=new_name,
-            matching_algorithm=MatchingAlgorithm.FUZZY,
-        )
-        assert to_create.matching_algorithm == MatchingAlgorithm.FUZZY
-        # actually call the create endpoint
-        created = await api_00.tags.create(to_create)
-        assert isinstance(created, Tag)
-        assert created.id == 3
-        assert created.matching_algorithm == MatchingAlgorithm.FUZZY
-
-    async def test_udpate(self, api_00: Paperless):
-        """Test update."""
-        new_name = "Created Tag Update"
-        to_update = await api_00.tags.one(3)
-        to_update.name = new_name
-        updated = await api_00.tags.update(to_update)
-        assert isinstance(updated, Tag)
-        assert updated.name == new_name
-
-    async def test_delete(self, api_00: Paperless):
-        """Test delete."""
-        to_delete = await api_00.tags.one(3)
-        deleted = await api_00.tags.delete(to_delete)
-        assert deleted
-        # must raise as we deleted 3
-        with pytest.raises(HTTPNotFound):
-            await api_00.tags.one(3)
-
-
-class TestTasks:
-    """Tasks test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.tasks, TasksController)
-        # test mixins
-        assert not hasattr(api_00.tasks, "list")
-        assert hasattr(api_00.tasks, "get")
-        assert hasattr(api_00.tasks, "iterate")
-        assert hasattr(api_00.tasks, "one")
-        assert not hasattr(api_00.tasks, "create")
-        assert not hasattr(api_00.tasks, "update")
-        assert not hasattr(api_00.tasks, "delete")
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.tasks.get()
-        assert isinstance(results, list)
-        for item in results:
-            assert isinstance(item, Task)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.tasks.iterate():
-            assert isinstance(item, Task)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.tasks.one("eb327ed7-b3c8-4a8c-9aa2-5385e499c74a")
-        assert isinstance(item, Task)
-        item = await api_00.tasks.one("non-existing-uuid")
-        assert not item
-
-
-class TestUsers:
-    """Users test cases."""
-
-    async def test_controller(self, api_00: Paperless):
-        """Test controller."""
-        assert isinstance(api_00.users, UsersController)
-        # test mixins
-        assert hasattr(api_00.users, "list")
-        assert hasattr(api_00.users, "get")
-        assert hasattr(api_00.users, "iterate")
-        assert hasattr(api_00.users, "one")
-        assert not hasattr(api_00.users, "create")
-        assert not hasattr(api_00.users, "update")
-        assert not hasattr(api_00.users, "delete")
-
-    async def test_list(self, api_00: Paperless):
-        """Test list."""
-        items = await api_00.users.list()
-        assert isinstance(items, list)
-        assert len(items) > 0
-        for item in items:
-            assert isinstance(item, int)
-
-    async def test_get(self, api_00: Paperless):
-        """Test get."""
-        results = await api_00.users.get()
-        assert isinstance(results, ResultPage)
-        assert results.current_page == 1
-        assert not results.next_page  # there is 1 page in sample data
-        assert results.last_page == 1  # there is 1 page in sample data
-        assert isinstance(results.items, list)
-        for item in results.items:
-            assert isinstance(item, User)
-
-    async def test_iterate(self, api_00: Paperless):
-        """Test iterate."""
-        async for item in api_00.users.iterate():
-            assert isinstance(item, User)
-
-    async def test_one(self, api_00: Paperless):
-        """Test one."""
-        item = await api_00.users.one(1)
-        assert item
-        assert isinstance(item, User)
-        # must raise as 1337 doesn't exist
-        with pytest.raises(HTTPNotFound):
-            await api_00.users.one(1337)
+    async def test_searching(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test searching."""
+        # search
+        async for item in getattr(p, mapping.resource).search("leet"):
+            assert isinstance(item, mapping.model_cls)
+            assert item.has_search_hit
+        # more_like
+        async for item in getattr(p, mapping.resource).more_like(1337):
+            assert isinstance(item, mapping.model_cls)
+            assert item.has_search_hit
