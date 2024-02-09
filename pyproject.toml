@@ -38,6 +38,7 @@ dependencies = [
 test = [
     "black==24.1.1",
     "codespell==2.2.6",
+    "coverage==7.4.1",
     "mypy==1.8.0",
     "ruff==0.2.1",
     "pytest<8.0.0",
