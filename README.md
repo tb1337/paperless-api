@@ -1,6 +1,6 @@
 # PyPaperless
 
-![Test Badge](https://github.com/tb1337/paperless-api/actions/workflows/test.yml/badge.svg) [![codecov](https://codecov.io/gh/tb1337/paperless-api/graph/badge.svg?token=IMXRBK3HRE)](https://codecov.io/gh/tb1337/paperless-api)
+![Test Badge](https://github.com/tb1337/paperless-api/actions/workflows/tests.yml/badge.svg) ![Test Badge](https://github.com/tb1337/paperless-api/actions/workflows/typing-linting.yml/badge.svg) [![codecov](https://codecov.io/gh/tb1337/paperless-api/graph/badge.svg?token=IMXRBK3HRE)](https://codecov.io/gh/tb1337/paperless-api)
 
 Little api client for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)!
 
