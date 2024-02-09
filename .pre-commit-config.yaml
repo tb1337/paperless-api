@@ -19,6 +19,8 @@ repos:
         name: ⮐  Trailing whitespace
       - id: no-commit-to-branch
         name: 🛑 No commit to master branch
+        args:
+          - --branch=master
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.2.1
     hooks:
