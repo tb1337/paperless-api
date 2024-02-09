@@ -1,0 +1,28 @@
+---
+name: Typing and Linting
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DEFAULT_PYTHON: "3.11"
+
+jobs:
+  typing-and-linting:
+    name: Run pre-commit hooks
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⤵️ Checkout code
+        uses: actions/checkout@v4.0.0
+      - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v5.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🚧 Install dependencies
+        run: pip install . .[test]
+      - name: 🚀 Run pre-commit hooks
+        run: pre-commit run --all --all-files

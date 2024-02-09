@@ -10,6 +10,10 @@ class PaperlessException(Exception):
 # Sessions and requests
 
 
+class AuthentificationRequired(PaperlessException):
+    """Raise when initializing a `Paperless` instance without url/token or session."""
+
+
 class RequestException(PaperlessException):
     """Raise when issuing a request fails."""
 

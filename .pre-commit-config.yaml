@@ -1,22 +1,36 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: no-commit-to-branch
-        args:
-          - --branch=main
+        name: ✅ Check yaml files
+      - id: check-toml
+        name: ✅ Check toml files
+      - id: check-ast
+        name: ✅ Check files are valid python
+      - id: check-docstring-first
+        name: ✅ Check docstrings first
       - id: debug-statements
+        name: ✅ Check debug statements
+      - id: end-of-file-fixer
+        name: ⮐  Fix end of files
+      - id: trailing-whitespace
+        name: ⮐  Trailing whitespace
+      - id: no-commit-to-branch
+        name: 🛑 No commit to master branch
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.2.1
     hooks:
       - id: ruff
+        name: 🐶 Ruff Check
+      - id: ruff-format
+        name: 🐶 Ruff Format
   - repo: https://github.com/psf/black
     rev: 24.1.1
     hooks:
       - id: black
+        name: ✅ Black Format
         args:
           - --safe
           - --quiet
@@ -24,22 +38,22 @@ repos:
     rev: v2.2.6
     hooks:
       - id: codespell
+        name: ✅ Check code for proper spelling
         args: []
         exclude_types: [csv, json]
-        exclude: ^tests/fixtures/
         additional_dependencies:
           - tomli
   - repo: local
     hooks:
       - id: mypy
-        name: mypy
+        name: 🆎 Type checking with mypy
         entry: script/run-in-env.sh mypy
         language: script
         types: [python]
         require_serial: true
         files: ^pypaperless/.+\.py$
       - id: pylint
-        name: pylint
+        name: 🌟 Rating code with pylint
         entry: script/run-in-env.sh pylint -j 0
         language: script
         types: [python]

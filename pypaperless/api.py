@@ -10,7 +10,7 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import BadJsonResponse, JsonResponseWithError
+from .exceptions import AuthentificationRequired, BadJsonResponse, JsonResponseWithError
 from .sessions import PaperlessSession
 
 
@@ -62,20 +62,28 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
-        url: str | URL,
-        token: str,
+        url: str | URL | None = None,
+        token: str | None = None,
         session: PaperlessSession | None = None,
     ):
         """Initialize a `Paperless` instance.
+
+        You have to permit either a session, or an url / token pair.
 
         `url`: A hostname or IP-address as string, or yarl.URL object.
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `session`: A custom `PaperlessSession` object, if existing.
         """
+        if session is not None:
+            self._session = session
+        elif url is not None and token is not None:
+            self._session = PaperlessSession(url, token)
+        else:
+            raise AuthentificationRequired
+
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()
         self._remote_resources: set[PaperlessResource] = set()
-        self._session = session or PaperlessSession(url, token)
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}[{self._session}]")

@@ -38,6 +38,12 @@ Find out more here:
   - [Updating existing items](#updating-existing-items)
   - [Deleting items](#deleting-items)
 - [Special cases](#special-cases)
+  - [Document binary data](#document-binary-data)
+  - [Document metadata](#document-metadata)
+  - [Document notes](#document-notes)
+  - [Document searching](#document-searching)
+  - [Document suggestions](#document-suggestions)
+  - [Next available ASN](#next-available-asn)
 
 ### Starting a session
 
@@ -107,9 +113,9 @@ _PyPaperless_ needs an API token to request and send data from and to Paperless-
 
 ```python
 token = Paperless.generate_api_token(
-  "localhost:8000",
-  "test_user",
-  "not-so-secret-password-anymore",
+    "localhost:8000",
+    "test_user",
+    "not-so-secret-password-anymore",
 )
 ```
 
@@ -120,15 +126,19 @@ url = "localhost:8000"
 session = PaperlessSession(url, "") # empty token string
 
 token = Paperless.generate_api_token(
-  "localhost:8000",
-  "test_user",
-  "not-so-secret-password-anymore",
-  session=session,
+    "localhost:8000",
+    "test_user",
+    "not-so-secret-password-anymore",
+    session=session,
 )
 ```
 
 > [!CAUTION]
-> Hardcoding credentials or tokens is never a good choice. Use that with caution.
+> Hardcoding credentials or tokens is never good practise. Use that with caution.
+
+The code above executes one http request:
+
+`POST` `https://localhost:8000/api/token/`
 
 ### Resource features
 
@@ -184,6 +194,8 @@ Since resource items are requested by their primary key, it could be useful to r
 item_keys = await paperless.documents.all()
 #-> [1, 2, 3, ...]
 ```
+
+The code above executes one http request:
 
 `GET` `https://localhost:8000/api/documents/?page=1`
 
@@ -338,6 +350,210 @@ The code above executes one http request:
 `DELETE` `http://localhost:8000/api/documents/23/`
 
 ### Special cases
+
+Some Paperless-ngx resources provide more features as others, especially when it comes to `Documents`.
+
+#### Document binary data
+
+You can access the binary data by using the following methods. They all return a `DownloadedDocument` class instance, which holds the binary data and provides some more useful attributes, like content type, disposition type and filename.
+
+**Example 1: Provide a primary key**
+
+```python
+download = await paperless.documents.download(23)
+preview = await paperless.documents.preview(23)
+thumbnail = await paperless.documents.thumbnail(23)
+```
+
+**Example 2: Already fetched item**
+
+```python
+document = await paperless.documents(23)
+
+download = await document.get_download()
+preview = await document.get_preview()
+thumbnail = await document.get_thumbnail()
+```
+
+Both codes above execute all of these http requests:
+
+`GET` `https://localhost:8000/api/documents/23/download/` <br>
+`GET` `https://localhost:8000/api/documents/23/preview/` <br>
+`GET` `https://localhost:8000/api/documents/23/thumb/`
+
+#### Document metadata
+
+Paperless-ngx stores some metadata about your documents. If you wish to access that, there are again two possibilities.
+
+**Example 1: Provide a primary key**
+
+```python
+metadata = await paperless.documents.metadata(23)
+```
+
+**Example 2: Already fetched item**
+
+```python
+document = await paperless.documents(23)
+metadata = await document.get_metadata()
+```
+
+Both codes above execute one http request:
+
+`GET` `https://localhost:8000/api/documents/23/metadata/`
+
+#### Document notes
+
+Documents can be commented with so called notes. Paperless-ngx supports requesting, creating and deleting those notes. _PyPaperless_ ships with support for it, too.
+
+**Getting notes**
+
+Document notes are always available as `list[DocumentNote]` after requesting them.
+
+```python
+# by primary key
+list_of_notes = await paperless.documents.notes(23)
+
+# by already fetched item
+document = await paperless.documents(23)
+list_of_notes = await document.notes()
+```
+
+The code above executes one http request:
+
+`GET` `https://localhost:8000/api/documents/23/notes/`
+
+**Creating notes**
+
+You can add new notes. Updating existing notes isn't possible due to Paperless-ngx API limitations.
+
+```python
+# by primary key
+draft = paperless.documents.notes.draft(23)
+
+# by already fetched item
+document = await paperless.documents(23)
+
+draft = document.notes.draft()
+draft.note = "Lorem ipsum"
+
+new_note_pk, document_pk = await draft.save()
+#-> 42, 23
+```
+
+The code above executes one http request:
+
+`POST` `https://localhost:8000/api/documents/23/notes/`
+
+**Deleting notes**
+
+Sometimes it may be necessary to delete document notes.
+
+> [!CAUTION]
+> This will permanently delete data from your database. There is no point of return. Be careful.
+
+```python
+a_note = list_of_notes.pop() # document note with example pk 42
+success = await a_note.delete()
+#-> True
+```
+
+The code above executes one http request:
+
+`DELETE` `https://localhost:8000/api/documents/23/notes/?id=42`
+
+#### Document searching
+
+If you want to seek after documents, Paperless-ngx offers two possibilities to achieve that. _PyPaperless_ implements two iterable shortcuts for that.
+
+**Search query**
+
+Search query documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
+
+```python
+async for document in paperless.documents.search("type:invoice"):
+    # do something
+```
+
+The code above executes many http requests, depending on the count of your matched documents:
+
+`GET` `https://localhost:8000/api/documents/?page=1&query=type%3Ainvoice` <br>
+`GET` `https://localhost:8000/api/documents/?page=2&query=type%3Ainvoice` <br>
+`...` <br>
+`GET` `https://localhost:8000/api/documents/?page=19&query=type%3Ainvoice`
+
+**More like**
+
+Search for similar documents like the permitted document primary key.
+
+```python
+async for document in paperless.documents.more_like(23):
+    # do something
+```
+
+The code above executes many http requests, depending on the count of your matched documents:
+
+`GET` `https://localhost:8000/api/documents/?page=1&more_like_id=23` <br>
+`GET` `https://localhost:8000/api/documents/?page=2&more_like_id=23` <br>
+`...` <br>
+`GET` `https://localhost:8000/api/documents/?page=19&more_like_id=23`
+
+**Search results**
+
+While iterating over search results, `Document` models are extended with another field: `search_hit`. Lets take a closer look at it.
+
+```python
+async for document in paperless.documents.more_like(23):
+    print(f"{document.id} matched query by {document.search_hit.score}.")
+#-> 42 matched query by 13.37.
+```
+
+To make life easier, you have the possibility to check whether a `Document` model has been initialized from a search or not:
+
+```python
+document = await paperless.documents(23) # no search
+if document.has_search_hit:
+    print("result of a search query")
+else:
+    print("not a result from a query")
+#-> not a result from a query
+```
+
+#### Document suggestions
+
+One of the biggest tasks of Paperless-ngx is _classification_: it is the workflow of assigning classifiers to your documents, like correspondents or tags. Paperless does that by auto-assigning or suggesting them to you. These suggestions can be accessed by _PyPaperless_, as well.
+
+**Example 1: Provide a primary key**
+
+```python
+suggestions = await paperless.documents.suggestions(23)
+```
+
+**Example 2: Already fetched item**
+
+```python
+document = await paperless.documents(23)
+suggestions = await document.get_suggestions()
+```
+
+Both codes above execute one http request:
+
+`GET` `https://localhost:8000/api/documents/23/suggestions/`
+
+The returned `DocumentSuggestions` instance stores a list of suggested resource items for each classifier: correspondents, tags, document_types, storage_paths and dates.
+
+#### Next available ASN
+
+Simply returns the next available archive serial number as `int`.
+
+```python
+next_asn = await paperless.documents.get_next_asn()
+#-> 1337
+```
+
+The code above executes one http request:
+
+`GET` `https://localhost:8000/api/documents/next_asn/`
 
 ## Thanks to
 

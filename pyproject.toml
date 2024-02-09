@@ -4,8 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pypaperless"
-# The version is set by GH action on release
-version = "0.0.0"
+version = "0.0.0" # set on release
 license = {text = "MIT License"}
 description = "Little api wrapper for the paperless(-ngx) dms."
 readme = "README.md"
@@ -51,24 +50,39 @@ test = [
     "httpx==0.26.0"
 ]
 
-[tool.codespell]
-ignore-words-list = "dependees,"
+[tool.setuptools]
+platforms = ["any"]
+zip-safe  = false
+packages = ["pypaperless"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+pypaperless = ["py.typed"]
 
 [tool.black]
 target-version = ['py311']
 line-length = 100
 
+[tool.codespell]
+ignore-words-list = "dependees,"
+
 [tool.mypy]
+platform = "linux"
 python_version = "3.11"
+
+follow_imports = "normal"
+
 check_untyped_defs = true
 disallow_any_generics = false
 disallow_incomplete_defs = true
-disallow_untyped_calls = false
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
 disallow_untyped_defs = true
-mypy_path = "pypaperless/"
 no_implicit_optional = true
 show_error_codes = true
 warn_incomplete_stub = true
+warn_no_return = true
 warn_redundant_casts = true
 warn_return_any = true
 warn_unreachable = true
@@ -89,15 +103,6 @@ norecursedirs = [
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
-
-[tool.setuptools]
-platforms = ["any"]
-zip-safe  = false
-packages = ["pypaperless"]
-include-package-data = true
-
-[tool.setuptools.package-data]
-pypaperless = ["py.typed"]
 
 [tool.ruff]
 fix = true

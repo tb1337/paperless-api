@@ -59,9 +59,10 @@ class PaperlessModelProtocol(Protocol):
     _fetched: bool
     _params: dict[str, Any]
 
+    # fmt: off
     def _get_dataclass_fields(self) -> list[Field]: ...
-
     def _set_dataclass_fields(self) -> None: ...
+    # fmt: on
 
 
 @dataclass(init=False)

@@ -66,7 +66,8 @@ class TestDocumentNotes:
         assert isinstance(getattr(p, mapping.resource).notes, doc_helpers.DocumentNoteHelper)
 
     async def test_model(
-        self, mapping: ResourceTestMapping  # pylint: disable=unused-argument # noqa ARG002
+        self,
+        mapping: ResourceTestMapping,  # pylint: disable=unused-argument # noqa ARG002
     ):
         """Test model."""
         assert model_mixins.DeletableMixin not in DocumentNote.__bases__

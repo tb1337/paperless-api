@@ -9,6 +9,7 @@ import pytest
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.const import PaperlessResource
 from pypaperless.exceptions import (
+    AuthentificationRequired,
     BadJsonResponse,
     DraftNotSupported,
     JsonResponseWithError,
@@ -48,6 +49,11 @@ class TestPaperless:
         """Test context."""
         async with api_obj:
             assert api_obj.is_initialized
+
+    async def test_auth_missing(self):
+        """Test auth missing."""
+        with pytest.raises(AuthentificationRequired):
+            api = Paperless()  # noqa
 
     async def test_request(self):
         """Test generate request."""
