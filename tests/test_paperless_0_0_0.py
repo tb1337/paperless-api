@@ -12,7 +12,12 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import DocumentMeta, Page
 from pypaperless.models import documents as doc_helpers
-from pypaperless.models.common import DocumentMetadataType, PermissionTableType, RetrieveFileMode
+from pypaperless.models.common import (
+    DocumentMetadataType,
+    DocumentSearchHitType,
+    PermissionTableType,
+    RetrieveFileMode,
+)
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
 from pypaperless.models.mixins import helpers as helper_mixins
 from pypaperless.models.mixins import models as model_mixins
@@ -114,6 +119,13 @@ class TestClassifiers:
         async for item in getattr(p, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
+    async def test_all(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test all."""
+        items = await getattr(p, mapping.resource).all()
+        assert isinstance(items, list)
+        for item in items:
+            assert isinstance(item, int)
+
     async def test_reduce(self, p: Paperless, mapping: ResourceTestMapping):
         """Test iter with reduce."""
         async with getattr(p, mapping.resource).reduce(any_filter_param="1") as q:
@@ -165,6 +177,7 @@ class TestClassifiers:
     async def test_permissions(self, p: Paperless, mapping: ResourceTestMapping):
         """Test permissions."""
         getattr(p, mapping.resource).request_permissions = True
+        assert getattr(p, mapping.resource).request_permissions
         item = await getattr(p, mapping.resource)(1)
         assert item.has_permissions
         assert isinstance(item.permissions, PermissionTableType)
@@ -223,6 +236,13 @@ class TestReadOnly:
         """Test iter."""
         async for item in getattr(p, mapping.resource):
             assert isinstance(item, mapping.model_cls)
+
+    async def test_all(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test all."""
+        items = await getattr(p, mapping.resource).all()
+        assert isinstance(items, list)
+        for item in items:
+            assert isinstance(item, int)
 
     async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
         """Test call."""
@@ -328,6 +348,13 @@ class TestDocuments:
         async for item in getattr(p, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
+    async def test_all(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test all."""
+        items = await getattr(p, mapping.resource).all()
+        assert isinstance(items, list)
+        for item in items:
+            assert isinstance(item, int)
+
     async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
         """Test call."""
         item = await getattr(p, mapping.resource)(1)
@@ -428,7 +455,9 @@ class TestDocuments:
         async for item in getattr(p, mapping.resource).search("leet"):
             assert isinstance(item, mapping.model_cls)
             assert item.has_search_hit
+            assert isinstance(item.search_hit, DocumentSearchHitType)
         # more_like
         async for item in getattr(p, mapping.resource).more_like(1337):
             assert isinstance(item, mapping.model_cls)
             assert item.has_search_hit
+            assert isinstance(item.search_hit, DocumentSearchHitType)

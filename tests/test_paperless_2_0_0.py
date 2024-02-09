@@ -92,6 +92,13 @@ class TestCustomFieldShareLinks:
         async for item in getattr(p, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
+    async def test_all(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test all."""
+        items = await getattr(p, mapping.resource).all()
+        assert isinstance(items, list)
+        for item in items:
+            assert isinstance(item, int)
+
     async def test_call(self, p: Paperless, mapping: ResourceTestMapping):
         """Test call."""
         item = await getattr(p, mapping.resource)(1)
