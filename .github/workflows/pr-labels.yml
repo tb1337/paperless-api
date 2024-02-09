@@ -2,18 +2,16 @@
 name: PR Labels
 
 on:
-  pull_request:
+  pull_request_target:
     types:
+      - opened
       - synchronize
       - labeled
       - unlabeled
-    branches:
-      - master
-
-permissions: {}
+  workflow_call:
 
 jobs:
-  pr_labels:
+  pr-labels:
     name: Verify
     runs-on: ubuntu-latest
     steps:
@@ -21,4 +19,11 @@ jobs:
         uses: ludeeus/action-require-labels@1.1.0
         with:
           labels: >-
-            breaking-change, bugfix, chore, dependencies, documentation, enhancement, new-feature, refactor
+            breaking-change, bugfix,
+            ci,
+            dependencies, documentation,
+            enhancement,
+            maintenance,
+            new-feature,
+            performance,
+            refactor

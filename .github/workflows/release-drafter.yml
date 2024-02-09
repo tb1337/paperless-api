@@ -1,17 +1,19 @@
-# Utilize release drafter action
-
+---
 name: Release Drafter
 
 on:
   push:
     branches:
       - master
+  workflow_dispatch:
+
 
 jobs:
   update_release_draft:
+    name: 📝 Draft release
     runs-on: ubuntu-latest
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v6.0.0
+      - name: 🚀 Run Release Drafter
+        uses: release-drafter/release-drafter@v6.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
