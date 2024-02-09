@@ -2,6 +2,9 @@
 name: Typing and Linting
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
   workflow_dispatch:
 
@@ -22,4 +25,17 @@ jobs:
       - name: 🚧 Install dependencies
         run: pip install . .[test]
       - name: 🚀 Run pre-commit hooks
-        run: pre-commit run --all --all-files
+        run: |
+          pre-commit run check-yaml --all-files
+          pre-commit run check-toml --all-files
+          pre-commit run check-ast --all-files
+          pre-commit run check-docstring-first --all-files
+          pre-commit run debug-statements --all-files
+          pre-commit run end-of-file-fixer --all-files
+          pre-commit run trailing-whitespace --all-files
+          pre-commit run ruff --all-files
+          pre-commit run ruff-format --all-files
+          pre-commit run black --all-files
+          pre-commit run codespell --all-files
+          pre-commit run mypy --all-files
+          pre-commit run pylint --all-files
