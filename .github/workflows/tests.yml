@@ -20,7 +20,7 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - name: ⤵️ Checkout code
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.1
       - name: 🐍 Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.0.0
         with:
@@ -41,7 +41,7 @@ jobs:
     needs: pytest
     steps:
       - name: ⤵️ Checkout code
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.1
       - name: ⬇️ Download coverage
         uses: actions/download-artifact@v4.1.2
       - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
