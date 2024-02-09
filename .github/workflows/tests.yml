@@ -50,8 +50,8 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🚀 Process coverage results
         run: |
-          coverage combine coverage*/.coverage*
-          coverage xml -i
+          script/run-in-env.sh coverage combine coverage*/.coverage*
+          script/run-in-env.sh coverage xml -i
       - name: ⬆️ Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
         env:
