@@ -23,7 +23,7 @@ jobs:
       version: ${{ steps.vars.outputs.tag }}
     steps:
       - name: ⤵️ Checkout code
-        uses: actions/checkout@v4.0.0
+        uses: actions/checkout@v4.1.1
       - name: 🏷 Get repository tag
         id: vars
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
