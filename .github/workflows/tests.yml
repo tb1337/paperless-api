@@ -48,10 +48,12 @@ jobs:
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🚧 Install dependencies
+        run: pip install . .[test]
       - name: 🚀 Process coverage results
         run: |
-          script/run-in-env.sh coverage combine coverage*/.coverage*
-          script/run-in-env.sh coverage xml -i
+          coverage combine coverage*/.coverage*
+          coverage xml -i
       - name: ⬆️ Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
         env:
