@@ -1,4 +1,7 @@
 ---
+- name: "auto"
+  color: bfdadc
+  description: "Marks a PR or issue that has been created automatically."
 - name: "breaking-change"
   color: ee0701
   description: "A breaking change for existing users."
@@ -38,7 +41,7 @@
   description: "There has not been activity on this issue or PR for quite some time."
 - name: "no-stale"
   color: fef2c0
-  description: "This issue or PR is exempted from the stable bot."
+  description: "This issue or PR is exempted from the stale bot."
 
 - name: "security"
   color: ee0701

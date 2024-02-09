@@ -5,10 +5,14 @@ updates:
     schedule:
       interval: daily
     labels:
-      - chore
+      - dependencies
+      - auto
+      - no-stale
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: weekly
     labels:
-      - chore
+      - dependencies
+      - auto
+      - no-stale
