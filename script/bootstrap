@@ -8,4 +8,4 @@ cd "$(dirname "$0")/.."
 
 echo "Installing development dependencies..."
 
-poetry install --only=develop
+poetry install --no-root --only main,dev

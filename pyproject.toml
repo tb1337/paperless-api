@@ -33,7 +33,7 @@ python = "^3.11"
 aiohttp = "^3.9.3"
 yarl = "^1.9.4"
 
-[tool.poetry.group.develop.dependencies]
+[tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
 codespell = "^2.2.6"
 coverage = {version = "^7.4.1", extras = ["toml"]}
@@ -73,6 +73,7 @@ plugins = ["covdefaults"]
 source = ["pypaperless"]
 
 [tool.codespell]
+skip = "poetry.lock"
 ignore-words-list = "dependees,"
 
 [tool.mypy]
