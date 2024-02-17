@@ -12,8 +12,5 @@
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true,
-    "files.associations": {
-        "*.yaml": "yaml"
-    },
+    "python.testing.pytestEnabled": true
 }

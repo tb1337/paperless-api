@@ -33,7 +33,7 @@ from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from . import PaperlessSessionMock
 
 # mypy: ignore-errors
-# pylint: disable=protected-access
+# pylint: disable=protected-access,unused-variable
 
 
 class TestPaperless:

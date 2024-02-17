@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [
-    { include = "pypaperless", from = "src" },
+    { include = "pypaperless" },
 ]
 
 [tool.poetry.dependencies]
@@ -109,7 +109,7 @@ warn_unused_ignores = true
 
 [tool.pylint.MASTER]
 ignore = [
-    "tests",
+    "tests/",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
