@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 class MailAccount(
     PaperlessModel,
     models.SecurableMixin,
-):  # pylint: disable=too-many-instance-attributes
+):
     """Represent a Paperless `MailAccount`."""
 
     _api_path = API_PATH["mail_accounts_single"]
@@ -43,7 +43,7 @@ class MailAccount(
 class MailRule(
     PaperlessModel,
     models.SecurableMixin,
-):  # pylint: disable=too-many-instance-attributes
+):
     """Represent a Paperless `MailRule`."""
 
     _api_path = API_PATH["mail_rules_single"]
@@ -78,7 +78,7 @@ class MailRule(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class MailAccountHelper(  # pylint: disable=too-many-ancestors
+class MailAccountHelper(
     HelperBase[MailAccount],
     helpers.CallableMixin[MailAccount],
     helpers.IterableMixin[MailAccount],
@@ -92,7 +92,7 @@ class MailAccountHelper(  # pylint: disable=too-many-ancestors
     _resource_cls = MailAccount
 
 
-class MailRuleHelper(  # pylint: disable=too-many-ancestors
+class MailRuleHelper(
     HelperBase[MailRule],
     helpers.CallableMixin[MailRule],
     helpers.IterableMixin[MailRule],

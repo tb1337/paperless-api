@@ -7,7 +7,7 @@ from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
 
-class CreatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods
+class CreatableMixin(PaperlessModelProtocol):
     """Provide the `save` method for PyPaperless models."""
 
     _create_required_fields: set[str]

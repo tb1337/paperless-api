@@ -6,7 +6,7 @@ from pypaperless.exceptions import DraftNotSupported
 from pypaperless.models.base import HelperProtocol, ResourceT
 
 
-class DraftableMixin(HelperProtocol[ResourceT]):  # pylint: disable=too-few-public-methods
+class DraftableMixin(HelperProtocol[ResourceT]):
     """Provide the `draft` method for PyPaperless helpers."""
 
     _draft_cls: type[ResourceT]

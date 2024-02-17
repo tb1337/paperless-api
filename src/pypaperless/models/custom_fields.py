@@ -49,7 +49,7 @@ class CustomFieldDraft(
     data_type: CustomFieldType | None = None
 
 
-class CustomFieldHelper(  # pylint: disable=too-many-ancestors
+class CustomFieldHelper(
     HelperBase[CustomField],
     helpers.CallableMixin[CustomField],
     helpers.DraftableMixin[CustomFieldDraft],

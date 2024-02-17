@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class Task(  # pylint: disable=too-many-instance-attributes
+class Task(
     PaperlessModel,
 ):
     """Represent a Paperless `Task`."""

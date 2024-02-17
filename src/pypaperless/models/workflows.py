@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class WorkflowAction(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+class WorkflowAction(PaperlessModel):
     """Represent a Paperless `WorkflowAction`."""
 
     _api_path = API_PATH["workflow_actions_single"]
@@ -40,7 +40,7 @@ class WorkflowAction(PaperlessModel):  # pylint: disable=too-many-instance-attri
 
 
 @dataclass(init=False)
-class WorkflowTrigger(  # pylint: disable=too-many-instance-attributes
+class WorkflowTrigger(
     PaperlessModel,
     models.MatchingFieldsMixin,
 ):

@@ -1,7 +1,7 @@
 """Provide `User` and 'Group' related models and helpers."""
 
-import datetime
 from dataclasses import dataclass
+import datetime
 from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
@@ -31,7 +31,7 @@ class Group(PaperlessModel):
 
 
 @dataclass(init=False)
-class User(PaperlessModel):  # pylint: disable=too-many-instance-attributes
+class User(PaperlessModel):
     """Represent a Paperless `User`."""
 
     _api_path = API_PATH["users_single"]

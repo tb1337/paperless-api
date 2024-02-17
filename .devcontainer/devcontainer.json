@@ -21,7 +21,6 @@
 				"esbenp.prettier-vscode",
 				"GitHub.vscode-pull-request-github",
 				"ms-azuretools.vscode-docker",
-				"ms-python.isort",
 				"ms-python.mypy-type-checker"
 			],
 			"settings": {

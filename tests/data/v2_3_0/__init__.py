@@ -2,6 +2,8 @@
 
 from tests.const import PAPERLESS_TEST_URL
 
+# mypy: ignore-errors
+
 V2_3_0_PATHS = {
     "workflows": f"{PAPERLESS_TEST_URL}/api/workflows/",
     "workflow_actions": f"{PAPERLESS_TEST_URL}/api/workflow_actions/",

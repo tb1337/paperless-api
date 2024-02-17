@@ -1,8 +1,8 @@
 """PyPaperless."""
 
-import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+import logging
 from typing import Any
 
 import aiohttp
@@ -14,7 +14,7 @@ from .exceptions import AuthentificationRequired, BadJsonResponse, JsonResponseW
 from .sessions import PaperlessSession
 
 
-class Paperless:  # pylint: disable=too-many-instance-attributes
+class Paperless:
     """Retrieves and manipulates data from and to Paperless via REST."""
 
     _class_map: set[tuple[str, type]] = {
@@ -181,7 +181,7 @@ class Paperless:  # pylint: disable=too-many-instance-attributes
         self._initialized = True
 
     @asynccontextmanager
-    async def request(  ## pylint: disable=too-many-arguments
+    async def request(
         self,
         method: str,
         path: str,

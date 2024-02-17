@@ -1,9 +1,9 @@
 """Simple router for faking Paperless routes."""
 
+from copy import deepcopy
 import datetime
 import random
 import uuid
-from copy import deepcopy
 
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
 from fastapi import FastAPI, Request, Response

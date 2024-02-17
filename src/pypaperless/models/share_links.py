@@ -1,7 +1,7 @@
 """Provide `ShareLink` related models and helpers."""
 
-import datetime
 from dataclasses import dataclass
+import datetime
 from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
@@ -54,7 +54,7 @@ class ShareLinkDraft(
     file_version: ShareLinkFileVersionType | None = None
 
 
-class ShareLinkHelper(  # pylint: disable=too-many-ancestors
+class ShareLinkHelper(
     HelperBase[ShareLink],
     helpers.CallableMixin[ShareLink],
     helpers.DraftableMixin[ShareLinkDraft],

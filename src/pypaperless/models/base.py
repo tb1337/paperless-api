@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
-class PaperlessBase:  # pylint: disable=too-few-public-methods
+class PaperlessBase:
     """Superclass for all classes in PyPaperless."""
 
     _api_path = API_PATH["index"]
@@ -23,7 +23,7 @@ class PaperlessBase:  # pylint: disable=too-few-public-methods
         self._api = api
 
 
-class HelperProtocol(Protocol, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
+class HelperProtocol(Protocol, Generic[ResourceT]):
     """Protocol for any `HelperBase` instances and its ancestors."""
 
     _api: "Paperless"
@@ -32,7 +32,7 @@ class HelperProtocol(Protocol, Generic[ResourceT]):  # pylint: disable=too-few-p
     _resource_cls: type[ResourceT]
 
 
-class HelperBase(PaperlessBase, Generic[ResourceT]):  # pylint: disable=too-few-public-methods
+class HelperBase(PaperlessBase, Generic[ResourceT]):
     """Base class for all helpers in PyPaperless."""
 
     _resource: PaperlessResource

@@ -108,7 +108,7 @@ class PaperlessSession:
         self._session.headers.update(headers)
         self._initialized = True
 
-    async def request(  # pylint: disable=too-many-arguments
+    async def request(
         self,
         method: str,
         path: str,

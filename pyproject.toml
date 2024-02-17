@@ -36,6 +36,7 @@ yarl = "^1.9.4"
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
 codespell = "^2.2.6"
+covdefaults = "^2.3.0"
 coverage = {version = "^7.4.1", extras = ["toml"]}
 mypy = "^1.8.0"
 pre-commit = "^3.6.0"
@@ -72,14 +73,21 @@ line-length = 100
 plugins = ["covdefaults"]
 source = ["pypaperless"]
 
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]
+fail_under = 97
+
 [tool.codespell]
 skip = "poetry.lock"
 ignore-words-list = "dependees,"
 
 [tool.mypy]
 platform = "linux"
-python_version = "3.11"
+python_version = "3.12"
 
+exclude = ["tests/"]
 follow_imports = "normal"
 
 check_untyped_defs = true
@@ -98,6 +106,21 @@ warn_return_any = true
 warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
+
+[tool.pylint.MASTER]
+ignore = [
+    "tests",
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "duplicate-code",
+    "too-few-public-methods",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-public-methods",
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov"
@@ -120,6 +143,12 @@ suppress-dummy-args = true
 
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pypaperless"]
+force-sort-within-sections = true
+split-on-trailing-comma = false
+combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 # Use Google-style docstrings.
