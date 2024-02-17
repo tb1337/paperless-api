@@ -1,7 +1,5 @@
 FROM mcr.microsoft.com/vscode/devcontainers/python:3.12
 
-ARG USERNAME=vscode
-
 ENV PYTHONUNBUFFERED 1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

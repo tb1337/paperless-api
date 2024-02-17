@@ -41,7 +41,7 @@ repos:
     hooks:
       - id: codespell
         name: ✅ Check code for proper spelling
-        args: []
+        args: ["--skip", "poetry.lock"]
         exclude_types: [csv, json]
         additional_dependencies:
           - tomli
