@@ -1,7 +1,7 @@
 {
 	"name": "PyPaperless Dev",
 	"context": "..",
-	"dockerFile": "../Dockerfile",
+	"dockerFile": "Dockerfile.dev",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"containerEnv": {
 		"DEVCONTAINER": "1"
@@ -9,6 +9,7 @@
 	"postCreateCommand": "script/setup",
 	"postStartCommand": "script/bootstrap",
 	"runArgs": ["-e", "GIT_EDITOR=code --wait"],
+	"remoteUser": "vscode",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -41,6 +42,5 @@
 				"terminal.integrated.defaultProfile.linux": "zsh"
 			}
 		}
-	},
-	"remoteUser": "vscode"
+	}
 }

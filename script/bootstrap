@@ -6,10 +6,6 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "Installing dependencies..."
-
-python3 -m pip install .
-
 echo "Installing development dependencies..."
 
-python3 -m pip install ".[test]"
+poetry install --only=develop
