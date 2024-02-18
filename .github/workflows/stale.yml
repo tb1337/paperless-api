@@ -21,19 +21,20 @@ jobs:
           stale-issue-label: "stale"
           exempt-issue-labels: "no-stale,help-wanted"
           stale-issue-message: >
-            There hasn't been any activity on this issue recently, so we
-            clean up some of the older and inactive issues.
+            There hasn't been any activity on this issue recently, so we have to
+            clean up some inactive issues.
 
             Please make sure to update to the latest version and
             check if that solves the issue. Let us know if that works for you
             by leaving a comment 👍
 
             This issue has now been marked as stale and will be closed if no
-            further activity occurs. Thanks!
+            further activity occurs. Thank you.
           stale-pr-label: "stale"
           exempt-pr-labels: "no-stale"
           stale-pr-message: >
             There hasn't been any activity on this pull request recently. This
             pull request has been automatically marked as stale because of that
             and will be closed if no further activity occurs within 7 days.
-            Thank you for your contributions.
+
+            Thank you for your contribution!

@@ -48,6 +48,8 @@ pytest-cov = "^4.1.0"
 ruff = "^0.2.1"
 
 [tool.poetry.group.test.dependencies]
+covdefaults = "^2.3.0"
+coverage = {version = "^7.4.1", extras = ["toml"]}
 fastapi = "^0.109.1"
 httpx = "^0.26.0"
 pytest = "<8.0.0"

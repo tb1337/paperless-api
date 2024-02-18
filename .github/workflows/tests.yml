@@ -21,14 +21,17 @@ jobs:
     steps:
       - name: ⤵️ Checkout code
         uses: actions/checkout@v4.1.1
+      - name: 🚧 Setup Poetry
+        run: pip install poetry
       - name: 🐍 Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: poetry
       - name: 🚧 Install dependencies
-        run: pip install . .[test]
+        run: poetry install --no-root --only main,test --no-interaction
       - name: 🚀 Run Pytest
-        run: pytest --cov pypaperless tests
+        run: poetry run pytest --cov pypaperless tests
       - name: ⬆️ Upload coverage
         uses: actions/upload-artifact@v4.3.1
         with:
@@ -44,16 +47,19 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: ⬇️ Download coverage
         uses: actions/download-artifact@v4.1.2
+      - name: 🚧 Setup Poetry
+        run: pip install poetry
       - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: poetry
       - name: 🚧 Install dependencies
-        run: pip install . .[test]
+        run: poetry install --no-root --only main,test --no-interaction
       - name: 🚀 Process coverage results
         run: |
-          coverage combine coverage*/.coverage*
-          coverage xml -i
+          poetry run coverage combine coverage*/.coverage*
+          poetry run coverage xml -i
       - name: ⬆️ Upload coverage to Codecov
         uses: codecov/codecov-action@v4.0.1
         env:

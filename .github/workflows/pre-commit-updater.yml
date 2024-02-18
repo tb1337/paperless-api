@@ -3,7 +3,7 @@ name: Pre-commit auto-update
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: "0 0 * * 1"
 
 env:
   DEFAULT_PYTHON: "3.11"
