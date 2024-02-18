@@ -26,7 +26,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: poetry
       - name: 🚧 Install dependencies
-        run: poetry install --no-root --only main,dev --no-interaction
+        run: poetry install --no-root --no-interaction
       - name: 🚀 Run pre-commit hooks
         run: |
           poetry run pre-commit run check-yaml --all-files
