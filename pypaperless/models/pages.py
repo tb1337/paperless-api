@@ -1,8 +1,8 @@
 """Provide the `Paginated` class."""
 
-import math
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+import math
 from typing import Any, Generic
 
 from pypaperless.const import API_PATH
@@ -15,7 +15,7 @@ from .base import PaperlessModel
 class Page(
     PaperlessModel,
     Generic[ResourceT],
-):  # pylint: disable=too-many-instance-attributes
+):
     """Represent a Paperless DRF `Paginated`."""
 
     _api_path = API_PATH["index"]

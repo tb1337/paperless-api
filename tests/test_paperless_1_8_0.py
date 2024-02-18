@@ -5,8 +5,7 @@ import pytest
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.exceptions import DraftFieldRequired, RequestException
 from pypaperless.models import Page
-from pypaperless.models.mixins import helpers as helper_mixins
-from pypaperless.models.mixins import models as model_mixins
+from pypaperless.models.mixins import helpers as helper_mixins, models as model_mixins
 
 from . import STORAGE_PATH_MAP, ResourceTestMapping
 

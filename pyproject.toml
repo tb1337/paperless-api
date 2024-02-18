@@ -1,20 +1,19 @@
 [build-system]
-requires = ["setuptools>=69.0"]
-build-backend = "setuptools.build_meta"
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
 
-[project]
+[tool.poetry]
 name = "pypaperless"
-version = "0.0.0" # set on release
-license = {text = "MIT License"}
-description = "Little api wrapper for the paperless(-ngx) dms."
+version = "0.0.0" # will be set by ci on release
+description = "Little api client for the paperless(-ngx) dms."
+authors = ["Tobias Schulz <public.dev@tbsch.de>"]
+maintainers = ["Tobias Schulz <public.dev@tbsch.de>"]
+license = "MIT"
 readme = "README.md"
-requires-python = ">=3.11"
-authors = [
-    {name = "Tobias Schulz", email = "public.dev@tbsch.de"}
-]
-keywords = [
-    "library", "async", "api-client", "python3", "paperless-ngx"
-]
+homepage = "https://github.com/tb1337/paperless-api"
+repository = "https://github.com/tb1337/paperless-api"
+documentation = "https://github.com/tb1337/paperless-api"
+keywords = ["library", "async", "api-client", "python3", "paperless-ngx"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: AsyncIO",
@@ -25,54 +24,72 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-dependencies = [
-    "aiohttp==3.9.3",
-    "yarl==1.9.4"
+packages = [
+    { include = "pypaperless" },
 ]
 
-[project.urls]
+[tool.poetry.dependencies]
+python = "^3.12"
+aiohttp = "^3.9.3"
+yarl = "^1.9.4"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+codespell = "^2.2.6"
+covdefaults = "^2.3.0"
+coverage = {version = "^7.4.1", extras = ["toml"]}
+mypy = "^1.8.0"
+pre-commit = "^3.6.1"
+pylint = "^3.0.3"
+pytest = "<8.0.0"
+pytest-aiohttp = "^1.0.5"
+pytest-asyncio = "^0.23.5"
+pytest-cov = "^4.1.0"
+ruff = "^0.2.1"
+
+[tool.poetry.group.test.dependencies]
+covdefaults = "^2.3.0"
+coverage = {version = "^7.4.1", extras = ["toml"]}
+fastapi = "^0.109.1"
+httpx = "^0.26.0"
+pytest = "<8.0.0"
+pytest-aiohttp = "^1.0.5"
+pytest-asyncio = "^0.23.5"
+pytest-cov = "^4.1.0"
+
+[tool.poetry.urls]
 "Homepage" = "https://github.com/tb1337/paperless-api"
 "GitHub: Source" = "https://github.com/tb1337/paperless-api"
 "GitHub: Issues" = "https://github.com/tb1337/paperless-api/issues"
 "Coverage: codecov" = "https://codecov.io/gh/tb1337/paperless-api"
 
-[project.optional-dependencies]
-test = [
-    "black==24.1.1",
-    "codespell==2.2.6",
-    "coverage==7.4.1",
-    "mypy==1.8.0",
-    "ruff==0.2.1",
-    "pytest<8.0.0",
-    "pytest-asyncio==0.23.5",
-    "pytest-aiohttp==1.0.5",
-    "pytest-cov==4.1.0",
-    "pre-commit==3.6.1",
-    "pylint==3.0.3",
-    "fastapi==0.109.2",
-    "httpx==0.26.0"
-]
-
-[tool.setuptools]
-platforms = ["any"]
-zip-safe  = false
-packages = ["pypaperless"]
-include-package-data = true
-
-[tool.setuptools.package-data]
-pypaperless = ["py.typed"]
+[tool.petry.report]
+fail_under = 50
+show_missing = true
 
 [tool.black]
-target-version = ['py311']
+target-version = ['py312']
 line-length = 100
 
+[tool.coverage.run]
+plugins = ["covdefaults"]
+source = ["pypaperless"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+]
+fail_under = 97
+
 [tool.codespell]
+skip = "poetry.lock"
 ignore-words-list = "dependees,"
 
 [tool.mypy]
 platform = "linux"
-python_version = "3.11"
+python_version = "3.12"
 
+exclude = ["tests/"]
 follow_imports = "normal"
 
 check_untyped_defs = true
@@ -92,29 +109,35 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
+[tool.pylint.MASTER]
+ignore = [
+    "tests/",
+]
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "duplicate-code",
+    "too-few-public-methods",
+    "too-many-ancestors",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-public-methods",
+]
+
 [tool.pytest.ini_options]
-pythonpath = [
-  ".",
-  "pypaperless",
-]
-testpaths = [
-    "tests",
-]
-norecursedirs = [
-    ".git",
-]
-log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
-log_date_format = "%Y-%m-%d %H:%M:%S"
+addopts = "--cov"
 asyncio_mode = "auto"
 
 [tool.ruff]
 fix = true
 show-fixes = true
 line-length = 100
-target-version = "py311"
-lint.select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
-lint.ignore = ["PLR2004", "N818"]
-lint.unfixable = ["F841"]
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = ["PLR2004", "N818"]
+select = ["E", "F", "W", "I", "N", "D", "UP", "PL", "Q", "SIM", "TID", "ARG"]
+unfixable = ["F841"]
 
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
@@ -122,6 +145,12 @@ suppress-dummy-args = true
 
 [tool.ruff.lint.flake8-builtins]
 builtins-ignorelist = ["id"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pypaperless"]
+force-sort-within-sections = true
+split-on-trailing-comma = false
+combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]
 # Use Google-style docstrings.

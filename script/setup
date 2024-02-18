@@ -19,8 +19,11 @@ if [ ! -n "$DEVCONTAINER" ] && [ ! -n "$VIRTUAL_ENV" ];then
   source .venv/bin/activate
 fi
 
+# Install package manager
+pip install poetry
+
 # Bootstrap
 script/bootstrap
 
 # Install pre-commit hooks
-pre-commit install
+poetry run pre-commit install

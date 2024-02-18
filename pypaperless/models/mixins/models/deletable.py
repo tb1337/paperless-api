@@ -3,7 +3,7 @@
 from pypaperless.models.base import PaperlessModelProtocol
 
 
-class DeletableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods
+class DeletableMixin(PaperlessModelProtocol):
     """Provide the `delete` method for PyPaperless models."""
 
     async def delete(self) -> bool:

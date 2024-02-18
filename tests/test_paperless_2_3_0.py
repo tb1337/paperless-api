@@ -2,12 +2,11 @@
 
 import pytest
 
-import pypaperless.models.workflows as wf_helpers
 from pypaperless import Paperless, PaperlessSession
 from pypaperless.exceptions import RequestException
 from pypaperless.models import Page, WorkflowAction, WorkflowTrigger
-from pypaperless.models.mixins import helpers as helper_mixins
-from pypaperless.models.mixins import models as model_mixins
+from pypaperless.models.mixins import helpers as helper_mixins, models as model_mixins
+import pypaperless.models.workflows as wf_helpers
 
 from . import WORKFLOW_MAP, ResourceTestMapping
 

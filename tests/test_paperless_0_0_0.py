@@ -10,8 +10,7 @@ from pypaperless.exceptions import (
     RequestException,
     TaskNotFound,
 )
-from pypaperless.models import DocumentMeta, Page
-from pypaperless.models import documents as doc_helpers
+from pypaperless.models import DocumentMeta, Page, documents as doc_helpers
 from pypaperless.models.common import (
     DocumentMetadataType,
     DocumentSearchHitType,
@@ -19,8 +18,7 @@ from pypaperless.models.common import (
     RetrieveFileMode,
 )
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
-from pypaperless.models.mixins import helpers as helper_mixins
-from pypaperless.models.mixins import models as model_mixins
+from pypaperless.models.mixins import helpers as helper_mixins, models as model_mixins
 
 from . import (
     CORRESPONDENT_MAP,

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 class SavedView(
     PaperlessModel,
     models.SecurableMixin,
-):  # pylint: disable=too-many-instance-attributes
+):
     """Represent a Paperless `SavedView`."""
 
     _api_path = API_PATH["saved_views_single"]
@@ -37,7 +37,7 @@ class SavedView(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class SavedViewHelper(  # pylint: disable=too-many-ancestors
+class SavedViewHelper(
     HelperBase[SavedView],
     helpers.CallableMixin[SavedView],
     helpers.IterableMixin[SavedView],

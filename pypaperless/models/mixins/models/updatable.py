@@ -6,7 +6,7 @@ from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
 
-class UpdatableMixin(PaperlessModelProtocol):  # pylint: disable=too-few-public-methods
+class UpdatableMixin(PaperlessModelProtocol):
     """Provide the `update` method for PyPaperless models."""
 
     _data: dict[str, Any]

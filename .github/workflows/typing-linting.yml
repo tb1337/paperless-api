@@ -18,24 +18,27 @@ jobs:
     steps:
       - name: ⤵️ Checkout code
         uses: actions/checkout@v4.1.1
+      - name: 🚧 Setup Poetry
+        run: pip install poetry
       - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+          cache: poetry
       - name: 🚧 Install dependencies
-        run: pip install . .[test]
+        run: poetry install --no-root --only main,dev --no-interaction
       - name: 🚀 Run pre-commit hooks
         run: |
-          pre-commit run check-yaml --all-files
-          pre-commit run check-toml --all-files
-          pre-commit run check-ast --all-files
-          pre-commit run check-docstring-first --all-files
-          pre-commit run debug-statements --all-files
-          pre-commit run end-of-file-fixer --all-files
-          pre-commit run trailing-whitespace --all-files
-          pre-commit run ruff --all-files
-          pre-commit run ruff-format --all-files
-          pre-commit run black --all-files
-          pre-commit run codespell --all-files
-          pre-commit run mypy --all-files
-          pre-commit run pylint --all-files
+          poetry run pre-commit run check-yaml --all-files
+          poetry run pre-commit run check-toml --all-files
+          poetry run pre-commit run check-ast --all-files
+          poetry run pre-commit run check-docstring-first --all-files
+          poetry run pre-commit run debug-statements --all-files
+          poetry run pre-commit run end-of-file-fixer --all-files
+          poetry run pre-commit run trailing-whitespace --all-files
+          poetry run pre-commit run ruff --all-files
+          poetry run pre-commit run ruff-format --all-files
+          poetry run pre-commit run black --all-files
+          poetry run pre-commit run codespell --all-files
+          poetry run pre-commit run mypy --all-files
+          poetry run pre-commit run pylint --all-files

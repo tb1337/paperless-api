@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class Config(  # pylint: disable=too-many-instance-attributes
+class Config(
     PaperlessModel,
 ):
     """Represent a Paperless `Config`."""
@@ -44,7 +44,7 @@ class Config(  # pylint: disable=too-many-instance-attributes
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class ConfigHelper(  # pylint: disable=too-few-public-methods
+class ConfigHelper(
     HelperBase[Config],
     helpers.CallableMixin[Config],
 ):

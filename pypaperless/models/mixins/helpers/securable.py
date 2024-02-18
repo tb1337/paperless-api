@@ -1,7 +1,7 @@
 """SecurableMixin for PyPaperless helpers."""
 
 
-class SecurableMixin:  # pylint: disable=too-few-public-methods
+class SecurableMixin:
     """Provide the `request_full_permissions` property for PyPaperless helpers."""
 
     _request_full_perms: bool = False

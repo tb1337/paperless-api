@@ -14,9 +14,9 @@ repos:
       - id: debug-statements
         name: ✅ Check debug statements
       - id: end-of-file-fixer
-        name: ⮐  Fix end of files
+        name: ⮐ Fix end of files
       - id: trailing-whitespace
-        name: ⮐  Trailing whitespace
+        name: ⮐ Trailing whitespace
       - id: no-commit-to-branch
         name: 🛑 No commit to main branch
         args:
@@ -41,7 +41,6 @@ repos:
     hooks:
       - id: codespell
         name: ✅ Check code for proper spelling
-        args: []
         exclude_types: [csv, json]
         additional_dependencies:
           - tomli
@@ -49,14 +48,12 @@ repos:
     hooks:
       - id: mypy
         name: 🆎 Type checking with mypy
-        entry: script/run-in-env.sh mypy
-        language: script
+        language: system
         types: [python]
+        entry: poetry run mypy
         require_serial: true
-        files: ^pypaperless/.+\.py$
       - id: pylint
         name: 🌟 Rating code with pylint
-        entry: script/run-in-env.sh pylint -j 0
-        language: script
+        language: system
         types: [python]
-        files: ^pypaperless/.+\.py$
+        entry: poetry run pylint pypaperless -j 0
