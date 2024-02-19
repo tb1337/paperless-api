@@ -22,14 +22,14 @@ repos:
         args:
           - --branch=main
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.2.1
+    rev: v0.2.2
     hooks:
       - id: ruff
         name: 🐶 Ruff Check
       - id: ruff-format
         name: 🐶 Ruff Format
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 24.2.0
     hooks:
       - id: black
         name: ✅ Black Format
