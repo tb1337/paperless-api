@@ -158,6 +158,8 @@ class TestClassifiers:
         to_update.name = new_name
         await to_update.update()
         assert to_update.name == new_name
+        # no updates
+        assert not await to_update.update()
         # force update
         new_name = f"{to_update.name} again"
         to_update.name = new_name
@@ -183,6 +185,14 @@ class TestClassifiers:
         getattr(p, mapping.resource).request_permissions = False
         item = await getattr(p, mapping.resource)(1)
         assert not item.has_permissions
+
+    async def test_permission_change(self, p: Paperless, mapping: ResourceTestMapping):
+        """Test permission changes."""
+        getattr(p, mapping.resource).request_permissions = True
+        assert getattr(p, mapping.resource).request_permissions
+        item = await getattr(p, mapping.resource)(1)
+        item.permissions.view.users.append(23)
+        assert await item.update()
 
 
 @pytest.mark.parametrize(

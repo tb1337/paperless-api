@@ -1,5 +1,6 @@
 """UpdatableMixin for PyPaperless models."""
 
+from copy import deepcopy
 from typing import Any
 
 from pypaperless.models.base import PaperlessModelProtocol
@@ -45,7 +46,7 @@ class UpdatableMixin(PaperlessModelProtocol):
         if not self.has_permissions:  # type: ignore[attr-defined]
             return
         if "permissions" in data:
-            data["set_permissions"] = data["permissions"]
+            data["set_permissions"] = deepcopy(data["permissions"])
             del data["permissions"]
 
     async def _patch_fields(self) -> bool:
