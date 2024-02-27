@@ -5,6 +5,8 @@ from typing import Any
 from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
+from .securable import SecurableMixin
+
 
 class UpdatableMixin(PaperlessModelProtocol):
     """Provide the `update` method for PyPaperless models."""
@@ -36,6 +38,16 @@ class UpdatableMixin(PaperlessModelProtocol):
         self._set_dataclass_fields()
         return updated
 
+    def _check_permissions_field(self, data: dict) -> None:
+        """Check."""
+        if SecurableMixin not in type(self).__bases__:
+            return
+        if not self.has_permissions:  # type: ignore[attr-defined]
+            return
+        if "permissions" in data:
+            data["set_permissions"] = data["permissions"]
+            del data["permissions"]
+
     async def _patch_fields(self) -> bool:
         """Use the http `PATCH` method for updating only changed fields."""
         changed = {}
@@ -47,6 +59,8 @@ class UpdatableMixin(PaperlessModelProtocol):
 
         if len(changed) == 0:
             return False
+
+        self._check_permissions_field(changed)
 
         self._data = await self._api.request_json(
             "patch",
@@ -62,6 +76,9 @@ class UpdatableMixin(PaperlessModelProtocol):
             field.name: object_to_dict_value(getattr(self, field.name))
             for field in self._get_dataclass_fields()
         }
+
+        self._check_permissions_field(data)
+
         self._data = await self._api.request_json(
             "put",
             self._api_path,
