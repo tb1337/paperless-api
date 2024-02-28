@@ -32,6 +32,7 @@ packages = [
 python = "^3.11"
 aiohttp = "^3.9.3"
 yarl = "^1.9.4"
+aioresponses = "^0.7.6"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
