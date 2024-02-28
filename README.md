@@ -51,7 +51,7 @@ Check out all [contributors here][contributors-url].
 [codecov-url]: https://app.codecov.io/gh/tb1337/paperless-api/tree/main
 [contributors-tbsch]: https://tbsch.de
 [contributors-url]: https://github.com/tb1337/paperless-api/graphs/contributors
-[docs-url]: /docs/usage.md
+[docs-url]: https://github.com/tb1337/paperless-api/blob/main/docs/usage.md
 [license-badge]: https://img.shields.io/github/license/tb1337/paperless-api
 [license-url]: /LICENSE.md
 [python-badge]: https://img.shields.io/pypi/pyversions/pypaperless
