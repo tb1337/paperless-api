@@ -32,7 +32,6 @@ packages = [
 python = "^3.11"
 aiohttp = "^3.9.3"
 yarl = "^1.9.4"
-aioresponses = "^0.7.6"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.1.1"
@@ -49,10 +48,9 @@ pytest-cov = "^4.1.0"
 ruff = "^0.2.1"
 
 [tool.poetry.group.test.dependencies]
+aioresponses = "^0.7.6"
 covdefaults = "^2.3.0"
 coverage = {version = "^7.4.1", extras = ["toml"]}
-fastapi = ">=0.109.1,<0.111.0"
-httpx = ">=0.26,<0.28"
 pytest = "<8.0.0"
 pytest-aiohttp = "^1.0.5"
 pytest-asyncio = "^0.23.5"

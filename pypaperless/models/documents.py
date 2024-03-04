@@ -595,7 +595,7 @@ class DocumentHelper(
                 raise AsnRequestError from exc
 
     async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
-        """Lookup more documents similar to the given document pk.
+        """Lookup documents similar to the given document pk.
 
         Shortcut function. Same behaviour is possible using `reduce()`.
 

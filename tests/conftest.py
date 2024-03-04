@@ -1,65 +1,104 @@
 """Setup pytest."""
 
+from collections.abc import AsyncGenerator, Generator
+from typing import Any
+
+from aioresponses import aioresponses
 import pytest
 
 from pypaperless import Paperless
+from pypaperless.const import API_PATH
 
-from . import PaperlessSessionMock
 from .const import PAPERLESS_TEST_REQ_ARGS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+from .data import PATCHWORK
 
 # mypy: ignore-errors
-# pylint: disable=protected-access,redefined-outer-name
 
 
-@pytest.fixture
-def api_obj() -> Paperless:
-    """Return a mock Paperless."""
-    session = PaperlessSessionMock(
+@pytest.fixture(name="resp")
+def aioresponses_fixture() -> Generator[aioresponses, None, None]:
+    """Return aioresponses fixture."""
+    with aioresponses() as m:
+        yield m
+
+
+@pytest.fixture(name="api_latest")
+async def api_version_latest_fixture(api_23) -> AsyncGenerator[Paperless, Any]:
+    """Return a Paperless object with latest version."""
+    yield api_23
+
+
+@pytest.fixture(name="api")
+def api_obj_fixture() -> Paperless:
+    """Return Paperless."""
+    paperless = Paperless(
         PAPERLESS_TEST_URL,
         PAPERLESS_TEST_TOKEN,
-        **PAPERLESS_TEST_REQ_ARGS,
+        request_args=PAPERLESS_TEST_REQ_ARGS,
     )
-    return Paperless(
-        url=PAPERLESS_TEST_URL,
-        token=PAPERLESS_TEST_TOKEN,
-        session=session,
-    )
+    return paperless
 
 
-@pytest.fixture
-async def api_00(api_obj) -> Paperless:
+@pytest.fixture(name="api_00")
+async def api_version_00_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
     """Return a basic Paperless object."""
-    async with api_obj:
-        yield api_obj
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "0.0.0"},
+        payload=PATCHWORK["paths_v0_0_0"],
+    )
+    async with api:
+        yield api
 
 
-@pytest.fixture
-async def api_18(api_obj) -> Paperless:
+@pytest.fixture(name="api_18")
+async def api_version_18_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
-    api_obj._session.version = "1.8.0"
-    async with api_obj:
-        yield api_obj
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "1.8.0"},
+        payload=PATCHWORK["paths_v1_8_0"],
+    )
+    async with api:
+        yield api
 
 
-@pytest.fixture
-async def api_117(api_obj) -> Paperless:
+@pytest.fixture(name="api_117")
+async def api_version_117_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
-    api_obj._session.version = "1.17.0"
-    async with api_obj:
-        yield api_obj
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "1.17.0"},
+        payload=PATCHWORK["paths_v1_17_0"],
+    )
+    async with api:
+        yield api
 
 
-@pytest.fixture
-async def api_20(api_obj) -> Paperless:
+@pytest.fixture(name="api_20")
+async def api_version_20_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
-    api_obj._session.version = "2.0.0"
-    async with api_obj:
-        yield api_obj
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "2.0.0"},
+        payload=PATCHWORK["paths_v2_0_0"],
+    )
+    async with api:
+        yield api
 
 
-@pytest.fixture
-async def api_23(api_obj) -> Paperless:
+@pytest.fixture(name="api_23")
+async def api_version_23_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
-    api_obj._session.version = "2.3.0"
-    async with api_obj:
-        yield api_obj
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "2.3.0"},
+        payload=PATCHWORK["paths_v2_3_0"],
+    )
+    async with api:
+        yield api

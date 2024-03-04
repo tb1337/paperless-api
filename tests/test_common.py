@@ -4,12 +4,14 @@ from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
 
+import aiohttp
+from aiohttp.http_exceptions import InvalidURLError
+from aioresponses import aioresponses
 import pytest
 
-from pypaperless import Paperless, PaperlessSession
-from pypaperless.const import PaperlessResource
+from pypaperless import Paperless
+from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
-    AuthentificationRequired,
     BadJsonResponse,
     DraftNotSupported,
     JsonResponseWithError,
@@ -28,34 +30,43 @@ from pypaperless.models.common import (
 )
 from pypaperless.models.mixins import helpers
 from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
-from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+from tests.const import (
+    PAPERLESS_TEST_PASSWORD,
+    PAPERLESS_TEST_TOKEN,
+    PAPERLESS_TEST_URL,
+    PAPERLESS_TEST_USER,
+)
 
-from . import PaperlessSessionMock
+from .data import PATCHWORK
 
 # mypy: ignore-errors
-# pylint: disable=protected-access,unused-variable
 
 
 class TestPaperless:
     """Paperless common test cases."""
 
-    async def test_init(self, api_obj: Paperless):
+    async def test_init(self, resp: aioresponses, api: Paperless) -> None:
         """Test init."""
-        await api_obj.initialize()
-        assert api_obj.is_initialized
-        await api_obj.close()
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=200,
+            payload=PATCHWORK["paths"],
+        )
+        await api.initialize()
+        assert api.is_initialized
+        await api.close()
 
-    async def test_context(self, api_obj: Paperless):
+    async def test_context(self, resp: aioresponses, api: Paperless) -> None:
         """Test context."""
-        async with api_obj:
-            assert api_obj.is_initialized
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=200,
+            payload=PATCHWORK["paths"],
+        )
+        async with api:
+            assert api.is_initialized
 
-    async def test_auth_missing(self):
-        """Test auth missing."""
-        with pytest.raises(AuthentificationRequired):
-            api = Paperless()  # noqa
-
-    async def test_request(self):
+    async def test_request(self, resp: aioresponses) -> None:
         """Test generate request."""
         # we need to use an unmocked PaperlessSession.request() method
         # simply don't initialize Paperless and everything will be fine
@@ -64,7 +75,12 @@ class TestPaperless:
             PAPERLESS_TEST_TOKEN,
         )
 
-        async with api.request("get", "https://example.org") as res:
+        # test ordinary 200
+        resp.get(
+            PAPERLESS_TEST_URL,
+            status=200,
+        )
+        async with api.request("get", PAPERLESS_TEST_URL) as res:
             assert res.status
 
         # last but not least, we test sending a form to test the converter
@@ -78,55 +94,60 @@ class TestPaperless:
             "int_list": [1, 1, 2, 3, 5, 8, 13],
             "dict_field": {"dict_str_field": "str", "dict_int_field": 2},
         }
-        async with api.request("post", "https://example.org", form=form_data) as res:
+        resp.post(
+            PAPERLESS_TEST_URL,
+            status=200,
+        )
+        async with api.request("post", PAPERLESS_TEST_URL, form=form_data) as res:
             assert res.status
 
         # test non-existing request
+        resp.get(
+            PAPERLESS_TEST_URL,
+            exception=InvalidURLError,
+        )
         with pytest.raises(RequestException):
-            async with api.request("get", "does-not-exist.example") as res:
+            async with api.request("get", PAPERLESS_TEST_URL) as res:
                 pass
 
         # session is still open
         await api.close()
 
-    async def test_request_json(self, api_obj: Paperless):
+    async def test_request_json(self, resp: aioresponses, api: Paperless) -> None:
         """Test requests."""
         # test 400 bad request with error payload
+        resp.get(
+            f"{PAPERLESS_TEST_URL}/400-json-error-payload",
+            status=400,
+            headers={"Content-Type": "application/json"},
+            payload={"error": "sample message"},
+        )
         with pytest.raises(JsonResponseWithError):
-            await api_obj.request_json(
-                "get",
-                "/test/http/400/",
-                params={
-                    "response_content": '{"error":"sample message"}',
-                    "content_type": "application/json",
-                },
-            )
+            await api.request_json("get", f"{PAPERLESS_TEST_URL}/400-json-error-payload")
 
         # test 200 ok with wrong content type
+        resp.get(
+            f"{PAPERLESS_TEST_URL}/200-text-error-payload",
+            status=200,
+            headers={"Content-Type": "text/plain"},
+            body='{"error": "sample message"}',
+        )
         with pytest.raises(BadJsonResponse):
-            await api_obj.request_json(
-                "get",
-                "/test/http/200/",
-                params={
-                    "response_content": '{"error":"sample message"}',
-                    "content_type": "text/plain",
-                },
-            )
+            await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-text-error-payload")
 
         # test 200 ok with correct content type, but no json payload
+        resp.get(
+            f"{PAPERLESS_TEST_URL}/200-json-text-body",
+            status=200,
+            headers={"Content-Type": "application/json"},
+            body="test 5 23 42 1337",
+        )
         with pytest.raises(BadJsonResponse):
-            await api_obj.request_json(
-                "get",
-                "/test/http/200/",
-                params={
-                    "response_content": "test 1337 5 23 42 1337",
-                    "content_type": "application/json",
-                },
-            )
+            await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-json-text-body")
 
-    async def test_create_url(self):
+    async def test_create_url(self) -> None:
         """Test create url util."""
-        create_url = PaperlessSession._create_base_url
+        create_url = Paperless._create_base_url  # pylint: disable=protected-access
 
         # test default ssl
         url = create_url("hostname")
@@ -149,51 +170,71 @@ class TestPaperless:
         url = create_url("hostname/api/api/")
         assert f"{url}" == "https://hostname/api/api"
 
-    async def test_generate_api_token(self, api_obj: Paperless):
+    async def test_generate_api_token(self, resp: aioresponses, api: Paperless) -> None:
         """Test generate api token."""
-        test_token = "abcdef1234567890"
-
-        session = PaperlessSessionMock(PAPERLESS_TEST_URL, "")
+        session = aiohttp.ClientSession()
 
         # test successful token creation
-        session.params = {
-            "response_content": f'{{"token":"{test_token}"}}',
-        }
-        token = await api_obj.generate_api_token(
-            PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=200,
+            payload=PATCHWORK["token"],
         )
-        assert token == test_token
+        token = await api.generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+            session,
+        )
+        assert token == PAPERLESS_TEST_TOKEN
 
         # test token creation with wrong json answer
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=200,
+            payload={"blah": "any string"},
+        )
         with pytest.raises(BadJsonResponse):
-            session.params = {
-                "response_content": '{"bla":"any string"}',
-            }
-            token = await api_obj.generate_api_token(
-                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+            token = await api.generate_api_token(
+                PAPERLESS_TEST_URL,
+                PAPERLESS_TEST_USER,
+                PAPERLESS_TEST_PASSWORD,
+                session,
             )
 
         # test error 400
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=400,
+            payload={"non_field_errors": ["Unable to log in."]},
+        )
         with pytest.raises(JsonResponseWithError):
-            session.params = {
-                "response_content": '{"non_field_errors":["Unable to log in."]}',
-                "status": "400",
-            }
-            token = await api_obj.generate_api_token(
-                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+            token = await api.generate_api_token(
+                PAPERLESS_TEST_URL,
+                PAPERLESS_TEST_USER,
+                PAPERLESS_TEST_PASSWORD,
+                session,
             )
 
         # general exception
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=500,
+            body="no json",
+        )
         with pytest.raises(Exception):
             session.params = {
                 "response_content": "no json",
                 "status": "500",
             }
-            token = await api_obj.generate_api_token(
-                PAPERLESS_TEST_URL, "test-user", "not-so-secret-password", session
+            token = await api.generate_api_token(
+                PAPERLESS_TEST_URL,
+                PAPERLESS_TEST_USER,
+                PAPERLESS_TEST_PASSWORD,
+                session,
             )
 
-    async def test_types(self):
+    async def test_types(self) -> None:
         """Test types."""
         never_str = "!never_existing_type!"
         never_int = 99952342
@@ -206,7 +247,7 @@ class TestPaperless:
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
-    async def test_dataclass_conversion(self):
+    async def test_dataclass_conversion(self) -> None:
         """Test dataclass utils."""
 
         class _Status(Enum):
@@ -297,7 +338,7 @@ class TestPaperless:
         assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
         assert isinstance(back["meta"], dict)
 
-    async def test_pages_object(self, api_obj):
+    async def test_pages_object(self, api: Paperless) -> None:
         """Test pages."""
 
         @dataclass(init=False)
@@ -321,8 +362,8 @@ class TestPaperless:
             data["all"].append(i)
             data["results"].append({"id": i})
 
-        page = Page.create_with_data(api_obj, data=data, fetched=True)
-        page._resource_cls = TestResource
+        page = Page.create_with_data(api, data=data, fetched=True)
+        page._resource_cls = TestResource  # pylint: disable=protected-access
 
         assert isinstance(page, Page)
         assert page.current_count == 100
@@ -352,7 +393,7 @@ class TestPaperless:
         assert page.next_page is None
         assert page.is_last_page
 
-    async def test_draft_exc(self, api_00: Paperless):
+    async def test_draft_exc(self, api: Paperless) -> None:
         """Test draft not supported."""
 
         @dataclass(init=False)
@@ -367,7 +408,7 @@ class TestPaperless:
             # draft_cls - we "forgot" to set a draft class, which will raise an exception ...
             _resource_cls = TestResource
 
-        helper = TestHelper(api_00)
+        helper = TestHelper(api)
         with pytest.raises(DraftNotSupported):
             # ... there it is
-            draft = helper.draft()  # noqa
+            helper.draft()  # noqa

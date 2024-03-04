@@ -10,7 +10,7 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import BadJsonResponse, JsonResponseWithError, RequestException
+from .exceptions import BadJsonResponse, JsonResponseWithError, PaperlessException, RequestException
 
 # from .sessions import PaperlessSession
 
@@ -67,7 +67,7 @@ class Paperless:
         token: str,
         *,
         session: aiohttp.ClientSession | None = None,
-        **kwargs: Any,
+        request_args: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a `Paperless` instance.
 
@@ -88,7 +88,7 @@ class Paperless:
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()
         self._remote_resources: set[PaperlessResource] = set()
-        self._request_args = kwargs
+        self._request_args = request_args or {}
         self._session = session
         self._token = token
         self._version: str | None = None
@@ -288,10 +288,11 @@ class Paperless:
                 **kwargs,
             )
             self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+            yield res
+        except PaperlessException:
+            raise
         except Exception as exc:
             raise RequestException(exc, (method, url, params), kwargs) from None
-
-        yield res
 
     async def request_json(
         self,
@@ -304,11 +305,14 @@ class Paperless:
             try:
                 assert res.content_type == "application/json"
                 payload = await res.json()
+
+                if res.status == 400:
+                    raise JsonResponseWithError(payload)
+
+                res.raise_for_status()
             except (AssertionError, ValueError) as exc:
                 raise BadJsonResponse(res) from exc
-
-        if res.status == 400:
-            raise JsonResponseWithError(payload)
-        res.raise_for_status()
+            except Exception as exc:
+                raise exc
 
         return payload
