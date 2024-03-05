@@ -404,7 +404,7 @@ class TestPaperless:
             """Test Helper."""
 
             _api_path = "any.url"
-            _resource = "test"
+            _resource = "test"  # type: ignore
             # draft_cls - we "forgot" to set a draft class, which will raise an exception ...
             _resource_cls = TestResource
 
