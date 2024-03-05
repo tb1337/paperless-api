@@ -46,7 +46,7 @@ jobs:
       - name: ⤵️ Checkout code
         uses: actions/checkout@v4.1.1
       - name: ⬇️ Download coverage
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.4
       - name: 🚧 Setup Poetry
         run: pip install poetry
       - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
@@ -61,7 +61,7 @@ jobs:
           poetry run coverage combine coverage*/.coverage*
           poetry run coverage xml -i
       - name: ⬆️ Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.0.2
+        uses: codecov/codecov-action@v4.1.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
