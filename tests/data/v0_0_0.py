@@ -2,9 +2,9 @@
 
 # mypy: ignore-errors
 
-from tests.const import PAPERLESS_TEST_URL
+from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
-V0_0_0_TOKEN = {"token": "abcdef1234567890987654321fedcba"}
+V0_0_0_TOKEN = {"token": PAPERLESS_TEST_TOKEN}
 
 V0_0_0_PATHS = {
     "correspondents": f"{PAPERLESS_TEST_URL}/api/correspondents/",

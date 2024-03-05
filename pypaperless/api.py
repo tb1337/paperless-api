@@ -10,8 +10,9 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import AuthentificationRequired, BadJsonResponse, JsonResponseWithError
-from .sessions import PaperlessSession
+from .exceptions import BadJsonResponse, JsonResponseWithError, PaperlessException, RequestException
+
+# from .sessions import PaperlessSession
 
 
 class Paperless:
@@ -62,10 +63,12 @@ class Paperless:
 
     def __init__(
         self,
-        url: str | URL | None = None,
-        token: str | None = None,
-        session: PaperlessSession | None = None,
-    ):
+        url: str | URL,
+        token: str,
+        *,
+        session: aiohttp.ClientSession | None = None,
+        request_args: dict[str, Any] | None = None,
+    ) -> None:
         """Initialize a `Paperless` instance.
 
         You have to permit either a session, or an url / token pair.
@@ -74,19 +77,23 @@ class Paperless:
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `session`: A custom `PaperlessSession` object, if existing.
         """
-        if session is not None:
-            self._session = session
-        elif url is not None and token is not None:
-            self._session = PaperlessSession(url, token)
-        else:
-            raise AuthentificationRequired
+        # if session is not None:
+        #     self._session = session
+        # elif url is not None and token is not None:
+        #     self._session = PaperlessSession(url, token)
+        # else:
+        #     raise AuthentificationRequired
 
+        self._base_url = self._create_base_url(url)
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()
         self._remote_resources: set[PaperlessResource] = set()
+        self._request_args = request_args or {}
+        self._session = session
+        self._token = token
         self._version: str | None = None
 
-        self.logger = logging.getLogger(f"{__package__}[{self._session}]")
+        self.logger = logging.getLogger(f"{__package__}[{self._base_url.host}]")
 
     @property
     def is_initialized(self) -> bool:
@@ -109,11 +116,55 @@ class Paperless:
         return self._remote_resources
 
     @staticmethod
+    def _create_base_url(url: str | URL) -> URL:
+        """Create URL from string or URL and prepare for further use."""
+        # reverse compatibility, fall back to https
+        if isinstance(url, str) and "://" not in url:
+            url = f"https://{url}".rstrip("/")
+        url = URL(url)
+
+        # scheme check. fall back to https
+        if url.scheme not in ("https", "http"):
+            url = URL(url).with_scheme("https")
+
+        return url
+
+    @staticmethod
+    def _process_form(data: dict[str, Any]) -> aiohttp.FormData:
+        """Process form data and create a `aiohttp.FormData` object.
+
+        Every field item gets converted to a string-like object.
+        """
+        form = aiohttp.FormData()
+
+        def _add_form_value(name: str | None, value: Any) -> Any:
+            if value is None:
+                return
+            params = {}
+            if isinstance(value, dict):
+                for dict_key, dict_value in value.items():
+                    _add_form_value(dict_key, dict_value)
+                return
+            if isinstance(value, list | set):
+                for list_value in value:
+                    _add_form_value(name, list_value)
+                return
+            if isinstance(value, tuple):
+                if len(value) == 2:
+                    params["filename"] = f"{value[1]}"
+                value = value[0]
+            if name is not None:
+                form.add_field(name, value if isinstance(value, bytes) else f"{value}", **params)
+
+        _add_form_value(None, data)
+        return form
+
+    @staticmethod
     async def generate_api_token(
         url: str,
         username: str,
         password: str,
-        session: PaperlessSession | None = None,
+        session: aiohttp.ClientSession | None = None,
     ) -> str:
         """Request Paperless to generate an api token for the given credentials.
 
@@ -130,14 +181,15 @@ class Paperless:
         # do something
         ```
         """
-        session = session or PaperlessSession(url, "")
+        external_session = session is not None
+        session = session or aiohttp.ClientSession()
         try:
             url = url.rstrip("/")
             json = {
                 "username": username,
                 "password": password,
             }
-            res = await session.request("post", f"{API_PATH['token']}", json=json)
+            res = await session.request("post", f"{url}{API_PATH['token']}", json=json)
             data = await res.json()
             res.raise_for_status()
             return str(data["token"])
@@ -148,7 +200,8 @@ class Paperless:
         except Exception as exc:
             raise exc
         finally:
-            await session.close()
+            if not external_session:
+                await session.close()
 
     async def close(self) -> None:
         """Clean up connection."""
@@ -191,20 +244,55 @@ class Paperless:
         params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
-        """Perform a request."""
-        if method == "post":
-            pass
-        res = await self._session.request(
-            method,
-            path,
-            json=json,
-            data=data,
-            form=form,
-            params=params,
-            **kwargs,
+        """Send a request to the Paperless api and return the `aiohttp.ClientResponse`.
+
+        This method provides a little interface for utilizing `aiohttp.FormData`.
+
+        `method`: A http method: get, post, patch, put, delete, head, options
+        `path`: A path to the endpoint or a string url.
+        `json`: A dict containing the json data.
+        `data`: A dict containing the data to send in the request body.
+        `form`: A dict with form data, which gets converted to `aiohttp.FormData`
+        and replaces `data`.
+        `params`: A dict with query parameters.
+        `kwargs`: Optional attributes for the `aiohttp.ClientSession.request` method.
+        """
+        if self._session is None:
+            self._session = aiohttp.ClientSession()
+
+        # add headers
+        self._session.headers.update(
+            {
+                "Accept": "application/json; version=2",
+                "Authorization": f"Token {self._token}",
+            }
         )
-        self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
-        yield res
+
+        # add request args
+        kwargs.update(self._request_args)
+
+        # overwrite data with a form, when there is a form payload
+        if isinstance(form, dict):
+            data = self._process_form(form)
+
+        # add base path
+        url = f"{self._base_url}{path}" if not path.startswith("http") else path
+
+        try:
+            res = await self._session.request(
+                method=method,
+                url=url,
+                json=json,
+                data=data,
+                params=params,
+                **kwargs,
+            )
+            self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+            yield res
+        except PaperlessException:
+            raise
+        except Exception as exc:
+            raise RequestException(exc, (method, url, params), kwargs) from None
 
     async def request_json(
         self,
@@ -217,11 +305,14 @@ class Paperless:
             try:
                 assert res.content_type == "application/json"
                 payload = await res.json()
+
+                if res.status == 400:
+                    raise JsonResponseWithError(payload)
+
+                res.raise_for_status()
             except (AssertionError, ValueError) as exc:
                 raise BadJsonResponse(res) from exc
-
-        if res.status == 400:
-            raise JsonResponseWithError(payload)
-        res.raise_for_status()
+            except Exception as exc:
+                raise exc
 
         return payload

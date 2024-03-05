@@ -4,7 +4,6 @@ from tests.const import PAPERLESS_TEST_URL
 
 V2_0_0_PATHS = {
     "config": f"{PAPERLESS_TEST_URL}/api/config/",
-    "consumption_templates": f"{PAPERLESS_TEST_URL}/api/consumption_templates/",
     "custom_fields": f"{PAPERLESS_TEST_URL}/api/custom_fields/",
     "share_links": f"{PAPERLESS_TEST_URL}/api/share_links/",
 }
@@ -29,75 +28,6 @@ V2_0_0_CONFIG = [
         "app_logo": None,
     }
 ]
-
-V2_0_0_CONSUMPTION_TEMPLATES = {
-    "count": 3,
-    "next": None,
-    "previous": None,
-    "all": [2, 3, 1],
-    "results": [
-        {
-            "id": 2,
-            "name": "API Upload Template",
-            "order": 2,
-            "sources": [1, 2],
-            "filter_path": "/api/*",
-            "filter_filename": "*.pdf",
-            "filter_mailrule": None,
-            "assign_title": "API",
-            "assign_tags": [4],
-            "assign_correspondent": 9,
-            "assign_document_type": 12,
-            "assign_storage_path": 2,
-            "assign_owner": 3,
-            "assign_view_users": [],
-            "assign_view_groups": [],
-            "assign_change_users": [],
-            "assign_change_groups": [],
-            "assign_custom_fields": [5],
-        },
-        {
-            "id": 3,
-            "name": "Email Template",
-            "order": 3,
-            "sources": [3],
-            "filter_path": "/mail/*",
-            "filter_filename": "*.eml",
-            "filter_mailrule": 1,
-            "assign_title": None,
-            "assign_tags": [],
-            "assign_correspondent": None,
-            "assign_document_type": None,
-            "assign_storage_path": None,
-            "assign_owner": 2,
-            "assign_view_users": [3, 7],
-            "assign_view_groups": [1],
-            "assign_change_users": [6],
-            "assign_change_groups": [],
-            "assign_custom_fields": [],
-        },
-        {
-            "id": 1,
-            "name": "Import Folder Template",
-            "order": 1,
-            "sources": [1],
-            "filter_path": None,
-            "filter_filename": "*.pdf",
-            "filter_mailrule": None,
-            "assign_title": "Any text",
-            "assign_tags": [4],
-            "assign_correspondent": 9,
-            "assign_document_type": 8,
-            "assign_storage_path": 2,
-            "assign_owner": 3,
-            "assign_view_users": [],
-            "assign_view_groups": [],
-            "assign_change_users": [],
-            "assign_change_groups": [],
-            "assign_custom_fields": [2],
-        },
-    ],
-}
 
 V2_0_0_CUSTOM_FIELDS = {
     "count": 8,
