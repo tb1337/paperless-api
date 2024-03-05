@@ -73,21 +73,16 @@ There are some rules for the Paperless-ngx url.
 
 ### Custom session
 
-You may want to use a customized session in some cases. The `PaperlessSession` object will pass optional kwargs to each request method call, it is utilizing an `aiohttp.ClientSession` under the hood.
+You may want to use an existing `aiohttp.ClientSession` in some cases. Simply pass it to the `Paperless` object.
 
 ```python
-from pypaperless import Paperless, PaperlessSession
+import aiohttp
+from pypaperless import Paperless
 
-my_session = PaperlessSession("localhost:8000", "your-secret-token", ssl=False, ...)
+my_session = aiohttp.ClientSession()
+# ...
 
-paperless = Paperless(session=my_session)
-```
-
-You also can implement your own session class. The code of `PaperlessSession` isn't too big and easy to understand. Your custom class must at least implement `__init__` and `request` methods, or simply derive it from `PaperlessSession`.
-
-```python
-class MyCustomSession(PaperlessSession):
-    # start overriding methods
+paperless = Paperless("localhost:8000", "your-secret-token", session=my_session)
 ```
 
 ### Creating a token
@@ -102,17 +97,18 @@ token = Paperless.generate_api_token(
 )
 ```
 
-This method utilizes `PaperlessSession`, so the same rules apply to it as when initiating a regular `Paperless` session. It also accepts a custom `PaperlessSession`:
+As for `Paperless` itself, you can provide a custom `aiohttp.ClientSession` object.
+
 
 ```python
 url = "localhost:8000"
-session = PaperlessSession(url, "") # empty token string
+my_session = aiohttp.ClientSession()
 
 token = Paperless.generate_api_token(
     "localhost:8000",
     "test_user",
     "not-so-secret-password-anymore",
-    session=session,
+    session=my_session,
 )
 ```
 
