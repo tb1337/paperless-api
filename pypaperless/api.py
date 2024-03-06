@@ -29,6 +29,7 @@ class Paperless:
         (PaperlessResource.MAIL_RULES, helpers.MailRuleHelper),
         (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
         (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
+        (PaperlessResource.STATUS, helpers.StatusHelper),
         (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
         (PaperlessResource.TAGS, helpers.TagHelper),
         (PaperlessResource.TASKS, helpers.TaskHelper),
@@ -46,6 +47,7 @@ class Paperless:
     mail_rules: helpers.MailRuleHelper
     saved_views: helpers.SavedViewHelper
     share_links: helpers.ShareLinkHelper
+    status: helpers.StatusHelper
     storage_paths: helpers.StoragePathHelper
     tags: helpers.TagHelper
     tasks: helpers.TaskHelper
@@ -76,14 +78,10 @@ class Paperless:
         `url`: A hostname or IP-address as string, or yarl.URL object.
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `session`: A custom `PaperlessSession` object, if existing.
-        """
-        # if session is not None:
-        #     self._session = session
-        # elif url is not None and token is not None:
-        #     self._session = PaperlessSession(url, token)
-        # else:
-        #     raise AuthentificationRequired
 
+        `request_args` are passed to each request method call as additional kwargs,
+        ssl stuff for example. You should read the aiohttp docs to learn more about it.
+        """
         self._base_url = self._create_base_url(url)
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()

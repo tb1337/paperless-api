@@ -1,6 +1,7 @@
 """PyPaperless common types."""
 
 from dataclasses import dataclass, field
+import datetime
 from enum import Enum, StrEnum
 from typing import Any
 
@@ -123,6 +124,67 @@ class ShareLinkFileVersionType(Enum):
     def _missing_(cls: type, value: object) -> "ShareLinkFileVersionType":  # noqa ARG003
         """Set default member on unknown value."""
         return ShareLinkFileVersionType.UNKNOWN
+
+
+# status
+class StatusType(Enum):
+    """Represent a subtype of `Status`."""
+
+    OK = "OK"
+    ERROR = "ERROR"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls: type, value: object) -> "StatusType":  # noqa ARG003
+        """Set default member on unknown value."""
+        return StatusType.UNKNOWN
+
+
+# status
+@dataclass(kw_only=True)
+class StatusDatabaseMigrationStatusType:
+    """Represent a subtype of `StatusDatabaseType`."""
+
+    latest_migration: str | None = None
+    unapplied_migrations: list[str] = field(default_factory=list)
+
+
+# status
+@dataclass(kw_only=True)
+class StatusDatabaseType:
+    """Represent a subtype of `Status`."""
+
+    type: str | None = None
+    url: str | None = None
+    status: StatusType | None = None
+    error: str | None = None
+    migration_status: StatusDatabaseMigrationStatusType
+
+
+# status
+@dataclass(kw_only=True)
+class StatusStorageType:
+    """Represent a subtype of `Status`."""
+
+    total: int | None = None
+    available: int | None = None
+
+
+# status
+@dataclass(kw_only=True)
+class StatusTasksType:
+    """Represent a subtype of `Status`."""
+
+    redis_url: str | None = None
+    redis_status: StatusType | None = None
+    redis_error: str | None = None
+    celery_status: StatusType | None = None
+    index_status: StatusType | None = None
+    index_last_modified: datetime.datetime | None = None
+    index_error: str | None = None
+    classifier_status: StatusType | None = None
+    classifier_last_trained: datetime.datetime | None = None
+    classifier_error: str | None = None
 
 
 # tasks
