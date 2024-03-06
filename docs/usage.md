@@ -27,6 +27,7 @@
     - [Toggle requesting permissions](#toggle-requesting-permissions)
     - [Create item with permissions](#create-item-with-permissions)
     - [Update permissions](#update-permissions)
+  - [System Status](#system-status)
 
 ## Starting a session
 
@@ -601,3 +602,15 @@ if document.has_permissions:
     await document.update()
 
 ```
+
+### System Status
+
+As of release 2.6.0, Paperless-ngx supports displaying information about the current system health.
+
+```python
+info = await paperless.status()
+```
+
+The code above executes one http request:
+
+`GET` `https://localhost:8000/api/status/`
