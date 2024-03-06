@@ -14,3 +14,4 @@ from .models.saved_views import SavedViewHelper  # noqa F401
 from .models.share_links import ShareLinkHelper  # noqa F401
 from .models.tasks import TaskHelper  # noqa F401
 from .models.workflows import WorkflowHelper  # noqa F401
+from .models.status import StatusHelper  # noqa F401

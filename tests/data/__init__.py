@@ -27,6 +27,7 @@ from .v2_3_0 import (
     V2_3_0_WORKFLOW_TRIGGERS,
     V2_3_0_WORKFLOWS,
 )
+from .v2_6_0 import V2_6_0_STATUS
 
 # mypy: ignore-errors
 
@@ -65,6 +66,8 @@ PATCHWORK = {
     "workflows": V2_3_0_WORKFLOWS,
     "workflow_actions": V2_3_0_WORKFLOW_ACTIONS,
     "workflow_triggers": V2_3_0_WORKFLOW_TRIGGERS,
+    # 2.6.0
+    "status": V2_6_0_STATUS,
 }
 
 __all__ = ("PATCHWORK",)

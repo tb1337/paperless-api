@@ -23,6 +23,7 @@ from pypaperless.models.common import (
     CustomFieldType,
     MatchingAlgorithmType,
     ShareLinkFileVersionType,
+    StatusType,
     TaskStatusType,
     WorkflowActionType,
     WorkflowTriggerSourceType,
@@ -242,6 +243,7 @@ class TestPaperless:
         assert CustomFieldType(never_str) == CustomFieldType.UNKNOWN
         assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
         assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
+        assert StatusType(never_str) == StatusType.UNKNOWN
         assert TaskStatusType(never_str) == TaskStatusType.UNKNOWN
         assert WorkflowActionType(never_int) == WorkflowActionType.UNKNOWN
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
