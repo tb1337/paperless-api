@@ -22,6 +22,9 @@ from pypaperless.models.common import (
     DocumentSearchHitType,
     PermissionTableType,
     RetrieveFileMode,
+    StatusDatabaseType,
+    StatusStorageType,
+    StatusTasksType,
 )
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
 
@@ -36,6 +39,7 @@ from . import (
     MAIL_RULE_MAP,
     SAVED_VIEW_MAP,
     SHARE_LINK_MAP,
+    STATUS_MAP,
     STORAGE_PATH_MAP,
     TAG_MAP,
     TASK_MAP,
@@ -649,6 +653,32 @@ class TestModelDocuments:
         )
         deletion = await results.pop().delete()
         assert deletion
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [STATUS_MAP],
+    scope="class",
+)
+# test models/status.py
+class TestModelStatus:
+    """Status test cases."""
+
+    async def test_call(
+        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """Test call."""
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}",
+            status=200,
+            payload=PATCHWORK[mapping.resource],
+        )
+        status = await getattr(api_latest, mapping.resource)()
+        assert status
+        assert isinstance(status, mapping.model_cls)
+        assert isinstance(status.storage, StatusStorageType)
+        assert isinstance(status.database, StatusDatabaseType)
+        assert isinstance(status.tasks, StatusTasksType)
 
 
 @pytest.mark.parametrize(

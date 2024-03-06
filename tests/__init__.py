@@ -117,6 +117,12 @@ SHARE_LINK_MAP = ResourceTestMapping(
     },
 )
 
+STATUS_MAP = ResourceTestMapping(
+    PaperlessResource.STATUS,
+    helpers.StatusHelper,
+    models.Status,
+)
+
 STORAGE_PATH_MAP = ResourceTestMapping(
     PaperlessResource.STORAGE_PATHS,
     helpers.StoragePathHelper,

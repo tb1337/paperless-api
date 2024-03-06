@@ -23,9 +23,9 @@ def aioresponses_fixture() -> Generator[aioresponses, None, None]:
 
 
 @pytest.fixture(name="api_latest")
-async def api_version_latest_fixture(api_23) -> AsyncGenerator[Paperless, Any]:
+async def api_version_latest_fixture(api_26) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with latest version."""
-    yield api_23
+    yield api_26
 
 
 @pytest.fixture(name="api")
@@ -99,6 +99,19 @@ async def api_version_23_fixture(resp: aioresponses, api) -> AsyncGenerator[Pape
         status=200,
         headers={"X-Version": "2.3.0"},
         payload=PATCHWORK["paths_v2_3_0"],
+    )
+    async with api:
+        yield api
+
+
+@pytest.fixture(name="api_26")
+async def api_version_26_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+    """Return a Paperless object with given version."""
+    resp.get(
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        status=200,
+        headers={"X-Version": "2.6.0"},
+        payload=PATCHWORK["paths"],
     )
     async with api:
         yield api
