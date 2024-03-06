@@ -168,7 +168,7 @@ class TestModelDocuments:
             status=200,
             headers={
                 "Content-Type": "application/pdf",
-                "Content-Disposition": "attachment;any_filename.pdf",
+                "Content-Disposition": "attachment;filename=any_filename.pdf",
             },
             body=b"Binary data: download",
         )
