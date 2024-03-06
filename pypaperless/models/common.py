@@ -158,7 +158,7 @@ class StatusDatabaseType:
     url: str | None = None
     status: StatusType | None = None
     error: str | None = None
-    migration_status: StatusDatabaseMigrationStatusType
+    migration_status: StatusDatabaseMigrationStatusType | None = None
 
 
 # status

@@ -1,9 +1,15 @@
 """Provide `Status` related models and helpers."""
 
 from dataclasses import dataclass
+from typing import cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.common import StatusDatabaseType, StatusStorageType, StatusTasksType
+from pypaperless.models.common import (
+    StatusDatabaseType,
+    StatusStorageType,
+    StatusTasksType,
+    StatusType,
+)
 
 from .base import HelperBase, PaperlessModel
 
@@ -20,6 +26,24 @@ class Status(PaperlessModel):
     storage: StatusStorageType | None = None
     database: StatusDatabaseType | None = None
     tasks: StatusTasksType | None = None
+
+    @property
+    def has_errors(self) -> bool:
+        """Return whether any status flag is `ERROR`."""
+        statuses: list[StatusType] = [
+            self.database.status if self.database and self.database.status else StatusType.OK,
+            *[
+                cast(StatusType, getattr(self.tasks, status, StatusType.OK))
+                for status in (
+                    "redis_status",
+                    "celery_status",
+                    "classifier_status",
+                )
+                if self.tasks
+            ],
+        ]
+
+        return any(map(lambda st: st == StatusType.ERROR, statuses))
 
 
 class StatusHelper(HelperBase[Status]):
