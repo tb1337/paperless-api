@@ -3,11 +3,12 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
     labels:
       - dependencies
       - auto
       - no-stale
+      - skip-changelog
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
