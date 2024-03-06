@@ -40,10 +40,7 @@ def _str_to_date(datestr: str):
 
 def _dateobj_to_str(value: date | datetime):
     """Parse string from date objects."""
-    result = value.isoformat().replace("+00:00", "Z")
-    if isinstance(value, datetime):
-        result = result.rstrip("Z") + "Z"
-    return result
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def object_to_dict_value(value: Any) -> Any:
