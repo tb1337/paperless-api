@@ -1,51 +1,54 @@
 ---
-name-template: 'v$RESOLVED_VERSION 🌈'
-tag-template: 'v$RESOLVED_VERSION'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+name-template: "v$RESOLVED_VERSION 🌈"
+tag-template: "v$RESOLVED_VERSION"
+change-template: "- $TITLE @$AUTHOR (#$NUMBER)"
 change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
 
+exclude-labels:
+  - "skip-changelog"
+
 categories:
-  - title: '🚨 Breaking changes'
+  - title: "🚨 Breaking changes"
     labels:
-      - 'breaking-change'
-  - title: '✨ New features'
+      - "breaking-change"
+  - title: "✨ New features"
     labels:
-      - 'new-feature'
-  - title: '🐛 Bug Fixes'
+      - "new-feature"
+  - title: "🐛 Bug Fixes"
     labels:
-      - 'bugfix'
-  - title: '🚀 Enhancements'
+      - "bugfix"
+  - title: "🚀 Enhancements"
     labels:
-      - 'enhancement'
-      - 'refactor'
-      - 'performance'
-  - title: '🧰 Maintenance'
+      - "enhancement"
+      - "refactor"
+      - "performance"
+  - title: "🧰 Maintenance"
     labels:
-      - 'maintenance'
-      - 'ci'
-  - title: '📚 Documentation'
+      - "maintenance"
+      - "ci"
+  - title: "📚 Documentation"
     labels:
-      - 'documentation'
-  - title: '⬆️ Dependency updates'
+      - "documentation"
+  - title: "⬆️ Dependency updates"
     labels:
-      - 'dependencies'
+      - "dependencies"
 
 version-resolver:
   major:
     labels:
-      - 'major'
-      - 'breaking-change'
+      - "major"
+      - "breaking-change"
   minor:
     labels:
-      - 'minor'
-      - 'new-feature'
+      - "minor"
+      - "new-feature"
   patch:
     labels:
-      - 'bugfix'
-      - 'dependencies'
-      - 'enhancement'
-      - 'performance'
-      - 'refactor'
+      - "bugfix"
+      - "dependencies"
+      - "enhancement"
+      - "performance"
+      - "refactor"
   default: patch
 
 template: |
