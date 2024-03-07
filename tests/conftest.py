@@ -3,9 +3,8 @@
 from collections.abc import AsyncGenerator, Generator
 from typing import Any
 
-from aioresponses import aioresponses
 import pytest
-
+from aioresponses import aioresponses
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 
@@ -23,24 +22,28 @@ def aioresponses_fixture() -> Generator[aioresponses, None, None]:
 
 
 @pytest.fixture(name="api_latest")
-async def api_version_latest_fixture(api_26) -> AsyncGenerator[Paperless, Any]:
+async def api_version_latest_fixture(
+    api_26: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with latest version."""
-    yield api_26
+    return api_26
 
 
 @pytest.fixture(name="api")
 def api_obj_fixture() -> Paperless:
     """Return Paperless."""
-    paperless = Paperless(
+    return Paperless(
         PAPERLESS_TEST_URL,
         PAPERLESS_TEST_TOKEN,
         request_args=PAPERLESS_TEST_REQ_ARGS,
     )
-    return paperless
 
 
 @pytest.fixture(name="api_00")
-async def api_version_00_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_00_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a basic Paperless object."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
@@ -53,7 +56,10 @@ async def api_version_00_fixture(resp: aioresponses, api) -> AsyncGenerator[Pape
 
 
 @pytest.fixture(name="api_18")
-async def api_version_18_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_18_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
@@ -66,7 +72,10 @@ async def api_version_18_fixture(resp: aioresponses, api) -> AsyncGenerator[Pape
 
 
 @pytest.fixture(name="api_117")
-async def api_version_117_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_117_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
@@ -79,7 +88,10 @@ async def api_version_117_fixture(resp: aioresponses, api) -> AsyncGenerator[Pap
 
 
 @pytest.fixture(name="api_20")
-async def api_version_20_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_20_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
@@ -92,7 +104,10 @@ async def api_version_20_fixture(resp: aioresponses, api) -> AsyncGenerator[Pape
 
 
 @pytest.fixture(name="api_23")
-async def api_version_23_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_23_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
@@ -105,7 +120,10 @@ async def api_version_23_fixture(resp: aioresponses, api) -> AsyncGenerator[Pape
 
 
 @pytest.fixture(name="api_26")
-async def api_version_26_fixture(resp: aioresponses, api) -> AsyncGenerator[Paperless, Any]:
+async def api_version_26_fixture(
+    resp: aioresponses,
+    api: Paperless,
+) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",

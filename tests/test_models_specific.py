@@ -3,9 +3,8 @@
 import datetime
 import re
 
-from aioresponses import aioresponses
 import pytest
-
+from aioresponses import aioresponses
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (

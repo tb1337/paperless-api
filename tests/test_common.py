@@ -5,10 +5,9 @@ from datetime import date, datetime
 from enum import Enum
 
 import aiohttp
+import pytest
 from aiohttp.http_exceptions import InvalidURLError
 from aioresponses import aioresponses
-import pytest
-
 from pypaperless import Paperless
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
@@ -31,6 +30,7 @@ from pypaperless.models.common import (
 )
 from pypaperless.models.mixins import helpers
 from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
+
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -223,11 +223,7 @@ class TestPaperless:
             status=500,
             body="no json",
         )
-        with pytest.raises(Exception):
-            session.params = {
-                "response_content": "no json",
-                "status": "500",
-            }
+        with pytest.raises(BadJsonResponse):
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
@@ -252,7 +248,7 @@ class TestPaperless:
     async def test_dataclass_conversion(self) -> None:
         """Test dataclass utils."""
 
-        class _Status(Enum):
+        class SomeStatus(Enum):
             """Test enum."""
 
             ACTIVE = 1
@@ -260,19 +256,19 @@ class TestPaperless:
             UNKNOWN = -1
 
             @classmethod
-            def _missing_(cls: type, *_: object):
+            def _missing_(cls: "SomeStatus", *_: object) -> "SomeStatus":
                 """Set default."""
                 return cls.UNKNOWN
 
         @dataclass
-        class _Friend:
+        class SomeFriend:
             """Test class."""
 
             name: str
             age: int
 
         @dataclass
-        class _Person:
+        class SomePerson:
             """Test class."""
 
             name: str
@@ -280,10 +276,10 @@ class TestPaperless:
             height: float
             birth: date
             last_login: datetime
-            friends: list[_Friend] | None
+            friends: list[SomeFriend] | None
             deleted: datetime | None
             is_deleted: bool
-            status: _Status
+            status: SomeStatus
             file: bytes
             meta: dict[str, str]
 
@@ -316,9 +312,9 @@ class TestPaperless:
                 field.type,
                 field.default,
             )
-            for field in fields(_Person)
+            for field in fields(SomePerson)
         }
-        res = _Person(**data)
+        res = SomePerson(**data)
 
         assert isinstance(res.name, str)
         assert isinstance(res.age, int)
@@ -326,12 +322,12 @@ class TestPaperless:
         assert isinstance(res.birth, date)
         assert isinstance(res.last_login, datetime)
         assert isinstance(res.friends, list)
-        assert isinstance(res.friends[0], _Friend)
+        assert isinstance(res.friends[0], SomeFriend)
         assert isinstance(res.friends[0].age, int)
         assert isinstance(res.friends[1].age, int)
         assert res.deleted is None
         assert res.is_deleted is False
-        assert isinstance(res.status, _Status)
+        assert isinstance(res.status, SomeStatus)
         assert isinstance(res.file, bytes)
 
         # back conversion
@@ -406,11 +402,11 @@ class TestPaperless:
             """Test Helper."""
 
             _api_path = "any.url"
-            _resource = "test"  # type: ignore
-            # draft_cls - we "forgot" to set a draft class, which will raise an exception ...
+            _resource = "test"
+            # draft_cls - we "forgot" to set a draft class, which will raises
             _resource_cls = TestResource
 
         helper = TestHelper(api)
         with pytest.raises(DraftNotSupported):
             # ... there it is
-            helper.draft()  # noqa
+            helper.draft()

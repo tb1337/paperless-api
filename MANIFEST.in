@@ -1,4 +1,0 @@
-include *.md
-include *.txt
-include LICENSE
-graft pypaperless

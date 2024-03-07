@@ -3,9 +3,8 @@
 import re
 from typing import Any
 
-from aioresponses import CallbackResult, aioresponses
 import pytest
-
+from aioresponses import CallbackResult, aioresponses
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import DraftFieldRequired, RequestException
@@ -221,7 +220,7 @@ class TestReadWrite:
     ) -> None:
         """Test create."""
         draft = getattr(api_latest, mapping.resource).draft(**mapping.draft_defaults)
-        assert isinstance(draft, mapping.draft_cls)  # type: ignore # noqa
+        assert isinstance(draft, mapping.draft_cls)
         # test empty draft fields
         if mapping.model_cls not in (
             SHARE_LINK_MAP.model_cls,
@@ -369,14 +368,15 @@ class TestSecurableMixin:
         item.permissions.view.users.append(23)
 
         def _lookup_set_permissions(
-            url: str,  # noqa
+            url: str,
             json: dict[str, Any],
-            **kwargs,  # pylint: disable=unused-argument # noqa
-        ):
+            **kwargs: Any,  # noqa: ARG001
+        ) -> CallbackResult:
+            assert url
             assert "set_permissions" in json
             return CallbackResult(
                 status=200,
-                payload=item._data,  # pylint: disable=protected-access
+                payload=item._data,
             )
 
         resp.patch(

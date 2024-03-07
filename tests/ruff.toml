@@ -1,0 +1,13 @@
+# This extend our general Ruff rules specifically for tests
+extend = "../pyproject.toml"
+
+lint.extend-select = [
+  "PT", # Use @pytest.fixture without parentheses
+]
+
+lint.extend-ignore = [
+  "S101", # As these are tests, the usage of assert could be good practise, no?
+  "S105", # Yes, we hardcoded passwords. It will be ok this time.
+  "SLF001", # Tests will access private/protected members.
+  "TCH002", # pytest doesn't like this one.
+]
