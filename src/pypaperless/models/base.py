@@ -48,11 +48,6 @@ class HelperBase(PaperlessBase, Generic[ResourceT]):
         """Return if the attached endpoint is available, or not."""
         return self._resource in self._api.remote_resources
 
-    @property
-    def resource(self) -> PaperlessResource:
-        """Return the attached resource."""
-        return self._resource
-
 
 @dataclass(init=False)
 class PaperlessModelProtocol(Protocol):

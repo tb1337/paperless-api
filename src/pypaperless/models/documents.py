@@ -611,8 +611,8 @@ class DocumentHelper(
             try:
                 res.raise_for_status()
                 return int(await res.text())
-            except ValueError:
-                raise AsnRequestError from None
+            except Exception as exc:  # noqa: BLE001
+                raise AsnRequestError from exc
 
     async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
         """Lookup documents similar to the given document pk.

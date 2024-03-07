@@ -11,30 +11,30 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import BadJsonResponseError, JsonResponseWithError, RequestError
+from .exceptions import BadJsonResponseError, JsonResponseWithError, PaperlessError, RequestError
 from .models.base import HelperBase
 
 
 class Paperless:
     """Retrieves and manipulates data from and to Paperless via REST."""
 
-    _helpers_map: set[type[HelperBase]] = {
-        helpers.ConfigHelper,
-        helpers.CorrespondentHelper,
-        helpers.CustomFieldHelper,
-        helpers.DocumentHelper,
-        helpers.DocumentTypeHelper,
-        helpers.GroupHelper,
-        helpers.MailAccountHelper,
-        helpers.MailRuleHelper,
-        helpers.SavedViewHelper,
-        helpers.ShareLinkHelper,
-        helpers.StatusHelper,
-        helpers.StoragePathHelper,
-        helpers.TagHelper,
-        helpers.TaskHelper,
-        helpers.UserHelper,
-        helpers.WorkflowHelper,
+    _helpers_map: set[tuple[str, type[HelperBase]]] = {
+        (PaperlessResource.CONFIG, helpers.ConfigHelper),
+        (PaperlessResource.CORRESPONDENTS, helpers.CorrespondentHelper),
+        (PaperlessResource.CUSTOM_FIELDS, helpers.CustomFieldHelper),
+        (PaperlessResource.DOCUMENTS, helpers.DocumentHelper),
+        (PaperlessResource.DOCUMENT_TYPES, helpers.DocumentTypeHelper),
+        (PaperlessResource.GROUPS, helpers.GroupHelper),
+        (PaperlessResource.MAIL_ACCOUNTS, helpers.MailAccountHelper),
+        (PaperlessResource.MAIL_RULES, helpers.MailRuleHelper),
+        (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
+        (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
+        (PaperlessResource.STATUS, helpers.StatusHelper),
+        (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
+        (PaperlessResource.TAGS, helpers.TagHelper),
+        (PaperlessResource.TASKS, helpers.TaskHelper),
+        (PaperlessResource.USERS, helpers.UserHelper),
+        (PaperlessResource.WORKFLOWS, helpers.WorkflowHelper),
     }
 
     config: helpers.ConfigHelper
@@ -193,7 +193,7 @@ class Paperless:
             data = await res.json()
             res.raise_for_status()
             return str(data["token"])
-        except KeyError as exc:
+        except (JSONDecodeError, KeyError) as exc:
             message = "Token is missing in response."
             raise BadJsonResponseError(message) from exc
         except aiohttp.ClientResponseError as exc:
@@ -216,8 +216,8 @@ class Paperless:
             self._version = res.headers.get("x-version", None)
             self._remote_resources = set(map(PaperlessResource, await res.json()))
 
-        for helper in self._helpers_map:
-            setattr(self, f"{helper.resource}", helper(self))
+        for attribute, helper in self._helpers_map:
+            setattr(self, f"{attribute}", helper(self))
 
         unused = self._remote_resources.difference(self._local_resources)
         missing = self._local_resources.difference(self._remote_resources)
@@ -290,8 +290,10 @@ class Paperless:
             )
             self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
             yield res
-        except aiohttp.ClientConnectionError as exc:
-            raise RequestError(exc, (method, url, params), kwargs) from exc
+        except PaperlessError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            raise RequestError(exc, (method, url, params), kwargs) from None
 
     async def request_json(
         self,
@@ -301,16 +303,17 @@ class Paperless:
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
         async with self.request(method, endpoint, **kwargs) as res:
-            if res.content_type != "application/json":
-                raise BadJsonResponseError(res)
-
             try:
+                assert res.content_type == "application/json"  # noqa: S101
                 payload = await res.json()
-            except JSONDecodeError:
-                raise BadJsonResponseError(res) from None
 
-            if res.status == 400:
-                raise JsonResponseWithError(payload)
-            res.raise_for_status()
+                if res.status == 400:
+                    raise JsonResponseWithError(payload)  # noqa: TRY301
+
+                res.raise_for_status()
+            except (AssertionError, ValueError) as exc:
+                raise BadJsonResponseError(res) from exc
+            except Exception:
+                raise
 
         return payload

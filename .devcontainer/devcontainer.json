@@ -9,34 +9,33 @@
     },
     "vscode": {
       "extensions": [
-        "charliermarsh.ruff",
-        "esbenp.prettier-vscode",
         "ms-python.python",
         "redhat.vscode-yaml",
-        "GitHub.vscode-github-actions",
+        "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
+        "charliermarsh.ruff",
+        "GitHub.vscode-github-actions",
         "ryanluker.vscode-coverage-gutters"
       ],
       "settings": {
         "[python]": {
           "editor.codeActionsOnSave": {
-            "source.fixAll": true,
-            "source.organizeImports": true
+            "source.fixAll": "always",
+            "source.organizeImports": "always"
           }
         },
         "coverage-gutters.customizable.context-menu": true,
         "coverage-gutters.customizable.status-bar-toggler-watchCoverageAndVisibleEditors-enabled": true,
-        "coverage-gutters.showGutterCoverage": false,
+        "coverage-gutters.showGutterCoverage": true,
         "coverage-gutters.showLineCoverage": true,
         "coverage-gutters.xmlname": "coverage.xml",
         "python.analysis.extraPaths": ["${workspaceFolder}/src"],
         "python.defaultInterpreterPath": ".venv/bin/python",
         "python.formatting.provider": "ruff",
-        "python.linting.enabled": true,
-        "python.linting.mypyEnabled": true,
-        "python.linting.pylintEnabled": true,
         "python.testing.cwd": "${workspaceFolder}",
-        "python.testing.pytestArgs": ["--cov-report=xml"],
+        "python.testing.pytestArgs": [
+          "--cov-report=xml"
+        ],
         "python.testing.pytestEnabled": true,
         "ruff.importStrategy": "fromEnvironment",
         "ruff.interpreter": [".venv/bin/python"],
