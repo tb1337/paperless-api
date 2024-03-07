@@ -1,6 +1,7 @@
 ---
 name: Typing and Linting
 
+# yamllint disable-line rule:truthy
 on:
   push:
     branches:

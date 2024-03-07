@@ -1,6 +1,7 @@
 ---
 name: Release
 
+# yamllint disable-line rule:truthy
 on:
   release:
     types:

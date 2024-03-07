@@ -12,10 +12,10 @@ from aioresponses import aioresponses
 from pypaperless import Paperless
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
-    BadJsonResponse,
-    DraftNotSupported,
+    BadJsonResponseError,
+    DraftNotSupportedError,
     JsonResponseWithError,
-    RequestException,
+    RequestError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
@@ -107,7 +107,7 @@ class TestPaperless:
             PAPERLESS_TEST_URL,
             exception=InvalidURLError,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             async with api.request("get", PAPERLESS_TEST_URL) as res:
                 pass
 
@@ -133,7 +133,7 @@ class TestPaperless:
             headers={"Content-Type": "text/plain"},
             body='{"error": "sample message"}',
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-text-error-payload")
 
         # test 200 ok with correct content type, but no json payload
@@ -143,7 +143,7 @@ class TestPaperless:
             headers={"Content-Type": "application/json"},
             body="test 5 23 42 1337",
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-json-text-body")
 
     async def test_create_url(self) -> None:
@@ -195,7 +195,7 @@ class TestPaperless:
             status=200,
             payload={"blah": "any string"},
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
@@ -223,7 +223,7 @@ class TestPaperless:
             status=500,
             body="no json",
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
@@ -407,6 +407,6 @@ class TestPaperless:
             _resource_cls = TestResource
 
         helper = TestHelper(api)
-        with pytest.raises(DraftNotSupported):
+        with pytest.raises(DraftNotSupportedError):
             # ... there it is
             helper.draft()
