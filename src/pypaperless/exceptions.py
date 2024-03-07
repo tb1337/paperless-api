@@ -3,18 +3,18 @@
 from typing import Any
 
 
-class PaperlessException(Exception):
+class PaperlessError(Exception):
     """Base exception for PyPaperless."""
 
 
 # Sessions and requests
 
 
-class AuthentificationRequired(PaperlessException):
+class AuthentificationRequiredError(PaperlessError):
     """Raise when initializing a `Paperless` instance without url/token or session."""
 
 
-class RequestException(PaperlessException):
+class RequestError(PaperlessError):
     """Raise when issuing a request fails."""
 
     def __init__(
@@ -33,11 +33,11 @@ class RequestException(PaperlessException):
         super().__init__(message)
 
 
-class BadJsonResponse(PaperlessException):
+class BadJsonResponseError(PaperlessError):
     """Raise when response is no valid json."""
 
 
-class JsonResponseWithError(PaperlessException):
+class JsonResponseWithError(PaperlessError):
     """Raise when Paperless accepted the request, but responded with an error payload."""
 
     def __init__(self, payload: Any) -> None:
@@ -57,26 +57,26 @@ class JsonResponseWithError(PaperlessException):
 # Models
 
 
-class AsnRequestError(PaperlessException):
+class AsnRequestError(PaperlessError):
     """Raise when getting an error during requesting the next asn."""
 
 
-class DraftFieldRequired(PaperlessException):
+class DraftFieldRequiredError(PaperlessError):
     """Raise when trying to save models with missing required fields."""
 
 
-class DraftNotSupported(PaperlessException):
+class DraftNotSupportedError(PaperlessError):
     """Raise when trying to draft unsupported models."""
 
 
-class PrimaryKeyRequired(PaperlessException):
+class PrimaryKeyRequiredError(PaperlessError):
     """Raise when trying to access model data without supplying a pk."""
 
 
 # Tasks
 
 
-class TaskNotFound(PaperlessException):
+class TaskNotFoundError(PaperlessError):
     """Raise when trying to access a task by non-existing uuid."""
 
     def __init__(self, task_id: str) -> None:

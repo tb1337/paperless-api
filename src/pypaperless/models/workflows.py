@@ -32,7 +32,7 @@ class WorkflowAction(PaperlessModel):
     assign_change_groups: list[int] | None = None
     assign_custom_fields: list[int] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Workflow` instance."""
         super().__init__(api, data)
 
@@ -58,7 +58,7 @@ class WorkflowTrigger(
     filter_has_correspondent: int | None = None
     filter_has_document_type: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Workflow` instance."""
         super().__init__(api, data)
 
@@ -78,7 +78,7 @@ class Workflow(PaperlessModel):
     actions: list[WorkflowAction] | None = None
     triggers: list[WorkflowTrigger] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Workflow` instance."""
         super().__init__(api, data)
 

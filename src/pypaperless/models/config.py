@@ -37,7 +37,7 @@ class Config(
     app_title: str | None = None
     app_logo: str | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Config` instance."""
         super().__init__(api, data)
 

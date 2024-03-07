@@ -27,7 +27,7 @@ class CustomField(
     name: str | None = None
     data_type: CustomFieldType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Document` instance."""
         super().__init__(api, data)
 

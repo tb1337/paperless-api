@@ -101,6 +101,6 @@ class PaperlessResource(StrEnum):
     UNKNOWN = UNKNOWN
 
     @classmethod
-    def _missing_(cls: type[PaperlessResource], value: object) -> PaperlessResource:  # noqa ARG003
+    def _missing_(cls: type[PaperlessResource], *_: object) -> PaperlessResource:
         """Set default member on unknown value."""
         return cls.UNKNOWN

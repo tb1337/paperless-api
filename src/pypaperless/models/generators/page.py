@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from pypaperless.models.base import PaperlessBase
 from pypaperless.models.pages import Page
@@ -22,7 +22,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
 
     _page: Page | None
 
-    def __aiter__(self) -> AsyncIterator:
+    def __aiter__(self) -> Self:
         """Return self as iterator."""
         return self
 
@@ -39,7 +39,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
             "page_size": self.params["page_size"],
         }
         self._page = Page.create_with_data(self._api, data, fetched=True)
-        self._page._resource_cls = self._resource_cls  # attach the resource to the data class
+        self._page._resource_cls = self._resource_cls  # noqa: SLF001  # dirty attach the resource to the data class
 
         # rise page by one to request next page on next iteration
         self.params["page"] += 1
@@ -53,7 +53,7 @@ class PageGenerator(PaperlessBase, AsyncIterator):
         url: str,
         resource_cls: type,
         params: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Initialize `PageGenerator` class instance."""
         super().__init__(api)
 

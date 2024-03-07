@@ -23,7 +23,7 @@ class Group(PaperlessModel):
     name: str | None = None
     permissions: list[str] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Group` instance."""
         super().__init__(api, data)
 
@@ -39,7 +39,7 @@ class User(PaperlessModel):
     id: int
     username: str | None = None
     # exclude that from the dataclass
-    # password: str | None = None
+    # password: str | None = None  # noqa: ERA001
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None
@@ -51,7 +51,7 @@ class User(PaperlessModel):
     user_permissions: list[str] | None = None
     inherited_permissions: list[str] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `User` instance."""
         super().__init__(api, data)
 

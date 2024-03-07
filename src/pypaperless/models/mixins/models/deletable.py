@@ -23,6 +23,4 @@ class DeletableMixin(PaperlessModelProtocol):
 
         """
         async with self._api.request("delete", self._api_path) as res:
-            success = res.status == 204
-
-        return success
+            return res.status == 204

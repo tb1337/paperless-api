@@ -12,7 +12,6 @@ Thanks for the excellent work, guys!
 """
 
 # mypy: ignore-errors
-# pylint: disable=all
 
 import logging
 from dataclasses import MISSING, asdict, fields, is_dataclass
@@ -27,17 +26,17 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-def _str_to_datetime(datetimestr: str):
+def _str_to_datetime(datetimestr: str) -> datetime:
     """Parse datetime from string."""
     return datetime.fromisoformat(datetimestr.replace("Z", "+00:00"))
 
 
-def _str_to_date(datestr: str):
+def _str_to_date(datestr: str) -> date:
     """Parse date from string."""
     return date.fromisoformat(datestr)
 
 
-def _dateobj_to_str(value: date | datetime):
+def _dateobj_to_str(value: date | datetime) -> str:
     """Parse string from date objects."""
     return value.isoformat().replace("+00:00", "Z")
 
@@ -61,7 +60,7 @@ def object_to_dict_value(value: Any) -> Any:
     def _clean_list(_list_obj: list) -> list[Any]:
         final = []
         for list_value in _list_obj:
-            final.append(_clean_value(list_value))
+            final.append(_clean_value(list_value))  # noqa: PERF401
         return final
 
     def _clean_dict(_dict_obj: dict) -> dict[str, Any]:
@@ -171,7 +170,8 @@ def dict_value_to_object(
         return value
     # raise if value is None and the value is required according to annotations
     if value is None and value_type is not NoneType:
-        raise KeyError(f"`{name}` of type `{value_type}` is required.")
+        message = f"`{name}` of type `{value_type}` is required."
+        raise KeyError(message)
 
     try:
         if issubclass(value_type, Enum):
@@ -192,8 +192,7 @@ def dict_value_to_object(
 
     # If we reach this point, we could not match the value with the type and we raise
     if not isinstance(value, value_type):
-        raise TypeError(
-            f"Value {value} of type {type(value)} is invalid for {name}, "
-            f"expected value of type {value_type}"
-        )
+        message = f"Value {value} of type {type(value)} is invalid for {name}, expected value of type {value_type}"  # noqa: E501
+        raise TypeError(message)
+
     return value

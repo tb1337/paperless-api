@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequired
+from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError
 from pypaperless.models.utils import object_to_dict_value
 
 from .base import HelperBase, PaperlessModel
@@ -51,7 +51,7 @@ class Document(
     custom_fields: list[CustomFieldValueType] | None = None
     __search_hit__: DocumentSearchHitType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Document` instance."""
         super().__init__(api, data)
 
@@ -68,30 +68,25 @@ class Document(
         """Return the document search hit."""
         return self.__search_hit__
 
-    async def get_download(self, original: bool = False) -> "DownloadedDocument":
+    async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        item = await self._api.documents.download(cast(int, self.id), original)
-        return item
+        return await self._api.documents.download(cast(int, self.id), original=original)
 
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
-        item = await self._api.documents.metadata(cast(int, self.id))
-        return item
+        return await self._api.documents.metadata(cast(int, self.id))
 
-    async def get_preview(self, original: bool = False) -> "DownloadedDocument":
+    async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        item = await self._api.documents.preview(cast(int, self.id), original)
-        return item
+        return await self._api.documents.preview(cast(int, self.id), original=original)
 
     async def get_suggestions(self) -> "DocumentSuggestions":
         """Request and return the `DocumentSuggestions` class."""
-        item = await self._api.documents.suggestions(cast(int, self.id))
-        return item
+        return await self._api.documents.suggestions(cast(int, self.id))
 
-    async def get_thumbnail(self, original: bool = False) -> "DownloadedDocument":
+    async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        item = await self._api.documents.thumbnail(cast(int, self.id), original)
-        return item
+        return await self._api.documents.thumbnail(cast(int, self.id), original=original)
 
 
 @dataclass(init=False)
@@ -146,7 +141,7 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `DocumentNote` instance."""
         super().__init__(api, data)
 
@@ -173,9 +168,7 @@ class DocumentNote(PaperlessModel):
             "id": self.id,
         }
         async with self._api.request("delete", self._api_path, params=params) as res:
-            success = res.status == 204
-
-        return success
+            return res.status == 204
 
 
 @dataclass(kw_only=True)
@@ -192,7 +185,7 @@ class DocumentNoteDraft(
     note: str | None = None
     document: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `DocumentNote` instance."""
         super().__init__(api, data)
 
@@ -219,7 +212,7 @@ class DocumentMeta(PaperlessModel):
     archive_size: int | None = None
     archive_metadata: list[DocumentMetadataType] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `DocumentMeta` instance."""
         super().__init__(api, data)
 
@@ -281,7 +274,7 @@ class DocumentSuggestions(PaperlessModel):
     storage_paths: list[int] | None = None
     dates: list[datetime.date] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `DocumentSuggestions` instance."""
         super().__init__(api, data)
 
@@ -320,9 +313,10 @@ class DocumentSubHelperBase(
     async def __call__(
         self,
         pk: int,
-        original: bool,
         mode: RetrieveFileMode,
         api_path: str,
+        *,
+        original: bool,
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
         data = {
@@ -331,7 +325,7 @@ class DocumentSubHelperBase(
             "original": original,
         }
         item = self._resource_cls.create_with_data(self._api, data)
-        item._api_path = api_path
+        item._api_path = api_path  # noqa: SLF001
         await item.load()
 
         return item
@@ -345,10 +339,13 @@ class DocumentFileDownloadHelper(DocumentSubHelperBase):
     async def __call__(  # type: ignore[override]
         self,
         pk: int,
+        *,
         original: bool = False,
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
-        return await super().__call__(pk, original, RetrieveFileMode.DOWNLOAD, self._api_path)
+        return await super().__call__(
+            pk, RetrieveFileMode.DOWNLOAD, self._api_path, original=original
+        )
 
 
 class DocumentFilePreviewHelper(DocumentSubHelperBase):
@@ -359,10 +356,13 @@ class DocumentFilePreviewHelper(DocumentSubHelperBase):
     async def __call__(  # type: ignore[override]
         self,
         pk: int,
+        *,
         original: bool = False,
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
-        return await super().__call__(pk, original, RetrieveFileMode.PREVIEW, self._api_path)
+        return await super().__call__(
+            pk, RetrieveFileMode.PREVIEW, self._api_path, original=original
+        )
 
 
 class DocumentFileThumbnailHelper(DocumentSubHelperBase):
@@ -373,10 +373,13 @@ class DocumentFileThumbnailHelper(DocumentSubHelperBase):
     async def __call__(  # type: ignore[override]
         self,
         pk: int,
+        *,
         original: bool = False,
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
-        return await super().__call__(pk, original, RetrieveFileMode.THUMBNAIL, self._api_path)
+        return await super().__call__(
+            pk, RetrieveFileMode.THUMBNAIL, self._api_path, original=original
+        )
 
 
 class DocumentMetaHelper(
@@ -437,7 +440,8 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):
     def _get_document_pk(self, pk: int | None = None) -> int:
         """Return the attached document pk, or the parameter."""
         if not any((self._attached_to, pk)):
-            raise PrimaryKeyRequired(f"Accessing {type(self).__name__} data without a primary key.")
+            message = f"Accessing {type(self).__name__} data without a primary key."
+            raise PrimaryKeyRequiredError(message)
         return cast(int, self._attached_to or pk)
 
     def _get_api_path(self, pk: int) -> str:
@@ -607,8 +611,8 @@ class DocumentHelper(
             try:
                 res.raise_for_status()
                 return int(await res.text())
-            except Exception as exc:
-                raise AsnRequestError from exc
+            except ValueError:
+                raise AsnRequestError from None
 
     async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
         """Lookup documents similar to the given document pk.

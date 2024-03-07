@@ -28,11 +28,11 @@ class MailAccount(
     imap_security: int | None = None
     username: str | None = None
     # exclude that from the dataclass
-    # password: str | None = None
+    # password: str | None = None  # noqa: ERA001
     character_set: str | None = None
     is_token: bool | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `MailAccount` instance."""
         super().__init__(api, data)
 
@@ -71,7 +71,7 @@ class MailRule(
     attachment_type: int | None = None
     consumption_scope: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `MailRule` instance."""
         super().__init__(api, data)
 

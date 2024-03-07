@@ -43,7 +43,7 @@ class Status(PaperlessModel):
             ],
         ]
 
-        return any(map(lambda st: st == StatusType.ERROR, statuses))
+        return any(st == StatusType.ERROR for st in statuses)
 
 
 class StatusHelper(HelperBase[Status]):
@@ -57,6 +57,4 @@ class StatusHelper(HelperBase[Status]):
     async def __call__(self) -> Status:
         """Request the `Status` model data."""
         res = await self._api.request_json("get", self._api_path)
-        item = self._resource_cls.create_with_data(self._api, res, fetched=True)
-
-        return item
+        return self._resource_cls.create_with_data(self._api, res, fetched=True)

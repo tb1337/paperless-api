@@ -11,6 +11,7 @@ class CallableMixin(HelperProtocol[ResourceT]):
     async def __call__(
         self,
         pk: int,
+        *,
         lazy: bool = False,
     ) -> ResourceT:
         """Request exactly one resource item.
@@ -33,7 +34,7 @@ class CallableMixin(HelperProtocol[ResourceT]):
 
         # set requesting full permissions
         if SecurableMixin in type(self).__bases__ and getattr(self, "_request_full_perms", False):
-            item._params.update({"full_perms": "true"})
+            item._params.update({"full_perms": "true"})  # noqa: SLF001
 
         if not lazy:
             await item.load()

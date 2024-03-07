@@ -14,7 +14,7 @@ class UpdatableMixin(PaperlessModelProtocol):
 
     _data: dict[str, Any]
 
-    async def update(self, only_changed: bool = True) -> bool:
+    async def update(self, *, only_changed: bool = True) -> bool:
         """Send actually changed `model data` to DRF.
 
         Return `True` when any attribute was updated, `False` otherwise.

@@ -30,7 +30,7 @@ class SavedView(
     sort_reverse: bool | None = None
     filter_rules: list[SavedViewFilterRuleType] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `SavedView` instance."""
         super().__init__(api, data)
 

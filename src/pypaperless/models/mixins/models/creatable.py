@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from pypaperless.exceptions import DraftFieldRequired
+from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
@@ -61,6 +61,6 @@ class CreatableMixin(PaperlessModelProtocol):
 
         if len(missing) == 0:
             return
-        raise DraftFieldRequired(
-            f"Missing fields for saving a `{type(self).__name__}`: {', '.join(missing)}."
-        )
+
+        message = f"Missing fields for saving a `{type(self).__name__}`: {', '.join(missing)}."
+        raise DraftFieldRequiredError(message)

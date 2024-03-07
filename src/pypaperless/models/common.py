@@ -21,7 +21,7 @@ class CustomFieldType(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "CustomFieldType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "CustomFieldType":
         """Set default member on unknown value."""
         return CustomFieldType.UNKNOWN
 
@@ -71,7 +71,7 @@ class MatchingAlgorithmType(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "MatchingAlgorithmType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "MatchingAlgorithmType":
         """Set default member on unknown value."""
         return MatchingAlgorithmType.UNKNOWN
 
@@ -121,7 +121,7 @@ class ShareLinkFileVersionType(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "ShareLinkFileVersionType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "ShareLinkFileVersionType":
         """Set default member on unknown value."""
         return ShareLinkFileVersionType.UNKNOWN
 
@@ -135,7 +135,7 @@ class StatusType(Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "StatusType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "StatusType":
         """Set default member on unknown value."""
         return StatusType.UNKNOWN
 
@@ -197,7 +197,7 @@ class TaskStatusType(Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "TaskStatusType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "TaskStatusType":
         """Set default member on unknown value."""
         return TaskStatusType.UNKNOWN
 
@@ -210,7 +210,7 @@ class WorkflowActionType(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "WorkflowActionType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "WorkflowActionType":
         """Set default member on unknown value."""
         return WorkflowActionType.UNKNOWN
 
@@ -225,7 +225,7 @@ class WorkflowTriggerType(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "WorkflowTriggerType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerType":
         """Set default member on unknown value."""
         return WorkflowTriggerType.UNKNOWN
 
@@ -240,6 +240,6 @@ class WorkflowTriggerSourceType(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, value: object) -> "WorkflowTriggerSourceType":  # noqa ARG003
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerSourceType":
         """Set default member on unknown value."""
         return WorkflowTriggerSourceType.UNKNOWN

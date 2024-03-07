@@ -33,7 +33,7 @@ class Task(
     acknowledged: bool | None = None
     related_document: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Task` instance."""
         super().__init__(api, data)
 

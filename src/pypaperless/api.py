@@ -4,25 +4,21 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from json.decoder import JSONDecodeError
-from typing import Any, ClassVar
+from typing import Any
 
 import aiohttp
 from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import (
-    BadJsonResponse,
-    JsonResponseWithError,
-    RequestException,
-)
+from .exceptions import BadJsonResponseError, JsonResponseWithError, RequestError
 from .models.base import HelperBase
 
 
 class Paperless:
     """Retrieves and manipulates data from and to Paperless via REST."""
 
-    _helpers_map: ClassVar[frozenset[HelperBase]] = {
+    _helpers_map: set[type[HelperBase]] = {
         helpers.ConfigHelper,
         helpers.CorrespondentHelper,
         helpers.CustomFieldHelper,
@@ -198,8 +194,8 @@ class Paperless:
             res.raise_for_status()
             return str(data["token"])
         except KeyError as exc:
-            body = "Token is missing in response."
-            raise BadJsonResponse(body) from exc
+            message = "Token is missing in response."
+            raise BadJsonResponseError(message) from exc
         except aiohttp.ClientResponseError as exc:
             raise JsonResponseWithError(payload={"error": data}) from exc
         except Exception:
@@ -295,7 +291,7 @@ class Paperless:
             self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
             yield res
         except aiohttp.ClientConnectionError as exc:
-            raise RequestException(exc, (method, url, params), kwargs) from exc
+            raise RequestError(exc, (method, url, params), kwargs) from exc
 
     async def request_json(
         self,
@@ -306,12 +302,12 @@ class Paperless:
         """Make a request to the api and parse response json to dict."""
         async with self.request(method, endpoint, **kwargs) as res:
             if res.content_type != "application/json":
-                raise BadJsonResponse(res)
+                raise BadJsonResponseError(res)
 
             try:
                 payload = await res.json()
             except JSONDecodeError:
-                raise BadJsonResponse(res) from None
+                raise BadJsonResponseError(res) from None
 
             if res.status == 400:
                 raise JsonResponseWithError(payload)

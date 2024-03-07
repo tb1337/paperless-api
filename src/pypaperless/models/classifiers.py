@@ -31,7 +31,7 @@ class Correspondent(
     document_count: int | None = None
     last_correspondence: datetime.datetime | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Correspondent` instance."""
         super().__init__(api, data)
 
@@ -76,7 +76,7 @@ class DocumentType(
     name: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `DocumentType` instance."""
         super().__init__(api, data)
 
@@ -123,7 +123,7 @@ class StoragePath(
     path: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `StoragePath` instance."""
         super().__init__(api, data)
 
@@ -174,7 +174,7 @@ class Tag(
     is_inbox_tag: bool | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Tag` instance."""
         super().__init__(api, data)
 

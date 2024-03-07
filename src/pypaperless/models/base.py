@@ -18,7 +18,7 @@ class PaperlessBase:
 
     _api_path = API_PATH["index"]
 
-    def __init__(self, api: "Paperless"):
+    def __init__(self, api: "Paperless") -> None:
         """Initialize a `PaperlessBase` instance."""
         self._api = api
 
@@ -37,7 +37,7 @@ class HelperBase(PaperlessBase, Generic[ResourceT]):
 
     _resource: PaperlessResource
 
-    def __init__(self, api: "Paperless"):
+    def __init__(self, api: "Paperless") -> None:
         """Initialize a `HelperBase` instance."""
         super().__init__(api)
 
@@ -74,7 +74,7 @@ class PaperlessModelProtocol(Protocol):
 class PaperlessModel(PaperlessBase):
     """Base class for all models in PyPaperless."""
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]):
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `PaperlessModel` instance."""
         super().__init__(api)
         self._data = {}
@@ -88,6 +88,7 @@ class PaperlessModel(PaperlessBase):
         cls: type[ResourceT],
         api: "Paperless",
         data: dict[str, Any],
+        *,
         fetched: bool = False,
     ) -> ResourceT:
         """Return a new instance of `cls` from `data`.
@@ -97,9 +98,10 @@ class PaperlessModel(PaperlessBase):
         Example: `document = Document.create_with_data(...)`
         """
         item = cls(api, data=data)
-        item._fetched = fetched
+
+        item._fetched = fetched  # noqa: SLF001
         if fetched:
-            item._set_dataclass_fields()
+            item._set_dataclass_fields()  # noqa: SLF001
         return item
 
     @final

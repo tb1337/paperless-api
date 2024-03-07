@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pypaperless.exceptions import DraftNotSupported
+from pypaperless.exceptions import DraftNotSupportedError
 from pypaperless.models.base import HelperProtocol, ResourceT
 
 
@@ -23,9 +23,8 @@ class DraftableMixin(HelperProtocol[ResourceT]):
 
         """
         if not hasattr(self, "_draft_cls"):
-            raise DraftNotSupported("Helper class has no _draft_cls attribute.")
+            message = "Helper class has no _draft_cls attribute."
+            raise DraftNotSupportedError(message)
         kwargs.update({"id": -1})
 
-        item = self._draft_cls.create_with_data(self._api, data=kwargs, fetched=True)
-
-        return item
+        return self._draft_cls.create_with_data(self._api, data=kwargs, fetched=True)
