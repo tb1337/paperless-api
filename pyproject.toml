@@ -156,7 +156,7 @@ fixture-parentheses = false
 mark-parentheses = false
 
 [tool.ruff.lint.isort]
-known-first-party = ["wled"]
+known-first-party = ["pypaperless"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25

@@ -5,6 +5,7 @@ import re
 
 import pytest
 from aioresponses import aioresponses
+
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (

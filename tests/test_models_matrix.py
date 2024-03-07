@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 from aioresponses import CallbackResult, aioresponses
+
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import DraftFieldRequired, RequestException

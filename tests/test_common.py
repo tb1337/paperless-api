@@ -8,6 +8,7 @@ import aiohttp
 import pytest
 from aiohttp.http_exceptions import InvalidURLError
 from aioresponses import aioresponses
+
 from pypaperless import Paperless
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
@@ -30,7 +31,6 @@ from pypaperless.models.common import (
 )
 from pypaperless.models.mixins import helpers
 from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
-
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
