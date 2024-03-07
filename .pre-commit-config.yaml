@@ -58,7 +58,7 @@ repos:
         entry: poetry run check-toml
       - id: check-xml
         name: ✅ Check XML files
-        entry: check-xml
+        entry: poetry run check-xml
         language: system
         types: [xml]
       - id: check-yaml

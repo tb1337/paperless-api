@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import TaskNotFound
+from pypaperless.exceptions import TaskNotFoundError
 
 from .base import HelperBase, PaperlessModel
 from .common import TaskStatusType
@@ -87,7 +87,7 @@ class TaskHelper(
             try:
                 item = self._resource_cls.create_with_data(self._api, res.pop(), fetched=True)
             except IndexError as exc:
-                raise TaskNotFound(task_id) from exc
+                raise TaskNotFoundError(task_id) from exc
         else:
             data = {
                 "id": task_id,

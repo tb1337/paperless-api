@@ -7,7 +7,6 @@ on:
       - main
   workflow_dispatch:
 
-
 jobs:
   update_release_draft:
     name: 📝 Draft release

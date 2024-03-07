@@ -1,59 +1,59 @@
 {
-    "containerEnv": {
-        "DEVCONTAINER": "true",
-      "POETRY_VIRTUALENVS_IN_PROJECT": "true"
+  "containerEnv": {
+    "DEVCONTAINER": "true",
+    "POETRY_VIRTUALENVS_IN_PROJECT": "true"
+  },
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["README.md", "src/pypaperless/api.py"]
     },
-    "customizations": {
-      "codespaces": {
-        "openFiles": ["README.md", "src/pypaperless/api.py"]
-      },
-      "vscode": {
-        "extensions": [
-            "charliermarsh.ruff",
-            "esbenp.prettier-vscode",
-          "ms-python.python",
-          "redhat.vscode-yaml",
-          "GitHub.vscode-github-actions",
-          "GitHub.vscode-pull-request-github",
-          "ryanluker.vscode-coverage-gutters"
-        ],
-        "settings": {
-          "[python]": {
-            "editor.codeActionsOnSave": {
-              "source.fixAll": true,
-              "source.organizeImports": true
-            }
-          },
-          "coverage-gutters.customizable.context-menu": true,
-          "coverage-gutters.customizable.status-bar-toggler-watchCoverageAndVisibleEditors-enabled": true,
-          "coverage-gutters.showGutterCoverage": false,
-          "coverage-gutters.showLineCoverage": true,
-          "coverage-gutters.xmlname": "coverage.xml",
-          "python.analysis.extraPaths": ["${workspaceFolder}/src"],
-          "python.defaultInterpreterPath": ".venv/bin/python",
-          "python.formatting.provider": "ruff",
-          "python.linting.enabled": true,
-          "python.linting.mypyEnabled": true,
-          "python.linting.pylintEnabled": true,
-          "python.testing.cwd": "${workspaceFolder}",
-          "python.testing.pytestArgs": ["--cov-report=xml"],
-          "python.testing.pytestEnabled": true,
-          "ruff.importStrategy": "fromEnvironment",
-          "ruff.interpreter": [".venv/bin/python"],
-          "terminal.integrated.defaultProfile.linux": "zsh"
-        }
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "redhat.vscode-yaml",
+        "GitHub.vscode-github-actions",
+        "GitHub.vscode-pull-request-github",
+        "ryanluker.vscode-coverage-gutters"
+      ],
+      "settings": {
+        "[python]": {
+          "editor.codeActionsOnSave": {
+            "source.fixAll": true,
+            "source.organizeImports": true
+          }
+        },
+        "coverage-gutters.customizable.context-menu": true,
+        "coverage-gutters.customizable.status-bar-toggler-watchCoverageAndVisibleEditors-enabled": true,
+        "coverage-gutters.showGutterCoverage": false,
+        "coverage-gutters.showLineCoverage": true,
+        "coverage-gutters.xmlname": "coverage.xml",
+        "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.formatting.provider": "ruff",
+        "python.linting.enabled": true,
+        "python.linting.mypyEnabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.testing.cwd": "${workspaceFolder}",
+        "python.testing.pytestArgs": ["--cov-report=xml"],
+        "python.testing.pytestEnabled": true,
+        "ruff.importStrategy": "fromEnvironment",
+        "ruff.interpreter": [".venv/bin/python"],
+        "terminal.integrated.defaultProfile.linux": "zsh"
       }
-    },
-    "features": {
-      "ghcr.io/devcontainers-contrib/features/poetry:2": {},
-      "ghcr.io/devcontainers/features/github-cli:1": {},
-      "ghcr.io/devcontainers/features/node:1": {},
-      "ghcr.io/devcontainers/features/python:1": {
-        "version": "3.12",
-        "installTools": false
-      }
-    },
-    "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-    "name": "pypaperless Developer",
-    "updateContentCommand": ". ${NVM_DIR}/nvm.sh && nvm install && nvm use && npm install && poetry install && poetry run pre-commit install"
-  }
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/poetry:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12",
+      "installTools": false
+    }
+  },
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "name": "pypaperless Developer",
+  "updateContentCommand": ". ${NVM_DIR}/nvm.sh && nvm install && nvm use && npm install && poetry install && poetry run pre-commit install"
+}
