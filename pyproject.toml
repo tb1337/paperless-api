@@ -41,12 +41,14 @@ covdefaults = "^2.3.0"
 coverage = {version = "^7.4.1", extras = ["toml"]}
 mypy = "^1.8.0"
 pre-commit = "^3.6.1"
+pre-commit-hooks = "^4.5.0"
 pylint = "^3.0.3"
 pytest = "^8.0.0"
 pytest-aiohttp = "^1.0.5"
 pytest-asyncio = "^0.23.5"
 pytest-cov = "^4.1.0"
-ruff = ">=0.2.1,<0.4.0"
+ruff = "^0.3.0"
+yamllint = "^1.35.1"
 
 [tool.poetry.urls]
 "Homepage" = "https://github.com/tb1337/paperless-api"
@@ -141,6 +143,7 @@ ignore = [
   "D213", # Conflicts with other rules
   "D417", # False positives in some occasions
   "PLR2004", # Just annoying, not really useful
+  "RUF012", # Just annoying
 
   # Conflicts with the Ruff formatter
   "COM812",
