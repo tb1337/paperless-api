@@ -3,6 +3,7 @@
 import datetime
 import re
 
+import aiohttp
 import pytest
 from aioresponses import aioresponses
 
@@ -12,7 +13,6 @@ from pypaperless.exceptions import (
     AsnRequestError,
     DraftFieldRequiredError,
     PrimaryKeyRequiredError,
-    RequestError,
     TaskNotFoundError,
 )
 from pypaperless.models import (
@@ -62,7 +62,7 @@ class TestModelConfig:
             f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestError):
+        with pytest.raises(aiohttp.ClientResponseError):
             await api_latest.config(1337)
 
 
@@ -417,7 +417,7 @@ class TestModelTasks:
             f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestError):
+        with pytest.raises(aiohttp.ClientResponseError):
             await api_latest.tasks(1337)
         # must raise as task_id doesn't exist
         resp.get(
