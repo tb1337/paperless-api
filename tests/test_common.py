@@ -6,7 +6,6 @@ from enum import Enum
 
 import aiohttp
 import pytest
-from aiohttp.http_exceptions import InvalidURLError
 from aioresponses import aioresponses
 
 from pypaperless import Paperless
@@ -15,7 +14,6 @@ from pypaperless.exceptions import (
     BadJsonResponseError,
     DraftNotSupportedError,
     JsonResponseWithError,
-    RequestError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
@@ -140,15 +138,6 @@ class TestPaperless:
         )
         async with api.request("post", PAPERLESS_TEST_URL, form=form_data) as res:
             assert res.status
-
-        # test non-existing request
-        resp.get(
-            PAPERLESS_TEST_URL,
-            exception=InvalidURLError,
-        )
-        with pytest.raises(RequestError):
-            async with api.request("get", PAPERLESS_TEST_URL) as res:
-                pass
 
         # session is still open
         await api.close()

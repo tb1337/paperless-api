@@ -14,25 +14,6 @@ class AuthentificationRequiredError(PaperlessError):
     """Raise when initializing a `Paperless` instance without url/token or session."""
 
 
-class RequestError(PaperlessError):
-    """Raise when issuing a request fails."""
-
-    def __init__(
-        self,
-        exc: Exception,
-        req_args: tuple[str, str, dict[str, str | int] | None],
-        req_kwargs: dict[str, Any] | None,
-    ) -> None:
-        """Initialize a `RequestException` instance."""
-        message = f"Request error: {type(exc).__name__}\n"
-        message += f"URL: {req_args[1]}\n"
-        message += f"Method: {req_args[0].upper()}\n"
-        message += f"params={req_args[2]}\n"
-        message += f"kwargs={req_kwargs}"
-
-        super().__init__(message)
-
-
 class BadJsonResponseError(PaperlessError):
     """Raise when response is no valid json."""
 

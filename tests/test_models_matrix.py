@@ -3,12 +3,13 @@
 import re
 from typing import Any
 
+import aiohttp
 import pytest
 from aioresponses import CallbackResult, aioresponses
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import DraftFieldRequiredError, RequestError
+from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models import Page
 from pypaperless.models.common import PermissionTableType
 
@@ -120,7 +121,7 @@ class TestReadOnly:
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestError):
+        with pytest.raises(aiohttp.ClientResponseError):
             await getattr(api_latest, mapping.resource)(1337)
 
 
@@ -213,7 +214,7 @@ class TestReadWrite:
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestError):
+        with pytest.raises(aiohttp.ClientResponseError):
             await getattr(api_latest, mapping.resource)(1337)
 
     async def test_create(

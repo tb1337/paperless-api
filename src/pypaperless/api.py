@@ -11,7 +11,7 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import BadJsonResponseError, JsonResponseWithError, PaperlessError, RequestError
+from .exceptions import BadJsonResponseError, JsonResponseWithError
 from .models.base import HelperBase
 
 
@@ -198,8 +198,6 @@ class Paperless:
             raise BadJsonResponseError(message) from exc
         except aiohttp.ClientResponseError as exc:
             raise JsonResponseWithError(payload={"error": data}) from exc
-        except Exception as exc:
-            raise exc  # noqa: TRY201
         finally:
             if not external_session:
                 await session.close()
@@ -226,7 +224,7 @@ class Paperless:
             self.logger.debug("Unused features: %s", ", ".join(unused))
 
         if len(missing) > 0:
-            self.logger.warning("Outdated version detected: v%s", self._version)
+            self.logger.warning("Outdated version detected.")
             self.logger.warning("Missing features: %s", ", ".join(missing))
             self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
 
@@ -279,21 +277,16 @@ class Paperless:
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
 
-        try:
-            res = await self._session.request(
-                method=method,
-                url=url,
-                json=json,
-                data=data,
-                params=params,
-                **kwargs,
-            )
-            self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
-            yield res
-        except PaperlessError:
-            raise
-        except Exception as exc:  # noqa: BLE001
-            raise RequestError(exc, (method, url, params), kwargs) from None
+        res = await self._session.request(
+            method=method,
+            url=url,
+            json=json,
+            data=data,
+            params=params,
+            **kwargs,
+        )
+        self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        yield res
 
     async def request_json(
         self,
@@ -303,17 +296,17 @@ class Paperless:
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
         async with self.request(method, endpoint, **kwargs) as res:
+            if res.content_type != "application/json":
+                raise BadJsonResponseError(res)
+
             try:
-                assert res.content_type == "application/json"  # noqa: S101
                 payload = await res.json()
+            except ValueError:
+                raise BadJsonResponseError(res) from None
 
-                if res.status == 400:
-                    raise JsonResponseWithError(payload)  # noqa: TRY301
+            if res.status == 400:
+                raise JsonResponseWithError(payload)
 
-                res.raise_for_status()
-            except (AssertionError, ValueError) as exc:
-                raise BadJsonResponseError(res) from exc
-            except Exception as exc:
-                raise exc  # noqa: TRY201
+            res.raise_for_status()
 
         return payload
