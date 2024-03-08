@@ -226,7 +226,7 @@ class Paperless:
             self.logger.debug("Unused features: %s", ", ".join(unused))
 
         if len(missing) > 0:
-            self.logger.warning("Outdated version detected: v%s", self._version)
+            self.logger.warning("Outdated version detected.")
             self.logger.warning("Missing features: %s", ", ".join(missing))
             self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
 
