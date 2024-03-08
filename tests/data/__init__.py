@@ -20,7 +20,12 @@ from .v0_0_0 import (
 )
 from .v1_8_0 import V1_8_0_PATHS, V1_8_0_STORAGE_PATHS
 from .v1_17_0 import V1_17_0_DOCUMENT_NOTES
-from .v2_0_0 import V2_0_0_CONFIG, V2_0_0_CUSTOM_FIELDS, V2_0_0_PATHS, V2_0_0_SHARE_LINKS
+from .v2_0_0 import (
+    V2_0_0_CONFIG,
+    V2_0_0_CUSTOM_FIELDS,
+    V2_0_0_PATHS,
+    V2_0_0_SHARE_LINKS,
+)
 from .v2_3_0 import (
     V2_3_0_PATHS,
     V2_3_0_WORKFLOW_ACTIONS,

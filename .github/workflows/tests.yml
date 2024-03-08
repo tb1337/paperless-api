@@ -1,6 +1,7 @@
 ---
-name: Tests
+name: Testing
 
+# yamllint disable-line rule:truthy
 on:
   push:
     branches:
@@ -13,56 +14,72 @@ env:
 
 jobs:
   pytest:
-    name: Testing on Python ${{ matrix.python-version }}
+    name: Python ${{ matrix.python }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python: ["3.11", "3.12"]
     steps:
-      - name: ⤵️ Checkout code
+      - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
-      - name: 🚧 Setup Poetry
-        run: pip install poetry
-      - name: 🐍 Setup Python ${{ matrix.python-version }}
+      - name: 🏗 Set up Poetry
+        run: pipx install poetry
+      - name: 🏗 Set up Python ${{ matrix.python }}
+        id: python
         uses: actions/setup-python@v5.0.0
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: poetry
-      - name: 🚧 Install dependencies
-        run: poetry install --no-root --only main,test --no-interaction
-      - name: 🚀 Run Pytest
+          python-version: ${{ matrix.python }}
+          cache: "poetry"
+      - name: 🏗 Install workflow dependencies
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+      - name: 🏗 Install Python dependencies
+        run: poetry install --no-interaction
+      - name: 🚀 Run pytest
         run: poetry run pytest --cov pypaperless tests
-      - name: ⬆️ Upload coverage
+      - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v4.3.1
         with:
-          name: coverage-${{ matrix.python-version }}
+          name: coverage-${{ matrix.python }}
           path: .coverage
 
   coverage:
-    name: Coverage report
     runs-on: ubuntu-latest
     needs: pytest
     steps:
-      - name: ⤵️ Checkout code
+      - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
-      - name: ⬇️ Download coverage
+        with:
+          fetch-depth: 0
+      - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v4.1.4
-      - name: 🚧 Setup Poetry
-        run: pip install poetry
-      - name: 🐍 Setup Python ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up Poetry
+        run: pipx install poetry
+      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
         uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: poetry
-      - name: 🚧 Install dependencies
-        run: poetry install --no-root --only main,test --no-interaction
+          cache: "poetry"
+      - name: 🏗 Install workflow dependencies
+        run: |
+          poetry config virtualenvs.create true
+          poetry config virtualenvs.in-project true
+      - name: 🏗 Install dependencies
+        run: poetry install --no-interaction
       - name: 🚀 Process coverage results
         run: |
           poetry run coverage combine coverage*/.coverage*
           poetry run coverage xml -i
-      - name: ⬆️ Upload coverage to Codecov
-        uses: codecov/codecov-action@v4.1.0
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: 🚀 Upload coverage report
+        uses: codecov/codecov-action@v3.1.6
         with:
-          file: ./coverage.xml
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      - name: 🚀 SonarCloud Scan
+        if: github.event.pull_request.head.repo.fork == false
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

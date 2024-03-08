@@ -3,17 +3,17 @@
 import datetime
 import re
 
-from aioresponses import aioresponses
 import pytest
+from aioresponses import aioresponses
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     AsnRequestError,
-    DraftFieldRequired,
-    PrimaryKeyRequired,
-    RequestException,
-    TaskNotFound,
+    DraftFieldRequiredError,
+    PrimaryKeyRequiredError,
+    RequestError,
+    TaskNotFoundError,
 )
 from pypaperless.models import (
     Config,
@@ -34,6 +34,7 @@ from pypaperless.models.common import (
     StatusTasksType,
 )
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
+from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHelper
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
@@ -61,7 +62,7 @@ class TestModelConfig:
             f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             await api_latest.config(1337)
 
 
@@ -76,7 +77,7 @@ class TestModelDocuments:
         assert isinstance(draft, DocumentDraft)
         backup = draft.document
         draft.document = None
-        with pytest.raises(DraftFieldRequired):
+        with pytest.raises(DraftFieldRequiredError):
             await draft.save()
         draft.document = backup
         # actually call the create endpoint
@@ -280,7 +281,7 @@ class TestModelDocuments:
         for note in results:
             assert isinstance(note, DocumentNote)
             assert isinstance(note.created, datetime.datetime)
-        with pytest.raises(PrimaryKeyRequired):
+        with pytest.raises(PrimaryKeyRequiredError):
             item = await api_latest.documents.notes()
 
     async def test_note_create(self, resp: aioresponses, api_latest: Paperless) -> None:
@@ -295,7 +296,7 @@ class TestModelDocuments:
         assert isinstance(draft, DocumentNoteDraft)
         backup = draft.note
         draft.note = None
-        with pytest.raises(DraftFieldRequired):
+        with pytest.raises(DraftFieldRequiredError):
             await draft.save()
         draft.note = backup
         # actually call the create endpoint
@@ -416,7 +417,7 @@ class TestModelTasks:
             f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             await api_latest.tasks(1337)
         # must raise as task_id doesn't exist
         resp.get(
@@ -424,5 +425,15 @@ class TestModelTasks:
             status=200,
             payload=[],
         )
-        with pytest.raises(TaskNotFound):
+        with pytest.raises(TaskNotFoundError):
             await api_latest.tasks("dummy-not-found")
+
+
+# test models/workflows.py
+class TestModelWorkflows:
+    """Tasks test cases."""
+
+    async def test_helpers(self, api_latest: Paperless) -> None:
+        """Test helpers."""
+        assert isinstance(api_latest.workflows.actions, WorkflowActionHelper)
+        assert isinstance(api_latest.workflows.triggers, WorkflowTriggerHelper)

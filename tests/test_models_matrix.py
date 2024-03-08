@@ -3,12 +3,12 @@
 import re
 from typing import Any
 
-from aioresponses import CallbackResult, aioresponses
 import pytest
+from aioresponses import CallbackResult, aioresponses
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import DraftFieldRequired, RequestException
+from pypaperless.exceptions import DraftFieldRequiredError, RequestError
 from pypaperless.models import Page
 from pypaperless.models.common import PermissionTableType
 
@@ -120,7 +120,7 @@ class TestReadOnly:
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             await getattr(api_latest, mapping.resource)(1337)
 
 
@@ -213,7 +213,7 @@ class TestReadWrite:
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
             status=404,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             await getattr(api_latest, mapping.resource)(1337)
 
     async def test_create(
@@ -221,7 +221,7 @@ class TestReadWrite:
     ) -> None:
         """Test create."""
         draft = getattr(api_latest, mapping.resource).draft(**mapping.draft_defaults)
-        assert isinstance(draft, mapping.draft_cls)  # type: ignore # noqa
+        assert isinstance(draft, mapping.draft_cls)
         # test empty draft fields
         if mapping.model_cls not in (
             SHARE_LINK_MAP.model_cls,
@@ -229,7 +229,7 @@ class TestReadWrite:
         ):
             backup = draft.name
             draft.name = None
-            with pytest.raises(DraftFieldRequired):
+            with pytest.raises(DraftFieldRequiredError):
                 await draft.save()
             draft.name = backup
         # actually call the create endpoint
@@ -368,11 +368,12 @@ class TestSecurableMixin:
         item = await getattr(api_latest, mapping.resource)(1)
         item.permissions.view.users.append(23)
 
-        def _lookup_set_permissions(
-            url: str,  # noqa
+        def _lookup_set_permissions(  # pylint: disable=unused-argument
+            url: str,
             json: dict[str, Any],
-            **kwargs,  # pylint: disable=unused-argument # noqa
-        ):
+            **kwargs: Any,  # noqa: ARG001
+        ) -> CallbackResult:
+            assert url
             assert "set_permissions" in json
             return CallbackResult(
                 status=200,

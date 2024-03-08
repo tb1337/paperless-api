@@ -1,9 +1,0 @@
-codecov:
-  branch: main
-
-coverage:
-  range: "97..100"
-
-comment:
-  layout: "diff, files"
-  require_changes: true

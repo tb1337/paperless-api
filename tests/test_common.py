@@ -5,17 +5,17 @@ from datetime import date, datetime
 from enum import Enum
 
 import aiohttp
+import pytest
 from aiohttp.http_exceptions import InvalidURLError
 from aioresponses import aioresponses
-import pytest
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
-    BadJsonResponse,
-    DraftNotSupported,
+    BadJsonResponseError,
+    DraftNotSupportedError,
     JsonResponseWithError,
-    RequestException,
+    RequestError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
@@ -67,6 +67,45 @@ class TestPaperless:
         async with api:
             assert api.is_initialized
 
+    async def test_properties(self, api: Paperless) -> None:
+        """Test properties."""
+        # version must be None in this case, as we test against
+        # an uninitialized Paperless object
+        assert api.host_version is None
+
+        assert isinstance(api.local_resources, set)
+        assert isinstance(api.remote_resources, set)
+
+    async def test_helper_avail_00(self, api_00: Paperless) -> None:
+        """Test availability of helpers against specific api version."""
+        assert not api_00.custom_fields.is_available
+        assert not api_00.workflows.is_available
+
+    async def test_helper_avail_latest(self, api_latest: Paperless) -> None:
+        """Test availability of helpers against specific api version."""
+        assert api_latest.custom_fields.is_available
+        assert api_latest.workflows.is_available
+
+    async def test_jsonresponsewitherror(self) -> None:
+        """Test JsonResponseWithError."""
+        try:
+            payload = "sample string"
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: error - unknown error"  # noqa: PT017
+
+        try:
+            payload = {"failure": "something failed"}
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: failure - something failed"  # noqa: PT017
+
+        try:
+            payload = {"error": ["that", "should", "have", "been", "never", "happened"]}
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: error - happened"  # noqa: PT017
+
     async def test_request(self, resp: aioresponses) -> None:
         """Test generate request."""
         # we need to use an unmocked PaperlessSession.request() method
@@ -107,7 +146,7 @@ class TestPaperless:
             PAPERLESS_TEST_URL,
             exception=InvalidURLError,
         )
-        with pytest.raises(RequestException):
+        with pytest.raises(RequestError):
             async with api.request("get", PAPERLESS_TEST_URL) as res:
                 pass
 
@@ -133,7 +172,7 @@ class TestPaperless:
             headers={"Content-Type": "text/plain"},
             body='{"error": "sample message"}',
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-text-error-payload")
 
         # test 200 ok with correct content type, but no json payload
@@ -143,7 +182,7 @@ class TestPaperless:
             headers={"Content-Type": "application/json"},
             body="test 5 23 42 1337",
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-json-text-body")
 
     async def test_create_url(self) -> None:
@@ -173,8 +212,6 @@ class TestPaperless:
 
     async def test_generate_api_token(self, resp: aioresponses, api: Paperless) -> None:
         """Test generate api token."""
-        session = aiohttp.ClientSession()
-
         # test successful token creation
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
@@ -185,7 +222,6 @@ class TestPaperless:
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_USER,
             PAPERLESS_TEST_PASSWORD,
-            session,
         )
         assert token == PAPERLESS_TEST_TOKEN
 
@@ -195,12 +231,11 @@ class TestPaperless:
             status=200,
             payload={"blah": "any string"},
         )
-        with pytest.raises(BadJsonResponse):
+        with pytest.raises(BadJsonResponseError):
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
 
         # test error 400
@@ -214,26 +249,38 @@ class TestPaperless:
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
 
         # general exception
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=500,
-            body="no json",
+            exception=ValueError,
         )
-        with pytest.raises(Exception):
-            session.params = {
-                "response_content": "no json",
-                "status": "500",
-            }
+        with pytest.raises(ValueError):  # noqa: PT011
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
+
+    async def test_generate_api_token_with_session(
+        self, resp: aioresponses, api: Paperless
+    ) -> None:
+        """Test generate api token with custom session."""
+        session = aiohttp.ClientSession()
+
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=200,
+            payload=PATCHWORK["token"],
+        )
+        token = await api.generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+            session=session,
+        )
+        assert token == PAPERLESS_TEST_TOKEN
 
     async def test_types(self) -> None:
         """Test types."""
@@ -252,7 +299,7 @@ class TestPaperless:
     async def test_dataclass_conversion(self) -> None:
         """Test dataclass utils."""
 
-        class _Status(Enum):
+        class SomeStatus(Enum):
             """Test enum."""
 
             ACTIVE = 1
@@ -260,19 +307,19 @@ class TestPaperless:
             UNKNOWN = -1
 
             @classmethod
-            def _missing_(cls: type, *_: object):
+            def _missing_(cls: "SomeStatus", *_: object) -> "SomeStatus":
                 """Set default."""
                 return cls.UNKNOWN
 
         @dataclass
-        class _Friend:
+        class SomeFriend:
             """Test class."""
 
             name: str
             age: int
 
         @dataclass
-        class _Person:
+        class SomePerson:
             """Test class."""
 
             name: str
@@ -280,10 +327,10 @@ class TestPaperless:
             height: float
             birth: date
             last_login: datetime
-            friends: list[_Friend] | None
+            friends: list[SomeFriend] | None
             deleted: datetime | None
             is_deleted: bool
-            status: _Status
+            status: SomeStatus
             file: bytes
             meta: dict[str, str]
 
@@ -316,9 +363,9 @@ class TestPaperless:
                 field.type,
                 field.default,
             )
-            for field in fields(_Person)
+            for field in fields(SomePerson)
         }
-        res = _Person(**data)
+        res = SomePerson(**data)
 
         assert isinstance(res.name, str)
         assert isinstance(res.age, int)
@@ -326,12 +373,12 @@ class TestPaperless:
         assert isinstance(res.birth, date)
         assert isinstance(res.last_login, datetime)
         assert isinstance(res.friends, list)
-        assert isinstance(res.friends[0], _Friend)
+        assert isinstance(res.friends[0], SomeFriend)
         assert isinstance(res.friends[0].age, int)
         assert isinstance(res.friends[1].age, int)
         assert res.deleted is None
         assert res.is_deleted is False
-        assert isinstance(res.status, _Status)
+        assert isinstance(res.status, SomeStatus)
         assert isinstance(res.file, bytes)
 
         # back conversion
@@ -406,11 +453,11 @@ class TestPaperless:
             """Test Helper."""
 
             _api_path = "any.url"
-            _resource = "test"  # type: ignore
-            # draft_cls - we "forgot" to set a draft class, which will raise an exception ...
+            _resource = "test"
+            # draft_cls - we "forgot" to set a draft class, which will raises
             _resource_cls = TestResource
 
         helper = TestHelper(api)
-        with pytest.raises(DraftNotSupported):
+        with pytest.raises(DraftNotSupportedError):
             # ... there it is
-            helper.draft()  # noqa
+            helper.draft()

@@ -100,7 +100,6 @@ token = Paperless.generate_api_token(
 
 As for `Paperless` itself, you can provide a custom `aiohttp.ClientSession` object.
 
-
 ```python
 url = "localhost:8000"
 my_session = aiohttp.ClientSession()

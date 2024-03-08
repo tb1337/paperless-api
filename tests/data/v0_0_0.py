@@ -510,7 +510,10 @@ V0_0_0_SAVED_VIEWS = {
             "show_in_sidebar": False,
             "sort_field": "title",
             "sort_reverse": False,
-            "filter_rules": [{"rule_type": 6, "value": "1"}, {"rule_type": 33, "value": "7"}],
+            "filter_rules": [
+                {"rule_type": 6, "value": "1"},
+                {"rule_type": 33, "value": "7"},
+            ],
             "owner": 1,
             "user_can_change": True,
         },
@@ -521,7 +524,10 @@ V0_0_0_SAVED_VIEWS = {
             "show_in_sidebar": False,
             "sort_field": None,
             "sort_reverse": False,
-            "filter_rules": [{"rule_type": 6, "value": "1"}, {"rule_type": 35, "value": "7"}],
+            "filter_rules": [
+                {"rule_type": 6, "value": "1"},
+                {"rule_type": 35, "value": "7"},
+            ],
             "owner": 1,
             "user_can_change": True,
         },

@@ -5,7 +5,7 @@
             "name": "Python: Aktuelle Datei",
             "type": "debugpy",
             "request": "launch",
-            "program": "++debug.py",
+            "program": "run/debug.py",
             "console": "integratedTerminal",
             "justMyCode": true
         }
