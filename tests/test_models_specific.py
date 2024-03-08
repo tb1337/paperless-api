@@ -34,6 +34,7 @@ from pypaperless.models.common import (
     StatusTasksType,
 )
 from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
+from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHelper
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
@@ -426,3 +427,13 @@ class TestModelTasks:
         )
         with pytest.raises(TaskNotFoundError):
             await api_latest.tasks("dummy-not-found")
+
+
+# test models/workflows.py
+class TestModelWorkflows:
+    """Tasks test cases."""
+
+    async def test_helpers(self, api_latest: Paperless) -> None:
+        """Test helpers."""
+        assert isinstance(api_latest.workflows.actions, WorkflowActionHelper)
+        assert isinstance(api_latest.workflows.triggers, WorkflowTriggerHelper)

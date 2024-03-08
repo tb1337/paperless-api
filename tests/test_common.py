@@ -67,6 +67,45 @@ class TestPaperless:
         async with api:
             assert api.is_initialized
 
+    async def test_properties(self, api: Paperless) -> None:
+        """Test properties."""
+        # version must be None in this case, as we test against
+        # an uninitialized Paperless object
+        assert api.host_version is None
+
+        assert isinstance(api.local_resources, set)
+        assert isinstance(api.remote_resources, set)
+
+    async def test_helper_avail_00(self, api_00: Paperless) -> None:
+        """Test availability of helpers against specific api version."""
+        assert not api_00.custom_fields.is_available
+        assert not api_00.workflows.is_available
+
+    async def test_helper_avail_latest(self, api_latest: Paperless) -> None:
+        """Test availability of helpers against specific api version."""
+        assert api_latest.custom_fields.is_available
+        assert api_latest.workflows.is_available
+
+    async def test_jsonresponsewitherror(self) -> None:
+        """Test JsonResponseWithError."""
+        try:
+            payload = "sample string"
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: error - unknown error"  # noqa: PT017
+
+        try:
+            payload = {"failure": "something failed"}
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: failure - something failed"  # noqa: PT017
+
+        try:
+            payload = {"error": ["that", "should", "have", "been", "never", "happened"]}
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless: error - happened"  # noqa: PT017
+
     async def test_request(self, resp: aioresponses) -> None:
         """Test generate request."""
         # we need to use an unmocked PaperlessSession.request() method
@@ -173,8 +212,6 @@ class TestPaperless:
 
     async def test_generate_api_token(self, resp: aioresponses, api: Paperless) -> None:
         """Test generate api token."""
-        session = aiohttp.ClientSession()
-
         # test successful token creation
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
@@ -185,7 +222,6 @@ class TestPaperless:
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_USER,
             PAPERLESS_TEST_PASSWORD,
-            session,
         )
         assert token == PAPERLESS_TEST_TOKEN
 
@@ -200,7 +236,6 @@ class TestPaperless:
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
 
         # test error 400
@@ -214,22 +249,38 @@ class TestPaperless:
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
 
         # general exception
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=500,
-            body="no json",
+            exception=ValueError,
         )
-        with pytest.raises(BadJsonResponseError):
+        with pytest.raises(ValueError):  # noqa: PT011
             token = await api.generate_api_token(
                 PAPERLESS_TEST_URL,
                 PAPERLESS_TEST_USER,
                 PAPERLESS_TEST_PASSWORD,
-                session,
             )
+
+    async def test_generate_api_token_with_session(
+        self, resp: aioresponses, api: Paperless
+    ) -> None:
+        """Test generate api token with custom session."""
+        session = aiohttp.ClientSession()
+
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            status=200,
+            payload=PATCHWORK["token"],
+        )
+        token = await api.generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+            session=session,
+        )
+        assert token == PAPERLESS_TEST_TOKEN
 
     async def test_types(self) -> None:
         """Test types."""
