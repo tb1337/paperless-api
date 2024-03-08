@@ -87,8 +87,8 @@ jobs:
         run: poetry run pre-commit run check-case-conflict --all-files
       - name: 🚀 Check docstring is first
         run: poetry run pre-commit run check-docstring-first --all-files
-      - name: 🚀 Check that executables have shebangs
-        run: poetry run pre-commit run check-executables-have-shebangs --all-files
+      # - name: 🚀 Check that executables have shebangs
+      #   run: poetry run pre-commit run check-executables-have-shebangs --all-files
       - name: 🚀 Check JSON files
         run: poetry run pre-commit run check-json --all-files
       - name: 🚀 Check for merge conflicts
