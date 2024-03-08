@@ -6,7 +6,8 @@
 
 [![Tests][tests-badge]][tests-url]
 [![Codecov][codecov-badge]][codecov-url]
-[![Typing and Linting][typing-linting-badge]][typing-linting-url]
+[![Linting][linting-badge]][linting-url]
+[![Typing][typing-badge]][typing-url]
 
 Little asynchronous client for Paperless-ngx, written in Python. You should at least use Python `>=3.11`.
 
@@ -60,5 +61,7 @@ Check out all [contributors here][contributors-url].
 [tests-url]: https://github.com/tb1337/paperless-api/actions
 [release-badge]: https://img.shields.io/github/v/release/tb1337/paperless-api
 [release-url]: https://github.com/tb1337/paperless-api/releases
-[typing-linting-badge]: https://github.com/tb1337/paperless-api/actions/workflows/typing-linting.yml/badge.svg
-[typing-linting-url]: https://github.com/tb1337/paperless-api/actions
+[linting-badge]: https://github.com/tb1337/paperless-api/actions/workflows/linting.yml/badge.svg
+[linting-url]: https://github.com/tb1337/paperless-api/actions
+[typing-badge]: https://github.com/tb1337/paperless-api/actions/workflows/typing.yml/badge.svg
+[typing-url]: https://github.com/tb1337/paperless-api/actions
