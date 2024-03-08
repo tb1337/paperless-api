@@ -15,9 +15,9 @@ jobs:
     name: 🏷 Sync labels
     runs-on: ubuntu-latest
     steps:
-      - name: ⤵️ Checkout code
+      - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.1.1
-      - name: 🚀 Run label sync
+      - name: 🚀 Run Label Syncer
         uses: micnncim/action-label-syncer@v1.3.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -12,14 +12,16 @@ on:
   workflow_call:
 
 jobs:
-  pr-labels:
+  pr_labels:
     name: Verify
     runs-on: ubuntu-latest
     steps:
-      - name: 🏷 Verify valid PR label
-        uses: ludeeus/action-require-labels@1.1.0
+      - name: 🏷 Verify PR has a valid label
+        uses: jesusvasquez333/verify-pr-label-action@v1.4.0
         with:
-          labels: >-
+          pull-request-number: "${{ github.event.pull_request.number }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          valid-labels: >-
             breaking-change, bugfix,
             ci,
             dependencies, documentation,
@@ -28,3 +30,4 @@ jobs:
             new-feature,
             performance,
             refactor
+          disable-reviews: true
