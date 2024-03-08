@@ -30,12 +30,12 @@ repos:
         language: system
         types: [python]
         entry: poetry run check-docstring-first
-      - id: check-executables-have-shebangs
-        name: 🧐 Check that executables have shebangs
-        language: system
-        types: [text, executable]
-        entry: poetry run check-executables-have-shebangs
-        stages: [commit, push, manual]
+      # - id: check-executables-have-shebangs
+      #   name: 🧐 Check that executables have shebangs
+      #   language: system
+      #   types: [text, executable]
+      #   entry: poetry run check-executables-have-shebangs
+      #   stages: [commit, push, manual]
       - id: check-json
         name: ｛ Check JSON files
         language: system

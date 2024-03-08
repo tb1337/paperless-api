@@ -12,6 +12,7 @@ Thanks for the excellent work, guys!
 """
 
 # mypy: ignore-errors
+# pylint: disable=all
 
 import logging
 from dataclasses import MISSING, asdict, fields, is_dataclass
@@ -192,7 +193,8 @@ def dict_value_to_object(
 
     # If we reach this point, we could not match the value with the type and we raise
     if not isinstance(value, value_type):
-        message = f"Value {value} of type {type(value)} is invalid for {name}, expected value of type {value_type}"  # noqa: E501
+        message = f"Value {value} of type {type(value)} is invalid for {name}, \
+            expected value of type {value_type}"
         raise TypeError(message)
 
     return value

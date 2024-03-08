@@ -368,7 +368,7 @@ class TestSecurableMixin:
         item = await getattr(api_latest, mapping.resource)(1)
         item.permissions.view.users.append(23)
 
-        def _lookup_set_permissions(
+        def _lookup_set_permissions(  # pylint: disable=unused-argument
             url: str,
             json: dict[str, Any],
             **kwargs: Any,  # noqa: ARG001
@@ -377,7 +377,7 @@ class TestSecurableMixin:
             assert "set_permissions" in json
             return CallbackResult(
                 status=200,
-                payload=item._data,
+                payload=item._data,  # pylint: disable=protected-access
             )
 
         resp.patch(

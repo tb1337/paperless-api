@@ -1,5 +1,7 @@
 """PyPaperless helpers."""
 
+# pylint: disable=unused-import
+
 from .models.base import HelperBase  # noqa: F401
 from .models.classifiers import (  # noqa: F401
     CorrespondentHelper,

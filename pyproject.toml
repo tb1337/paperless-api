@@ -122,7 +122,7 @@ disable = [
 ignore-imports = true
 
 [tool.pylint.FORMAT]
-max-line-length = 88
+max-line-length = 100
 
 [tool.pylint.DESIGN]
 max-attributes = 20

@@ -198,8 +198,8 @@ class Paperless:
             raise BadJsonResponseError(message) from exc
         except aiohttp.ClientResponseError as exc:
             raise JsonResponseWithError(payload={"error": data}) from exc
-        except Exception:
-            raise
+        except Exception as exc:
+            raise exc  # noqa: TRY201
         finally:
             if not external_session:
                 await session.close()
@@ -313,7 +313,7 @@ class Paperless:
                 res.raise_for_status()
             except (AssertionError, ValueError) as exc:
                 raise BadJsonResponseError(res) from exc
-            except Exception:
-                raise
+            except Exception as exc:
+                raise exc  # noqa: TRY201
 
         return payload
