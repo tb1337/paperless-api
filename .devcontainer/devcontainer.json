@@ -5,7 +5,10 @@
   },
   "customizations": {
     "codespaces": {
-      "openFiles": ["README.md", "src/pypaperless/api.py"]
+      "openFiles": [
+        "README.md",
+        "src/pypaperless/api.py"
+      ]
     },
     "vscode": {
       "extensions": [
@@ -29,7 +32,9 @@
         "coverage-gutters.showGutterCoverage": true,
         "coverage-gutters.showLineCoverage": true,
         "coverage-gutters.xmlname": "coverage.xml",
-        "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+        "python.analysis.extraPaths": [
+          "${workspaceFolder}/src"
+        ],
         "python.defaultInterpreterPath": ".venv/bin/python",
         "python.formatting.provider": "ruff",
         "python.testing.cwd": "${workspaceFolder}",
@@ -38,7 +43,9 @@
         ],
         "python.testing.pytestEnabled": true,
         "ruff.importStrategy": "fromEnvironment",
-        "ruff.interpreter": [".venv/bin/python"],
+        "ruff.interpreter": [
+          ".venv/bin/python"
+        ],
         "terminal.integrated.defaultProfile.linux": "zsh"
       }
     }
