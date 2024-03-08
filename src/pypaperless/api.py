@@ -296,15 +296,17 @@ class Paperless:
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
         async with self.request(method, endpoint, **kwargs) as res:
+            if res.content_type != "application/json":
+                raise BadJsonResponseError(res)
+
             try:
-                assert res.content_type == "application/json"  # noqa: S101
                 payload = await res.json()
+            except ValueError:
+                raise BadJsonResponseError(res) from None
 
-                if res.status == 400:
-                    raise JsonResponseWithError(payload)
+            if res.status == 400:
+                raise JsonResponseWithError(payload)
 
-                res.raise_for_status()
-            except (AssertionError, ValueError) as exc:
-                raise BadJsonResponseError(res) from exc
+            res.raise_for_status()
 
         return payload
