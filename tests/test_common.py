@@ -13,6 +13,7 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
     BadJsonResponseError,
     DraftNotSupportedError,
+    InitializationError,
     JsonResponseWithError,
 )
 from pypaperless.models import Page
@@ -83,6 +84,26 @@ class TestPaperless:
         """Test availability of helpers against specific api version."""
         assert api_latest.custom_fields.is_available
         assert api_latest.workflows.is_available
+
+    async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
+        """Test initialization error."""
+        # http status error
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=401,
+            body="any html",
+        )
+        with pytest.raises(InitializationError):
+            await api.initialize()
+
+        # http ok, wrong payload
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=200,
+            body="any html",
+        )
+        with pytest.raises(InitializationError):
+            await api.initialize()
 
     async def test_jsonresponsewitherror(self) -> None:
         """Test JsonResponseWithError."""
