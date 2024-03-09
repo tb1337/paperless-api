@@ -10,8 +10,8 @@ class PaperlessError(Exception):
 # Sessions and requests
 
 
-class AuthentificationRequiredError(PaperlessError):
-    """Raise when initializing a `Paperless` instance without url/token or session."""
+class InitializationError(PaperlessError):
+    """Raise when initializing a `Paperless` instance without valid url or token."""
 
 
 class BadJsonResponseError(PaperlessError):

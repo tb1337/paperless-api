@@ -11,7 +11,7 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, PaperlessResource
-from .exceptions import BadJsonResponseError, JsonResponseWithError
+from .exceptions import BadJsonResponseError, InitializationError, JsonResponseWithError
 from .models.base import HelperBase
 
 
@@ -211,8 +211,14 @@ class Paperless:
     async def initialize(self) -> None:
         """Initialize the connection to DRF and fetch the endpoints."""
         async with self.request("get", API_PATH["index"]) as res:
+            try:
+                res.raise_for_status()
+                payload = await res.json()
+            except (aiohttp.ClientResponseError, ValueError) as exc:
+                raise InitializationError from exc
+
             self._version = res.headers.get("x-version", None)
-            self._remote_resources = set(map(PaperlessResource, await res.json()))
+            self._remote_resources = set(map(PaperlessResource, payload))
 
         for attribute, helper in self._helpers_map:
             setattr(self, f"{attribute}", helper(self))
