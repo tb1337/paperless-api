@@ -3,7 +3,7 @@
   "schedule": ["before 2am"],
   "rebaseWhen": "behind-base-branch",
   "dependencyDashboard": true,
-  "labels": ["dependencies", "no-stale"],
+  "labels": ["auto", "dependencies", "no-stale"],
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
