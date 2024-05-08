@@ -2,8 +2,6 @@
 
 from pypaperless.models.base import HelperProtocol, ResourceT
 
-from .securable import SecurableMixin
-
 
 class CallableMixin(HelperProtocol[ResourceT]):
     """Provide methods for calling a specific resource item."""
@@ -33,7 +31,7 @@ class CallableMixin(HelperProtocol[ResourceT]):
         item = self._resource_cls.create_with_data(self._api, data)
 
         # set requesting full permissions
-        if SecurableMixin in type(self).__bases__ and getattr(self, "_request_full_perms", False):
+        if getattr(self, "_request_full_perms", False):
             item._params.update({"full_perms": "true"})  # noqa: SLF001
 
         if not lazy:
