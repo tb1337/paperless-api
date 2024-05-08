@@ -94,4 +94,8 @@ class IterableMixin(HelperProtocol[ResourceT]):
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)
 
+        # set requesting full permissions
+        if getattr(self, "_request_full_perms", False):
+            params.update({"full_perms": "true"})
+
         return PageGenerator(self._api, self._api_path, self._resource_cls, params=params)
