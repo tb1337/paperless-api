@@ -332,6 +332,7 @@ class TestSecurableMixin:
         """Test permissions."""
         getattr(api_latest, mapping.resource).request_permissions = True
         assert getattr(api_latest, mapping.resource).request_permissions
+        # request single object
         resp.get(
             re.compile(
                 r"^"
@@ -347,6 +348,22 @@ class TestSecurableMixin:
         item = await getattr(api_latest, mapping.resource)(1)
         assert item.has_permissions
         assert isinstance(item.permissions, PermissionTableType)
+        # request by iterator
+        resp.get(
+            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status=200,
+            payload={
+                **PATCHWORK[mapping.resource],
+                "results": [
+                    {**item, "permissions": PATCHWORK["object_permissions"]}
+                    for item in PATCHWORK[mapping.resource]["results"]
+                ],
+            },
+        )
+        async for item in getattr(api_latest, mapping.resource):
+            assert isinstance(item, mapping.model_cls)
+            assert item.has_permissions
+            assert isinstance(item.permissions, PermissionTableType)
 
     async def test_permission_change(
         self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
