@@ -29,7 +29,7 @@ V2_6_0_STATUS = {
         "index_last_modified": "2024-03-06T07:10:55.370884+01:00",
         "index_error": None,
         "classifier_status": "OK",
-        "classifier_last_trained": "2024-03-06T07:05:01.281804Z",
+        "classifier_last_trained": "2024-03-06T07:05:01.281804+00:00",
         "classifier_error": None,
     },
 }
