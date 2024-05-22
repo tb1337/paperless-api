@@ -195,7 +195,6 @@ class TagDraft(
     _create_required_fields = {
         "name",
         "color",
-        "text_color",
         "is_inbox_tag",
         "match",
         "matching_algorithm",
