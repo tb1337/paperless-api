@@ -36,12 +36,14 @@ class HelperBase(PaperlessBase, Generic[ResourceT]):
     """Base class for all helpers in PyPaperless."""
 
     _resource: PaperlessResource
+    _resource_public: bool = True
 
     def __init__(self, api: "Paperless") -> None:
         """Initialize a `HelperBase` instance."""
         super().__init__(api)
 
-        self._api.local_resources.add(self._resource)
+        if self._resource_public:
+            self._api.local_resources.add(self._resource)
 
     @property
     def is_available(self) -> bool:
@@ -72,6 +74,7 @@ class PaperlessModel(PaperlessBase):
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `PaperlessModel` instance."""
         super().__init__(api)
+
         self._data = {}
         self._data.update(data)
         self._fetched = False
