@@ -51,6 +51,7 @@ class StatusHelper(HelperBase[Status]):
 
     _api_path = API_PATH["status"]
     _resource = PaperlessResource.STATUS
+    _resource_public = False
 
     _resource_cls = Status
 
