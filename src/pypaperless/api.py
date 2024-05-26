@@ -133,7 +133,7 @@ class Paperless:
 
         Every field item gets converted to a string-like object.
         """
-        form = aiohttp.FormData()
+        form = aiohttp.FormData(quote_fields=False)
 
         def _add_form_value(name: str | None, value: Any) -> Any:
             if value is None:
