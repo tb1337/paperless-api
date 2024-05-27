@@ -192,6 +192,7 @@ class TaskStatusType(Enum):
     """Represent a subtype of `Task`."""
 
     PENDING = "PENDING"
+    STARTED = "STARTED"
     SUCCESS = "SUCCESS"
     FAILURE = "FAILURE"
     UNKNOWN = "UNKNOWN"
