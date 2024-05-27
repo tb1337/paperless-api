@@ -334,8 +334,8 @@ V0_0_0_DOCUMENT_TYPES = {
         },
         {
             "id": 2,
-            "slug": "dokument",
-            "name": "Dokument",
+            "slug": "document",
+            "name": "Document",
             "match": "",
             "matching_algorithm": 1,
             "is_insensitive": True,
