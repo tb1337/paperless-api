@@ -91,6 +91,18 @@ class IterableMixin(HelperProtocol[ResourceT]):
 
         """
         params = getattr(self, "_aiter_filters", None) or {}
+
+        for param in params:
+            if param.endswith("__in"):
+                value = params[param]
+                try:
+                    value.extend([])  # throw AttributeError if not a list
+                    params[param] = ",".join(map(str, value))
+
+                except AttributeError:
+                    # value is not a list, don't modify
+                    continue
+
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)
 
@@ -98,4 +110,6 @@ class IterableMixin(HelperProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params.update({"full_perms": "true"})
 
-        return PageGenerator(self._api, self._api_path, self._resource_cls, params=params)
+        return PageGenerator(
+            self._api, self._api_path, self._resource_cls, params=params
+        )
