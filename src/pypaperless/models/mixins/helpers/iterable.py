@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from pypaperless.models.base import HelperProtocol, ResourceT
 from pypaperless.models.generators import PageGenerator
@@ -90,15 +90,13 @@ class IterableMixin(HelperProtocol[ResourceT]):
         ```
 
         """
-        params = getattr(self, "_aiter_filters", None) or {}
+        params: dict[str, Any] = getattr(self, "_aiter_filters", None) or {}
 
-        for param in params:
+        for param, value in params.items():
             if param.endswith("__in"):
-                value = params[param]
                 try:
                     value.extend([])  # throw AttributeError if not a list
                     params[param] = ",".join(map(str, value))
-
                 except AttributeError:
                     # value is not a list, don't modify
                     continue
@@ -110,6 +108,4 @@ class IterableMixin(HelperProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params.update({"full_perms": "true"})
 
-        return PageGenerator(
-            self._api, self._api_path, self._resource_cls, params=params
-        )
+        return PageGenerator(self._api, self._api_path, self._resource_cls, params=params)
