@@ -3,6 +3,7 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from io import BytesIO
 from json.decoder import JSONDecodeError
 from typing import Any
 
@@ -152,7 +153,9 @@ class Paperless:
                     params["filename"] = f"{value[1]}"
                 value = value[0]
             if name is not None:
-                form.add_field(name, value if isinstance(value, bytes) else f"{value}", **params)
+                form.add_field(
+                    name, BytesIO(value) if isinstance(value, bytes) else f"{value}", **params
+                )
 
         _add_form_value(None, data)
         return form

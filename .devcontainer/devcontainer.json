@@ -25,7 +25,9 @@
           "editor.codeActionsOnSave": {
             "source.fixAll": "always",
             "source.organizeImports": "always"
-          }
+          },
+          "editor.formatOnSave": true,
+					"editor.defaultFormatter": "charliermarsh.ruff"
         },
         "coverage-gutters.customizable.context-menu": true,
         "coverage-gutters.customizable.status-bar-toggler-watchCoverageAndVisibleEditors-enabled": true,
@@ -35,7 +37,7 @@
         "python.analysis.extraPaths": [
           "${workspaceFolder}/src"
         ],
-        "python.defaultInterpreterPath": ".venv/bin/python",
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
         "python.formatting.provider": "ruff",
         "python.testing.cwd": "${workspaceFolder}",
         "python.testing.pytestArgs": [
@@ -44,7 +46,7 @@
         "python.testing.pytestEnabled": true,
         "ruff.importStrategy": "fromEnvironment",
         "ruff.interpreter": [
-          ".venv/bin/python"
+          "${workspaceFolder}/.venv/bin/python"
         ],
         "terminal.integrated.defaultProfile.linux": "zsh"
       }
@@ -61,5 +63,7 @@
   },
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "name": "pypaperless Developer",
-  "updateContentCommand": ". ${NVM_DIR}/nvm.sh && nvm install && nvm use && npm install && poetry install && poetry run pre-commit install"
+  "updateContentCommand": ". ${NVM_DIR}/nvm.sh && nvm install && nvm use && npm install && poetry install",
+	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+	"postAttachCommand": "poetry run pre-commit install"
 }
