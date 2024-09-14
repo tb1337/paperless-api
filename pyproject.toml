@@ -58,7 +58,7 @@ yamllint = "^1.35.1"
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
-source = ["pypaperless"]
+include = ["src"]
 
 [tool.coverage.report]
 fail_under = 95
@@ -130,6 +130,7 @@ max-attributes = 20
 [tool.pytest.ini_options]
 addopts = "--cov"
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff]
 line-length = 100
