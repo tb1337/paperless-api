@@ -111,19 +111,25 @@ class TestPaperless:
             payload = "sample string"
             raise JsonResponseWithError(payload)  # noqa: TRY301
         except JsonResponseWithError as exc:
-            assert exc.args[0] == "Paperless: error - unknown error"  # noqa: PT017
+            assert exc.args[0] == "Paperless [error]: sample string"  # noqa: PT017
 
         try:
             payload = {"failure": "something failed"}
             raise JsonResponseWithError(payload)  # noqa: TRY301
         except JsonResponseWithError as exc:
-            assert exc.args[0] == "Paperless: failure - something failed"  # noqa: PT017
+            assert exc.args[0] == "Paperless [failure]: something failed"  # noqa: PT017
 
         try:
             payload = {"error": ["that", "should", "have", "been", "never", "happened"]}
             raise JsonResponseWithError(payload)  # noqa: TRY301
         except JsonResponseWithError as exc:
-            assert exc.args[0] == "Paperless: error - happened"  # noqa: PT017
+            assert exc.args[0] == "Paperless [error]: that"  # noqa: PT017
+
+        try:
+            payload = [{"some": [[{"weird": {"error": ["occurred"]}}]]}]
+            raise JsonResponseWithError(payload)  # noqa: TRY301
+        except JsonResponseWithError as exc:
+            assert exc.args[0] == "Paperless [some -> weird -> error]: occurred"  # noqa: PT017
 
     async def test_request(self, resp: aioresponses) -> None:
         """Test generate request."""

@@ -58,6 +58,7 @@ yamllint = "^1.35.1"
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
+source = ["pypaperless"]
 
 [tool.coverage.report]
 fail_under = 95

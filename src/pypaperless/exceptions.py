@@ -23,16 +23,33 @@ class JsonResponseWithError(PaperlessError):
 
     def __init__(self, payload: Any) -> None:
         """Initialize a `JsonResponseWithError` instance."""
-        key: str = "error"
-        message: Any = "unknown error"
 
-        if isinstance(payload, dict):
-            key = "error" if "error" in payload else set(payload.keys()).pop()
-            message = payload[key]
-            if isinstance(message, list):
-                message = message.pop()
+        def _parse_payload(payload: Any, key: list[str] | None = None) -> tuple[list[str], str]:
+            """Parse first suitable error from payload."""
+            if key is None:
+                key = []
 
-        super().__init__(f"Paperless: {key} - {message}")
+            if isinstance(payload, list):
+                return _parse_payload(payload.pop(0), key)
+            if isinstance(payload, dict):
+                if "error" in payload:
+                    key.append("error")
+                    return _parse_payload(payload["error"], key)
+
+                new_key = next(iter(payload))
+                key.append(new_key)
+
+                return _parse_payload(payload[new_key], key)
+
+            return key, payload
+
+        key, message = _parse_payload(payload)
+
+        if len(key) == 0:
+            key.append("error")
+        key_chain = " -> ".join(key)
+
+        super().__init__(f"Paperless [{key_chain}]: {message}")
 
 
 # Models
