@@ -37,12 +37,12 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: poetry install --no-interaction
       - name: 🚀 Run pytest
-        run: poetry run pytest --cov pypaperless tests
+        run: poetry run pytest -v --cov-report xml:coverage.xml --cov src tests
       - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v4.4.0
         with:
           name: coverage-${{ matrix.python }}
-          path: .coverage
+          path: coverage.xml
 
   coverage:
     runs-on: ubuntu-latest
@@ -75,5 +75,5 @@ jobs:
       - name: 🚀 Upload coverage report
         uses: codecov/codecov-action@v4.5.0
         with:
-          fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
