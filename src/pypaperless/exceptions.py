@@ -47,8 +47,9 @@ class JsonResponseWithError(PaperlessError):
 
         if len(key) == 0:
             key.append("error")
+        key_chain = " -> ".join(key)
 
-        super().__init__(f"Paperless [{" -> ".join(key)}]: {message}")
+        super().__init__(f"Paperless [{key_chain}]: {message}")
 
 
 # Models
