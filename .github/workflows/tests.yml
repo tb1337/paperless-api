@@ -41,7 +41,7 @@ jobs:
       - name: ⬆️ Upload coverage artifact
         uses: actions/upload-artifact@v4.4.0
         with:
-          name: coverage-${{ matrix.python }}
+          name: coverage-${{ matrix.python }}.xml
           path: coverage.xml
 
   coverage:
@@ -68,10 +68,10 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: 🏗 Install dependencies
         run: poetry install --no-interaction
-      - name: 🚀 Process coverage results
-        run: |
-          poetry run coverage combine coverage*/.coverage*
-          poetry run coverage xml -i
+      # - name: 🚀 Process coverage results
+      #   run: |
+      #     poetry run coverage combine coverage*/.coverage*
+      #     poetry run coverage xml -i
       - name: 🚀 Upload coverage report
         uses: codecov/codecov-action@v4.5.0
         with:
