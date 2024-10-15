@@ -4,12 +4,6 @@
     "POETRY_VIRTUALENVS_IN_PROJECT": "true"
   },
   "customizations": {
-    "codespaces": {
-      "openFiles": [
-        "README.md",
-        "src/pypaperless/api.py"
-      ]
-    },
     "vscode": {
       "extensions": [
         "ms-python.python",
@@ -57,7 +51,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/node:1": {},
     "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.12",
+      "version": "3.13",
       "installTools": false
     }
   },
