@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "schedule": ["before 2am"],
+  "schedule": ["0 2 1 * *"],
   "rebaseWhen": "behind-base-branch",
   "dependencyDashboard": true,
   "labels": ["auto", "dependencies", "no-stale"],
