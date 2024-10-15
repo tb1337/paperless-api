@@ -112,6 +112,7 @@ good-names = [
 [tool.pylint."MESSAGES CONTROL"]
 disable = [
     "duplicate-code",
+    "no-name-in-module", # currently throws
     "too-few-public-methods",
     "too-many-ancestors",
     "too-many-arguments",
