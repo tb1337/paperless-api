@@ -1,7 +1,7 @@
 {
   "containerEnv": {
     "DEVCONTAINER": "true",
-    "POETRY_VIRTUALENVS_IN_PROJECT": "true"
+    "POETRY_VIRTUALENVS_IN_PROJECT": "false"
   },
   "customizations": {
     "vscode": {
