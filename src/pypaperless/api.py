@@ -242,7 +242,7 @@ class Paperless:
         self._initialized = True
 
     @asynccontextmanager
-    async def request(  # noqa: PLR0913
+    async def request(  # noqa: PLR0913 # pylint: disable=too-many-positional-arguments
         self,
         method: str,
         path: str,
