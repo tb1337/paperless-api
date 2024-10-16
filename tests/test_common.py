@@ -207,20 +207,20 @@ class TestPaperless:
 
         # test default ssl
         url = create_url("hostname")
-        assert url.host == "hostname"
-        assert url.port == 443
+        assert f"{url.host}" == "hostname"
+        assert int(url.port) == 443
 
         # test enforce http
         url = create_url("http://hostname")
-        assert url.port == 80
+        assert int(url.port) == 80
 
         # test non-http scheme
         url = create_url("ftp://hostname")
-        assert url.scheme == "https"
+        assert f"{url.scheme}" == "https"
 
         # should be https even on just setting a port number
         url = create_url("hostname:80")
-        assert url.scheme == "https"
+        assert f"{url.scheme}" == "https"
 
         # test api/api url
         url = create_url("hostname/api/api/")
