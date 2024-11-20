@@ -66,7 +66,7 @@ show_missing = true
 
 [tool.mypy]
 platform = "linux"
-python_version = "3.13"
+python_version = "3.12"
 
 follow_imports = "normal"
 ignore_missing_imports = true
@@ -135,7 +135,7 @@ asyncio_default_fixture_loop_scope = "session"
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.lint]
 ignore = [
