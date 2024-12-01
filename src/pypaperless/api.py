@@ -79,7 +79,6 @@ class Paperless:
         `url`: A hostname or IP-address as string, or yarl.URL object.
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `session`: A custom `PaperlessSession` object, if existing.
-
         `request_args` are passed to each request method call as additional kwargs,
         ssl stuff for example. You should read the aiohttp docs to learn more about it.
         """
@@ -93,6 +92,11 @@ class Paperless:
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}[{self._base_url.host}]")
+
+    @property
+    def base_url(self) -> str:
+        """Return the base url of the Paperless api endpoint."""
+        return str(self._base_url)
 
     @property
     def is_initialized(self) -> bool:
@@ -237,9 +241,8 @@ class Paperless:
             self.logger.warning("Missing features: %s", ", ".join(missing))
             self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
 
-        self.logger.info("Initialized.")
-
         self._initialized = True
+        self.logger.info("Initialized.")
 
     @asynccontextmanager
     async def request(  # noqa: PLR0913 # pylint: disable=too-many-positional-arguments

@@ -72,6 +72,20 @@ class IterableMixin(HelperProtocol[ResourceT]):
         page = await anext(self.pages(page=1))
         return page.all
 
+    async def as_dict(self) -> dict[int, ResourceT]:
+        """Shortcut for returning a primary key/object dict of all resource items.
+
+        When used within a `reduce` context, data is filtered.
+        """
+        return {item.id: item async for item in self}  # type: ignore[attr-defined]
+
+    async def as_list(self) -> list[ResourceT]:
+        """Shortcut for returning a list of all resource items.
+
+        When used within a `reduce` context, data is filtered.
+        """
+        return [item async for item in self]
+
     def pages(
         self,
         page: int = 1,

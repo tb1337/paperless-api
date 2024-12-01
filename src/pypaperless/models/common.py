@@ -3,7 +3,13 @@
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pypaperless import Paperless
+
+    from .classifiers import Correspondent, DocumentType, StoragePath, Tag
+    from .custom_fields import CustomField
 
 
 # custom_fields
@@ -11,13 +17,14 @@ class CustomFieldType(Enum):
     """Represent a subtype of `CustomField`."""
 
     STRING = "string"
+    URL = "url"
+    DATE = "date"
     BOOLEAN = "boolean"
     INTEGER = "integer"
     FLOAT = "float"
     MONETARY = "monetary"
-    DATE = "date"
-    URL = "url"
     DOCUMENT_LINK = "documentlink"
+    SELECT = "select"
     UNKNOWN = "unknown"
 
     @classmethod
@@ -55,6 +62,21 @@ class DocumentSearchHitType:
     highlights: str | None = None
     note_highlights: str | None = None
     rank: int | None = None
+
+
+# api
+@dataclass(kw_only=True)
+class MasterDataInstance:
+    """Represent a `MasterDataInstance`."""
+
+    api: "Paperless"
+    is_initialized: bool = False
+
+    correspondents: list["Correspondent"] = field(default_factory=list)
+    custom_fields: list["CustomField"] = field(default_factory=list)
+    document_types: list["DocumentType"] = field(default_factory=list)
+    storage_paths: list["StoragePath"] = field(default_factory=list)
+    tags: list["Tag"] = field(default_factory=list)
 
 
 # mixins/models/data_fields, used for classifiers
