@@ -35,11 +35,48 @@ class CustomFieldType(Enum):
 
 # documents
 @dataclass(kw_only=True)
-class CustomFieldValueType:
-    """Represent a subtype of `Document`."""
+class CustomFieldValue:
+    """Represent a subtype of `CustomField`."""
 
     field: int | None = None
     value: Any | None = None
+    name: str | None = None
+    data_type: CustomFieldType | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldBooleanValue(CustomFieldValue):
+    """Represent a boolean `CustomFieldValue`."""
+
+    value: bool | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldDateValue(CustomFieldValue):
+    """Represent a date `CustomFieldValue`."""
+
+    value: datetime.datetime | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldFloatValue(CustomFieldValue):
+    """Represent a float `CustomFieldValue`."""
+
+    value: float | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldIntegerValue(CustomFieldValue):
+    """Represent an integer `CustomFieldValue`."""
+
+    value: int | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldStringValue(CustomFieldValue):
+    """Represent a string `CustomFieldValue`."""
+
+    value: str | None = None
 
 
 # documents
@@ -96,6 +133,14 @@ class MatchingAlgorithmType(Enum):
     def _missing_(cls: type, *_: object) -> "MatchingAlgorithmType":
         """Set default member on unknown value."""
         return MatchingAlgorithmType.UNKNOWN
+
+
+# api
+@dataclass(kw_only=True)
+class PaperlessCache:
+    """Represent a Paperless cache object."""
+
+    custom_fields: dict[int, "CustomField"] | None = None
 
 
 # mixins/models/securable

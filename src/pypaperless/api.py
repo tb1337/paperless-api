@@ -14,6 +14,7 @@ from . import helpers
 from .const import API_PATH, PaperlessResource
 from .exceptions import BadJsonResponseError, InitializationError, JsonResponseWithError
 from .models.base import HelperBase
+from .models.common import PaperlessCache
 
 
 class Paperless:
@@ -83,6 +84,7 @@ class Paperless:
         ssl stuff for example. You should read the aiohttp docs to learn more about it.
         """
         self._base_url = self._create_base_url(url)
+        self._cache = PaperlessCache()
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()
         self._remote_resources: set[PaperlessResource] = set()
@@ -97,6 +99,11 @@ class Paperless:
     def base_url(self) -> str:
         """Return the base url of the Paperless api endpoint."""
         return str(self._base_url)
+
+    @property
+    def cache(self) -> PaperlessCache:
+        """Return the cache object."""
+        return self._cache
 
     @property
     def is_initialized(self) -> bool:

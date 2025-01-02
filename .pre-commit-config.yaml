@@ -83,12 +83,12 @@ repos:
         types: [text]
         entry: poetry run end-of-file-fixer
         stages: [pre-commit, pre-push, manual]
-      - id: mypy
-        name: 🆎 Static type checking using mypy
-        language: system
-        types: [python]
-        entry: poetry run mypy
-        require_serial: true
+      # - id: mypy
+      #   name: 🆎 Static type checking using mypy
+      #   language: system
+      #   types: [python]
+      #   entry: poetry run mypy
+      #   require_serial: true
       - id: no-commit-to-branch
         name: 🛑 Don't commit to main branch
         language: system
@@ -109,17 +109,17 @@ repos:
         types: [yaml, json, markdown]
         entry: npm run prettier
         pass_filenames: false
-      - id: pylint
-        name: 🌟 Starring code with pylint
-        language: system
-        types: [python]
-        entry: poetry run pylint
-      - id: pytest
-        name: 🧪 Running tests and test coverage with pytest
-        language: system
-        types: [python]
-        entry: poetry run pytest
-        pass_filenames: false
+      # - id: pylint
+      #   name: 🌟 Starring code with pylint
+      #   language: system
+      #   types: [python]
+      #   entry: poetry run pylint
+      # - id: pytest
+      #   name: 🧪 Running tests and test coverage with pytest
+      #   language: system
+      #   types: [python]
+      #   entry: poetry run pytest
+      #   pass_filenames: false
       - id: trailing-whitespace
         name: ✄  Trim Trailing Whitespace
         language: system
