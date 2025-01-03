@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Aktuelle Datei",
+            "name": "Python: pypaperless debug",
             "type": "debugpy",
             "request": "launch",
             "program": "run/debug.py",

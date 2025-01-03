@@ -10,7 +10,7 @@ __all__ = (
     "CreatableMixin",
     "DeletableMixin",
     "MatchingFieldsMixin",
-    "UpdatableMixin",
-    "SecurableMixin",
     "SecurableDraftMixin",
+    "SecurableMixin",
+    "UpdatableMixin",
 )

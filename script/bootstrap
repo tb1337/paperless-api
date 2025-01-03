@@ -1,0 +1,12 @@
+#!/bin/sh
+# Resolve all dependencies that the application requires to run.
+
+# Stop on errors
+set -e
+
+cd "$(dirname "$0")/.."
+
+uv venv $VIRTUAL_ENV
+
+echo "Installing development dependencies..."
+uv pip install -r requirements_dev.txt --upgrade
