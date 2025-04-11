@@ -42,21 +42,22 @@ class DocumentCustomFieldList(PaperlessModelData):
             if (cache := self._api.cache.custom_fields) and (
                 field := cache.get(item["field"], None)
             ):
-                data = {**item, "name": field.name, "data_type": field.data_type}
+                klass: CustomFieldValue
+                klass_data = {**item, "name": field.name, "data_type": field.data_type}
 
                 if field.data_type == CustomFieldType.BOOLEAN:
-                    klass = CustomFieldBooleanValue(**data)
+                    klass = CustomFieldBooleanValue(**klass_data)
                 elif field.data_type == CustomFieldType.DATE:
-                    data["value"] = datetime.datetime.fromisoformat(data["value"])
-                    klass = CustomFieldDateValue(**data)
+                    klass_data["value"] = datetime.datetime.fromisoformat(klass_data["value"])
+                    klass = CustomFieldDateValue(**klass_data)
                 elif field.data_type == CustomFieldType.FLOAT:
-                    klass = CustomFieldFloatValue(**data)
+                    klass = CustomFieldFloatValue(**klass_data)
                 elif field.data_type == CustomFieldType.INTEGER:
-                    klass = CustomFieldIntegerValue(**data)
+                    klass = CustomFieldIntegerValue(**klass_data)
                 elif field.data_type == CustomFieldType.STRING:
-                    klass = CustomFieldStringValue(**data)
+                    klass = CustomFieldStringValue(**klass_data)
                 else:
-                    klass = CustomFieldValue(**data)
+                    klass = CustomFieldValue(**klass_data)
 
                 self._fields.append(klass)
 
@@ -65,7 +66,7 @@ class DocumentCustomFieldList(PaperlessModelData):
         item_id = field.id if type(field) is CustomField else field
         return any(item["field"] == item_id for item in self._data)
 
-    def __getitem__(self, field: int | CustomField) -> CustomField:
+    def __getitem__(self, field: int | CustomField) -> CustomFieldValue:
         """Shortcut for `DocumentCustomFieldList.get()`."""
         return self.get(field)
 
@@ -81,7 +82,7 @@ class DocumentCustomFieldList(PaperlessModelData):
         """Serialize the class data."""
         return self._data
 
-    def default(self, field: int | CustomField) -> CustomField | None:
+    def default(self, field: int | CustomField) -> CustomFieldValue | None:
         """Access and return a `CustomField` from the `DocumentCustomFieldList`, or `None`."""
         try:
             return self.get(field)
