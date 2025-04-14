@@ -1,5 +1,8 @@
 """Raw data constants."""
 
+import json
+from pathlib import Path
+
 from .v0_0_0 import (
     V0_0_0_CORRESPONDENTS,
     V0_0_0_DOCUMENT_SUGGESTIONS,
@@ -37,6 +40,14 @@ from .v2_6_0 import V2_6_0_STATUS
 # mypy: ignore-errors
 
 
+def _read_schema(filename: str) -> dict:
+    filepath = Path(f"tests/data/api-schema_{filename}.json")
+    with Path.open(filepath, mode="r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+_schema_v2_15_0 = _read_schema("v2.15.0")
+
 PATCHWORK = {
     # 0.0.0
     "paths": V0_0_0_PATHS | V1_8_0_PATHS | V2_0_0_PATHS | V2_3_0_PATHS,
@@ -73,6 +84,8 @@ PATCHWORK = {
     "workflow_triggers": V2_3_0_WORKFLOW_TRIGGERS,
     # 2.6.0
     "status": V2_6_0_STATUS,
+    # 2.15.0
+    "schema": _schema_v2_15_0,
 }
 
 __all__ = ("PATCHWORK",)

@@ -48,7 +48,7 @@ class TestPaperless:
     async def test_init(self, resp: aioresponses, api: Paperless) -> None:
         """Test init."""
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
             status=200,
             payload=PATCHWORK["paths"],
         )
@@ -72,6 +72,7 @@ class TestPaperless:
         # an uninitialized Paperless object
         assert api.host_version is None
 
+        assert api.base_url == PAPERLESS_TEST_URL
         assert isinstance(api.local_resources, set)
         assert isinstance(api.remote_resources, set)
 

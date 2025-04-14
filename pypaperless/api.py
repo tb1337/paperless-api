@@ -8,6 +8,7 @@ from json.decoder import JSONDecodeError
 from typing import Any
 
 import aiohttp
+import aiohttp.web_exceptions
 from yarl import URL
 
 from . import helpers
@@ -83,7 +84,6 @@ class Paperless:
         `request_args` are passed to each request method call as additional kwargs,
         ssl stuff for example. You should read the aiohttp docs to learn more about it.
         """
-        self._api_version: int | None
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
         self._initialized = False
@@ -95,11 +95,6 @@ class Paperless:
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}")
-
-    @property
-    def api_version(self) -> str | None:
-        """Return the version of the Paperless api."""
-        return self._api_version
 
     @property
     def base_url(self) -> str:
@@ -230,27 +225,41 @@ class Paperless:
 
     async def initialize(self) -> None:
         """Initialize the connection to DRF and fetch the endpoints."""
-        async with self.request("get", API_PATH["api_schema"]) as res:
+
+        async def _init_with_openapi_response() -> bool:
+            """Connect to paperless and request the openapi schema."""
             try:
-                res.raise_for_status()
-                await res.json()
-                self._remote_resources = set(PaperlessResource) ^ {
-                    PaperlessResource.UNKNOWN,
-                    PaperlessResource.CONSUMPTION_TEMPLATES,
-                }
-            except (aiohttp.ClientResponseError, ValueError):
-                # do the old way
-                async with self.request("get", API_PATH["index"]) as fbres:
-                    try:
-                        fbres.raise_for_status()
-                        payload = await res.json()
-                        self._remote_resources = set(map(PaperlessResource, payload))
-                    except (aiohttp.ClientResponseError, ValueError) as exc:
-                        raise InitializationError from exc
+                async with self.request("get", API_PATH["api_schema"]) as res:
+                    res.raise_for_status()
+            except aiohttp.ClientError:
+                return False
 
-            self._api_version = int(res.headers.get("x-api-version", -1))
             self._version = res.headers.get("x-version", None)
+            return True
 
+        async def _init_with_legacy_response() -> dict[str, Any]:
+            """Connect to paperless and request the entity dictionary (DRF)."""
+            async with self.request("get", API_PATH["index"]) as res:
+                try:
+                    res.raise_for_status()
+                    payload = await res.json()
+                except (aiohttp.ClientResponseError, ValueError) as exc:
+                    raise InitializationError from exc
+
+                self._version = res.headers.get("x-version", None)
+                return payload
+
+        if await _init_with_openapi_response():
+            self.logger.debug("OpenAPI spec detected.")
+            self._remote_resources = set(PaperlessResource) ^ {
+                PaperlessResource.UNKNOWN,
+                PaperlessResource.CONSUMPTION_TEMPLATES,
+            }
+        else:
+            payload = await _init_with_legacy_response()
+            self._remote_resources = set(map(PaperlessResource, payload))
+
+        # initialize helpers
         for attribute, helper in self._helpers_map:
             setattr(self, f"{attribute}", helper(self))
 
@@ -261,9 +270,10 @@ class Paperless:
             self.logger.debug("Unused features: %s", ", ".join(unused))
 
         if len(missing) > 0:
-            self.logger.warning("Outdated version detected.")
-            self.logger.warning("Missing features: %s", ", ".join(missing))
-            self.logger.warning("Consider pulling the latest version of Paperless-ngx.")
+            self.logger.warning(
+                "Outdated version detected. Consider pulling the latest version of Paperless-ngx."
+            )
+            self.logger.warning("Support for Paperless-ngx <v2.15.0 will expire 07/01/2025.")
 
         self._initialized = True
         self.logger.info("Initialized.")

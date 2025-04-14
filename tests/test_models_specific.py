@@ -70,6 +70,19 @@ class TestModelConfig:
 class TestModelDocuments:
     """Documents test cases."""
 
+    async def test_lazy(self, resp: aioresponses, api_latest: Paperless) -> None:
+        """Test laziness."""
+        document = Document(api_latest, data={"id": 1})
+        assert not document.is_fetched
+
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status=200,
+            payload=PATCHWORK["documents"]["results"][0],
+        )
+        await document.load()
+        assert document.is_fetched
+
     async def test_create(self, resp: aioresponses, api_latest: Paperless) -> None:
         """Test create."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
