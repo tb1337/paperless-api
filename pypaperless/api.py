@@ -83,6 +83,7 @@ class Paperless:
         `request_args` are passed to each request method call as additional kwargs,
         ssl stuff for example. You should read the aiohttp docs to learn more about it.
         """
+        self._api_version: int | None
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
         self._initialized = False
@@ -93,7 +94,12 @@ class Paperless:
         self._token = token
         self._version: str | None = None
 
-        self.logger = logging.getLogger(f"{__package__}[{self._base_url.host}]")
+        self.logger = logging.getLogger(f"{__package__}")
+
+    @property
+    def api_version(self) -> str | None:
+        """Return the version of the Paperless api."""
+        return self._api_version
 
     @property
     def base_url(self) -> str:
@@ -112,7 +118,7 @@ class Paperless:
 
     @property
     def host_version(self) -> str | None:
-        """Return the version object of the Paperless host."""
+        """Return the version of the Paperless host."""
         return self._version
 
     @property
@@ -224,15 +230,26 @@ class Paperless:
 
     async def initialize(self) -> None:
         """Initialize the connection to DRF and fetch the endpoints."""
-        async with self.request("get", API_PATH["index"]) as res:
+        async with self.request("get", API_PATH["api_schema"]) as res:
             try:
                 res.raise_for_status()
-                payload = await res.json()
-            except (aiohttp.ClientResponseError, ValueError) as exc:
-                raise InitializationError from exc
+                await res.json()
+                self._remote_resources = set(PaperlessResource) ^ {
+                    PaperlessResource.UNKNOWN,
+                    PaperlessResource.CONSUMPTION_TEMPLATES,
+                }
+            except (aiohttp.ClientResponseError, ValueError):
+                # do the old way
+                async with self.request("get", API_PATH["index"]) as fbres:
+                    try:
+                        fbres.raise_for_status()
+                        payload = await res.json()
+                        self._remote_resources = set(map(PaperlessResource, payload))
+                    except (aiohttp.ClientResponseError, ValueError) as exc:
+                        raise InitializationError from exc
 
+            self._api_version = int(res.headers.get("x-api-version", -1))
             self._version = res.headers.get("x-version", None)
-            self._remote_resources = set(map(PaperlessResource, payload))
 
         for attribute, helper in self._helpers_map:
             setattr(self, f"{attribute}", helper(self))
