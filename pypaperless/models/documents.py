@@ -14,8 +14,10 @@ from .base import HelperBase, PaperlessModel, PaperlessModelData
 from .common import (
     CustomFieldBooleanValue,
     CustomFieldDateValue,
+    CustomFieldDocumentLinkValue,
     CustomFieldFloatValue,
     CustomFieldIntegerValue,
+    CustomFieldSelectValue,
     CustomFieldStringValue,
     CustomFieldType,
     CustomFieldValue,
@@ -32,6 +34,16 @@ if TYPE_CHECKING:
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
 
+    CustomFieldValueMap: dict[CustomFieldType, CustomFieldValue] = {
+        CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
+        CustomFieldType.DATE: CustomFieldDateValue,
+        CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
+        CustomFieldType.FLOAT: CustomFieldFloatValue,
+        CustomFieldType.INTEGER: CustomFieldIntegerValue,
+        CustomFieldType.SELECT: CustomFieldSelectValue,
+        CustomFieldType.STRING: CustomFieldStringValue,
+    }
+
     def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
         """Initialize a `CustomFieldList` instance."""
         self._api = api
@@ -42,24 +54,14 @@ class DocumentCustomFieldList(PaperlessModelData):
             if (cache := self._api.cache.custom_fields) and (
                 field := cache.get(item["field"], None)
             ):
-                klass: CustomFieldValue
-                klass_data = {**item, "name": field.name, "data_type": field.data_type}
-
-                if field.data_type == CustomFieldType.BOOLEAN:
-                    klass = CustomFieldBooleanValue(**klass_data)
-                elif field.data_type == CustomFieldType.DATE:
-                    klass_data["value"] = datetime.datetime.fromisoformat(klass_data["value"])
-                    klass = CustomFieldDateValue(**klass_data)
-                elif field.data_type == CustomFieldType.FLOAT:
-                    klass = CustomFieldFloatValue(**klass_data)
-                elif field.data_type == CustomFieldType.INTEGER:
-                    klass = CustomFieldIntegerValue(**klass_data)
-                elif field.data_type == CustomFieldType.STRING:
-                    klass = CustomFieldStringValue(**klass_data)
-                else:
-                    klass = CustomFieldValue(**klass_data)
-
-                self._fields.append(klass)
+                klass = self.CustomFieldValueMap.get(field.data_type, CustomFieldValue)
+                klass_data = {
+                    **item,
+                    "name": field.name,
+                    "data_type": field.data_type,
+                    "extra_data": field.extra_data,
+                }
+                self._fields.append(klass(**klass_data))
 
     def __contains__(self, field: int | CustomField) -> bool:
         """Check if the given `CustomField` or its id is present in `DocumentCustomFieldList`."""
@@ -89,37 +91,13 @@ class DocumentCustomFieldList(PaperlessModelData):
         except ItemNotFoundError:
             return None
 
-    def _get(self, item_id: int, item: dict[str, Any]) -> CustomFieldValue:
-        """Access."""
-        if not (cache := self._api.cache.custom_fields) or not (field := cache.get(item_id, None)):
-            return CustomFieldValue(**item)
-
-        data = {**item, "name": field.name, "data_type": field.data_type}
-
-        if field.data_type == CustomFieldType.BOOLEAN:
-            test = CustomFieldBooleanValue(**data)
-        elif field.data_type == CustomFieldType.DATE:
-            data["value"] = datetime.datetime.fromisoformat(data["value"])
-            test = CustomFieldDateValue(**data)
-        elif field.data_type == CustomFieldType.FLOAT:
-            test = CustomFieldFloatValue(**data)
-        elif field.data_type == CustomFieldType.INTEGER:
-            test = CustomFieldIntegerValue(**data)
-        elif field.data_type == CustomFieldType.STRING:
-            test = CustomFieldStringValue(**data)
-        else:
-            test = CustomFieldValue(**data)
-
-        return test
-
     def get(self, field: int | CustomField) -> CustomFieldValue:
         """Access and return a `CustomField` from the `DocumentCustomFieldList`, or raise."""
-        item_id = field.id if type(field) is CustomField else field
+        item_id = field.id if isinstance(field, CustomField) else field
 
-        for item in self._data:
-            if item["field"] == item_id:
-                return self._get(item_id, item)
-
+        for item in self._fields:
+            if item.field == item_id:
+                return item
         raise ItemNotFoundError
 
 
