@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
 
-    CustomFieldValueMap: dict[CustomFieldType, CustomFieldValue] = {
+    CustomFieldValueMap: dict[CustomFieldType, type[CustomFieldValue]] = {
         CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
         CustomFieldType.DATE: CustomFieldDateValue,
         CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
@@ -54,7 +54,9 @@ class DocumentCustomFieldList(PaperlessModelData):
             if (cache := self._api.cache.custom_fields) and (
                 field := cache.get(item["field"], None)
             ):
-                klass = self.CustomFieldValueMap.get(field.data_type, CustomFieldValue)
+                klass = self.CustomFieldValueMap.get(
+                    field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
+                )
                 klass_data = {
                     **item,
                     "name": field.name,

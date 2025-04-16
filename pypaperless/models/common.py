@@ -56,7 +56,7 @@ class CustomFieldBooleanValue(CustomFieldValue):
 class CustomFieldDateValue(CustomFieldValue):
     """Represent a date `CustomFieldValue`."""
 
-    value: datetime.datetime | None = None
+    value: datetime.datetime | str | None = None
 
     def __post_init__(self) -> None:
         """Convert the value to a datetime."""
@@ -95,7 +95,8 @@ class CustomFieldSelectValue(CustomFieldValue):
     def labels(self) -> list[dict[str, str]]:
         """Return the list of labels for the `CustomFieldSelectValue`."""
         try:
-            return self.extra_data["select_options"]
+            # this is currently intended
+            return self.extra_data["select_options"]  # type: ignore[no-any-return, index]
         except KeyError:
             return []
 

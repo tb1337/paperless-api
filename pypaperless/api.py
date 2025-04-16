@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from io import BytesIO
 from json.decoder import JSONDecodeError
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import aiohttp.web_exceptions
@@ -237,7 +237,7 @@ class Paperless:
             self._version = res.headers.get("x-version", None)
             return True
 
-        async def _init_with_legacy_response() -> dict[str, Any]:
+        async def _init_with_legacy_response() -> dict[str, str]:
             """Connect to paperless and request the entity dictionary (DRF)."""
             async with self.request("get", API_PATH["index"]) as res:
                 try:
@@ -247,13 +247,18 @@ class Paperless:
                     raise InitializationError from exc
 
                 self._version = res.headers.get("x-version", None)
-                return payload
+                return cast(dict[str, str], payload)
 
         if await _init_with_openapi_response():
             self.logger.debug("OpenAPI spec detected.")
-            self._remote_resources = set(PaperlessResource) ^ {
-                PaperlessResource.UNKNOWN,
-                PaperlessResource.CONSUMPTION_TEMPLATES,
+            self._remote_resources = {
+                res
+                for res in PaperlessResource
+                if res
+                not in {
+                    PaperlessResource.UNKNOWN,
+                    PaperlessResource.CONSUMPTION_TEMPLATES,
+                }
             }
         else:
             payload = await _init_with_legacy_response()
