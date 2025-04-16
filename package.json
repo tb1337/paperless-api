@@ -1,0 +1,14 @@
+{
+  "name": "pypaperless",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Little api client for paperless(-ngx).",
+  "scripts": {
+    "prettier": "prettier --write **/*.{json,js,md,yml,yaml} *.{json,js,md,yml,yaml}"
+  },
+  "author": "Tobias Schulz <public.dev@tbsch.de>",
+  "license": "MIT",
+  "devDependencies": {
+    "prettier": "3.5.3"
+  }
+}
