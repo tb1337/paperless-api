@@ -74,18 +74,6 @@ class DocumentCustomFieldList(PaperlessModelData):
         """Shortcut for `DocumentCustomFieldList.get()`."""
         return self.get(field)
 
-    @classmethod
-    def unserialize(cls, api: "Paperless", data: list[dict[str, Any]]) -> Self:
-        """Return a new instance of `cls` from `data`.
-
-        Primarily used by `dict_value_to_object` when instantiating model classes.
-        """
-        return cls(api, data=data)
-
-    def serialize(self) -> list[dict[str, Any]]:
-        """Serialize the class data."""
-        return self._data
-
     def default(self, field: int | CustomField) -> CustomFieldValue | None:
         """Access and return a `CustomField` from the `DocumentCustomFieldList`, or `None`."""
         try:
@@ -101,6 +89,18 @@ class DocumentCustomFieldList(PaperlessModelData):
             if item.field == item_id:
                 return item
         raise ItemNotFoundError
+
+    @classmethod
+    def unserialize(cls, api: "Paperless", data: list[dict[str, Any]]) -> Self:
+        """Return a new instance of `cls` from `data`.
+
+        Primarily used by `dict_value_to_object` when instantiating model classes.
+        """
+        return cls(api, data=data)
+
+    def serialize(self) -> list[dict[str, Any]]:
+        """Serialize the class data."""
+        return self._data
 
 
 @dataclass(init=False)

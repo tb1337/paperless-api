@@ -78,6 +78,33 @@ class TestReadOnly:
         for item in page.items:
             assert isinstance(item, mapping.model_cls)
 
+    async def test_as_dict(
+        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """Test as_dict."""
+        resp.get(
+            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status=200,
+            payload=PATCHWORK[mapping.resource],
+        )
+        items = await getattr(api_latest, mapping.resource).as_dict()
+        for pk, obj in items.items():
+            assert isinstance(pk, int)
+            assert isinstance(obj, mapping.model_cls)
+
+    async def test_as_list(
+        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """Test as_dict."""
+        resp.get(
+            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status=200,
+            payload=PATCHWORK[mapping.resource],
+        )
+        items = await getattr(api_latest, mapping.resource).as_list()
+        for obj in items:
+            assert isinstance(obj, mapping.model_cls)
+
     async def test_iter(
         self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
     ) -> None:
@@ -193,7 +220,11 @@ class TestReadWrite:
             status=200,
             payload=PATCHWORK[mapping.resource],
         )
-        async with getattr(api_latest, mapping.resource).reduce(any_filter_param="1") as q:
+        async with getattr(api_latest, mapping.resource).reduce(
+            any_filter_param="1",
+            any_filter_list__in=["1", "2"],
+            any_filter_no_list__in="1",
+        ) as q:
             async for item in q:
                 assert isinstance(item, mapping.model_cls)
 

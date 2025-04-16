@@ -17,6 +17,7 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import (
     Config,
+    CustomField,
     Document,
     DocumentDraft,
     DocumentMeta,
@@ -26,6 +27,7 @@ from pypaperless.models import (
     Task,
 )
 from pypaperless.models.common import (
+    CustomFieldValue,
     DocumentMetadataType,
     DocumentSearchHitType,
     RetrieveFileMode,
@@ -33,7 +35,11 @@ from pypaperless.models.common import (
     StatusStorageType,
     StatusTasksType,
 )
-from pypaperless.models.documents import DocumentSuggestions, DownloadedDocument
+from pypaperless.models.documents import (
+    DocumentCustomFieldList,
+    DocumentSuggestions,
+    DownloadedDocument,
+)
 from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHelper
 
 from . import DOCUMENT_MAP
@@ -343,6 +349,36 @@ class TestModelDocuments:
         )
         deletion = await results.pop().delete()
         assert deletion
+
+    async def test_custom_fields(self, resp: aioresponses, api_latest: Paperless) -> None:
+        """Test custom fields."""
+        # set custom fields cache
+        resp.get(
+            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
+            status=200,
+            payload=PATCHWORK["custom_fields"],
+        )
+        api_latest.cache.custom_fields = await api_latest.custom_fields.as_dict()
+
+        # request document
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            status=200,
+            payload=PATCHWORK["documents"]["results"][1],
+        )
+        item = await api_latest.documents(2)
+        assert isinstance(item.custom_fields, DocumentCustomFieldList)
+
+        # test if custom field is in document custom field values
+        test_cf = CustomField.create_with_data(
+            api=api_latest,
+            data=PATCHWORK["custom_fields"]["results"][0],
+            fetched=True,
+        )
+        assert test_cf in item.custom_fields
+        assert isinstance(item.custom_fields[test_cf], CustomFieldValue)
+        assert item.custom_fields.default(test_cf) is not None
+        assert item.custom_fields.default(-1337) is None
 
 
 # test models/status.py

@@ -97,7 +97,7 @@ class CustomFieldSelectValue(CustomFieldValue):
         try:
             # this is currently intended
             return self.extra_data["select_options"]  # type: ignore[no-any-return, index]
-        except KeyError:
+        except (KeyError, TypeError):
             return []
 
     @property

@@ -19,6 +19,8 @@ from pypaperless.exceptions import (
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
 from pypaperless.models.common import (
+    CustomFieldDateValue,
+    CustomFieldSelectValue,
     CustomFieldType,
     MatchingAlgorithmType,
     ShareLinkFileVersionType,
@@ -313,6 +315,29 @@ class TestPaperless:
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
+    async def test_custom_field_value_types(self) -> None:
+        """Test custom field value types."""
+        # check date transformation
+        test = CustomFieldDateValue(value="1900-01-02T02:03:04")
+        assert isinstance(test.value, datetime)
+
+        # check label properties
+        test = CustomFieldSelectValue(
+            value="id2",
+            extra_data={
+                "select_options": [
+                    {"id": "id1", "label": "label1"},
+                    {"id": "id2", "label": "label2"},
+                ]
+            },
+        )
+        assert isinstance(test.labels, list)
+        assert test.label == "label2"
+
+        # test fail
+        test.extra_data = None
+        assert test.label is None
+
     async def test_dataclass_conversion(self) -> None:
         """Test dataclass utils."""
 
@@ -471,7 +496,7 @@ class TestPaperless:
 
             _api_path = "any.url"
             _resource = "test"
-            # draft_cls - we "forgot" to set a draft class, which will raises
+            # draft_cls - we "forgot" to set a draft class, which will raise
             _resource_cls = TestResource
 
         helper = TestHelper(api)
