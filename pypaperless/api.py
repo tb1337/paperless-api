@@ -12,7 +12,7 @@ import aiohttp.web_exceptions
 from yarl import URL
 
 from . import helpers
-from .const import API_PATH, PaperlessResource
+from .const import API_PATH, API_VERSION, PaperlessResource
 from .exceptions import BadJsonResponseError, InitializationError, JsonResponseWithError
 from .models.base import HelperBase
 from .models.common import PaperlessCache
@@ -308,7 +308,7 @@ class Paperless:
         # add headers
         self._session.headers.update(
             {
-                "Accept": "application/json; version=2",
+                "Accept": f"application/json; version={API_VERSION}",
                 "Authorization": f"Token {self._token}",
             }
         )
