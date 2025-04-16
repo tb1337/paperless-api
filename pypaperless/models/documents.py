@@ -67,7 +67,7 @@ class DocumentCustomFieldList(PaperlessModelData):
 
     def __contains__(self, field: int | CustomField) -> bool:
         """Check if the given `CustomField` or its id is present in `DocumentCustomFieldList`."""
-        item_id = field.id if type(field) is CustomField else field
+        item_id = field.id if isinstance(field, CustomField) else field
         return any(item["field"] == item_id for item in self._data)
 
     def __getitem__(self, field: int | CustomField) -> CustomFieldValue:

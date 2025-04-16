@@ -97,17 +97,17 @@ repos:
         always_run: true
         args:
           - --branch=main
-      # - id: pylint
-      #   name: 🌟 Starring code with pylint
-      #   language: system
-      #   types: [python]
-      #   entry: uv run pylint
-      # - id: pytest
-      #   name: 🧪 Running tests and test coverage with pytest
-      #   language: system
-      #   types: [python]
-      #   entry: uv run pytest
-      #   pass_filenames: false
+      - id: pylint
+        name: 🌟 Starring code with pylint
+        language: system
+        types: [python]
+        entry: uv run pylint
+      - id: pytest
+        name: 🧪 Running tests and test coverage with pytest
+        language: system
+        types: [python]
+        entry: uv run pytest
+        pass_filenames: false
       - id: trailing-whitespace
         name: ✄  Trim Trailing Whitespace
         language: system
