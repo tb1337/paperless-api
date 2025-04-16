@@ -22,7 +22,7 @@ jobs:
       - name: 🏗 Set up uv
         run: |
           pipx install uv
-          uv venv --system
+          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.4.0
@@ -33,9 +33,9 @@ jobs:
       #     poetry config virtualenvs.create true
       #     poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
-        run: pip install -r requirements_dev.txt
+        run: pip install -r requirements_dev.txt --upgrade
       - name: 🚀 Check code for common misspellings
-        run: poetry run pre-commit run codespell --all-files
+        run: uv run pre-commit run codespell --all-files
 
   ruff:
     name: Ruff
