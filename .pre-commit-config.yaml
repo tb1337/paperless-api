@@ -1,7 +1,7 @@
 ---
 repos:
   - repo: local
-    hooks: []
+    hooks:
       # - id: ruff-check
       #   name: 🐶 Ruff Linter
       #   language: system
@@ -66,12 +66,12 @@ repos:
       #   language: system
       #   types: [yaml]
       #   entry: uv run check-yaml
-      # - id: codespell
-      #   name: ✅ Check code for common misspellings
-      #   language: system
-      #   types: [text]
-      #   exclude: ^(uv\.lock|requirements\.txt|requirements_dev.txt)$
-      #   entry: uv run codespell
+      - id: codespell
+        name: ✅ Check code for common misspellings
+        language: system
+        types: [text]
+        exclude: ^(uv\.lock|requirements\.txt|requirements_dev.txt)$
+        entry: uv run codespell
       # - id: detect-private-key
       #   name: 🕵️  Detect Private Keys
       #   language: system
