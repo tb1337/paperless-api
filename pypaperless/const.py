@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+API_VERSION = 7
+
 CONFIG = "config"
 CONSUMPTION_TEMPLATES = "consumption_templates"
 CORRESPONDENTS = "correspondents"

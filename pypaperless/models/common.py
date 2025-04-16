@@ -42,6 +42,7 @@ class CustomFieldValue:
     value: Any | None = None
     name: str | None = None
     data_type: CustomFieldType | None = None
+    extra_data: dict[str, Any] | None = None
 
 
 @dataclass(kw_only=True)
@@ -57,6 +58,18 @@ class CustomFieldDateValue(CustomFieldValue):
 
     value: datetime.datetime | None = None
 
+    def __post_init__(self) -> None:
+        """Convert the value to a datetime."""
+        if isinstance(self.value, str):
+            self.value = datetime.datetime.fromisoformat(self.value)
+
+
+@dataclass(kw_only=True)
+class CustomFieldDocumentLinkValue(CustomFieldValue):
+    """Represent a document link `CustomFieldValue`."""
+
+    value: list[int] | None = None
+
 
 @dataclass(kw_only=True)
 class CustomFieldFloatValue(CustomFieldValue):
@@ -70,6 +83,29 @@ class CustomFieldIntegerValue(CustomFieldValue):
     """Represent an integer `CustomFieldValue`."""
 
     value: int | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldSelectValue(CustomFieldValue):
+    """Represent a select `CustomFieldValue`."""
+
+    value: int | None = None
+
+    @property
+    def labels(self) -> list[dict[str, str]]:
+        """Return the list of labels for the `CustomFieldSelectValue`."""
+        try:
+            return self.extra_data["select_options"]
+        except KeyError:
+            return []
+
+    @property
+    def label(self) -> str | None:
+        """Return the label for `value` or fall back to `None`."""
+        for opt in self.labels:
+            if opt["id"] == self.value:
+                return opt["label"]
+        return None
 
 
 @dataclass(kw_only=True)
