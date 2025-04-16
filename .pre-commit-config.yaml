@@ -30,12 +30,12 @@ repos:
         language: system
         types: [python]
         entry: uv run check-docstring-first
-      # # - id: check-executables-have-shebangs
-      # #   name: 🧐 Check that executables have shebangs
-      # #   language: system
-      # #   types: [text, executable]
-      # #   entry: uv run check-executables-have-shebangs
-      # #   stages: [commit, push, manual]
+      # - id: check-executables-have-shebangs
+      #   name: 🧐 Check that executables have shebangs
+      #   language: system
+      #   types: [text, executable]
+      #   entry: uv run check-executables-have-shebangs
+      #   stages: [commit, push, manual]
       - id: check-json
         name: ｛ Check JSON files
         language: system
@@ -102,12 +102,12 @@ repos:
         language: system
         types: [python]
         entry: uv run pylint
-      # - id: pytest
-      #   name: 🧪 Running tests and test coverage with pytest
-      #   language: system
-      #   types: [python]
-      #   entry: uv run pytest
-      #   pass_filenames: false
+      - id: pytest
+        name: 🧪 Running tests and test coverage with pytest
+        language: system
+        types: [python]
+        entry: uv run pytest
+        pass_filenames: false
       - id: trailing-whitespace
         name: ✄  Trim Trailing Whitespace
         language: system
