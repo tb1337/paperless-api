@@ -26,6 +26,8 @@ class CustomField(
     id: int
     name: str | None = None
     data_type: CustomFieldType | None = None
+    extra_data: dict[str, Any] | None = None
+    document_count: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Document` instance."""

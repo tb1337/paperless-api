@@ -1,9 +1,16 @@
 """PyPaperless common types."""
 
+import contextlib
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from pypaperless import Paperless
+
+    from .classifiers import Correspondent, DocumentType, StoragePath, Tag
+    from .custom_fields import CustomField
 
 
 # custom_fields
@@ -11,13 +18,14 @@ class CustomFieldType(Enum):
     """Represent a subtype of `CustomField`."""
 
     STRING = "string"
+    URL = "url"
+    DATE = "date"
     BOOLEAN = "boolean"
     INTEGER = "integer"
     FLOAT = "float"
     MONETARY = "monetary"
-    DATE = "date"
-    URL = "url"
     DOCUMENT_LINK = "documentlink"
+    SELECT = "select"
     UNKNOWN = "unknown"
 
     @classmethod
@@ -28,11 +36,86 @@ class CustomFieldType(Enum):
 
 # documents
 @dataclass(kw_only=True)
-class CustomFieldValueType:
-    """Represent a subtype of `Document`."""
+class CustomFieldValue:
+    """Represent a subtype of `CustomField`."""
 
     field: int | None = None
     value: Any | None = None
+    name: str | None = None
+    data_type: CustomFieldType | None = None
+    extra_data: dict[str, Any] | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldBooleanValue(CustomFieldValue):
+    """Represent a boolean `CustomFieldValue`."""
+
+    value: bool | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldDateValue(CustomFieldValue):
+    """Represent a date `CustomFieldValue`."""
+
+    value: datetime.datetime | str | None = None
+
+    def __post_init__(self) -> None:
+        """Convert the value to a datetime."""
+        if isinstance(self.value, str):
+            with contextlib.suppress(ValueError):
+                self.value = datetime.datetime.fromisoformat(self.value)
+
+
+@dataclass(kw_only=True)
+class CustomFieldDocumentLinkValue(CustomFieldValue):
+    """Represent a document link `CustomFieldValue`."""
+
+    value: list[int] | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldFloatValue(CustomFieldValue):
+    """Represent a float `CustomFieldValue`."""
+
+    value: float | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldIntegerValue(CustomFieldValue):
+    """Represent an integer `CustomFieldValue`."""
+
+    value: int | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldSelectValue(CustomFieldValue):
+    """Represent a select `CustomFieldValue`."""
+
+    value: int | None = None
+
+    @property
+    def labels(self) -> list[dict[str, str]]:
+        """Return the list of labels of the `CustomField`."""
+        try:
+            # this is currently intended
+            return self.extra_data["select_options"]  # type: ignore[no-any-return, index]
+        except (KeyError, TypeError):
+            return []
+
+    @property
+    def label(self) -> str | None:
+        """Return the label for `value` or fall back to `None`."""
+        for opt in self.labels:
+            if opt["id"] == self.value:
+                return opt["label"]
+        return None
+
+
+@dataclass(kw_only=True)
+class CustomFieldStringValue(CustomFieldValue):
+    """Represent a string `CustomFieldValue`."""
+
+    value: str | None = None
 
 
 # documents
@@ -57,6 +140,21 @@ class DocumentSearchHitType:
     rank: int | None = None
 
 
+# api
+@dataclass(kw_only=True)
+class MasterDataInstance:
+    """Represent a `MasterDataInstance`."""
+
+    api: "Paperless"
+    is_initialized: bool = False
+
+    correspondents: list["Correspondent"] = field(default_factory=list)
+    custom_fields: list["CustomField"] = field(default_factory=list)
+    document_types: list["DocumentType"] = field(default_factory=list)
+    storage_paths: list["StoragePath"] = field(default_factory=list)
+    tags: list["Tag"] = field(default_factory=list)
+
+
 # mixins/models/data_fields, used for classifiers
 class MatchingAlgorithmType(Enum):
     """Represent a subtype of `Correspondent`, `DocumentType`, `StoragePath` and `Tag`."""
@@ -74,6 +172,14 @@ class MatchingAlgorithmType(Enum):
     def _missing_(cls: type, *_: object) -> "MatchingAlgorithmType":
         """Set default member on unknown value."""
         return MatchingAlgorithmType.UNKNOWN
+
+
+# api
+@dataclass(kw_only=True)
+class PaperlessCache:
+    """Represent a Paperless cache object."""
+
+    custom_fields: dict[int, "CustomField"] | None = None
 
 
 # mixins/models/securable

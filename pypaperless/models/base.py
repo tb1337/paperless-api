@@ -1,7 +1,8 @@
 """Provide base classes."""
 
+from abc import ABC, abstractmethod
 from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, final
+from typing import TYPE_CHECKING, Any, Generic, Protocol, Self, TypeVar, final
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.utils import dict_value_to_object
@@ -124,6 +125,11 @@ class PaperlessModel(PaperlessBase):
             )
             setattr(self, field.name, value)
 
+    @property
+    def is_fetched(self) -> bool:
+        """Return whether the `model data` is fetched or not."""
+        return self._fetched
+
     async def load(self) -> None:
         """Get `model data` from DRF."""
         data = await self._api.request_json("get", self._api_path, params=self._params)
@@ -131,3 +137,16 @@ class PaperlessModel(PaperlessBase):
         self._data.update(data)
         self._set_dataclass_fields()
         self._fetched = True
+
+
+class PaperlessModelData(ABC):
+    """Base class for all custom data types in PyPaperless."""
+
+    @classmethod
+    @abstractmethod
+    def unserialize(cls, api: "Paperless", data: Any) -> Self:
+        """Return a new instance of `cls` from `data`."""
+
+    @abstractmethod
+    def serialize(self) -> Any:
+        """Serialize the class data."""

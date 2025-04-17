@@ -1,25 +1,117 @@
 """Provide `Document` related models and helpers."""
 
 import datetime
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError
+from pypaperless.exceptions import AsnRequestError, ItemNotFoundError, PrimaryKeyRequiredError
 from pypaperless.models.utils import object_to_dict_value
 
-from .base import HelperBase, PaperlessModel
+from .base import HelperBase, PaperlessModel, PaperlessModelData
 from .common import (
-    CustomFieldValueType,
+    CustomFieldBooleanValue,
+    CustomFieldDateValue,
+    CustomFieldDocumentLinkValue,
+    CustomFieldFloatValue,
+    CustomFieldIntegerValue,
+    CustomFieldSelectValue,
+    CustomFieldStringValue,
+    CustomFieldType,
+    CustomFieldValue,
     DocumentMetadataType,
     DocumentSearchHitType,
     RetrieveFileMode,
 )
+from .custom_fields import CustomField
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
+
+
+class DocumentCustomFieldList(PaperlessModelData):
+    """Represent a list of Paperless custom field instances typically on documents."""
+
+    CustomFieldValueMap: dict[CustomFieldType, type[CustomFieldValue]] = {
+        CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
+        CustomFieldType.DATE: CustomFieldDateValue,
+        CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
+        CustomFieldType.FLOAT: CustomFieldFloatValue,
+        CustomFieldType.INTEGER: CustomFieldIntegerValue,
+        CustomFieldType.SELECT: CustomFieldSelectValue,
+        CustomFieldType.STRING: CustomFieldStringValue,
+    }
+
+    def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
+        """Initialize a `CustomFieldList` instance."""
+        self._api = api
+        self._data = data
+        self._fields: list[CustomFieldValue] = []
+
+        cache = api.cache.custom_fields
+
+        for item in data:
+            if cache and (field := cache.get(item["field"], None)):
+                klass = self.CustomFieldValueMap.get(
+                    field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
+                )
+                klass_data = {
+                    **item,
+                    "name": field.name,
+                    "data_type": field.data_type,
+                    "extra_data": field.extra_data,
+                }
+                self._fields.append(klass(**klass_data))
+            else:
+                self._fields.append(CustomFieldValue(**item))
+
+    def __contains__(self, field: int | CustomField) -> bool:
+        """Check if the given `CustomField` or its id is present in `DocumentCustomFieldList`."""
+        item_id = field.id if isinstance(field, CustomField) else field
+        return any(item["field"] == item_id for item in self._data)
+
+    def __iter__(self) -> Iterator[CustomFieldValue]:
+        """Iterate over custom fields.
+
+        Example:
+        -------
+        ```python
+        for item in document.custom_fields:
+            # do something
+        ```
+
+        """
+        yield from self._fields
+
+    def default(self, field: int | CustomField) -> CustomFieldValue | None:
+        """Access and return a `CustomField` from the `DocumentCustomFieldList`, or `None`."""
+        try:
+            return self.get(field)
+        except ItemNotFoundError:
+            return None
+
+    def get(self, field: int | CustomField) -> CustomFieldValue:
+        """Access and return a `CustomField` from the `DocumentCustomFieldList`, or raise."""
+        item_id = field.id if isinstance(field, CustomField) else field
+
+        for item in self._fields:
+            if item.field == item_id:
+                return item
+        raise ItemNotFoundError
+
+    @classmethod
+    def unserialize(cls, api: "Paperless", data: list[dict[str, Any]]) -> Self:
+        """Return a new instance of `cls` from `data`.
+
+        Primarily used by `dict_value_to_object` when instantiating model classes.
+        """
+        return cls(api, data=data)
+
+    def serialize(self) -> list[dict[str, Any]]:
+        """Serialize the class data."""
+        return self._data
 
 
 @dataclass(init=False)
@@ -48,7 +140,7 @@ class Document(
     original_file_name: str | None = None
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
-    custom_fields: list[CustomFieldValueType] | None = None
+    custom_fields: DocumentCustomFieldList | None = None
     __search_hit__: DocumentSearchHitType | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:

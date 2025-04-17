@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+API_VERSION = 7
+
 CONFIG = "config"
 CONSUMPTION_TEMPLATES = "consumption_templates"
 CORRESPONDENTS = "correspondents"
@@ -27,6 +29,7 @@ WORKFLOW_TRIGGERS = "workflow_triggers"
 UNKNOWN = "unknown"
 
 API_PATH = {
+    "api_schema": "/api/schema/",
     "index": "/api/",
     "token": "/api/token/",
     f"{CONFIG}": f"/api/{CONFIG}/",

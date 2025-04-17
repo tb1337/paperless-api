@@ -67,6 +67,10 @@ class DraftNotSupportedError(PaperlessError):
     """Raise when trying to draft unsupported models."""
 
 
+class ItemNotFoundError(PaperlessError):
+    """Raise when trying to access non-existing items in PaperlessModelData classes."""
+
+
 class PrimaryKeyRequiredError(PaperlessError):
     """Raise when trying to access model data without supplying a pk."""
 
