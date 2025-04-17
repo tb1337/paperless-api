@@ -247,7 +247,7 @@ class Paperless:
                     raise InitializationError from exc
 
                 self._version = res.headers.get("x-version", None)
-                return cast(dict[str, str], payload)
+                return cast("dict[str, str]", payload)
 
         if await _init_with_openapi_response():
             self.logger.debug("OpenAPI spec detected.")
