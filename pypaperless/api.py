@@ -135,7 +135,7 @@ class Paperless:
         url = URL(url)
 
         # scheme check. fall back to https
-        if url.scheme not in ("https", "http"):
+        if url.scheme not in ("https", "http"):  # type: ignore[call-overload]
             url = URL(url).with_scheme("https")
 
         return url
