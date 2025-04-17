@@ -9,13 +9,13 @@
 [![Linting][linting-badge]][linting-url]
 [![Typing][typing-badge]][typing-url]
 
-Little asynchronous client for Paperless-ngx, written in Python. You should at least use Python `>=3.11`.
+Little asynchronous client for Paperless-ngx, written in Python. You should at least use Python `>=3.12`.
 
-Find out more about Paperless-ngx here:
+**v4 upgrade warning**
 
-- Project: https://docs.paperless-ngx.com
-- API Docs: https://docs.paperless-ngx.com/api/
-- Source Code: https://github.com/paperless-ngx/paperless-ngx
+* We dropped support for Python `<=3.11`.
+* Major changes in various classes occurred. Consider using Paperless-ngx `>=2.15.0`.
+* Support for Paperless-ngx `<2.15.0` will end after 2025/07.
 
 ## Features
 
@@ -26,6 +26,12 @@ Find out more about Paperless-ngx here:
 - Create, update and delete resource items.
 - Almost feature complete.
 - _PyPaperless_ is designed to transport data only. Your code must organize it.
+
+Find out more about Paperless-ngx here:
+
+- Project: https://docs.paperless-ngx.com
+- API Docs: https://docs.paperless-ngx.com/api/
+- Source Code: https://github.com/paperless-ngx/paperless-ngx
 
 ## Installation
 
@@ -42,11 +48,6 @@ Please check out the **[docs][docs-url]** for detailed instructions and examples
 _PyPaperless_ is written by [Tobias Schulz][contributors-tbsch]. Its his first Python project. Feedback appreciated.
 
 Check out all [contributors here][contributors-url].
-
-## Thanks to
-
-- The Paperless-ngx Team
-- The Home Assistant Community
 
 [codecov-badge]: https://codecov.io/gh/tb1337/paperless-api/graph/badge.svg?token=IMXRBK3HRE
 [codecov-url]: https://app.codecov.io/gh/tb1337/paperless-api/tree/main

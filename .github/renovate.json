@@ -15,16 +15,16 @@
       "addLabels": ["skip-changelog"]
     },
     {
-      "matchManagers": ["pep621", "pip_requirements"],
+      "matchManagers": ["pep621"],
       "addLabels": ["dependencies", "python"]
     },
     {
-      "matchManagers": ["pep621", "pip_requirements"],
+      "matchManagers": ["pep621"],
       "matchDepTypes": ["dev"],
       "rangeStrategy": "pin"
     },
     {
-      "matchManagers": ["pep621", "pip_requirements"],
+      "matchManagers": ["pep621"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     },
