@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  DEFAULT_PYTHON: "3.11"
+  DEFAULT_PYTHON: "3.12"
 
 jobs:
   pytest:
@@ -18,24 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.12", "3.13"]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
-      - name: 🏗 Set up Python ${{ matrix.python }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
+      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.4.0
         with:
-          python-version: ${{ matrix.python }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
+          python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Install Python dependencies
-        run: poetry install --no-interaction
+        run: uv pip install -r requirements_dev.txt --upgrade
       - name: 🚀 Run pytest
         run: poetry run pytest -v --cov-report xml:coverage.xml --cov src tests
       - name: ⬆️ Upload coverage artifact
@@ -54,20 +51,17 @@ jobs:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v4.1.9
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-      - name: 🏗 Install dependencies
-        run: poetry install --no-interaction
+      - name: 🏗 Install Python dependencies
+        run: uv pip install -r requirements_dev.txt --upgrade
       - name: 🚀 Upload coverage report
         uses: codecov/codecov-action@v5.4.0
         with:
