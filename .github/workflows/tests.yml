@@ -6,7 +6,21 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "**.py"
+      - "pyproject.toml"
+      - "requirements*.txt"
+      - "uv.lock"
+      - "pypaperless/**"
+      - "tests/**"
   pull_request:
+    paths:
+      - "**.py"
+      - "pyproject.toml"
+      - "requirements*.txt"
+      - "uv.lock"
+      - "pypaperless/**"
+      - "tests/**"
   workflow_dispatch:
 
 env:
