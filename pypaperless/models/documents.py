@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Self, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, ItemNotFoundError, PrimaryKeyRequiredError
-from pypaperless.models import CustomField
 from pypaperless.models.utils import object_to_dict_value
 
 from .base import HelperBase, PaperlessModel, PaperlessModelData
@@ -25,6 +24,7 @@ from .common import (
     DocumentSearchHitType,
     RetrieveFileMode,
 )
+from .custom_fields import CustomField
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
