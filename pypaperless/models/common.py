@@ -1,5 +1,6 @@
 """PyPaperless common types."""
 
+import contextlib
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
@@ -61,7 +62,8 @@ class CustomFieldDateValue(CustomFieldValue):
     def __post_init__(self) -> None:
         """Convert the value to a datetime."""
         if isinstance(self.value, str):
-            self.value = datetime.datetime.fromisoformat(self.value)
+            with contextlib.suppress(ValueError):
+                self.value = datetime.datetime.fromisoformat(self.value)
 
 
 @dataclass(kw_only=True)
@@ -93,7 +95,7 @@ class CustomFieldSelectValue(CustomFieldValue):
 
     @property
     def labels(self) -> list[dict[str, str]]:
-        """Return the list of labels for the `CustomFieldSelectValue`."""
+        """Return the list of labels of the `CustomField`."""
         try:
             # this is currently intended
             return self.extra_data["select_options"]  # type: ignore[no-any-return, index]

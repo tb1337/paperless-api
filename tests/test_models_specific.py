@@ -376,7 +376,7 @@ class TestModelDocuments:
             fetched=True,
         )
         assert test_cf in item.custom_fields
-        assert isinstance(item.custom_fields[test_cf], CustomFieldValue)
+        assert isinstance(item.custom_fields.get(test_cf), CustomFieldValue)
         assert item.custom_fields.default(test_cf) is not None
         assert item.custom_fields.default(-1337) is None
 

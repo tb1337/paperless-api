@@ -1,7 +1,7 @@
 """Provide `Document` related models and helpers."""
 
 import datetime
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Self, cast
 
@@ -50,10 +50,10 @@ class DocumentCustomFieldList(PaperlessModelData):
         self._data = data
         self._fields: list[CustomFieldValue] = []
 
+        cache = api.cache.custom_fields
+
         for item in data:
-            if (cache := self._api.cache.custom_fields) and (
-                field := cache.get(item["field"], None)
-            ):
+            if cache and (field := cache.get(item["field"], None)):
                 klass = self.CustomFieldValueMap.get(
                     field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
                 )
@@ -64,15 +64,26 @@ class DocumentCustomFieldList(PaperlessModelData):
                     "extra_data": field.extra_data,
                 }
                 self._fields.append(klass(**klass_data))
+            else:
+                self._fields.append(CustomFieldValue(**item))
 
     def __contains__(self, field: int | CustomField) -> bool:
         """Check if the given `CustomField` or its id is present in `DocumentCustomFieldList`."""
         item_id = field.id if isinstance(field, CustomField) else field
         return any(item["field"] == item_id for item in self._data)
 
-    def __getitem__(self, field: int | CustomField) -> CustomFieldValue:
-        """Shortcut for `DocumentCustomFieldList.get()`."""
-        return self.get(field)
+    def __iter__(self) -> Iterator[CustomFieldValue]:
+        """Iterate over custom fields.
+
+        Example:
+        -------
+        ```python
+        for item in document.custom_fields:
+            # do something
+        ```
+
+        """
+        yield from self._fields
 
     def default(self, field: int | CustomField) -> CustomFieldValue | None:
         """Access and return a `CustomField` from the `DocumentCustomFieldList`, or `None`."""
