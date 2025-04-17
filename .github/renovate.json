@@ -3,7 +3,7 @@
   "schedule": ["* 2 1 * *"],
   "rebaseWhen": "behind-base-branch",
   "dependencyDashboard": true,
-  "labels": ["auto", "dependencies", "no-stale"],
+  "labels": ["auto", "no-stale"],
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
@@ -11,32 +11,26 @@
   "commitMessagePrefix": "⬆️",
   "packageRules": [
     {
-      "matchManagers": ["poetry"],
-      "addLabels": ["python"]
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "addLabels": ["skip-changelog"]
     },
     {
-      "matchManagers": ["poetry"],
+      "matchManagers": ["uv"],
+      "addLabels": ["dependencies", "python"]
+    },
+    {
+      "matchManagers": ["uv"],
       "matchDepTypes": ["dev"],
       "rangeStrategy": "pin"
     },
     {
-      "matchManagers": ["poetry"],
-      "matchUpdateTypes": ["minor", "patch"],
-      "automerge": true
-    },
-    {
-      "matchManagers": ["npm", "nvm"],
-      "addLabels": ["javascript"],
-      "rangeStrategy": "pin"
-    },
-    {
-      "matchManagers": ["npm", "nvm"],
+      "matchManagers": ["uv"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["github_actions"],
+      "addLabels": ["ci", "github_actions", "skip-changelog"],
       "rangeStrategy": "pin"
     },
     {
