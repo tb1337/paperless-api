@@ -136,4 +136,3 @@ jobs:
         run: uv pip install -r requirements_dev.txt --upgrade
       - name: 🚀 Run yamllint
         run: uv run yamllint .
-

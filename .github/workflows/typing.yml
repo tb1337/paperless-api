@@ -19,19 +19,16 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Poetry
-        run: pipx install poetry
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-          cache: "poetry"
-      - name: 🏗 Install workflow dependencies
-        run: |
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
       - name: 🏗 Install Python dependencies
-        run: poetry install --no-interaction
+        run: uv pip install -r requirements_dev.txt --upgrade
       - name: 🚀 Run mypy
-        run: poetry run mypy src tests
+        run: uv run mypy pypaperless tests
