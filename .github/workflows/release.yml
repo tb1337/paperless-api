@@ -44,7 +44,7 @@ jobs:
       - name: 🏗 Build package
         run: |
           uv pip install build
-          python -m build
+          uv run python -m build
       - name: 🚀 Publish to PyPi
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
