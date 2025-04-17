@@ -49,6 +49,7 @@ class CustomFieldDraft(
 
     name: str | None = None
     data_type: CustomFieldType | None = None
+    extra_data: dict[str, Any] | None = None
 
 
 class CustomFieldHelper(
