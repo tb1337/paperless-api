@@ -18,6 +18,7 @@
   - [Deleting items](#deleting-items)
 - [Special cases](#special-cases)
   - [Document binary data](#document-binary-data)
+  - [Document custom fields (NEW)](#document-custom-fields-new)
   - [Document metadata](#document-metadata)
   - [Document notes](#document-notes)
   - [Document searching](#document-searching)
@@ -33,7 +34,7 @@
 
 ### Quickstart
 
-Just import the module and go on. Note that we must be async.
+Just import the module and start using it. Note that we must be async.
 
 ```python
 import asyncio
@@ -69,7 +70,7 @@ async def main():
 There are some rules for the Paperless-ngx url.
 
 1. Isn't a scheme applied to it? `https` is automatically used.
-2. Does the url explicitly start with `http`? Okay, be unsafe :dizzy_face:.
+2. If you explicitly start with `http`, the connection will be unencrypted (not recommended).
 3. Only use the **base url** of your Paperless-ngx. Don't add `/api` to it.
 
 ### Custom session
@@ -88,13 +89,13 @@ paperless = Paperless("localhost:8000", "your-secret-token", session=my_session)
 
 ### Creating a token
 
-_PyPaperless_ needs an API token to request and send data from and to Paperless-ngx for authentication purposes. I recommend you to create a technical user and assign a token to it via Django Admin, when you bootstrap any project with _PyPaperless_. If you need to create that token by providing credentials, _PyPaperless_ ships with a little helper for that task.
+_PyPaperless_ needs an API token to request and send data from and to Paperless-ngx for authentication purposes. It is recommended to create a technical user and assign a token to it via Django Admin, when you bootstrap any project with _PyPaperless_. If you need to create that token by providing credentials, _PyPaperless_ ships with a little helper for that task.
 
 ```python
 token = Paperless.generate_api_token(
     "localhost:8000",
     "test_user",
-    "not-so-secret-password-anymore",
+    "your-password-here",
 )
 ```
 
@@ -134,6 +135,7 @@ The code above executes one http request:
 | mail_rules     | x        | x       |        |         |        | x           |
 | saved_views    | x        | x       |        |         |        | x           |
 | share_links    | x        | x       | x      | x       | x      |
+| status | x |
 | storage_paths  | x        | x       | x      | x       | x      | x           |
 | tags           | x        | x       | x      | x       | x      | x           |
 | tasks          | x        | x\*     |        |         |
@@ -142,7 +144,7 @@ The code above executes one http request:
 
 \*: Only `__aiter__` is supported.
 
-`logs` are not implemented, as they return plain text. I cannot imagine any case where that could be needed by someone.
+`logs` are not implemented, as they return plain text. Since logs return plain text, support for this resource is currently not implemented.
 
 ## Requesting data
 
@@ -150,7 +152,7 @@ Retrieving data from Paperless-ngx is really easy, there are different possibili
 
 ### Getting one item by primary key
 
-You'll need to use that in the most cases, as _PyPaperless_ always returns references to other resource items by their primary keys. You must resolve these references on your own. The returned objects are always `PaperlessModel`s.
+This is the most common use case, since _PyPaperless_ always returns references to other resource items by their primary keys. You must resolve these references on your own. The returned objects are always `PaperlessModel`s.
 
 ```python
 document = await paperless.documents(1337)
@@ -217,7 +219,7 @@ The code above executes two http requests:
 
 ### Reducing http requests
 
-Requesting many pages can be time-consuming, so a better way to apply the filter (mentioned [here](#iterating-over-resource-items)) is using the `reduce` context. Technically, it applies query parameters to the http request, which are interpreted as filters by Paperless-ngx.
+Requesting many pages can be time-consuming, so a better way to apply the filter (mentioned [here](#iterating-over-resource-items)) is to use the `reduce` context manager. Technically, it applies query parameters to the http request, which are interpreted as filters by Paperless-ngx.
 
 ```python
 filters = {
@@ -238,7 +240,7 @@ The code above executes just one http request, and achieves the same:
 > The `reduce` context works with all previously mentioned methods: `__aiter__`, `all` and `pages`.
 
 > [!NOTE]
-> There are many filters available, _PyPaperless_ doesn't provide a complete list. I am working on that. At the moment, you must use the Django Rest framework http endpoint of Paperless-ngx in your browser and play around with the **Filter** button on each resource.
+> There are many filters available, _PyPaperless_ doesn't provide a complete list. I am working on that. At the moment, you must use the Django Rest framework http endpoint of Paperless-ngx in your browser and experiment with the **Filter** button on each resource.
 >
 > Paperless-ngx simply ignores filters which don't exist and treats them as no filter instead of raising errors, be careful.
 
@@ -248,7 +250,7 @@ _PyPaperless_ offers creation, update and deletion of resource items. These feat
 
 ### Creating new items
 
-The process of creating items consists of three parts: retrieving a new draft instance from _PyPaperless_, apply data to it and call `save`. You can choose whether applying data to the draft via `kwargs` or by assigning it to the draft instance, or both. Maybe you want to request the newly created item by the returned primary key and compare it against the data from the draft. If not, you can safely trash the draft instance after saving, as it cannot be saved twice (database constraint violation).
+The process of creating items consists of three parts: retrieving a new draft instance from _PyPaperless_, apply data to it and call `save`. You can choose whether applying data to the draft via `kwargs` or by assigning it to the draft instance, or both. If you do not need to further use the created item, the draft instance can be safely discarded after saving, as it cannot be reused (database constraint violation).
 
 ```python
 from pypaperless.models.common import MatchingAlgorithmType
@@ -313,7 +315,7 @@ The code above executes two http requests:
 
 ### Deleting items
 
-Lust but not least, it is also possible to remove data from Paperless-ngx.
+Last but not least, it is also possible to remove data from Paperless-ngx.
 
 > [!CAUTION]
 > This will permanently delete data from your database. There is no point of return. Be careful.
@@ -354,15 +356,108 @@ preview = await document.get_preview()
 thumbnail = await document.get_thumbnail()
 ```
 
-Both codes above execute all of these http requests:
+The examples above result in the following http requests:
 
 `GET` `https://localhost:8000/api/documents/23/download/` <br>
 `GET` `https://localhost:8000/api/documents/23/preview/` <br>
 `GET` `https://localhost:8000/api/documents/23/thumb/`
 
+### Document custom fields (NEW)
+
+When classifying your documents, you may want to add custom fields to them. Working with their values could be tricky and required you to loop through lists of field primary keys and their values. You also had to look up the custom fields by their primary key and parse the values according to their data types.
+
+This is a typical `CustomFieldInstance` object provided by the Paperless-ngx API:
+
+```python
+{
+    # inside document object
+    "custom_fields": [
+        {
+            "value": 42,
+            "field": 11
+        },
+    ],
+}
+```
+
+This provides no details about the custom field except for its primary key.
+
+**Provide a cache for all custom fields**
+
+The benefit of this cache mechanism is that you don't have to request custom fields from the API multiple times. In addition, _PyPaperless_ makes use of this cache while mapping JSON objects to their classes in your Python program. You could use that cache in your code, as well.
+
+```python
+# initialize the cache to let PyPaperless resolve custom fields automatically
+paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
+
+# fetch a document by primary key
+document = await paperless.documents(1337)
+
+doc_custom_fields = list(document.custom_fields)
+
+```
+
+Main difference between providing a cache or not:
+
+```python
+# without cache - no mapping, only basic information
+print(doc_custom_fields[0])
+#-> CustomFieldValue(field=11, value=42, name=None, data_type=None, extra_data=None)
+
+# with cache - note the difference in the class type!
+print(doc_custom_fields[0])
+#-> CustomFieldIntegerValue(field=11, value=42, name='Any Number Field', data_type=<CustomFieldType.INTEGER: 'integer'>, extra_data={'select_options': [None], 'default_currency': None})
+```
+
+**Example 2: Lookup a specific custom field by `CustomField` instance**
+
+```python
+# select a custom field to access its value
+specific_custom_field = await paperless.custom_fields(1)
+
+# and work with it
+if specific_custom_field in document.custom_fields:
+    field = document.custom_fields.get(specific_custom_field)
+    # do something with: field.value
+```
+
+**Example 3: Lookup a specific custom field by its primary key**
+
+```python
+custom_field_id = 1
+
+field = document.custom_fields.get(custom_field_id)
+# do something with: field.value
+```
+
+> [!NOTE]
+> Note that `document.custom_fields.get(...)` will raise an exception if the given custom field doesn't exist in the document data. If that could happen and you prefer not to perform an existence check before, you should use `.default(...)`.
+
+**Example 4: Lookup a specific custom field or fallback to `None`**
+
+```python
+if field := document.custom_fields.default(23):
+    # do something with: field.value
+```
+
+**Example 5: Loop through all custom fields**
+```python
+for field in document.custom_fields:
+    # do something with: field.value
+```
+
+**Special custom field data types**
+
+There are many data types for custom fields in Paperless-ngx, for example, strings and integers. While both are very common, special data types are also available. _PyPaperless_ provides some extra functionality for uncommon data types.
+
+* `CustomFieldDateValue.value`: The value is converted into a `datetime.datetime` object, if possible. It's a string or `None` otherwise.
+* `CustomFieldDocumentLinkValue.value`: The value is a list of document ids (no `Document` objects at all)
+* `CustomFieldSelectValue.labels`: Returns the list of labels of the `CustomField`.
+* `CustomFieldSelectValue.label`: Returns the label for `value` (which is a reference to a label) or falls back to `None`.
+
 ### Document metadata
 
-Paperless-ngx stores some metadata about your documents. If you wish to access that, there are again two possibilities.
+Paperless-ngx stores some metadata about your documents. If you wish to access that, there are two ways to access it.
 
 **Example 1: Provide a primary key**
 
@@ -383,7 +478,7 @@ Both codes above execute one http request:
 
 ### Document notes
 
-Documents can be commented with so called notes. Paperless-ngx supports requesting, creating and deleting those notes. _PyPaperless_ ships with support for it, too.
+Documents can be commented with so-called notes. Paperless-ngx supports requesting, creating and deleting those notes. _PyPaperless_ includes built-in support for it, too.
 
 **Getting notes**
 
@@ -429,7 +524,7 @@ The code above executes one http request:
 Sometimes it may be necessary to delete document notes.
 
 > [!CAUTION]
-> This will permanently delete data from your database. There is no point of return. Be careful.
+> This will permanently delete data from your database. There is no way to recover deleted data. Be careful.
 
 ```python
 a_note = list_of_notes.pop() # document note with example pk 42
@@ -443,7 +538,7 @@ The code above executes one http request:
 
 ### Document searching
 
-If you want to seek after documents, Paperless-ngx offers two possibilities to achieve that. _PyPaperless_ implements two iterable shortcuts for that.
+If you want to search for documents, Paperless-ngx offers two possibilities to achieve that. _PyPaperless_ implements two iterable shortcuts for that.
 
 **Search query**
 
@@ -500,7 +595,7 @@ else:
 
 ### Document suggestions
 
-One of the biggest tasks of Paperless-ngx is _classification_: it is the workflow of assigning classifiers to your documents, like correspondents or tags. Paperless does that by auto-assigning or suggesting them to you. These suggestions can be accessed by _PyPaperless_, as well.
+One of the key functionalities of Paperless-ngx is _classification_: it is the workflow of assigning classifiers to your documents, like correspondents or tags. Paperless does that by auto-assigning or suggesting them to you. These suggestions can be accessed by _PyPaperless_, as well.
 
 **Example 1: Provide a primary key**
 
@@ -536,7 +631,7 @@ The code above executes one http request:
 
 ### Permissions
 
-Some resources of Paperless-ngx provide getting and setting of object-level permissions. When requesting data from Paperless-ngx, it delivers two permission fields by default: `owner` and `user_can_change`. You have to explicitly call the API to return the permissions table by a toggle parameter.
+Some resources of Paperless-ngx support retrieving and updating of object-level permissions. When requesting data from Paperless-ngx, it delivers two permission fields by default: `owner` and `user_can_change`. You have to explicitly call the API to return the permissions table by a toggle parameter.
 
 #### Toggle requesting permissions
 
