@@ -162,23 +162,23 @@ class Document(
 
     async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.download(cast(int, self.id), original=original)
+        return await self._api.documents.download(cast("int", self.id), original=original)
 
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
-        return await self._api.documents.metadata(cast(int, self.id))
+        return await self._api.documents.metadata(cast("int", self.id))
 
     async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.preview(cast(int, self.id), original=original)
+        return await self._api.documents.preview(cast("int", self.id), original=original)
 
     async def get_suggestions(self) -> "DocumentSuggestions":
         """Request and return the `DocumentSuggestions` class."""
-        return await self._api.documents.suggestions(cast(int, self.id))
+        return await self._api.documents.suggestions(cast("int", self.id))
 
     async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.thumbnail(cast(int, self.id), original=original)
+        return await self._api.documents.thumbnail(cast("int", self.id), original=original)
 
 
 @dataclass(init=False)
@@ -535,7 +535,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):
         if not any((self._attached_to, pk)):
             message = f"Accessing {type(self).__name__} data without a primary key."
             raise PrimaryKeyRequiredError(message)
-        return cast(int, self._attached_to or pk)
+        return cast("int", self._attached_to or pk)
 
     def _get_api_path(self, pk: int) -> str:
         """Return the formatted api path."""

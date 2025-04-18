@@ -84,12 +84,12 @@ class PaperlessModel(PaperlessBase):
     @final
     @classmethod
     def create_with_data(
-        cls: type[ResourceT],
+        cls,
         api: "Paperless",
         data: dict[str, Any],
         *,
         fetched: bool = False,
-    ) -> ResourceT:
+    ) -> Self:
         """Return a new instance of `cls` from `data`.
 
         Primarily used by class factories to create new model instances.
@@ -98,9 +98,9 @@ class PaperlessModel(PaperlessBase):
         """
         item = cls(api, data=data)
 
-        item._fetched = fetched  # noqa: SLF001
+        item._fetched = fetched
         if fetched:
-            item._set_dataclass_fields()  # noqa: SLF001
+            item._set_dataclass_fields()
         return item
 
     @final
