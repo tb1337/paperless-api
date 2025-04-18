@@ -9,7 +9,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "requirements*.txt"
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
@@ -17,7 +16,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "requirements*.txt"
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
@@ -33,16 +31,16 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Run mypy
         run: uv run mypy pypaperless tests
