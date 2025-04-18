@@ -130,7 +130,7 @@ max-line-length = 100
 max-attributes = 20
 
 [tool.pytest.ini_options]
-addopts = "--cov"
+addopts = "--cov --cov-report=term --cov-report=xml"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 

@@ -40,7 +40,9 @@
         "python.pythonPath": "/home/vscode/.local/dev-venv/bin/python",
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": [
-          "--no-cov"
+          "--no-cov",
+          "--cov-report=term",
+          "--cov-report=xml"
         ],
         "pylint.importStrategy": "fromEnvironment",
         "[python]": {
