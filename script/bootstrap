@@ -9,4 +9,4 @@ cd "$(dirname "$0")/.."
 uv venv $VIRTUAL_ENV
 
 echo "Installing development dependencies..."
-uv pip install -r requirements_dev.txt --upgrade
+uv sync --group dev
