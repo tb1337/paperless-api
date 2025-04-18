@@ -9,7 +9,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "requirements*.txt"
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
@@ -17,7 +16,6 @@ on:
     paths:
       - "**.py"
       - "pyproject.toml"
-      - "requirements*.txt"
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
@@ -33,17 +31,17 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Check code for common misspellings
         run: uv run pre-commit run codespell --all-files
 
@@ -53,17 +51,17 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Run ruff linter
         run: uv run ruff check --output-format=github .
       - name: 🚀 Run ruff formatter
@@ -75,17 +73,17 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Check Python AST
         run: uv run pre-commit run check-ast --all-files
       - name: 🚀 Check for case conflicts
@@ -117,17 +115,17 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Run pylint
         run: uv run pre-commit run pylint --all-files
 
@@ -137,16 +135,16 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🚀 Run yamllint
         run: uv run yamllint .

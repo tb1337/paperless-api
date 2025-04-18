@@ -23,17 +23,17 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.5.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up uv
+        run: |
+          pipx install uv
+          uv venv
       - name: 🏗 Install Python dependencies
-        run: uv pip install -r requirements_dev.txt --upgrade
+        run: uv sync --group dev
       - name: 🏗 Set package version
         run: |
           version="${{ github.event.release.tag_name }}"
@@ -41,9 +41,7 @@ jobs:
           version="${version#v}"
           sed -i "s/^version = .*/version = \"${version}\"/" pyproject.toml
       - name: 🏗 Build package
-        run: |
-          uv pip install build
-          uv run python -m build
+        run: uv build
       - name: 🚀 Publish to PyPi
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:

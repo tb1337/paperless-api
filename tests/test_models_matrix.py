@@ -136,7 +136,7 @@ class TestReadOnly:
     ) -> None:
         """Test call."""
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload=PATCHWORK[mapping.resource]["results"][0],
         )
@@ -145,7 +145,7 @@ class TestReadOnly:
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
@@ -233,7 +233,7 @@ class TestReadWrite:
     ) -> None:
         """Test call."""
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload=PATCHWORK[mapping.resource]["results"][0],
         )
@@ -242,7 +242,7 @@ class TestReadWrite:
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1337),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
@@ -287,7 +287,7 @@ class TestReadWrite:
             update_value = 2
         # go on
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload=PATCHWORK[mapping.resource]["results"][0],
         )
@@ -295,7 +295,7 @@ class TestReadWrite:
         setattr(to_update, update_field, update_value)
         # actually call the update endpoint
         resp.patch(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload={
                 **to_update._data,  # pylint: disable=protected-access
@@ -309,7 +309,7 @@ class TestReadWrite:
         # force update
         setattr(to_update, update_field, update_value)
         resp.put(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload={
                 **to_update._data,  # pylint: disable=protected-access
@@ -324,19 +324,19 @@ class TestReadWrite:
     ) -> None:
         """Test delete."""
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
             payload=PATCHWORK[mapping.resource]["results"][0],
         )
         to_delete = await getattr(api_latest, mapping.resource)(1)
         resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=204,  # Paperless-ngx responds with 204 on deletion
         )
         assert await to_delete.delete()
         # test deletion failed
         resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1),
+            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=404,  # we send another status code
         )
         assert not await to_delete.delete()
@@ -367,7 +367,7 @@ class TestSecurableMixin:
         resp.get(
             re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
                 + r"\?.*$"
             ),
             status=200,
@@ -405,7 +405,7 @@ class TestSecurableMixin:
         resp.get(
             re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
                 + r"\?.*$"
             ),
             status=200,
@@ -432,7 +432,7 @@ class TestSecurableMixin:
         resp.patch(
             re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource+'_single']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
                 + r"\?.*$"
             ),
             callback=_lookup_set_permissions,

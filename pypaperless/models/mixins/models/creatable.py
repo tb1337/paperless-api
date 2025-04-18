@@ -34,8 +34,8 @@ class CreatableMixin(PaperlessModelProtocol):
 
         if type(self).__name__ == "DocumentNoteDraft":
             return (
-                cast(int, max(item.get("id") for item in res)),
-                cast(int, kwdict["json"]["document"]),
+                cast("int", max(item.get("id") for item in res)),
+                cast("int", kwdict["json"]["document"]),
             )
         if isinstance(res, dict):
             return int(res["id"])

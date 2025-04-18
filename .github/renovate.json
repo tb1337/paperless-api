@@ -11,6 +11,10 @@
   "commitMessagePrefix": "⬆️",
   "packageRules": [
     {
+      "matchManagers": ["pip_requirements"],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": ["lockFileMaintenance"],
       "addLabels": ["skip-changelog"]
     },

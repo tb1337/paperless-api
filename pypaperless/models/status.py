@@ -33,7 +33,7 @@ class Status(PaperlessModel):
         statuses: list[StatusType] = [
             self.database.status if self.database and self.database.status else StatusType.OK,
             *[
-                cast(StatusType, getattr(self.tasks, status, StatusType.OK))
+                cast("StatusType", getattr(self.tasks, status, StatusType.OK))
                 for status in (
                     "redis_status",
                     "celery_status",
