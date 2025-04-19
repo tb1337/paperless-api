@@ -51,12 +51,6 @@ dev = [
 "Bug Reports" = "https://github.com/tb1337/paperless-api/issues"
 "Coverage" = "https://codecov.io/gh/tb1337/paperless-api"
 
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-include = ["pypaperless*"]
-
 [tool.coverage.run]
 plugins = ["covdefaults"]
 source = ["pypaperless"]
