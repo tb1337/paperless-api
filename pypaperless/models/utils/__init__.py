@@ -42,40 +42,35 @@ def _dateobj_to_str(value: date | datetime) -> str:
     return value.isoformat()
 
 
+def _is_typeddict(cls: type) -> bool:
+    """Check whether a type is a `TypedDict` or not."""
+    return (
+        isinstance(cls, type)
+        and issubclass(cls, dict)
+        and hasattr(cls, "__annotations__")
+        and getattr(cls, "__total__", None) is not None
+    )
+
+
 def object_to_dict_value(value: Any) -> Any:
     """Convert object values to their correspondending json values."""
+    if isinstance(value, dict):
+        return {k: object_to_dict_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [object_to_dict_value(item) for item in value]
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, (date, datetime)):
+        return _dateobj_to_str(value)
+    if isinstance(value, paperless_base.PaperlessModelData):
+        return value.serialize()
+    if is_dataclass(value):
+        return object_to_dict_value(asdict(value))
 
-    def _clean_value(_value_obj: Any) -> Any:
-        if isinstance(_value_obj, dict):
-            _value_obj = _clean_dict(_value_obj)
-        if isinstance(_value_obj, list):
-            _value_obj = _clean_list(_value_obj)
-        if isinstance(_value_obj, Enum):
-            _value_obj = _value_obj.value
-        if isinstance(_value_obj, date | datetime):
-            _value_obj = _dateobj_to_str(_value_obj)
-        if isinstance(_value_obj, paperless_base.PaperlessModelData):
-            _value_obj = _value_obj.serialize()
-        if is_dataclass(_value_obj):
-            _value_obj = _clean_dict(asdict(_value_obj))
-        return _value_obj
-
-    def _clean_list(_list_obj: list) -> list[Any]:
-        final = []
-        for list_value in _list_obj:
-            final.append(_clean_value(list_value))  # noqa: PERF401
-        return final
-
-    def _clean_dict(_dict_obj: dict) -> dict[str, Any]:
-        final = {}
-        for dict_key, dict_value in _dict_obj.items():
-            final[dict_key] = _clean_value(dict_value)
-        return final
-
-    return _clean_value(value)
+    return value
 
 
-def dict_value_to_object(  # noqa: C901
+def dict_value_to_object(  # noqa: C901, PLR0915
     name: str,
     value: Any,
     value_type: Any,
@@ -95,7 +90,8 @@ def dict_value_to_object(  # noqa: C901
     # pypaperless addition
     try:
         is_paperless_model = _api is not None and issubclass(
-            value_type, paperless_base.PaperlessModel
+            value_type,
+            paperless_base.PaperlessModel,
         )
     except TypeError:
         # happens if value_type is not a class
@@ -103,7 +99,8 @@ def dict_value_to_object(  # noqa: C901
 
     try:
         is_paperless_data = _api is not None and issubclass(
-            value_type, paperless_base.PaperlessModelData
+            value_type,
+            paperless_base.PaperlessModelData,
         )
     except TypeError:
         # happens if value_type is not a class
@@ -118,9 +115,13 @@ def dict_value_to_object(  # noqa: C901
         # create class instance if its custom data
         return value_type.unserialize(api=_api, data=value)
 
-    if isinstance(value, dict) and hasattr(value_type, "from_dict"):
+    if isinstance(value, dict):
         # always prefer classes that have a from_dict
-        return value_type.from_dict(value)
+        if hasattr(value_type, "from_dict"):
+            return value_type.from_dict(value)
+        # pypaperless addition for typeddicts
+        if _is_typeddict(value_type):
+            return value
 
     if value is None and not isinstance(default, type(MISSING)):
         return default

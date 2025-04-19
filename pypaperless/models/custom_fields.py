@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
-from .common import CustomFieldType
+from .common import CustomFieldExtraData, CustomFieldType
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class CustomField(
     id: int
     name: str | None = None
     data_type: CustomFieldType | None = None
-    extra_data: dict[str, Any] | None = None
+    extra_data: CustomFieldExtraData | None = None
     document_count: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
@@ -49,6 +49,7 @@ class CustomFieldDraft(
 
     name: str | None = None
     data_type: CustomFieldType | None = None
+    extra_data: CustomFieldExtraData | None = None
 
 
 class CustomFieldHelper(

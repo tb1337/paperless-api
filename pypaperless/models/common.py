@@ -4,7 +4,7 @@ import contextlib
 import datetime
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -14,6 +14,20 @@ if TYPE_CHECKING:
 
 
 # custom_fields
+class CustomFieldExtraDataSelectOptions(TypedDict):
+    """Represent the `extra_data.select_options` field of a `CustomField`."""
+
+    id: str | None
+    label: str | None
+
+
+class CustomFieldExtraData(TypedDict):
+    """Represent the `extra_data` field of a `CustomField`."""
+
+    default_currency: str | None
+    select_options: list[CustomFieldExtraDataSelectOptions | None]
+
+
 class CustomFieldType(Enum):
     """Represent a subtype of `CustomField`."""
 
@@ -43,7 +57,7 @@ class CustomFieldValue:
     value: Any | None = None
     name: str | None = None
     data_type: CustomFieldType | None = None
-    extra_data: dict[str, Any] | None = None
+    extra_data: CustomFieldExtraData | None = None
 
 
 @dataclass(kw_only=True)
@@ -94,19 +108,17 @@ class CustomFieldSelectValue(CustomFieldValue):
     value: int | None = None
 
     @property
-    def labels(self) -> list[dict[str, str]]:
+    def labels(self) -> list[CustomFieldExtraDataSelectOptions | None]:
         """Return the list of labels of the `CustomField`."""
-        try:
-            # this is currently intended
-            return self.extra_data["select_options"]  # type: ignore[no-any-return, index]
-        except (KeyError, TypeError):
+        if not self.extra_data:
             return []
+        return self.extra_data["select_options"]
 
     @property
     def label(self) -> str | None:
         """Return the label for `value` or fall back to `None`."""
         for opt in self.labels:
-            if opt["id"] == self.value:
+            if opt and opt["id"] == self.value:
                 return opt["label"]
         return None
 
