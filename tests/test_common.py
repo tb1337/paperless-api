@@ -3,6 +3,7 @@
 from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
+from typing import TypedDict
 
 import aiohttp
 import pytest
@@ -338,7 +339,7 @@ class TestPaperless:
         test.extra_data = None
         assert test.label is None
 
-    async def test_dataclass_conversion(self) -> None:
+    async def test_dataclass_conversion(self) -> None:  # pylint: disable=too-many-statements
         """Test dataclass utils."""
 
         class SomeStatus(Enum):
@@ -353,12 +354,31 @@ class TestPaperless:
                 """Set default."""
                 return cls.UNKNOWN
 
+        class SomeNestedExtraData(TypedDict):
+            """Test nested TypedDict."""
+
+            ustr: str | None
+            uany: int | str | bool | None
+
+        class SomeExtraData(TypedDict):
+            """Test TypedDict."""
+
+            a_str: str
+            a_dict: dict[str, str]
+            a_list: list[str]
+            a_typeddict: SomeNestedExtraData
+
         @dataclass
         class SomeFriend:
             """Test class."""
 
             name: str
             age: int
+
+            @classmethod
+            def from_dict(cls, data: dict) -> "SomeFriend":
+                """Test from_dict stuff."""
+                return cls(name=str(data.get("name")), age=int(data.get("age")))
 
         @dataclass
         class SomePerson:
@@ -367,6 +387,7 @@ class TestPaperless:
             name: str
             age: int
             height: float
+            height2: float
             birth: date
             last_login: datetime
             friends: list[SomeFriend] | None
@@ -375,11 +396,13 @@ class TestPaperless:
             status: SomeStatus
             file: bytes
             meta: dict[str, str]
+            extra_data: SomeExtraData
 
         raw_data = {
             "name": "Lee Tobi, Sajangnim",
             "age": 38,
             "height": 1.76,
+            "height2": 2,
             "birth": "1986-05-23",
             "last_login": "2023-08-08T06:06:35.495972Z",
             "is_deleted": False,
@@ -396,6 +419,15 @@ class TestPaperless:
             "status": 1,
             "file": b"5-23-42-666-0815-1337",
             "meta": {"hairs": "blonde", "eyes": "blue", "loves": "Python"},
+            "extra_data": {
+                "a_str": "test",
+                "a_dict": {
+                    "key1": "val1",
+                    "key2": "val2",
+                },
+                "a_list": ["a", "b", "c"],
+                "a_typeddict": {"ustr": "hello", "uany": 1},
+            },
         }
 
         data = {
@@ -412,6 +444,7 @@ class TestPaperless:
         assert isinstance(res.name, str)
         assert isinstance(res.age, int)
         assert isinstance(res.height, float)
+        assert isinstance(res.height2, float)
         assert isinstance(res.birth, date)
         assert isinstance(res.last_login, datetime)
         assert isinstance(res.friends, list)
@@ -422,12 +455,16 @@ class TestPaperless:
         assert res.is_deleted is False
         assert isinstance(res.status, SomeStatus)
         assert isinstance(res.file, bytes)
+        assert isinstance(res.extra_data, dict)
+        assert isinstance(res.extra_data["a_typeddict"], dict)
 
         # back conversion
         back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
 
         assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
         assert isinstance(back["meta"], dict)
+        assert isinstance(back["extra_data"], dict)
+        assert isinstance(back["extra_data"]["a_list"], list)
 
     async def test_pages_object(self, api: Paperless) -> None:
         """Test pages."""
