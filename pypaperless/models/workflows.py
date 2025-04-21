@@ -31,6 +31,25 @@ class WorkflowAction(PaperlessModel):
     assign_change_users: list[int] | None = None
     assign_change_groups: list[int] | None = None
     assign_custom_fields: list[int] | None = None
+    assign_custom_fields_values: dict[str, Any] | None = None
+    remove_all_tags: bool | None = None
+    remove_tags: list[int] | None = None
+    remove_all_correspondents: bool | None = None
+    remove_correspondents: list[int] | None = None
+    remove_all_document_types: bool | None = None
+    remove_document_types: list[int] | None = None
+    remove_all_storage_paths: bool | None = None
+    remove_storage_paths: list[int] | None = None
+    remove_custom_fields: list[int] | None = None
+    remove_all_custom_fields: bool | None = None
+    remove_all_owners: bool | None = None
+    remove_all_permissions: bool | None = None
+    remove_view_users: list[int] | None = None
+    remove_view_groups: list[int] | None = None
+    remove_change_users: list[int] | None = None
+    remove_change_groups: list[int] | None = None
+    email: int | None = None
+    webhook: dict[str, Any] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Workflow` instance."""
@@ -57,6 +76,11 @@ class WorkflowTrigger(
     filter_has_tags: list[int] | None = None
     filter_has_correspondent: int | None = None
     filter_has_document_type: int | None = None
+    schedule_offset_days: int | None = None
+    schedule_is_recurring: bool | None = None
+    schedule_recurring_interval_days: int | None = None
+    schedule_date_field: str | None = None
+    schedule_date_custom_field: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Workflow` instance."""

@@ -50,6 +50,7 @@ class User(PaperlessModel):
     groups: list[int] | None = None
     user_permissions: list[str] | None = None
     inherited_permissions: list[str] | None = None
+    is_mfa_enabled: bool | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `User` instance."""

@@ -297,12 +297,17 @@ class StatusTasksType:
     redis_status: StatusType | None = None
     redis_error: str | None = None
     celery_status: StatusType | None = None
+    celery_url: str | None = None
+    celery_error: str | None = None
     index_status: StatusType | None = None
     index_last_modified: datetime.datetime | None = None
     index_error: str | None = None
     classifier_status: StatusType | None = None
     classifier_last_trained: datetime.datetime | None = None
     classifier_error: str | None = None
+    sanity_check_status: StatusType | None = None
+    sanity_check_last_run: datetime.datetime | None = None
+    sanity_check_error: str | None = None
 
 
 # tasks

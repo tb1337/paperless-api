@@ -1,5 +1,6 @@
 """Provide `MailRule` related models and helpers."""
 
+import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -31,6 +32,8 @@ class MailAccount(
     # password: str | None = None  # noqa: ERA001
     character_set: str | None = None
     is_token: bool | None = None
+    account_type: int | None = None
+    expiration: datetime.datetime | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `MailAccount` instance."""
@@ -51,6 +54,7 @@ class MailRule(
     id: int | None = None
     name: str | None = None
     account: int | None = None
+    enabled: bool | None = None
     folder: str | None = None
     filter_from: str | None = None
     filter_to: str | None = None
@@ -70,6 +74,7 @@ class MailRule(
     order: int | None = None
     attachment_type: int | None = None
     consumption_scope: int | None = None
+    pdf_layout: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `MailRule` instance."""
