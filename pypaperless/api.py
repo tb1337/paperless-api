@@ -311,12 +311,16 @@ class Paperless:
             self._session = aiohttp.ClientSession()
 
         # add headers
-        self._session.headers.update(
-            {
-                "Accept": f"application/json; version={API_VERSION}",
-                "Authorization": f"Token {self._token}",
-            }
-        )
+        headers = {
+            "Accept": f"application/json; version={API_VERSION}",
+            "Authorization": f"Token {self._token}",
+        }
+
+        # Merge with any user-defined headers (optional)
+        if "headers" in kwargs:
+            kwargs["headers"].update(headers)
+        else:
+            kwargs["headers"] = headers
 
         # add request args
         kwargs.update(self._request_args)
