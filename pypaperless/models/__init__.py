@@ -24,6 +24,7 @@ from .pages import Page
 from .permissions import Group, User
 from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
+from .statistics import Statistic
 from .status import Status
 from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
@@ -48,6 +49,7 @@ __all__ = (
     "SavedView",
     "ShareLink",
     "ShareLinkDraft",
+    "Statistic",
     "Status",
     "StoragePath",
     "StoragePathDraft",

@@ -31,6 +31,7 @@ from pypaperless.models.common import (
     DocumentMetadataType,
     DocumentSearchHitType,
     RetrieveFileMode,
+    StatisticDocumentFileTypeCount,
     StatusDatabaseType,
     StatusStorageType,
     StatusTasksType,
@@ -379,6 +380,25 @@ class TestModelDocuments:
         assert isinstance(item.custom_fields.get(test_cf), CustomFieldValue)
         assert item.custom_fields.default(test_cf) is not None
         assert item.custom_fields.default(-1337) is None
+
+
+# test models/statistics.py
+class TestModelStatistics:
+    """Statistics test cases."""
+
+    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+        """Test call."""
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
+            status=200,
+            payload=PATCHWORK["statistics"],
+        )
+        stats = await api_latest.statistics()
+        assert stats
+        assert isinstance(stats.character_count, int)
+        assert isinstance(stats.document_file_type_counts, list)
+        for item in stats.document_file_type_counts:
+            assert isinstance(item, StatisticDocumentFileTypeCount)
 
 
 # test models/status.py

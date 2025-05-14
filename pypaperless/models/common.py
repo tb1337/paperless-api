@@ -244,6 +244,15 @@ class ShareLinkFileVersionType(Enum):
         return ShareLinkFileVersionType.UNKNOWN
 
 
+# statistics
+@dataclass(kw_only=True)
+class StatisticDocumentFileTypeCount:
+    """Represent a Paperless statistics file type count."""
+
+    mime_type: str | None = None
+    mime_type_count: int | None = None
+
+
 # status
 class StatusType(Enum):
     """Represent a subtype of `Status`."""

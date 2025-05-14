@@ -32,7 +32,7 @@ class ShareLink(
     file_version: ShareLinkFileVersionType | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `MailAccount` instance."""
+        """Initialize a `ShareLink` instance."""
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
