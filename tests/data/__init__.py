@@ -36,6 +36,7 @@ from .v2_3_0 import (
     V2_3_0_WORKFLOWS,
 )
 from .v2_6_0 import V2_6_0_STATUS
+from .v2_15_0 import V2_15_0_STATISTICS
 
 # mypy: ignore-errors
 
@@ -86,6 +87,7 @@ PATCHWORK = {
     "status": V2_6_0_STATUS,
     # 2.15.0
     "schema": _schema_v2_15_0,
+    "statistics": V2_15_0_STATISTICS,
 }
 
 __all__ = ("PATCHWORK",)

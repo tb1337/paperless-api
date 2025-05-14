@@ -32,6 +32,7 @@ class Paperless:
         (PaperlessResource.MAIL_RULES, helpers.MailRuleHelper),
         (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
         (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
+        (PaperlessResource.STATISTICS, helpers.StatisticHelper),
         (PaperlessResource.STATUS, helpers.StatusHelper),
         (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
         (PaperlessResource.TAGS, helpers.TagHelper),
@@ -50,6 +51,7 @@ class Paperless:
     mail_rules: helpers.MailRuleHelper
     saved_views: helpers.SavedViewHelper
     share_links: helpers.ShareLinkHelper
+    statistics: helpers.StatisticHelper
     status: helpers.StatusHelper
     storage_paths: helpers.StoragePathHelper
     tags: helpers.TagHelper
