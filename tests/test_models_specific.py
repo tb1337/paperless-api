@@ -382,7 +382,7 @@ class TestModelDocuments:
         assert item.custom_fields.default(-1337) is None
 
 
-# test models/version.py
+# test models/remote_version.py
 class TestModelVersion:
     """Version test cases."""
 
