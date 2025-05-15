@@ -4,6 +4,8 @@
 
 from tests.const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 
+V0_0_0_REMOTE_VERSION = {"version": "v2.15.3", "update_available": True}
+
 V0_0_0_TOKEN = {"token": PAPERLESS_TEST_TOKEN}
 
 V0_0_0_PATHS = {
