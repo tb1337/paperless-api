@@ -15,6 +15,7 @@ from .v0_0_0 import (
     V0_0_0_MAIL_RULES,
     V0_0_0_OBJECT_PERMISSIONS,
     V0_0_0_PATHS,
+    V0_0_0_REMOTE_VERSION,
     V0_0_0_SAVED_VIEWS,
     V0_0_0_TAGS,
     V0_0_0_TASKS,
@@ -71,6 +72,7 @@ PATCHWORK = {
     "tasks": V0_0_0_TASKS,
     "token": V0_0_0_TOKEN,
     "users": V0_0_0_USERS,
+    "remote_version": V0_0_0_REMOTE_VERSION,
     # 1.8.0
     "storage_paths": V1_8_0_STORAGE_PATHS,
     # 1.17.0

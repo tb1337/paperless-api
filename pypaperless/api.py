@@ -33,6 +33,7 @@ class Paperless:
         (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
         (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
         (PaperlessResource.STATISTICS, helpers.StatisticHelper),
+        (PaperlessResource.REMOTE_VERSION, helpers.RemoteVersionHelper),
         (PaperlessResource.STATUS, helpers.StatusHelper),
         (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
         (PaperlessResource.TAGS, helpers.TagHelper),
@@ -52,6 +53,7 @@ class Paperless:
     saved_views: helpers.SavedViewHelper
     share_links: helpers.ShareLinkHelper
     statistics: helpers.StatisticHelper
+    remote_version: helpers.RemoteVersionHelper
     status: helpers.StatusHelper
     storage_paths: helpers.StoragePathHelper
     tags: helpers.TagHelper
