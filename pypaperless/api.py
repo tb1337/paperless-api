@@ -17,6 +17,8 @@ from .exceptions import (
     BadJsonResponseError,
     InitializationError,
     JsonResponseWithError,
+    PaperlessConnectionError,
+    PaperlessError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
@@ -240,7 +242,7 @@ class Paperless:
             try:
                 async with self.request("get", API_PATH["api_schema"]) as res:
                     res.raise_for_status()
-            except aiohttp.ClientError:
+            except (PaperlessError, aiohttp.ClientError):
                 return False
 
             self._version = res.headers.get("x-version", None)
@@ -341,15 +343,18 @@ class Paperless:
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
 
-        res = await self._session.request(
-            method=method,
-            url=url,
-            json=json,
-            data=data,
-            params=params,
-            **kwargs,
-        )
-        self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        try:
+            res = await self._session.request(
+                method=method,
+                url=url,
+                json=json,
+                data=data,
+                params=params,
+                **kwargs,
+            )
+            self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        except aiohttp.ClientConnectionError as err:
+            raise PaperlessConnectionError from err
 
         # error handling for 401 and 403 codes
         if res.status == 401:
