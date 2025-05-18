@@ -64,6 +64,11 @@ class TestPaperless:
     async def test_context(self, resp: aioresponses, api: Paperless) -> None:
         """Test context."""
         resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
             payload=PATCHWORK["paths"],
@@ -95,6 +100,11 @@ class TestPaperless:
         """Test initialization error."""
         # http status error
         resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=401,
             body="any html",
@@ -104,6 +114,11 @@ class TestPaperless:
 
         # http status forbidden
         resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=403,
             body="any html",
@@ -112,6 +127,11 @@ class TestPaperless:
             await api.initialize()
 
         # http ok, wrong payload
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,

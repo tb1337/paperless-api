@@ -242,7 +242,7 @@ class Paperless:
             try:
                 async with self.request("get", API_PATH["api_schema"]) as res:
                     res.raise_for_status()
-            except (PaperlessError, aiohttp.ClientError):
+            except aiohttp.ClientError:
                 return False
 
             self._version = res.headers.get("x-version", None)
