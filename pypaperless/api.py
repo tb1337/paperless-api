@@ -351,14 +351,19 @@ class Paperless:
         )
         self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
 
+        # error handling for 401 and 403 codes
         if res.status == 401:
-            error_data = await res.json()
-            detail = error_data.get("detail", "")
+            try:
+                error_data = await res.json()
+                detail = error_data.get("detail", "")
+            except JSONDecodeError:
+                detail = ""
 
             if "inactive" in detail.lower() or "deleted" in detail.lower():
                 raise PaperlessInactiveOrDeletedError(res)
-            else:
-                raise PaperlessInvalidTokenError(res)
+
+            raise PaperlessInvalidTokenError(res)
+
         if res.status == 403:
             raise PaperlessForbiddenError(res)
 

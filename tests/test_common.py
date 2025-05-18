@@ -16,6 +16,8 @@ from pypaperless.exceptions import (
     DraftNotSupportedError,
     InitializationError,
     JsonResponseWithError,
+    PaperlessForbiddenError,
+    PaperlessInvalidTokenError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
@@ -97,7 +99,16 @@ class TestPaperless:
             status=401,
             body="any html",
         )
-        with pytest.raises(InitializationError):
+        with pytest.raises(PaperlessInvalidTokenError):
+            await api.initialize()
+
+        # http status forbidden
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=403,
+            body="any html",
+        )
+        with pytest.raises(PaperlessForbiddenError):
             await api.initialize()
 
         # http ok, wrong payload
