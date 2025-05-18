@@ -19,6 +19,7 @@ MAIL_RULES = "mail_rules"
 SAVED_VIEWS = "saved_views"
 SHARE_LINKS = "share_links"
 STATISTICS = "statistics"
+REMOTE_VERSION = "remote_version"
 STATUS = "status"
 STORAGE_PATHS = "storage_paths"
 TAGS = "tags"
@@ -62,6 +63,7 @@ API_PATH = {
     f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
     f"{SHARE_LINKS}_single": f"/api/{SHARE_LINKS}/{{pk}}/",
     f"{STATISTICS}": f"/api/{STATISTICS}/",
+    f"{REMOTE_VERSION}": f"/api/{REMOTE_VERSION}/",
     f"{STATUS}": f"/api/{STATUS}/",
     f"{STORAGE_PATHS}": f"/api/{STORAGE_PATHS}/",
     f"{STORAGE_PATHS}_single": f"/api/{STORAGE_PATHS}/{{pk}}/",
@@ -96,6 +98,7 @@ class PaperlessResource(StrEnum):
     SAVED_VIEWS = SAVED_VIEWS
     SHARE_LINKS = SHARE_LINKS
     STATISTICS = STATISTICS
+    REMOTE_VERSION = REMOTE_VERSION
     STATUS = STATUS
     STORAGE_PATHS = STORAGE_PATHS
     TAGS = TAGS

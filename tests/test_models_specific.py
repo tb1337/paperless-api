@@ -382,6 +382,23 @@ class TestModelDocuments:
         assert item.custom_fields.default(-1337) is None
 
 
+# test models/remote_version.py
+class TestModelVersion:
+    """Version test cases."""
+
+    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+        """Test call."""
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
+            status=200,
+            payload=PATCHWORK["remote_version"],
+        )
+        remote_version = await api_latest.remote_version()
+        assert remote_version
+        assert isinstance(remote_version.version, str)
+        assert isinstance(remote_version.update_available, bool)
+
+
 # test models/statistics.py
 class TestModelStatistics:
     """Statistics test cases."""

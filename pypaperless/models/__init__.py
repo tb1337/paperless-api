@@ -22,6 +22,7 @@ from .documents import (
 from .mails import MailAccount, MailRule
 from .pages import Page
 from .permissions import Group, User
+from .remote_version import RemoteVersion
 from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
 from .statistics import Statistic
@@ -46,6 +47,7 @@ __all__ = (
     "MailAccount",
     "MailRule",
     "Page",
+    "RemoteVersion",
     "SavedView",
     "ShareLink",
     "ShareLinkDraft",
