@@ -14,6 +14,26 @@ class InitializationError(PaperlessError):
     """Raise when initializing a `Paperless` instance without valid url or token."""
 
 
+class PaperlessConnectionError(InitializationError, PaperlessError):
+    """Raise when connection to Paperless is not possible."""
+
+
+class PaperlessAuthError(InitializationError, PaperlessError):
+    """Raise when response is 401 code."""
+
+
+class PaperlessInvalidTokenError(PaperlessAuthError):
+    """Raise when response is 401 due invalid access token."""
+
+
+class PaperlessInactiveOrDeletedError(PaperlessAuthError):
+    """Raise when response is 401 code due user is inactive or deleted."""
+
+
+class PaperlessForbiddenError(InitializationError, PaperlessError):
+    """Raise when response is 403 code."""
+
+
 class BadJsonResponseError(PaperlessError):
     """Raise when response is no valid json."""
 

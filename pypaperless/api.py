@@ -13,7 +13,15 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, API_VERSION, PaperlessResource
-from .exceptions import BadJsonResponseError, InitializationError, JsonResponseWithError
+from .exceptions import (
+    BadJsonResponseError,
+    InitializationError,
+    JsonResponseWithError,
+    PaperlessConnectionError,
+    PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
+)
 from .models.base import HelperBase
 from .models.common import PaperlessCache
 
@@ -336,15 +344,35 @@ class Paperless:
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
 
-        res = await self._session.request(
-            method=method,
-            url=url,
-            json=json,
-            data=data,
-            params=params,
-            **kwargs,
-        )
-        self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        try:
+            res = await self._session.request(
+                method=method,
+                url=url,
+                json=json,
+                data=data,
+                params=params,
+                **kwargs,
+            )
+            self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+        except aiohttp.ClientConnectionError as err:
+            raise PaperlessConnectionError from err
+
+        # error handling for 401 and 403 codes
+        if res.status == 401:
+            try:
+                error_data = await res.json()
+                detail = error_data.get("detail", "")
+            except JSONDecodeError:
+                detail = ""
+
+            if "inactive" in detail.lower() or "deleted" in detail.lower():
+                raise PaperlessInactiveOrDeletedError(res)
+
+            raise PaperlessInvalidTokenError(res)
+
+        if res.status == 403:
+            raise PaperlessForbiddenError(res)
+
         yield res
 
     async def request_json(

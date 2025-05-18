@@ -16,6 +16,10 @@ from pypaperless.exceptions import (
     DraftNotSupportedError,
     InitializationError,
     JsonResponseWithError,
+    PaperlessConnectionError,
+    PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
@@ -62,6 +66,11 @@ class TestPaperless:
     async def test_context(self, resp: aioresponses, api: Paperless) -> None:
         """Test context."""
         resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
             payload=PATCHWORK["paths"],
@@ -91,16 +100,58 @@ class TestPaperless:
 
     async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
         """Test initialization error."""
+        # simulate connection due no configuration error
+        with pytest.raises(PaperlessConnectionError):
+            await api.initialize()
+
         # http status error
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=401,
             body="any html",
         )
-        with pytest.raises(InitializationError):
+        with pytest.raises(PaperlessInvalidTokenError):
+            await api.initialize()
+
+        # http 401 - inactive or deleted user
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=401,
+            payload={"detail": "User is inactive"},
+        )
+        with pytest.raises(PaperlessInactiveOrDeletedError):
+            await api.initialize()
+
+        # http status forbidden
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=403,
+            body="any html",
+        )
+        with pytest.raises(PaperlessForbiddenError):
             await api.initialize()
 
         # http ok, wrong payload
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
@@ -108,6 +159,19 @@ class TestPaperless:
         )
         with pytest.raises(InitializationError):
             await api.initialize()
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [
+            PaperlessConnectionError,
+            PaperlessInvalidTokenError,
+            PaperlessInactiveOrDeletedError,
+            PaperlessForbiddenError,
+        ],
+    )
+    async def test_errors_are_backwards_compatible(self, exception_cls: type) -> None:
+        """Test, if new errors are backwards compatible."""
+        assert issubclass(exception_cls, InitializationError)
 
     async def test_jsonresponsewitherror(self) -> None:
         """Test JsonResponseWithError."""
