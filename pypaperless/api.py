@@ -13,7 +13,14 @@ from yarl import URL
 
 from . import helpers
 from .const import API_PATH, API_VERSION, PaperlessResource
-from .exceptions import BadJsonResponseError, InitializationError, JsonResponseWithError
+from .exceptions import (
+    BadJsonResponseError,
+    InitializationError,
+    JsonResponseWithError,
+    PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
+    PaperlessInvalidTokenError,
+)
 from .models.base import HelperBase
 from .models.common import PaperlessCache
 
@@ -343,6 +350,18 @@ class Paperless:
             **kwargs,
         )
         self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
+
+        if res.status == 401:
+            error_data = await res.json()
+            detail = error_data.get("detail", "")
+
+            if "inactive" in detail.lower() or "deleted" in detail.lower():
+                raise PaperlessInactiveOrDeletedError(res)
+            else:
+                raise PaperlessInvalidTokenError(res)
+        if res.status == 403:
+            raise PaperlessForbiddenError(res)
+
         yield res
 
     async def request_json(
