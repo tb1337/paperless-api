@@ -4,6 +4,7 @@ from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
 from typing import TypedDict
+from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -16,7 +17,9 @@ from pypaperless.exceptions import (
     DraftNotSupportedError,
     InitializationError,
     JsonResponseWithError,
+    PaperlessConnectionError,
     PaperlessForbiddenError,
+    PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
 from pypaperless.models import Page
@@ -98,6 +101,10 @@ class TestPaperless:
 
     async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
         """Test initialization error."""
+        # simulate connection due no configuration error
+        with pytest.raises(PaperlessConnectionError):
+            await api.initialize()
+
         # http status error
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
@@ -110,6 +117,20 @@ class TestPaperless:
             body="any html",
         )
         with pytest.raises(PaperlessInvalidTokenError):
+            await api.initialize()
+
+        # http 401 - inactive or deleted user
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            status=500,
+            payload=PATCHWORK["paths"],
+        )
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            status=401,
+            payload={"detail": "User is inactive"},
+        )
+        with pytest.raises(PaperlessInactiveOrDeletedError):
             await api.initialize()
 
         # http status forbidden
