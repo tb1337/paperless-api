@@ -18,7 +18,6 @@ from .exceptions import (
     InitializationError,
     JsonResponseWithError,
     PaperlessConnectionError,
-    PaperlessError,
     PaperlessForbiddenError,
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
