@@ -4,7 +4,6 @@ from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
 from typing import TypedDict
-from unittest.mock import patch
 
 import aiohttp
 import pytest
@@ -160,6 +159,19 @@ class TestPaperless:
         )
         with pytest.raises(InitializationError):
             await api.initialize()
+
+    @pytest.mark.parametrize(
+        "exception_cls",
+        [
+            PaperlessConnectionError,
+            PaperlessInvalidTokenError,
+            PaperlessInactiveOrDeletedError,
+            PaperlessForbiddenError,
+        ],
+    )
+    async def test_errors_are_backwards_compatible(self, exception_cls: type) -> None:
+        """Test, if new errors are backwards compatible."""
+        assert issubclass(exception_cls, InitializationError)
 
     async def test_jsonresponsewitherror(self) -> None:
         """Test JsonResponseWithError."""
