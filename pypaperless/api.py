@@ -243,12 +243,12 @@ class Paperless:
             try:
                 async with self.request("get", API_PATH["api_schema"]) as res:
                     res.raise_for_status()
+                    self._version = res.headers.get("x-version", None)
+                    await res.read()
             except aiohttp.ClientError:
                 return False
 
-            self._version = res.headers.get("x-version", None)
             return True
-
         async def _init_with_legacy_response() -> dict[str, str]:
             """Connect to paperless and request the entity dictionary (DRF)."""
             async with self.request("get", API_PATH["index"]) as res:
