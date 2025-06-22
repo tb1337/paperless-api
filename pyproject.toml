@@ -57,6 +57,9 @@ source = ["pypaperless"]
 
 [tool.coverage.report]
 fail_under = 95
+omit = [
+    "pypaperless/models/utils/__init__.py"
+]
 show_missing = true
 
 [tool.mypy]

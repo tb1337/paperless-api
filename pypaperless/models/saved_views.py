@@ -29,6 +29,9 @@ class SavedView(
     sort_field: str | None = None
     sort_reverse: bool | None = None
     filter_rules: list[SavedViewFilterRuleType] | None = None
+    page_size: int | None = None
+    display_mode: str | None = None
+    display_fields: list[str] | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `SavedView` instance."""

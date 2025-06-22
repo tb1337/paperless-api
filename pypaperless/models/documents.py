@@ -141,6 +141,8 @@ class Document(
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: DocumentCustomFieldList | None = None
+    page_count: int | None = None
+    mime_type: str | None = None
     __search_hit__: DocumentSearchHitType | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
