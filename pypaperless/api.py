@@ -249,6 +249,7 @@ class Paperless:
                 return False
 
             return True
+
         async def _init_with_legacy_response() -> dict[str, str]:
             """Connect to paperless and request the entity dictionary (DRF)."""
             async with self.request("get", API_PATH["index"]) as res:
