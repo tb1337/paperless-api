@@ -30,7 +30,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "aioresponses>=0.7.7",
-    "codespell>=2.3.0",
+    "codespell>=2.4.1",
     "covdefaults>=2.3.0",
     "coverage>=7.6.10",
     "mypy>=1.14.1",
