@@ -534,7 +534,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.8.5" },
-    { name = "yamllint", specifier = ">=1.35.1" },
+    { name = "yamllint", specifier = ">=1.37.1" },
 ]
 
 [[package]]
