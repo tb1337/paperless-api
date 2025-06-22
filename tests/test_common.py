@@ -294,6 +294,10 @@ class TestPaperless:
         url = create_url("hostname/api/api/")
         assert f"{url}" == "https://hostname/api/api"
 
+        # test slashes
+        url = create_url("hostname/api/endpoint///")
+        assert f"{url}" == "https://hostname/api/endpoint"
+
     async def test_generate_api_token(self, resp: aioresponses, api: Paperless) -> None:
         """Test generate api token."""
         # test successful token creation
