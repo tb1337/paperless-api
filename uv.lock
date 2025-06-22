@@ -605,7 +605,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "aioresponses", specifier = ">=0.7.7" },
+    { name = "aioresponses", specifier = ">=0.7.8" },
     { name = "codespell", specifier = ">=2.4.1" },
     { name = "covdefaults", specifier = ">=2.3.0" },
     { name = "coverage", specifier = ">=7.9.1" },
