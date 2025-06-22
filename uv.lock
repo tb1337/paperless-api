@@ -615,7 +615,7 @@ dev = [
     { name = "pylint", specifier = ">=3.3.7" },
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-aiohttp", specifier = ">=1.0.5" },
-    { name = "pytest-asyncio", specifier = ">=0.25.1" },
+    { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.8.5" },
     { name = "yamllint", specifier = ">=1.35.1" },
