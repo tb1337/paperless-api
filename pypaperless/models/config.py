@@ -36,6 +36,17 @@ class Config(
     color_conversion_strategy: str | None = None
     app_title: str | None = None
     app_logo: str | None = None
+    barcode_tag_mapping: dict[str, str] | None = None
+    barcodes_enabled: bool | None = None
+    barcode_enable_tiff_support: bool | None = None
+    barcode_string: str | None = None
+    barcode_retain_split_pages: bool | None = None
+    barcode_enable_asn: bool | None = None
+    barcode_asn_prefix: str | None = None
+    barcode_upscale: float | None = None
+    barcode_dpi: int | None = None
+    barcode_max_pages: int | None = None
+    barcode_enable_tag: bool | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Config` instance."""

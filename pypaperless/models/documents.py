@@ -136,6 +136,7 @@ class Document(
     created_date: datetime.date | None = None
     modified: datetime.datetime | None = None
     added: datetime.datetime | None = None
+    deleted_at: datetime.datetime | None = None
     archive_serial_number: int | None = None
     original_file_name: str | None = None
     archived_file_name: str | None = None
