@@ -26,7 +26,7 @@ env:
 
 jobs:
   lint:
-    name: Tool ${{ matrix.tool }}
+    name: ${{ matrix.tool }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
