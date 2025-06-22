@@ -530,7 +530,7 @@ dev = [
     { name = "pre-commit-hooks", specifier = ">=5.0.0" },
     { name = "pylint", specifier = ">=3.3.7" },
     { name = "pytest", specifier = ">=8.4.1" },
-    { name = "pytest-aiohttp", specifier = ">=1.0.5" },
+    { name = "pytest-aiohttp", specifier = ">=1.1.0" },
     { name = "pytest-asyncio", specifier = ">=0.26.0" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
     { name = "ruff", specifier = ">=0.8.5" },
