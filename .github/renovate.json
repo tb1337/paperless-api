@@ -20,12 +20,13 @@
     },
     {
       "matchManagers": ["pep621"],
-      "addLabels": ["dependencies", "python"]
+      "addLabels": ["dependencies", "python"],
+      "rangeStrategy": "bump"
     },
     {
       "matchManagers": ["pep621"],
       "matchDepTypes": ["dev"],
-      "rangeStrategy": "pin"
+      "rangeStrategy": "bump"
     },
     {
       "matchManagers": ["pep621"],
