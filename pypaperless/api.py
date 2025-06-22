@@ -142,9 +142,11 @@ class Paperless:
     def _create_base_url(url: str | URL) -> URL:
         """Create URL from string or URL and prepare for further use."""
         # reverse compatibility, fall back to https
-        if isinstance(url, str) and "://" not in url:
-            url = f"https://{url}"
-        url = URL(url.rstrip("/"))
+        if isinstance(url, str):
+            if "://" not in url:
+                url = f"https://{url}"
+            url = url.rstrip("/")
+        url = URL(url)
 
         # scheme check. fall back to https
         if url.scheme not in ("https", "http"):
