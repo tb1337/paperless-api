@@ -608,7 +608,7 @@ dev = [
     { name = "aioresponses", specifier = ">=0.7.7" },
     { name = "codespell", specifier = ">=2.4.1" },
     { name = "covdefaults", specifier = ">=2.3.0" },
-    { name = "coverage", specifier = ">=7.6.10" },
+    { name = "coverage", specifier = ">=7.9.1" },
     { name = "mypy", specifier = ">=1.14.1" },
     { name = "pre-commit", specifier = ">=4.0.1" },
     { name = "pre-commit-hooks", specifier = ">=5.0.0" },
