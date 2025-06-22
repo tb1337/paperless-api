@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Generic, Protocol, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, Protocol, Self, TypeVar, final
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.utils import dict_value_to_object
@@ -24,7 +24,7 @@ class PaperlessBase:
         self._api = api
 
 
-class HelperProtocol(Protocol, Generic[ResourceT]):
+class HelperProtocol[ResourceT](Protocol):
     """Protocol for any `HelperBase` instances and its ancestors."""
 
     _api: "Paperless"
@@ -33,7 +33,7 @@ class HelperProtocol(Protocol, Generic[ResourceT]):
     _resource_cls: type[ResourceT]
 
 
-class HelperBase(PaperlessBase, Generic[ResourceT]):
+class HelperBase[ResourceT](PaperlessBase):
     """Base class for all helpers in PyPaperless."""
 
     _resource: PaperlessResource

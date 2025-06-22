@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 def _str_to_datetime(datetimestr: str) -> datetime:
     """Parse datetime from string."""
-    return datetime.fromisoformat(datetimestr.replace("Z", "+00:00"))
+    return datetime.fromisoformat(datetimestr.replace("Z", "+00:00"))  # noqa: FURB162
 
 
 def _str_to_date(datestr: str) -> date:
