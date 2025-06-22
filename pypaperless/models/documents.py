@@ -710,7 +710,7 @@ class DocumentHelper(
             except Exception as exc:
                 raise AsnRequestError from exc
 
-    async def more_like(self, pk: int) -> AsyncGenerator[Document, None]:
+    async def more_like(self, pk: int) -> AsyncGenerator[Document]:
         """Lookup documents similar to the given document pk.
 
         Shortcut function. Same behaviour is possible using `reduce()`.
@@ -721,7 +721,7 @@ class DocumentHelper(
             async for item in self:
                 yield item
 
-    async def search(self, query: str) -> AsyncGenerator[Document, None]:
+    async def search(self, query: str) -> AsyncGenerator[Document]:
         """Lookup documents by a search query.
 
         Shortcut function. Same behaviour is possible using `reduce()`.

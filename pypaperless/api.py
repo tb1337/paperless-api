@@ -308,7 +308,7 @@ class Paperless:
         form: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
         **kwargs: Any,
-    ) -> AsyncGenerator[aiohttp.ClientResponse, None]:
+    ) -> AsyncGenerator[aiohttp.ClientResponse]:
         """Send a request to the Paperless api and return the `aiohttp.ClientResponse`.
 
         This method provides a little interface for utilizing `aiohttp.FormData`.
