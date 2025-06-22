@@ -16,7 +16,7 @@ from .data import PATCHWORK
 
 
 @pytest.fixture(name="resp")
-def aioresponses_fixture() -> Generator[aioresponses, None, None]:
+def aioresponses_fixture() -> Generator[aioresponses]:
     """Return aioresponses fixture."""
     with aioresponses() as m:
         yield m

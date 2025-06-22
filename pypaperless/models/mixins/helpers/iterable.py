@@ -35,7 +35,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
     async def reduce(
         self: Self,
         **kwargs: str | int,
-    ) -> AsyncGenerator[Self, None]:
+    ) -> AsyncGenerator[Self]:
         """Provide context for iterating over resource items with query parameters.
 
         `kwargs`: Insert any Paperless api supported filter keywords here.
