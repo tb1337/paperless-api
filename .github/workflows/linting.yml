@@ -22,12 +22,15 @@ on:
   workflow_dispatch:
 
 env:
-  DEFAULT_PYTHON: "3.12"
+  DEFAULT_PYTHON: "3.13"
 
 jobs:
-  codespell:
-    name: codespell
+  lint:
+    name: Tool ${{ matrix.tool }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tool: [codespell, ruff, pre-commit-hooks, pylint, yamllint]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4.2.2
@@ -42,109 +45,27 @@ jobs:
           uv venv
       - name: 🏗 Install Python dependencies
         run: uv sync --group dev
-      - name: 🚀 Check code for common misspellings
-        run: uv run pre-commit run codespell --all-files
-
-  ruff:
-    name: ruff
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.6.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Set up uv
+      - name: 🚀 Execute checks
         run: |
-          pipx install uv
-          uv venv
-      - name: 🏗 Install Python dependencies
-        run: uv sync --group dev
-      - name: 🚀 Run ruff linter
-        run: uv run ruff check --output-format=github .
-      - name: 🚀 Run ruff formatter
-        run: uv run ruff format --check .
-
-  pre-commit-hooks:
-    name: pre-commit-hooks
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.6.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
-      - name: 🏗 Install Python dependencies
-        run: uv sync --group dev
-      - name: 🚀 Check Python AST
-        run: uv run pre-commit run check-ast --all-files
-      - name: 🚀 Check for case conflicts
-        run: uv run pre-commit run check-case-conflict --all-files
-      - name: 🚀 Check docstring is first
-        run: uv run pre-commit run check-docstring-first --all-files
-      # - name: 🚀 Check that executables have shebangs
-      #   run: uv run pre-commit run check-executables-have-shebangs --all-files
-      - name: 🚀 Check JSON files
-        run: uv run pre-commit run check-json --all-files
-      - name: 🚀 Check for merge conflicts
-        run: uv run pre-commit run check-merge-conflict --all-files
-      - name: 🚀 Check for broken symlinks
-        run: uv run pre-commit run check-symlinks --all-files
-      - name: 🚀 Check TOML files
-        run: uv run pre-commit run check-toml --all-files
-      - name: 🚀 Check YAML files
-        run: uv run pre-commit run check-yaml --all-files
-      - name: 🚀 Detect Private Keys
-        run: uv run pre-commit run detect-private-key --all-files
-      - name: 🚀 Check End of Files
-        run: uv run pre-commit run end-of-file-fixer --all-files
-      - name: 🚀 Trim Trailing Whitespace
-        run: uv run pre-commit run trailing-whitespace --all-files
-
-  pylint:
-    name: pylint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.6.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
-      - name: 🏗 Install Python dependencies
-        run: uv sync --group dev
-      - name: 🚀 Run pylint
-        run: uv run pre-commit run pylint --all-files
-
-  yamllint:
-    name: yamllint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.2.2
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
-        id: python
-        uses: actions/setup-python@v5.6.0
-        with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
-      - name: 🏗 Install Python dependencies
-        run: uv sync --group dev
-      - name: 🚀 Run yamllint
-        run: uv run yamllint .
+          if [ "${{ matrix.tool }}" = "codespell" ]; then
+            uv run pre-commit run codespell --all-files
+          elif [ "${{ matrix.tool }}" = "ruff" ]; then
+            uv run ruff check --output-format=github .
+            uv run ruff format --check .
+          elif [ "${{ matrix.tool }}" = "pre-commit-hooks" ]; then
+            uv run pre-commit run check-ast --all-files
+            uv run pre-commit run check-case-conflict --all-files
+            uv run pre-commit run check-docstring-first --all-files
+            uv run pre-commit run check-json --all-files
+            uv run pre-commit run check-merge-conflict --all-files
+            uv run pre-commit run check-symlinks --all-files
+            uv run pre-commit run check-toml --all-files
+            uv run pre-commit run check-yaml --all-files
+            uv run pre-commit run detect-private-key --all-files
+            uv run pre-commit run end-of-file-fixer --all-files
+            uv run pre-commit run trailing-whitespace --all-files
+          elif [ "${{ matrix.tool }}" = "pylint" ]; then
+            uv run pre-commit run pylint --all-files
+          elif [ "${{ matrix.tool }}" = "yamllint" ]; then
+            uv run yamllint .
+          fi
