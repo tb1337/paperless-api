@@ -20,10 +20,7 @@
     },
     {
       "matchManagers": ["pep621"],
-      "addLabels": ["dependencies", "python"]
-    },
-    {
-      "matchManagers": ["pep621"],
+      "addLabels": ["dependencies", "python"],
       "rangeStrategy": "bump"
     },
     {
