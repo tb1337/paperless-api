@@ -6,16 +6,12 @@ from dataclasses import dataclass, field
 from typing import Any, Generic
 
 from pypaperless.const import API_PATH
-from pypaperless.models.base import ResourceT
 
-from .base import PaperlessModel
+from .base import PaperlessModel, ResourceT
 
 
 @dataclass(init=False)
-class Page(
-    PaperlessModel,
-    Generic[ResourceT],
-):
+class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     """Represent a Paperless DRF `Paginated`."""
 
     _api_path = API_PATH["index"]
