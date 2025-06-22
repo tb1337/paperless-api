@@ -24,8 +24,12 @@
     },
     {
       "matchManagers": ["pep621"],
+      "rangeStrategy": "bump"
+    },
+    {
+      "matchManagers": ["pep621"],
       "matchDepTypes": ["dev"],
-      "rangeStrategy": "pin"
+      "rangeStrategy": "bump"
     },
     {
       "matchManagers": ["pep621"],
