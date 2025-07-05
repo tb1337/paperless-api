@@ -526,7 +526,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):
                 {
                     **item,
                     "document": doc_pk,
-                    "user": item["user"]["id"],
+                    "user": item["user"]["id"] if self._api.host_api_version >= 8 else item["user"],
                 },
                 fetched=True,
             )

@@ -85,6 +85,7 @@ class Paperless:
         *,
         session: aiohttp.ClientSession | None = None,
         request_args: dict[str, Any] | None = None,
+        request_api_version: int | None = None,
     ) -> None:
         """Initialize a `Paperless` instance.
 
@@ -101,9 +102,12 @@ class Paperless:
         self._initialized = False
         self._local_resources: set[PaperlessResource] = set()
         self._remote_resources: set[PaperlessResource] = set()
+        self._request_api_version = request_api_version or API_VERSION
         self._request_args = request_args or {}
         self._session = session
         self._token = token
+
+        self._api_version = API_VERSION
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}")
@@ -122,6 +126,11 @@ class Paperless:
     def is_initialized(self) -> bool:
         """Return `True` if connection is initialized."""
         return self._initialized
+
+    @property
+    def host_api_version(self) -> int:
+        """Return the api version of the Paperless host."""
+        return self._api_version
 
     @property
     def host_version(self) -> str | None:
@@ -245,6 +254,9 @@ class Paperless:
             try:
                 async with self.request("get", API_PATH["api_schema"]) as res:
                     res.raise_for_status()
+                    self._api_version = self._request_api_version or int(
+                        res.headers.get("x-api-version", API_VERSION)
+                    )
                     self._version = res.headers.get("x-version", None)
                     await res.read()
             except aiohttp.ClientError:
@@ -261,6 +273,9 @@ class Paperless:
                 except (aiohttp.ClientResponseError, ValueError) as exc:
                     raise InitializationError from exc
 
+                self._api_version = self._request_api_version or int(
+                    res.headers.get("x-api-version", API_VERSION)
+                )
                 self._version = res.headers.get("x-version", None)
                 return cast("dict[str, str]", payload)
 
@@ -327,7 +342,7 @@ class Paperless:
 
         # add headers
         headers = {
-            "Accept": f"application/json; version={API_VERSION}",
+            "Accept": f"application/json; version={self._request_api_version}",
             "Authorization": f"Token {self._token}",
         }
 
