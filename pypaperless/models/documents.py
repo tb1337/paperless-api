@@ -264,7 +264,7 @@ class DocumentNote(PaperlessModel):
             "id": self.id,
         }
         async with self._api.request("delete", self._api_path, params=params) as res:
-            return res.status == 204
+            return res.status == 200
 
 
 @dataclass(kw_only=True)
