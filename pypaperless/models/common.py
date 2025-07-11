@@ -2,6 +2,7 @@
 
 import contextlib
 import datetime
+import re
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Any, TypedDict
@@ -102,10 +103,37 @@ class CustomFieldIntegerValue(CustomFieldValue):
 
 
 @dataclass(kw_only=True)
+class CustomFieldMonetaryValue(CustomFieldValue):
+    """Represent a monetary `CustomFieldValue`."""
+
+    value: str | None = None
+
+    @property
+    def currency(self) -> str | None:
+        """Return the currency of the `value` field."""
+        if self.extra_data and (default_currency := self.extra_data.get("default_currency", None)):
+            return default_currency
+        return ""
+
+    @property
+    def amount(self) -> float | None:
+        """Return the amount without currentcy of the `value` field."""
+        if self.value:
+            numeric = re.sub(r"[^\d.]", "", self.value)
+            return float(numeric)
+        return None
+
+    @amount.setter
+    def amount(self, new_amount: float) -> None:
+        """Set a new amount and construct the internal needed value."""
+        self.value = f"{self.currency}{new_amount:.2f}"
+
+
+@dataclass(kw_only=True)
 class CustomFieldSelectValue(CustomFieldValue):
     """Represent a select `CustomFieldValue`."""
 
-    value: int | None = None
+    value: int | str | None = None
 
     @property
     def labels(self) -> list[CustomFieldExtraDataSelectOptions | None]:
@@ -126,6 +154,13 @@ class CustomFieldSelectValue(CustomFieldValue):
 @dataclass(kw_only=True)
 class CustomFieldStringValue(CustomFieldValue):
     """Represent a string `CustomFieldValue`."""
+
+    value: str | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldURLValue(CustomFieldValue):
+    """Represent an url `CustomFieldValue`."""
 
     value: str | None = None
 
