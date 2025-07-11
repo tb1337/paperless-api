@@ -3,7 +3,7 @@
 import datetime
 from collections.abc import AsyncGenerator, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Self, cast
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, ItemNotFoundError, PrimaryKeyRequiredError
@@ -16,9 +16,11 @@ from .common import (
     CustomFieldDocumentLinkValue,
     CustomFieldFloatValue,
     CustomFieldIntegerValue,
+    CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldStringValue,
     CustomFieldType,
+    CustomFieldURLValue,
     CustomFieldValue,
     DocumentMetadataType,
     DocumentSearchHitType,
@@ -30,6 +32,8 @@ from .mixins import helpers, models
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
+CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
+
 
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
@@ -40,12 +44,14 @@ class DocumentCustomFieldList(PaperlessModelData):
         CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
         CustomFieldType.FLOAT: CustomFieldFloatValue,
         CustomFieldType.INTEGER: CustomFieldIntegerValue,
+        CustomFieldType.MONETARY: CustomFieldMonetaryValue,
         CustomFieldType.SELECT: CustomFieldSelectValue,
         CustomFieldType.STRING: CustomFieldStringValue,
+        CustomFieldType.URL: CustomFieldURLValue,
     }
 
     def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
-        """Initialize a `CustomFieldList` instance."""
+        """Initialize a `DocumentCustomFieldList` instance."""
         self._api = api
         self._data = data
         self._fields: list[CustomFieldValue] = []
@@ -85,20 +91,49 @@ class DocumentCustomFieldList(PaperlessModelData):
         """
         yield from self._fields
 
-    def default(self, field: int | CustomField) -> CustomFieldValue | None:
-        """Access and return a `CustomField` from the `DocumentCustomFieldList`, or `None`."""
+    @overload
+    def default(self, field: int | CustomField) -> CustomFieldValue | None: ...
+
+    @overload
+    def default(
+        self, field: int | CustomField, expected_type: type[CustomFieldValueT]
+    ) -> CustomFieldValueT | None: ...
+
+    def default(
+        self, field: int | CustomField, expected_type: type[CustomFieldValueT] | None = None
+    ) -> CustomFieldValue | CustomFieldValueT | None:
+        """Access and return a (typed) `CustomFieldValue`, or `None`."""
         try:
-            return self.get(field)
+            value = self.get(field)
         except ItemNotFoundError:
             return None
 
-    def get(self, field: int | CustomField) -> CustomFieldValue:
-        """Access and return a `CustomField` from the `DocumentCustomFieldList`, or raise."""
+        if expected_type is not None and not isinstance(value, expected_type):
+            msg = f"Expected {expected_type.__name__}, got {type(value).__name__}"
+            raise TypeError(msg)
+        return value
+
+    @overload
+    def get(self, field: int | CustomField) -> CustomFieldValue: ...
+
+    @overload
+    def get(
+        self, field: int | CustomField, expected_type: type[CustomFieldValueT]
+    ) -> CustomFieldValueT: ...
+
+    def get(
+        self, field: int | CustomField, expected_type: type[CustomFieldValueT] | None = None
+    ) -> CustomFieldValue | CustomFieldValueT:
+        """Access and return a (typed) `CustomFieldValue` from the list."""
         item_id = field.id if isinstance(field, CustomField) else field
 
         for item in self._fields:
             if item.field == item_id:
+                if expected_type is not None and not isinstance(item, expected_type):
+                    msg = f"Expected {expected_type.__name__}, got {type(item).__name__}"
+                    raise TypeError(msg)
                 return item
+
         raise ItemNotFoundError
 
     @classmethod

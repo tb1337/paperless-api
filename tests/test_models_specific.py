@@ -37,6 +37,8 @@ from pypaperless.models.common import (
     StatusTasksType,
 )
 from pypaperless.models.documents import (
+    CustomFieldBooleanValue,
+    CustomFieldDocumentLinkValue,
     DocumentCustomFieldList,
     DocumentSuggestions,
     DownloadedDocument,
@@ -370,6 +372,10 @@ class TestModelDocuments:
         item = await api_latest.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
 
+        # check custom fields
+        for field in item.custom_fields:
+            assert isinstance(field, CustomFieldValue)
+
         # test if custom field is in document custom field values
         test_cf = CustomField.create_with_data(
             api=api_latest,
@@ -380,6 +386,20 @@ class TestModelDocuments:
         assert isinstance(item.custom_fields.get(test_cf), CustomFieldValue)
         assert item.custom_fields.default(test_cf) is not None
         assert item.custom_fields.default(-1337) is None
+
+        # test typed getters
+        assert isinstance(
+            item.custom_fields.get(test_cf, CustomFieldDocumentLinkValue),
+            CustomFieldDocumentLinkValue,
+        )
+        assert isinstance(
+            item.custom_fields.default(test_cf, CustomFieldDocumentLinkValue),
+            CustomFieldDocumentLinkValue,
+        )
+        with pytest.raises(TypeError):
+            item.custom_fields.get(test_cf, CustomFieldBooleanValue)
+        with pytest.raises(TypeError):
+            item.custom_fields.default(test_cf, CustomFieldBooleanValue)
 
 
 # test models/remote_version.py
