@@ -387,8 +387,8 @@ class TestPaperless:
     async def test_custom_field_value_types(self) -> None:
         """Test custom field value types."""
         # check date transformation
-        test = CustomFieldDateValue(value="1900-01-02T02:03:04")
-        assert isinstance(test.value, datetime)
+        test = CustomFieldDateValue(value="1900-01-02")
+        assert isinstance(test.value, date)
 
         # check label properties
         test = CustomFieldSelectValue(

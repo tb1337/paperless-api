@@ -173,8 +173,7 @@ class Document(
     title: str | None = None
     content: str | None = None
     tags: list[int] | None = None
-    created: datetime.datetime | None = None
-    created_date: datetime.date | None = None
+    created: datetime.date | None = None
     modified: datetime.datetime | None = None
     added: datetime.datetime | None = None
     deleted_at: datetime.datetime | None = None
@@ -193,6 +192,11 @@ class Document(
 
         self._api_path = self._api_path.format(pk=data.get("id"))
         self.notes = DocumentNoteHelper(api, data.get("id"))
+
+    @property
+    def created_date(self) -> datetime.date | None:
+        """Backward compatibility for the removed `created_date` field."""
+        return self.created
 
     @property
     def has_search_hit(self) -> bool:

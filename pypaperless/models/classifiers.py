@@ -29,7 +29,7 @@ class Correspondent(
     slug: str | None = None
     name: str | None = None
     document_count: int | None = None
-    last_correspondence: datetime.datetime | None = None
+    last_correspondence: datetime.date | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Correspondent` instance."""

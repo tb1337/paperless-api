@@ -39,7 +39,7 @@ def _str_to_date(datestr: str) -> date:
 
 def _dateobj_to_str(value: date | datetime) -> str:
     """Parse string from date objects."""
-    return value.isoformat()
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def _is_typeddict(cls: type) -> bool:

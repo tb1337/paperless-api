@@ -72,13 +72,13 @@ class CustomFieldBooleanValue(CustomFieldValue):
 class CustomFieldDateValue(CustomFieldValue):
     """Represent a date `CustomFieldValue`."""
 
-    value: datetime.datetime | str | None = None
+    value: datetime.date | str | None = None
 
     def __post_init__(self) -> None:
         """Convert the value to a datetime."""
         if isinstance(self.value, str):
             with contextlib.suppress(ValueError):
-                self.value = datetime.datetime.fromisoformat(self.value)
+                self.value = datetime.date.fromisoformat(self.value)
 
 
 @dataclass(kw_only=True)
