@@ -535,7 +535,7 @@ dev = [
     { name = "pytest-aiohttp", specifier = ">=1.1.0" },
     { name = "pytest-asyncio", specifier = ">=1.0.0" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
-    { name = "ruff", specifier = ">=0.12.1" },
+    { name = "ruff", specifier = ">=0.12.2" },
     { name = "yamllint", specifier = ">=1.37.1" },
 ]
 
