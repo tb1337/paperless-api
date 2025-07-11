@@ -5,7 +5,7 @@ import datetime
 import re
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -59,6 +59,9 @@ class CustomFieldValue:
     name: str | None = None
     data_type: CustomFieldType | None = None
     extra_data: CustomFieldExtraData | None = None
+
+
+CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
 
 
 @dataclass(kw_only=True)
@@ -163,6 +166,19 @@ class CustomFieldURLValue(CustomFieldValue):
     """Represent an url `CustomFieldValue`."""
 
     value: str | None = None
+
+
+CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
+    CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
+    CustomFieldType.DATE: CustomFieldDateValue,
+    CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
+    CustomFieldType.FLOAT: CustomFieldFloatValue,
+    CustomFieldType.INTEGER: CustomFieldIntegerValue,
+    CustomFieldType.MONETARY: CustomFieldMonetaryValue,
+    CustomFieldType.SELECT: CustomFieldSelectValue,
+    CustomFieldType.STRING: CustomFieldStringValue,
+    CustomFieldType.URL: CustomFieldURLValue,
+}
 
 
 # documents

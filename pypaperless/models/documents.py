@@ -3,7 +3,7 @@
 import datetime
 from collections.abc import AsyncGenerator, Iterator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Self, cast, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, ItemNotFoundError, PrimaryKeyRequiredError
@@ -11,17 +11,10 @@ from pypaperless.models.utils import object_to_dict_value
 
 from .base import HelperBase, PaperlessModel, PaperlessModelData
 from .common import (
-    CustomFieldBooleanValue,
-    CustomFieldDateValue,
-    CustomFieldDocumentLinkValue,
-    CustomFieldFloatValue,
-    CustomFieldIntegerValue,
-    CustomFieldMonetaryValue,
-    CustomFieldSelectValue,
-    CustomFieldStringValue,
+    CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldType,
-    CustomFieldURLValue,
     CustomFieldValue,
+    CustomFieldValueT,
     DocumentMetadataType,
     DocumentSearchHitType,
     RetrieveFileMode,
@@ -32,23 +25,9 @@ from .mixins import helpers, models
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
-CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
-
 
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
-
-    CustomFieldValueMap: dict[CustomFieldType, type[CustomFieldValue]] = {
-        CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
-        CustomFieldType.DATE: CustomFieldDateValue,
-        CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
-        CustomFieldType.FLOAT: CustomFieldFloatValue,
-        CustomFieldType.INTEGER: CustomFieldIntegerValue,
-        CustomFieldType.MONETARY: CustomFieldMonetaryValue,
-        CustomFieldType.SELECT: CustomFieldSelectValue,
-        CustomFieldType.STRING: CustomFieldStringValue,
-        CustomFieldType.URL: CustomFieldURLValue,
-    }
 
     def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
         """Initialize a `DocumentCustomFieldList` instance."""
@@ -60,7 +39,7 @@ class DocumentCustomFieldList(PaperlessModelData):
 
         for item in data:
             if cache and (field := cache.get(item["field"], None)):
-                klass = self.CustomFieldValueMap.get(
+                klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
                     field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
                 )
                 klass_data = {
@@ -93,7 +72,28 @@ class DocumentCustomFieldList(PaperlessModelData):
 
     def __iadd__(self, field: CustomFieldValue) -> Self:
         """Add a new `CustomFieldValue` to a document."""
+        return self.add(field)
+
+    def add(self, field: CustomFieldValue) -> Self:
+        """Add a new `CustomFieldValue` to a document."""
         self._fields.append(field)
+        return self
+
+    def __isub__(self, field: CustomFieldValue | CustomField | int) -> Self:
+        """Remove a `CustomFieldValue` from a document."""
+        return self.remove(field)
+
+    def remove(self, field: CustomFieldValue | CustomField | int) -> Self:
+        """Remove a `CustomFieldValue` from a document."""
+        item_id = (
+            field.id
+            if isinstance(field, CustomField)
+            else field.field
+            if isinstance(field, CustomFieldValue)
+            else field
+        )
+        self._fields = [field for field in self._fields if field.field != item_id]
+
         return self
 
     @overload

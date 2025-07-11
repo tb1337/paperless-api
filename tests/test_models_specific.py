@@ -27,6 +27,8 @@ from pypaperless.models import (
     Task,
 )
 from pypaperless.models.common import (
+    CustomFieldBooleanValue,
+    CustomFieldDocumentLinkValue,
     CustomFieldValue,
     DocumentMetadataType,
     DocumentSearchHitType,
@@ -37,8 +39,6 @@ from pypaperless.models.common import (
     StatusTasksType,
 )
 from pypaperless.models.documents import (
-    CustomFieldBooleanValue,
-    CustomFieldDocumentLinkValue,
     DocumentCustomFieldList,
     DocumentSuggestions,
     DownloadedDocument,
