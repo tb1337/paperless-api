@@ -3,15 +3,6 @@ name: Linting
 
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "**.py"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "pypaperless/**"
-      - "tests/**"
   pull_request:
     paths:
       - "**.py"
