@@ -63,7 +63,7 @@ def object_to_dict_value(value: Any) -> Any:
     if isinstance(value, (date, datetime)):
         return _dateobj_to_str(value)
     if isinstance(value, paperless_base.PaperlessModelData):
-        return value.serialize()
+        return object_to_dict_value(value.serialize())
     if is_dataclass(value):
         return object_to_dict_value(asdict(value))
 

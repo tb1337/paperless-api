@@ -91,6 +91,11 @@ class DocumentCustomFieldList(PaperlessModelData):
         """
         yield from self._fields
 
+    def __iadd__(self, field: CustomFieldValue) -> Self:
+        """Add a new `CustomFieldValue` to a document."""
+        self._fields.append(field)
+        return self
+
     @overload
     def default(self, field: int | CustomField) -> CustomFieldValue | None: ...
 
@@ -111,6 +116,7 @@ class DocumentCustomFieldList(PaperlessModelData):
         if expected_type is not None and not isinstance(value, expected_type):
             msg = f"Expected {expected_type.__name__}, got {type(value).__name__}"
             raise TypeError(msg)
+
         return value
 
     @overload
@@ -146,7 +152,7 @@ class DocumentCustomFieldList(PaperlessModelData):
 
     def serialize(self) -> list[dict[str, Any]]:
         """Serialize the class data."""
-        return self._data
+        return [{"field": field.field, "value": field.value} for field in self._fields]
 
 
 @dataclass(init=False)
