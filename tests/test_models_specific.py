@@ -401,6 +401,14 @@ class TestModelDocuments:
         with pytest.raises(TypeError):
             item.custom_fields.default(test_cf, CustomFieldBooleanValue)
 
+        # test remove field value
+        item.custom_fields -= test_cf
+        assert test_cf not in item.custom_fields
+
+        # test add field value
+        item.custom_fields += test_cf.draft_value(1337)
+        assert test_cf in item.custom_fields
+
 
 # test models/remote_version.py
 class TestModelVersion:
