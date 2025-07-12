@@ -232,7 +232,7 @@ if field := document.custom_fields.default(custom_field_id):
 
 **Example 3: Type safety**
 
-Just like with [`get()`](#type-safety), this method ensures type safety as well.
+Just like with `get()`, this method ensures type safety as well.
 
 ```python
 from pypaperless.models.common import CustomFieldIntegerValue
@@ -251,7 +251,7 @@ If you want to add new custom fields to your documents, you have to draft custom
 
 Use the `draft_value` method on a `CustomField`:
 
-**Example 1: with cache ([read about caching](#provide-a-cache))**
+**Example 1: with cache ([read about caching](#providing-a-cache))**
 
 ```python
 my_int_field = await paperless.custom_fields(1)
