@@ -40,7 +40,8 @@ print(document.has_permissions)
 #-> True
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/?full_perms=true`
 
 Requesting permissions stays enabled until it gets disabled again.
@@ -54,14 +55,15 @@ print(document.has_permissions)
 #-> False
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/`
 
 ## Create item with permissions
 
 When creating new resource items, you can apply permissions by setting a `PermissionTableType` to the optional `set_permissions` field.
 
-> [!NOTE]
+> [!WARNING]
 > Both `PermissionTableType` and `PermissionSetType` automatically initialize empty lists for their fields unless you provided a value.
 
 ```python
@@ -91,5 +93,6 @@ if document.has_permissions:
     await document.update()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `PATCH` `https://localhost:8000/api/documents/23/?full_perms=true`

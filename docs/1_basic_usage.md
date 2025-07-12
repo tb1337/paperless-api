@@ -114,7 +114,8 @@ token = Paperless.generate_api_token(
 > [!CAUTION]
 > Hardcoding credentials or tokens is never good practise. Use that with caution.
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `POST` `https://localhost:8000/api/token/`
 
 ## Resource features
@@ -160,7 +161,8 @@ print(f"Document '{document.title}' is an {doc_type.name}.")
 #-> Document 'Order #23: Desktop Table' is an Invoice.
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/1337/` <br>
 > `GET` `https://localhost:8000/api/document_types/23/`
 
@@ -173,7 +175,8 @@ item_keys = await paperless.documents.all()
 #-> [1, 2, 3, ...]
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1`
 
 ### Iterating over resource items
@@ -189,9 +192,8 @@ print(f"{count} documents are currently stored for correspondent 1.")
 #-> 5 documents are currently stored for correspondent 1.
 ```
 
-> [!NOTE] Executed http requests
-> The code above executes many http requests, depending on the count of your stored documents:
->
+> [!NOTE]
+> The code above executes many http requests, depending on the count of your stored documents: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1` <br>
 > `GET` `https://localhost:8000/api/documents/?page=2` <br>
 > `...` <br>
@@ -209,7 +211,8 @@ page = await anext(page_iter)
 #-> page.current_page == 2
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1` <br>
 > `GET` `https://localhost:8000/api/documents/?page=2`
 
@@ -228,7 +231,8 @@ async with paperless.documents.reduce(**filters) as filtered:
 #-> 5 documents are currently stored for correspondent 1.
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1&correspondent__id=1`
 
 > [!TIP]
@@ -262,7 +266,8 @@ new_pk = await draft.save()
 #-> 42
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `POST` `https://localhost:8000/api/correspondents/`
 
 ### Updating existing items
@@ -277,7 +282,8 @@ success = await item.update(only_changed=False) # put all fields
 #-> True
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `PATCH` `http://localhost:8000/api/documents/23/` <br>
 > **OR** <br>
 > `PUT` `http://localhost:8000/api/documents/23/`
@@ -320,5 +326,6 @@ success = await item.delete()
 #-> True
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `DELETE` `http://localhost:8000/api/documents/23/`

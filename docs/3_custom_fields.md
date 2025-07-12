@@ -84,7 +84,8 @@ You may now add all currently existing custom fields of your *Paperless-ngx* ins
 paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/custom_fields/`
 
 When fetching a document now, its custom fields are mapped to `CustomField...Value` objects.
@@ -100,7 +101,8 @@ print(list(document.custom_fields))
 # ]
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/1337/`
 
 ### Without cache
@@ -134,7 +136,8 @@ else:
     print("Custom field 1 is missing!")
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/custom_fields/1/`
 
 ### By primary key
@@ -174,7 +177,8 @@ print(field.value)
 #-> 42
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/custom_fields/1/`
 
 #### By primary key
@@ -212,7 +216,8 @@ if field := document.custom_fields.default(specific_custom_field):
     #-> 42
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/custom_fields/1/`
 
 #### By primary key

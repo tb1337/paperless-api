@@ -45,7 +45,8 @@ preview = await document.get_preview()
 thumbnail = await document.get_thumbnail()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/download/` <br>
 > `GET` `https://localhost:8000/api/documents/23/preview/` <br>
 > `GET` `https://localhost:8000/api/documents/23/thumb/`
@@ -63,9 +64,8 @@ async for document in paperless.documents.search("type:invoice"):
     # do something
 ```
 
-> [!NOTE] Executed http requests
-> The code above executes many http requests, depending on the count of your matched documents:
->
+> [!NOTE]
+> The code above executes many http requests, depending on the count of your matched documents: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1&query=type%3Ainvoice` <br>
 > `GET` `https://localhost:8000/api/documents/?page=2&query=type%3Ainvoice` <br>
 > `...` <br>
@@ -80,9 +80,8 @@ async for document in paperless.documents.more_like(23):
     # do something
 ```
 
-> [!NOTE] Executed http requests
-> The code above executes many http requests, depending on the count of your matched documents:
->
+> [!NOTE]
+> The code above executes many http requests, depending on the count of your matched documents: <br>
 > `GET` `https://localhost:8000/api/documents/?page=1&more_like_id=23` <br>
 > `GET` `https://localhost:8000/api/documents/?page=2&more_like_id=23` <br>
 > `...` <br>
@@ -119,7 +118,8 @@ else:
 metadata = await paperless.documents.metadata(23)
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/metadata/`
 
 **Example 2: Already fetched item**
@@ -129,7 +129,8 @@ document = await paperless.documents(23)
 metadata = await document.get_metadata()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/` <br>
 > `GET` `https://localhost:8000/api/documents/23/metadata/`
 
@@ -148,7 +149,8 @@ There are two ways of requesting document notes:
 list_of_notes = await paperless.documents.notes(23)
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/notes/`
 
 or
@@ -159,7 +161,8 @@ document = await paperless.documents(23)
 list_of_notes = await document.notes()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/` <br>
 > `GET` `https://localhost:8000/api/documents/23/notes/`
 
@@ -192,7 +195,8 @@ new_note_pk, document_pk = await draft.save()
 #-> 42, 23
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `POST` `https://localhost:8000/api/documents/23/notes/`
 
 **Deleting notes**
@@ -208,7 +212,8 @@ success = await a_note.delete()
 #-> True
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `DELETE` `https://localhost:8000/api/documents/23/notes/?id=42`
 
 ## Suggestions
@@ -221,7 +226,8 @@ One of the key functionalities of *Paperless-ngx* is _classification_: it is the
 suggestions = await paperless.documents.suggestions(23)
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/suggestions/`
 
 **Example 2: Already fetched item**
@@ -231,7 +237,8 @@ document = await paperless.documents(23)
 suggestions = await document.get_suggestions()
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/23/` <br>
 > `GET` `https://localhost:8000/api/documents/23/suggestions/`
 
@@ -268,5 +275,6 @@ next_asn = await paperless.documents.get_next_asn()
 #-> 1337
 ```
 
-> [!NOTE] Executed http requests
+> [!NOTE]
+> Executed http requests: <br>
 > `GET` `https://localhost:8000/api/documents/next_asn/`
