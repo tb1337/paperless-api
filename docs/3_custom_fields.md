@@ -121,7 +121,7 @@ print(list(document.custom_fields))
 
 ## Verifying existence of a custom field
 
-If you want to check whether a specific custom field is present in a document, pypaperless offers the following approaches.
+If you want to check whether a specific custom field is present in a document, **pypaperless** offers the following approaches.
 
 ### By `CustomField` instance itself
 
