@@ -1,6 +1,6 @@
 # Working with custom fields
 
-When classifying your documents, you may want to add custom fields to them. As of `v4.2`, **pypaperless** introduces a completely new way of working with them!
+When classifying your documents, you may want to add custom fields to them. As of `v5.0`, **pypaperless** introduces a completely new way of working with them!
 
 ## Documentation
 
@@ -37,7 +37,7 @@ When classifying your documents, you may want to add custom fields to them. As o
 
 ## Introduction to custom fields
 
-In *Paperless-ngx*, custom fields allow you to enrich your documents with additional, structured data. Prior to `v4.2`, working with them was cumbersome: you had to loop through field IDs and values, manually resolve field metadata, and handle parsing based on their types.
+In *Paperless-ngx*, custom fields allow you to enrich your documents with additional, structured data. Prior to `v5.0`, working with them was cumbersome: you had to loop through field IDs and values, manually resolve field metadata, and handle parsing based on their types.
 
 Here is an example of how the *Paperless-ngx* API returns custom field instances:
 
