@@ -81,7 +81,8 @@ class CustomFieldDateValue(CustomFieldValue):
         """Convert the value to a datetime."""
         if isinstance(self.value, str):
             with contextlib.suppress(ValueError):
-                self.value = datetime.date.fromisoformat(self.value)
+                dt = datetime.datetime.fromisoformat(self.value)
+                self.value = dt.date()
 
 
 @dataclass(kw_only=True)
@@ -114,9 +115,22 @@ class CustomFieldMonetaryValue(CustomFieldValue):
     @property
     def currency(self) -> str | None:
         """Return the currency of the `value` field."""
+        if self.value and (match := re.match(r"^([a-zA-Z]{3})", self.value)):
+            return match.group(1) if match else self.value
         if self.extra_data and (default_currency := self.extra_data.get("default_currency", None)):
             return default_currency
         return ""
+
+    @currency.setter
+    def currency(self, new_currency: str) -> None:
+        """Override the currency of the field."""
+        value = self.value or ""
+        value = re.sub(r"^[a-zA-Z]{3}", "", value)
+
+        if new_currency and re.match(r"^[A-Z]{3}$", new_currency):
+            self.value = f"{new_currency}{value}"
+        else:
+            self.value = value
 
     @property
     def amount(self) -> float | None:

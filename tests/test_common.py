@@ -25,6 +25,7 @@ from pypaperless.models import Page
 from pypaperless.models.base import HelperBase, PaperlessModel
 from pypaperless.models.common import (
     CustomFieldDateValue,
+    CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
     MatchingAlgorithmType,
@@ -384,13 +385,39 @@ class TestPaperless:
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
-    async def test_custom_field_value_types(self) -> None:
-        """Test custom field value types."""
-        # check date transformation
+    async def test_custom_field_date_value(self) -> None:
+        """Test `CustomFieldDateValue`."""
         test = CustomFieldDateValue(value="1900-01-02")
         assert isinstance(test.value, date)
+        test = CustomFieldDateValue(value="1900-01-02T03:04:05.133337Z")
+        assert isinstance(test.value, date)
 
-        # check label properties
+    async def test_custom_field_monetary_value(self) -> None:
+        """Test `CustomFieldMonetaryValue`."""
+        field = CustomFieldMonetaryValue(value="EUR1337.00")
+        assert field.currency == "EUR"
+        assert field.amount == 1337
+
+        field.amount = 123.45678
+        assert field.amount == 123.46  # round
+
+        field.extra_data = {"default_currency": "USD"}
+        assert field.value == "EUR123.46"
+
+        field.value = "123.45"  # no currency
+        assert field.currency == "USD"
+
+        field.extra_data = {}
+        assert field.currency == ""
+
+        field.currency = "EUR"
+        assert field.value == "EUR123.45"
+
+        field.currency = ""
+        assert field.value == "123.45"
+
+    async def test_custom_field_select_value(self) -> None:
+        """Test custom field value types."""
         test = CustomFieldSelectValue(
             value="id2",
             extra_data={
