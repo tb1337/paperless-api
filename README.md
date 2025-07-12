@@ -9,25 +9,20 @@
 [![Linting][linting-badge]][linting-url]
 [![Typing][typing-badge]][typing-url]
 
-Little asynchronous client for Paperless-ngx, written in Python. You should at least use Python `>=3.12`.
-
-**v4 upgrade warning**
-
-* We dropped support for Python `<=3.11`.
-* Major changes in various classes occurred. Consider using Paperless-ngx `>=2.15.0`.
-* Support for Paperless-ngx `<2.15.0` will end after 2025/07.
+Little asynchronous client for *Paperless-ngx*, written in Python. You should at least use Python `>=3.12`.
 
 ## Features
 
 - Depends on aiohttp, works in async environments.
-- Token authentication only. **No credentials anymore.**
+- Token authentication only. **No credentials.**
 - Request single resource items.
 - Iterate over all resource items or request them page by page.
 - Create, update and delete resource items.
+- Add, remove and update custom fields on documents.
 - Almost feature complete.
-- _PyPaperless_ is designed to transport data only. Your code must organize it.
+- **pypaperless** is designed to transport data only. Your code must organize it.
 
-Find out more about Paperless-ngx here:
+Find out more about *Paperless-ngx* here:
 
 - Project: https://docs.paperless-ngx.com
 - API Docs: https://docs.paperless-ngx.com/api/
@@ -43,9 +38,27 @@ pip install pypaperless
 
 Please check out the **[docs][docs-url]** for detailed instructions and examples.
 
+## Compatibility matrix
+
+Choosing the right version of **pypaperless** for your *Paperless-ngx* instance can be tricky. This little matrix is here to help.
+
+| *Paperless-ngx* | **pypaperless** |
+| --------------- | --------------- |
+| >= 2.17         | >= 5.0          |
+| >= 2.16         | >= 4.1          |
+| >= 2.15         | >= 4.0          |
+| < 2.15          | < 4.0           |
+
+* **pypaperless** `<4.0` is not compatible with *Paperless-ngx* `>=2.15` due to breaking server changes.
+* **pypaperless** `5.0` implements date changes in the document API and is therefore not compatible with *Paperless-ngx* `<2.16`.
+* **pypaperless** `>=5.1` will drop support for all *Paperless-ngx* versions without the Open API schema, introduced in `2.15`.
+
+> [!TIP]
+> Consider keeping both *Paperless-ngx* and **pypaperless** always updated.
+
 ## Authors & contributors
 
-_PyPaperless_ is written by [Tobias Schulz][contributors-tbsch]. Its his first Python project. Feedback appreciated.
+**pypaperless** is written by [Tobias Schulz][contributors-tbsch]. Its his first Python project. Feedback appreciated.
 
 Check out all [contributors here][contributors-url].
 
@@ -53,7 +66,7 @@ Check out all [contributors here][contributors-url].
 [codecov-url]: https://app.codecov.io/gh/tb1337/paperless-api/tree/main
 [contributors-tbsch]: https://tbsch.de
 [contributors-url]: https://github.com/tb1337/paperless-api/graphs/contributors
-[docs-url]: https://github.com/tb1337/paperless-api/blob/main/docs/usage.md
+[docs-url]: https://github.com/tb1337/paperless-api/blob/main/docs/
 [license-badge]: https://img.shields.io/github/license/tb1337/paperless-api
 [license-url]: /LICENSE.md
 [python-badge]: https://img.shields.io/pypi/pyversions/pypaperless

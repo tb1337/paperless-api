@@ -24,7 +24,8 @@
         "esbenp.prettier-vscode",
         "visualstudioexptteam.vscodeintellicode",
         "GitHub.vscode-pull-request-github",
-        "ryanluker.vscode-coverage-gutters"
+        "ryanluker.vscode-coverage-gutters",
+        "yzhang.markdown-all-in-one"
       ],
       "settings": {
         "coverage-gutters.customizable.context-menu": true,
@@ -36,6 +37,13 @@
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
         "files.trimTrailingWhitespace": true,
+        "markdown.extension.toc.levels": "2..6",
+        "markdown.extension.toc.omittedFromToc": {
+          "docs/1_basic_usage.md": ["## Documentation"],
+          "docs/2_documents.md": ["## Documentation"],
+          "docs/3_custom_fields.md": ["## Documentation"],
+          "docs/4_permissions.md": ["## Documentation"]
+        },
         "python.defaultInterpreterPath": "/home/vscode/.local/dev-venv/bin/python",
         "python.pythonPath": "/home/vscode/.local/dev-venv/bin/python",
         "python.terminal.activateEnvInCurrentTerminal": true,
