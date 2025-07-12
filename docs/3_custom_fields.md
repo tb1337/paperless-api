@@ -39,7 +39,7 @@ When classifying your documents, you may want to add custom fields to them. As o
 
 ## Introduction to custom fields
 
-When classifying your documents, you may want to add custom fields to them. Working with their values could be tricky and required you to loop through lists of field primary keys and their values. You also had to look up the custom fields by their primary key and parse the values according to their data types.
+When classifying your documents, you may want to add custom fields to them in *Paperless-ngx*. Working with their values could be tricky and required you to loop through lists of field primary keys and their values. You also had to look up the custom fields by their primary key and parse the values according to their data types.
 
 This is a typical `CustomFieldInstance` object provided by the *Paperless-ngx* API:
 
