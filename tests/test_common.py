@@ -1,5 +1,6 @@
 """Paperless common tests."""
 
+import re
 from dataclasses import dataclass, fields
 from datetime import date, datetime
 from enum import Enum
@@ -21,10 +22,12 @@ from pypaperless.exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from pypaperless.models import Page
+from pypaperless.models import CustomField, Page
 from pypaperless.models.base import HelperBase, PaperlessModel
 from pypaperless.models.common import (
+    CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
+    CustomFieldIntegerValue,
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
@@ -385,6 +388,37 @@ class TestPaperless:
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
+    async def test_custom_field_draft_value_wo_cache(self, api_latest: Paperless) -> None:
+        """Test draft custom field value without cache."""
+        custom_field = CustomField.create_with_data(
+            api_latest,
+            data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
+            fetched=True,
+        )
+        field_value = custom_field.draft_value(1337)
+        for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
+            assert not isinstance(field_value, value_type)
+
+    async def test_custom_field_draft_value_wslash_cache(
+        self, resp: aioresponses, api_latest: Paperless
+    ) -> None:
+        """Test draft custom field value with cache."""
+        # set custom fields cache
+        resp.get(
+            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
+            status=200,
+            payload=PATCHWORK["custom_fields"],
+        )
+        api_latest.cache.custom_fields = await api_latest.custom_fields.as_dict()
+
+        custom_field = CustomField.create_with_data(
+            api=api_latest,
+            data=PATCHWORK["custom_fields"]["results"][5],
+            fetched=True,
+        )
+        field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)
+        assert isinstance(field_value, CustomFieldIntegerValue)
+
     async def test_custom_field_date_value(self) -> None:
         """Test `CustomFieldDateValue`."""
         test = CustomFieldDateValue(value="1900-01-02")
@@ -415,6 +449,9 @@ class TestPaperless:
 
         field.currency = ""
         assert field.value == "123.45"
+
+        field.value = None
+        assert field.amount is None
 
     async def test_custom_field_select_value(self) -> None:
         """Test custom field value types."""

@@ -61,7 +61,14 @@ class CustomField(
             klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
                 self.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
             )
-            return klass(field=self.id, value=value)
+            klass_data = {
+                "field": self.id,
+                "value": value,
+                "name": self.name,
+                "data_type": self.data_type,
+                "extra_data": self.extra_data,
+            }
+            return klass(**klass_data)
 
         return CustomFieldValue(field=self.id, value=value)
 
