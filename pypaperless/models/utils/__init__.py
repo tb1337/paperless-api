@@ -39,7 +39,7 @@ def _str_to_date(datestr: str) -> date:
 
 def _dateobj_to_str(value: date | datetime) -> str:
     """Parse string from date objects."""
-    return value.isoformat()
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def _is_typeddict(cls: type) -> bool:
@@ -63,7 +63,7 @@ def object_to_dict_value(value: Any) -> Any:
     if isinstance(value, (date, datetime)):
         return _dateobj_to_str(value)
     if isinstance(value, paperless_base.PaperlessModelData):
-        return value.serialize()
+        return object_to_dict_value(value.serialize())
     if is_dataclass(value):
         return object_to_dict_value(asdict(value))
 

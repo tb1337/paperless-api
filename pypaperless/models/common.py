@@ -2,9 +2,10 @@
 
 import contextlib
 import datetime
+import re
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -60,6 +61,9 @@ class CustomFieldValue:
     extra_data: CustomFieldExtraData | None = None
 
 
+CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
+
+
 @dataclass(kw_only=True)
 class CustomFieldBooleanValue(CustomFieldValue):
     """Represent a boolean `CustomFieldValue`."""
@@ -71,13 +75,14 @@ class CustomFieldBooleanValue(CustomFieldValue):
 class CustomFieldDateValue(CustomFieldValue):
     """Represent a date `CustomFieldValue`."""
 
-    value: datetime.datetime | str | None = None
+    value: datetime.date | str | None = None
 
     def __post_init__(self) -> None:
         """Convert the value to a datetime."""
         if isinstance(self.value, str):
             with contextlib.suppress(ValueError):
-                self.value = datetime.datetime.fromisoformat(self.value)
+                dt = datetime.datetime.fromisoformat(self.value)
+                self.value = dt.date()
 
 
 @dataclass(kw_only=True)
@@ -102,10 +107,50 @@ class CustomFieldIntegerValue(CustomFieldValue):
 
 
 @dataclass(kw_only=True)
+class CustomFieldMonetaryValue(CustomFieldValue):
+    """Represent a monetary `CustomFieldValue`."""
+
+    value: str | None = None
+
+    @property
+    def currency(self) -> str | None:
+        """Return the currency of the `value` field."""
+        if self.value and (match := re.match(r"^([a-zA-Z]{3})", self.value)):
+            return match.group(1) if match else self.value
+        if self.extra_data and (default_currency := self.extra_data.get("default_currency", None)):
+            return default_currency
+        return ""
+
+    @currency.setter
+    def currency(self, new_currency: str) -> None:
+        """Override the currency of the field."""
+        value = self.value or ""
+        value = re.sub(r"^[a-zA-Z]{3}", "", value)
+
+        if new_currency and re.match(r"^[A-Z]{3}$", new_currency):
+            self.value = f"{new_currency}{value}"
+        else:
+            self.value = value
+
+    @property
+    def amount(self) -> float | None:
+        """Return the amount without currentcy of the `value` field."""
+        if self.value:
+            numeric = re.sub(r"[^\d.]", "", self.value)
+            return float(numeric)
+        return None
+
+    @amount.setter
+    def amount(self, new_amount: float) -> None:
+        """Set a new amount and construct the internal needed value."""
+        self.value = f"{self.currency}{new_amount:.2f}"
+
+
+@dataclass(kw_only=True)
 class CustomFieldSelectValue(CustomFieldValue):
     """Represent a select `CustomFieldValue`."""
 
-    value: int | None = None
+    value: int | str | None = None
 
     @property
     def labels(self) -> list[CustomFieldExtraDataSelectOptions | None]:
@@ -128,6 +173,26 @@ class CustomFieldStringValue(CustomFieldValue):
     """Represent a string `CustomFieldValue`."""
 
     value: str | None = None
+
+
+@dataclass(kw_only=True)
+class CustomFieldURLValue(CustomFieldValue):
+    """Represent an url `CustomFieldValue`."""
+
+    value: str | None = None
+
+
+CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
+    CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
+    CustomFieldType.DATE: CustomFieldDateValue,
+    CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
+    CustomFieldType.FLOAT: CustomFieldFloatValue,
+    CustomFieldType.INTEGER: CustomFieldIntegerValue,
+    CustomFieldType.MONETARY: CustomFieldMonetaryValue,
+    CustomFieldType.SELECT: CustomFieldSelectValue,
+    CustomFieldType.STRING: CustomFieldStringValue,
+    CustomFieldType.URL: CustomFieldURLValue,
+}
 
 
 # documents

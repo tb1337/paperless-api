@@ -1,12 +1,18 @@
 """Provide `CustomField` related models and helpers."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
-from .common import CustomFieldExtraData, CustomFieldType
+from .common import (
+    CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomFieldExtraData,
+    CustomFieldType,
+    CustomFieldValue,
+    CustomFieldValueT,
+)
 from .mixins import helpers, models
 
 if TYPE_CHECKING:
@@ -34,6 +40,37 @@ class CustomField(
         super().__init__(api, data)
 
         self._api_path = self._api_path.format(pk=data.get("id"))
+
+    @overload
+    def draft_value(self, value: Any) -> CustomFieldValue: ...
+
+    @overload
+    def draft_value(
+        self, value: Any, expected_type: type[CustomFieldValueT]
+    ) -> CustomFieldValueT: ...
+
+    def draft_value(
+        self,
+        value: Any,
+        expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+    ) -> CustomFieldValue | CustomFieldValueT:
+        """Draft a new `CustomFieldValue` instance."""
+        cache = self._api.cache.custom_fields
+
+        if cache and self.id in cache:
+            klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
+                self.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
+            )
+            klass_data = {
+                "field": self.id,
+                "value": value,
+                "name": self.name,
+                "data_type": self.data_type,
+                "extra_data": self.extra_data,
+            }
+            return klass(**klass_data)
+
+        return CustomFieldValue(field=self.id, value=value)
 
 
 @dataclass(init=False)

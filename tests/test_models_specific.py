@@ -27,6 +27,9 @@ from pypaperless.models import (
     Task,
 )
 from pypaperless.models.common import (
+    CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomFieldBooleanValue,
+    CustomFieldDocumentLinkValue,
     CustomFieldValue,
     DocumentMetadataType,
     DocumentSearchHitType,
@@ -107,6 +110,13 @@ class TestModelDocuments:
             payload="11112222-3333-4444-5555-666677778888",
         )
         await draft.save()
+
+    async def test_create_date_property(self, api_latest: Paperless) -> None:
+        """Test create_date property - well, lol."""
+        document = Document.create_with_data(
+            api_latest, data={**PATCHWORK["documents"]["results"][0]}, fetched=True
+        )
+        assert document.created_date == document.created
 
     async def test_udpate(self, resp: aioresponses, api_latest: Paperless) -> None:
         """Test update."""
@@ -351,8 +361,29 @@ class TestModelDocuments:
         deletion = await results.pop().delete()
         assert deletion
 
-    async def test_custom_fields(self, resp: aioresponses, api_latest: Paperless) -> None:
-        """Test custom fields."""
+    async def test_custom_field_list_wo_cache(
+        self, resp: aioresponses, api_latest: Paperless
+    ) -> None:
+        """Test custom field list without cache."""
+        # request document
+        resp.get(
+            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            status=200,
+            payload=PATCHWORK["documents"]["results"][1],
+        )
+        item = await api_latest.documents(2)
+        assert isinstance(item.custom_fields, DocumentCustomFieldList)
+
+        # every item MUST NOT be a derived CustomFieldValue instance
+        for field in item.custom_fields:
+            for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
+                assert not isinstance(field, value_type)
+            assert isinstance(field, CustomFieldValue)
+
+    async def test_custom_field_list_wslash_cache(
+        self, resp: aioresponses, api_latest: Paperless
+    ) -> None:
+        """Test custom fields list with cache."""
         # set custom fields cache
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
@@ -370,6 +401,10 @@ class TestModelDocuments:
         item = await api_latest.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
 
+        # every item may be a derived class or not
+        for field in item.custom_fields:
+            assert isinstance(field, CustomFieldValue)
+
         # test if custom field is in document custom field values
         test_cf = CustomField.create_with_data(
             api=api_latest,
@@ -380,6 +415,28 @@ class TestModelDocuments:
         assert isinstance(item.custom_fields.get(test_cf), CustomFieldValue)
         assert item.custom_fields.default(test_cf) is not None
         assert item.custom_fields.default(-1337) is None
+
+        # test typed getters
+        assert isinstance(
+            item.custom_fields.get(test_cf, CustomFieldDocumentLinkValue),
+            CustomFieldDocumentLinkValue,
+        )
+        assert isinstance(
+            item.custom_fields.default(test_cf, CustomFieldDocumentLinkValue),
+            CustomFieldDocumentLinkValue,
+        )
+        with pytest.raises(TypeError):
+            item.custom_fields.get(test_cf, CustomFieldBooleanValue)
+        with pytest.raises(TypeError):
+            item.custom_fields.default(test_cf, CustomFieldBooleanValue)
+
+        # test remove field value
+        item.custom_fields -= test_cf
+        assert test_cf not in item.custom_fields
+
+        # test add field value
+        item.custom_fields += test_cf.draft_value(1337)
+        assert test_cf in item.custom_fields
 
 
 # test models/remote_version.py
