@@ -117,7 +117,7 @@ print(list(document.custom_fields))
 ```
 
 > [!TIP]
-> This approach can be useful in scenarios where you're certain that, for example, field 11 contains the integer value you need to operate on.
+> This approach can be useful in scenarios where you're certain that, for example, field 1 contains the integer value you need to operate on.
 
 ## Verifying existence of a custom field
 
