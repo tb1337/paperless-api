@@ -11,12 +11,6 @@
 
 Little asynchronous client for *Paperless-ngx*, written in Python. You should at least use Python `>=3.12`.
 
-**v4 upgrade warning**
-
-* We dropped support for Python `<=3.11`.
-* Major changes in various classes occurred. Consider using *Paperless-ngx* `>=2.15.0`.
-* Support for *Paperless-ngx* `<2.15.0` will end after 2025/07.
-
 ## Features
 
 - Depends on aiohttp, works in async environments.
@@ -43,6 +37,24 @@ pip install pypaperless
 ## Documentation
 
 Please check out the **[docs][docs-url]** for detailed instructions and examples.
+
+## Compatibility matrix
+
+Choosing the right version of **pypaperless** for your *Paperless-ngx* instance can be tricky. This little matrix is here to help.
+
+| *Paperless-ngx* | **pypaperless** |
+| --------------- | --------------- |
+| >= 2.17         | >= 5.0          |
+| >= 2.16         | >= 4.1          |
+| >= 2.15         | >= 4.0          |
+| < 2.15          | < 4.0           |
+
+* **pypaperless** `<4.0` is not compatible with *Paperless-ngx* `>=2.15` due to breaking server changes.
+* **pypaperless** `5.0` implements date changes in the document API and is therefore not compatible with *Paperless-ngx* `<2.16`.
+* **pypaperless** `>=5.1` will drop support for all *Paperless-ngx* versions without the Open API schema, introduced in `2.15`.
+
+> [!TIP]
+> Consider keeping both *Paperless-ngx* and **pypaperless** always updated.
 
 ## Authors & contributors
 
