@@ -111,6 +111,13 @@ class TestModelDocuments:
         )
         await draft.save()
 
+    async def test_create_date_property(self, api_latest: Paperless) -> None:
+        """Test create_date property - well, lol."""
+        document = Document.create_with_data(
+            api_latest, data={**PATCHWORK["documents"]["results"][0]}, fetched=True
+        )
+        assert document.created_date == document.created
+
     async def test_udpate(self, resp: aioresponses, api_latest: Paperless) -> None:
         """Test update."""
         resp.get(
