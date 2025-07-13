@@ -5,10 +5,9 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from io import BytesIO
 from json.decoder import JSONDecodeError
-from typing import Any, cast
+from typing import Any
 
 import aiohttp
-import aiohttp.web_exceptions
 from yarl import URL
 
 from . import helpers
@@ -247,40 +246,18 @@ class Paperless:
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
-        """Initialize the connection to DRF and fetch the endpoints."""
-
-        async def _init_with_openapi_response() -> bool:
-            """Connect to paperless and request the openapi schema."""
+        """Initialize and test the connection to DRF."""
+        async with self.request("get", API_PATH["index"]) as res:
             try:
-                async with self.request("get", API_PATH["api_schema"]) as res:
-                    res.raise_for_status()
-                    self._api_version = self._request_api_version or int(
-                        res.headers.get("x-api-version", API_VERSION)
-                    )
-                    self._version = res.headers.get("x-version", None)
-                    await res.read()
-            except aiohttp.ClientError:
-                return False
-
-            return True
-
-        async def _init_with_legacy_response() -> dict[str, str]:
-            """Connect to paperless and request the entity dictionary (DRF)."""
-            async with self.request("get", API_PATH["index"]) as res:
-                try:
-                    res.raise_for_status()
-                    payload = await res.json()
-                except (aiohttp.ClientResponseError, ValueError) as exc:
-                    raise InitializationError from exc
-
+                res.raise_for_status()
                 self._api_version = self._request_api_version or int(
                     res.headers.get("x-api-version", API_VERSION)
                 )
                 self._version = res.headers.get("x-version", None)
-                return cast("dict[str, str]", payload)
+                await res.json()
+            except (aiohttp.ClientResponseError, JSONDecodeError) as exc:
+                raise InitializationError from exc
 
-        if await _init_with_openapi_response():
-            self.logger.debug("OpenAPI spec detected.")
             self._remote_resources = {
                 res
                 for res in PaperlessResource
@@ -290,9 +267,6 @@ class Paperless:
                     PaperlessResource.CONSUMPTION_TEMPLATES,
                 }
             }
-        else:
-            payload = await _init_with_legacy_response()
-            self._remote_resources = set(map(PaperlessResource, payload))
 
         # initialize helpers
         for attribute, helper in self._helpers_map:

@@ -47,12 +47,6 @@ async def api_version_00_fixture(
 ) -> AsyncGenerator[Paperless, Any]:
     """Return a basic Paperless object."""
     resp.get(
-        f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-        status=500,
-        headers={"X-Version": "0.0.0"},
-        payload=PATCHWORK["paths_v0_0_0"],
-    )
-    resp.get(
         f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
         status=200,
         headers={"X-Version": "0.0.0"},
@@ -149,7 +143,7 @@ async def api_version_215_fixture(
 ) -> AsyncGenerator[Paperless, Any]:
     """Return a Paperless object with given version."""
     resp.get(
-        f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+        f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
         status=200,
         headers={"X-Version": "2.15.0"},
         payload=PATCHWORK["schema"],
