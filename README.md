@@ -42,19 +42,19 @@ Please check out the **[docs][docs-url]** for detailed instructions and examples
 
 Choosing the right version of **pypaperless** for your *Paperless-ngx* instance can be tricky. This little matrix is here to help.
 
-| *Paperless-ngx* | **pypaperless** |
-| --------------- | --------------- |
-| >= 2.17         | >= 5.0          |
-| >= 2.16         | >= 4.1          |
-| >= 2.15         | >= 4.0          |
-| < 2.15          | < 4.0           |
+| **pypaperless**   | *Paperless-ngx* |
+| ----------------- | --------------- |
+| >= 5.1 (upcoming) | >= 2.17         |
+| >= 5.0            | >= 2.17         |
+| >= 4.1            | >= 2.16         |
+| >= 4.0            | >= 2.15         |
+| < 4.0             | < 2.15          |
 
 * **pypaperless** `<4.0` is not compatible with *Paperless-ngx* `>=2.15` due to breaking server changes.
-* **pypaperless** `5.0` implements date changes in the document API and is therefore not compatible with *Paperless-ngx* `<2.16`.
+* **pypaperless** `>=5.0` implements date changes in the document API and is therefore not compatible with *Paperless-ngx* `<2.17`.
 * **pypaperless** `>=5.1` will drop support for all *Paperless-ngx* versions without the Open API schema, introduced in `2.15`.
 
-> [!TIP]
-> Consider keeping both *Paperless-ngx* and **pypaperless** always updated.
+Consider keeping both *Paperless-ngx* and **pypaperless** always updated.
 
 ## Authors & contributors
 
