@@ -59,7 +59,7 @@ class TestPaperless:
     async def test_init(self, resp: aioresponses, api: Paperless) -> None:
         """Test init."""
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
+            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
             payload=PATCHWORK["paths"],
         )
@@ -69,11 +69,6 @@ class TestPaperless:
 
     async def test_context(self, resp: aioresponses, api: Paperless) -> None:
         """Test context."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-            status=500,
-            payload=PATCHWORK["paths"],
-        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
@@ -87,20 +82,10 @@ class TestPaperless:
         # version must be None in this case, as we test against
         # an uninitialized Paperless object
         assert api.host_version is None
-
         assert api.base_url == PAPERLESS_TEST_URL
+
         assert isinstance(api.local_resources, set)
         assert isinstance(api.remote_resources, set)
-
-    async def test_helper_avail_00(self, api_00: Paperless) -> None:
-        """Test availability of helpers against specific api version."""
-        assert not api_00.custom_fields.is_available
-        assert not api_00.workflows.is_available
-
-    async def test_helper_avail_latest(self, api_latest: Paperless) -> None:
-        """Test availability of helpers against specific api version."""
-        assert api_latest.custom_fields.is_available
-        assert api_latest.workflows.is_available
 
     async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
         """Test initialization error."""
@@ -109,11 +94,6 @@ class TestPaperless:
             await api.initialize()
 
         # http status error
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-            status=500,
-            payload=PATCHWORK["paths"],
-        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=401,
@@ -124,11 +104,6 @@ class TestPaperless:
 
         # http 401 - inactive or deleted user
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-            status=500,
-            payload=PATCHWORK["paths"],
-        )
-        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=401,
             payload={"detail": "User is inactive"},
@@ -138,11 +113,6 @@ class TestPaperless:
 
         # http status forbidden
         resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-            status=500,
-            payload=PATCHWORK["paths"],
-        )
-        resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=403,
             body="any html",
@@ -151,11 +121,6 @@ class TestPaperless:
             await api.initialize()
 
         # http ok, wrong payload
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['api_schema']}",
-            status=500,
-            payload=PATCHWORK["paths"],
-        )
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,

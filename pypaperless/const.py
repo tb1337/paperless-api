@@ -31,8 +31,7 @@ WORKFLOW_TRIGGERS = "workflow_triggers"
 UNKNOWN = "unknown"
 
 API_PATH = {
-    "api_schema": "/api/schema/",
-    "index": "/api/",
+    "index": "/api/schema/",
     "token": "/api/token/",
     f"{CONFIG}": f"/api/{CONFIG}/",
     f"{CONFIG}_single": f"/api/{CONFIG}/{{pk}}/",
