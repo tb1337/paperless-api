@@ -8,9 +8,7 @@ from .base import HelperBase, PaperlessModel
 
 
 @dataclass(init=False)
-class RemoteVersion(
-    PaperlessModel,
-):
+class RemoteVersion(PaperlessModel):
     """Represent Paperless `Remote Version`."""
 
     _api_path = API_PATH["remote_version"]
@@ -19,7 +17,7 @@ class RemoteVersion(
     update_available: bool | None = None
 
 
-class RemoteVersionHelper(HelperBase[RemoteVersion]):
+class RemoteVersionHelper(HelperBase):
     """Represent a factory for Paperless `Remote Version` models."""
 
     _api_path = API_PATH["remote_version"]

@@ -99,8 +99,6 @@ class Paperless:
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
         self._initialized = False
-        self._local_resources: set[PaperlessResource] = set()
-        self._remote_resources: set[PaperlessResource] = set()
         self._request_api_version = request_api_version or API_VERSION
         self._request_args = request_args or {}
         self._session = session
@@ -135,16 +133,6 @@ class Paperless:
     def host_version(self) -> str | None:
         """Return the version of the Paperless host."""
         return self._version
-
-    @property
-    def local_resources(self) -> set[PaperlessResource]:
-        """Return a set of locally available resources."""
-        return self._local_resources
-
-    @property
-    def remote_resources(self) -> set[PaperlessResource]:
-        """Return a set of available resources of the Paperless host."""
-        return self._remote_resources
 
     @staticmethod
     def _create_base_url(url: str | URL) -> URL:
@@ -258,31 +246,9 @@ class Paperless:
             except (aiohttp.ClientResponseError, JSONDecodeError) as exc:
                 raise InitializationError from exc
 
-            self._remote_resources = {
-                res
-                for res in PaperlessResource
-                if res
-                not in {
-                    PaperlessResource.UNKNOWN,
-                    PaperlessResource.CONSUMPTION_TEMPLATES,
-                }
-            }
-
         # initialize helpers
         for attribute, helper in self._helpers_map:
             setattr(self, f"{attribute}", helper(self))
-
-        unused = self._remote_resources.difference(self._local_resources)
-        missing = self._local_resources.difference(self._remote_resources)
-
-        if len(unused) > 0:
-            self.logger.debug("Unused features: %s", ", ".join(unused))
-
-        if len(missing) > 0:
-            self.logger.warning(
-                "Outdated version detected. Consider pulling the latest version of Paperless-ngx."
-            )
-            self.logger.warning("Support for Paperless-ngx <v2.15.0 will expire 07/01/2025.")
 
         self._initialized = True
         self.logger.info("Initialized.")

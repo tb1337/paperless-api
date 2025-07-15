@@ -60,7 +60,7 @@ class User(PaperlessModel):
 
 
 class GroupHelper(
-    HelperBase[Group],
+    HelperBase,
     helpers.CallableMixin[Group],
     helpers.IterableMixin[Group],
 ):
@@ -73,7 +73,7 @@ class GroupHelper(
 
 
 class UserHelper(
-    HelperBase[User],
+    HelperBase,
     helpers.CallableMixin[User],
     helpers.IterableMixin[User],
 ):

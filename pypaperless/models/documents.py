@@ -230,10 +230,7 @@ class Document(
 
 
 @dataclass(init=False)
-class DocumentDraft(
-    PaperlessModel,
-    models.CreatableMixin,
-):
+class DocumentDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path = API_PATH["documents_post"]
@@ -313,10 +310,7 @@ class DocumentNote(PaperlessModel):
 
 
 @dataclass(kw_only=True)
-class DocumentNoteDraft(
-    PaperlessModel,
-    models.CreatableMixin,
-):
+class DocumentNoteDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
 
     _api_path = API_PATH["documents_notes"]
@@ -422,7 +416,7 @@ class DocumentSuggestions(PaperlessModel):
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class DocumentSuggestionsHelper(HelperBase[DocumentSuggestions]):
+class DocumentSuggestionsHelper(HelperBase):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
     _api_path = API_PATH["documents_suggestions"]
@@ -441,9 +435,7 @@ class DocumentSuggestionsHelper(HelperBase[DocumentSuggestions]):
         return item
 
 
-class DocumentSubHelperBase(
-    HelperBase[DownloadedDocument],
-):
+class DocumentSubHelperBase(HelperBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_suggestions"]
@@ -523,10 +515,7 @@ class DocumentFileThumbnailHelper(DocumentSubHelperBase):
         )
 
 
-class DocumentMetaHelper(
-    HelperBase[DocumentMeta],
-    helpers.CallableMixin[DocumentMeta],
-):
+class DocumentMetaHelper(HelperBase, helpers.CallableMixin[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
@@ -535,7 +524,7 @@ class DocumentMetaHelper(
     _resource_cls = DocumentMeta
 
 
-class DocumentNoteHelper(HelperBase[DocumentNote]):
+class DocumentNoteHelper(HelperBase):
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = API_PATH["documents_notes"]
@@ -609,7 +598,7 @@ class DocumentNoteHelper(HelperBase[DocumentNote]):
 
 
 class DocumentHelper(
-    HelperBase[Document],
+    HelperBase,
     helpers.SecurableMixin,
     helpers.CallableMixin[Document],
     helpers.DraftableMixin[DocumentDraft],

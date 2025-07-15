@@ -46,12 +46,11 @@ class Status(PaperlessModel):
         return any(st == StatusType.ERROR for st in statuses)
 
 
-class StatusHelper(HelperBase[Status]):
+class StatusHelper(HelperBase):
     """Represent a factory for the Paperless `Status` model."""
 
     _api_path = API_PATH["status"]
     _resource = PaperlessResource.STATUS
-    _resource_public = False
 
     _resource_cls = Status
 

@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class Task(
-    PaperlessModel,
-):
+class Task(PaperlessModel):
     """Represent a Paperless `Task`."""
 
     _api_path = API_PATH["tasks_single"]
@@ -41,9 +39,7 @@ class Task(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class TaskHelper(
-    HelperBase[Task],
-):
+class TaskHelper(HelperBase):
     """Represent a factory for Paperless `Task` models."""
 
     _api_path = API_PATH["tasks"]

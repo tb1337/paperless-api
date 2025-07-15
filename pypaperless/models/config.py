@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class Config(
-    PaperlessModel,
-):
+class Config(PaperlessModel):
     """Represent a Paperless `Config`."""
 
     _api_path = API_PATH["config_single"]
@@ -55,10 +53,7 @@ class Config(
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
-class ConfigHelper(
-    HelperBase[Config],
-    helpers.CallableMixin[Config],
-):
+class ConfigHelper(HelperBase, helpers.CallableMixin[Config]):
     """Represent a factory for Paperless `Config` models."""
 
     _api_path = API_PATH["config"]

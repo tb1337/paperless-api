@@ -39,10 +39,7 @@ class ShareLink(
 
 
 @dataclass(init=False)
-class ShareLinkDraft(
-    PaperlessModel,
-    models.CreatableMixin,
-):
+class ShareLinkDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
     _api_path = API_PATH["share_links"]
@@ -55,7 +52,7 @@ class ShareLinkDraft(
 
 
 class ShareLinkHelper(
-    HelperBase[ShareLink],
+    HelperBase,
     helpers.CallableMixin[ShareLink],
     helpers.DraftableMixin[ShareLinkDraft],
     helpers.IterableMixin[ShareLink],
