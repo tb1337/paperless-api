@@ -14,7 +14,7 @@ Little asynchronous client for *Paperless-ngx*, written in Python. You should at
 ## Features
 
 - Depends on aiohttp, works in async environments.
-- Token authentication only. **No credentials.**
+- Token authentication preferred (credentials possible using a URL like https://user:pass@example.com)
 - Request single resource items.
 - Iterate over all resource items or request them page by page.
 - Create, update and delete resource items.
