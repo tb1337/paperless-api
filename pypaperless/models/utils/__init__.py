@@ -34,7 +34,7 @@ def _str_to_datetime(datetimestr: str) -> datetime:
 
 def _str_to_date(datestr: str) -> date:
     """Parse date from string."""
-    return date.fromisoformat(datestr)
+    return datetime.fromisoformat(datestr).date()
 
 
 def _dateobj_to_str(value: date | datetime) -> str:
