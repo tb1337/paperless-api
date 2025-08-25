@@ -24,7 +24,7 @@ jobs:
         python: ["3.12", "3.13"]
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.3.0
+        uses: actions/checkout@v5.0.0
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v5.6.0
@@ -49,7 +49,7 @@ jobs:
     needs: pytest
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4.3.0
+        uses: actions/checkout@v5.0.0
         with:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
