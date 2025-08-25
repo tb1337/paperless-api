@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-API_VERSION = 8  # we support document notes simplified user fields
+API_VERSION = 9  # we support document notes simplified user fields
 
 CONFIG = "config"
 CONSUMPTION_TEMPLATES = "consumption_templates"
