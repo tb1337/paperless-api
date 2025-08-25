@@ -30,7 +30,7 @@ from . import (
     ResourceTestMapping,
 )
 from .const import PAPERLESS_TEST_URL
-from .data import PATCHWORK
+from .data import DATA_OBJECT_PERMISSIONS
 
 # mypy: ignore-errors
 
@@ -64,83 +64,83 @@ class TestReadOnly:
     """Read only resources test cases."""
 
     async def test_pages(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        page = await anext(aiter(getattr(api_latest, mapping.resource).pages(1)))
+        page = await anext(aiter(getattr(paperless, mapping.resource).pages(1)))
         assert isinstance(page, Page)
         assert isinstance(page.items, list)
         for item in page.items:
             assert isinstance(item, mapping.model_cls)
 
     async def test_as_dict(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        items = await getattr(api_latest, mapping.resource).as_dict()
+        items = await getattr(paperless, mapping.resource).as_dict()
         for pk, obj in items.items():
             assert isinstance(pk, int)
             assert isinstance(obj, mapping.model_cls)
 
     async def test_as_list(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        items = await getattr(api_latest, mapping.resource).as_list()
+        items = await getattr(paperless, mapping.resource).as_list()
         for obj in items:
             assert isinstance(obj, mapping.model_cls)
 
     async def test_iter(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        async for item in getattr(api_latest, mapping.resource):
+        async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        items = await getattr(api_latest, mapping.resource).all()
+        items = await getattr(paperless, mapping.resource).all()
         assert isinstance(items, list)
         for item in items:
             assert isinstance(item, int)
 
     async def test_call(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK[mapping.resource]["results"][0],
+            payload=mapping.data["results"][0],
         )
-        item = await getattr(api_latest, mapping.resource)(1)
+        item = await getattr(paperless, mapping.resource)(1)
         assert item
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
@@ -149,7 +149,7 @@ class TestReadOnly:
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
-            await getattr(api_latest, mapping.resource)(1337)
+            await getattr(paperless, mapping.resource)(1337)
 
 
 @pytest.mark.parametrize(
@@ -171,56 +171,56 @@ class TestReadWrite:
     """R/W models test cases."""
 
     async def test_pages(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        page = await anext(aiter(getattr(api_latest, mapping.resource).pages(1)))
+        page = await anext(aiter(getattr(paperless, mapping.resource).pages(1)))
         assert isinstance(page, Page)
         assert isinstance(page.items, list)
         for item in page.items:
             assert isinstance(item, mapping.model_cls)
 
     async def test_iter(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        async for item in getattr(api_latest, mapping.resource):
+        async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        items = await getattr(api_latest, mapping.resource).all()
+        items = await getattr(paperless, mapping.resource).all()
         assert isinstance(items, list)
         for item in items:
             assert isinstance(item, int)
 
     async def test_reduce(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter with reduce."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK[mapping.resource],
+            payload=mapping.data,
         )
-        async with getattr(api_latest, mapping.resource).reduce(
+        async with getattr(paperless, mapping.resource).reduce(
             any_filter_param="1",
             any_filter_list__in=["1", "2"],
             any_filter_no_list__in="1",
@@ -229,15 +229,15 @@ class TestReadWrite:
                 assert isinstance(item, mapping.model_cls)
 
     async def test_call(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK[mapping.resource]["results"][0],
+            payload=mapping.data["results"][0],
         )
-        item = await getattr(api_latest, mapping.resource)(1)
+        item = await getattr(paperless, mapping.resource)(1)
         assert item
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
@@ -246,13 +246,13 @@ class TestReadWrite:
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
-            await getattr(api_latest, mapping.resource)(1337)
+            await getattr(paperless, mapping.resource)(1337)
 
     async def test_create(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test create."""
-        draft = getattr(api_latest, mapping.resource).draft(**mapping.draft_defaults)
+        draft = getattr(paperless, mapping.resource).draft(**mapping.draft_defaults)
         assert isinstance(draft, mapping.draft_cls)
         # test empty draft fields
         if mapping.model_cls not in (
@@ -269,7 +269,7 @@ class TestReadWrite:
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}",
             status=200,
             payload={
-                "id": len(PATCHWORK[mapping.resource]["results"]),
+                "id": len(mapping.data["results"]),
                 **draft._serialize(),  # pylint: disable=protected-access
             },
         )
@@ -277,7 +277,7 @@ class TestReadWrite:
         assert new_pk >= 1
 
     async def test_udpate(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test update."""
         update_field = "name"
@@ -289,9 +289,9 @@ class TestReadWrite:
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK[mapping.resource]["results"][0],
+            payload=mapping.data["results"][0],
         )
-        to_update = await getattr(api_latest, mapping.resource)(1)
+        to_update = await getattr(paperless, mapping.resource)(1)
         setattr(to_update, update_field, update_value)
         # actually call the update endpoint
         resp.patch(
@@ -320,15 +320,15 @@ class TestReadWrite:
         assert getattr(to_update, update_field) == update_value
 
     async def test_delete(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test delete."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK[mapping.resource]["results"][0],
+            payload=mapping.data["results"][0],
         )
-        to_delete = await getattr(api_latest, mapping.resource)(1)
+        to_delete = await getattr(paperless, mapping.resource)(1)
         resp.delete(
             f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
             status=204,  # Paperless-ngx responds with 204 on deletion
@@ -358,11 +358,11 @@ class TestSecurableMixin:
     """SecurableMixin test cases."""
 
     async def test_permissions(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test permissions."""
-        getattr(api_latest, mapping.resource).request_permissions = True
-        assert getattr(api_latest, mapping.resource).request_permissions
+        getattr(paperless, mapping.resource).request_permissions = True
+        assert getattr(paperless, mapping.resource).request_permissions
         # request single object
         resp.get(
             re.compile(
@@ -372,11 +372,11 @@ class TestSecurableMixin:
             ),
             status=200,
             payload={
-                **PATCHWORK[mapping.resource]["results"][0],
-                "permissions": PATCHWORK["object_permissions"],
+                **mapping.data["results"][0],
+                "permissions": DATA_OBJECT_PERMISSIONS,
             },
         )
-        item = await getattr(api_latest, mapping.resource)(1)
+        item = await getattr(paperless, mapping.resource)(1)
         assert item.has_permissions
         assert isinstance(item.permissions, PermissionTableType)
         # request by iterator
@@ -384,24 +384,24 @@ class TestSecurableMixin:
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status=200,
             payload={
-                **PATCHWORK[mapping.resource],
+                **mapping.data,
                 "results": [
-                    {**item, "permissions": PATCHWORK["object_permissions"]}
-                    for item in PATCHWORK[mapping.resource]["results"]
+                    {**item, "permissions": DATA_OBJECT_PERMISSIONS}
+                    for item in mapping.data["results"]
                 ],
             },
         )
-        async for item in getattr(api_latest, mapping.resource):
+        async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
             assert item.has_permissions
             assert isinstance(item.permissions, PermissionTableType)
 
     async def test_permission_change(
-        self, resp: aioresponses, api_latest: Paperless, mapping: ResourceTestMapping
+        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test permission changes."""
-        getattr(api_latest, mapping.resource).request_permissions = True
-        assert getattr(api_latest, mapping.resource).request_permissions
+        getattr(paperless, mapping.resource).request_permissions = True
+        assert getattr(paperless, mapping.resource).request_permissions
         resp.get(
             re.compile(
                 r"^"
@@ -410,11 +410,11 @@ class TestSecurableMixin:
             ),
             status=200,
             payload={
-                **PATCHWORK[mapping.resource]["results"][0],
-                "permissions": PATCHWORK["object_permissions"],
+                **mapping.data["results"][0],
+                "permissions": DATA_OBJECT_PERMISSIONS,
             },
         )
-        item = await getattr(api_latest, mapping.resource)(1)
+        item = await getattr(paperless, mapping.resource)(1)
         item.permissions.view.users.append(23)
 
         def _lookup_set_permissions(  # pylint: disable=unused-argument

@@ -48,7 +48,19 @@ from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHe
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
-from .data import PATCHWORK
+from .data import (
+    DATA_CONFIG,
+    DATA_CUSTOM_FIELDS,
+    DATA_DOCUMENT_METADATA,
+    DATA_DOCUMENT_NOTES,
+    DATA_DOCUMENT_SUGGESTIONS,
+    DATA_DOCUMENTS,
+    DATA_DOCUMENTS_SEARCH,
+    DATA_REMOTE_VERSION,
+    DATA_STATISTICS,
+    DATA_STATUS,
+    DATA_TASKS,
+)
 
 # mypy: ignore-errors
 
@@ -57,14 +69,14 @@ from .data import PATCHWORK
 class TestModelConfig:
     """Config test cases."""
 
-    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["config"][0],
+            payload=DATA_CONFIG[0],
         )
-        item = await api_latest.config(1)
+        item = await paperless.config(1)
         assert item
         assert isinstance(item, Config)
         # must raise as 1337 doesn't exist
@@ -73,30 +85,30 @@ class TestModelConfig:
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
-            await api_latest.config(1337)
+            await paperless.config(1337)
 
 
 # test models/documents.py
 class TestModelDocuments:
     """Documents test cases."""
 
-    async def test_lazy(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_lazy(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test laziness."""
-        document = Document(api_latest, data={"id": 1})
+        document = Document(paperless, data={"id": 1})
         assert not document.is_fetched
 
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
         await document.load()
         assert document.is_fetched
 
-    async def test_create(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_create(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test create."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
-        draft = api_latest.documents.draft(**defaults)
+        draft = paperless.documents.draft(**defaults)
         assert isinstance(draft, DocumentDraft)
         backup = draft.document
         draft.document = None
@@ -111,21 +123,21 @@ class TestModelDocuments:
         )
         await draft.save()
 
-    async def test_create_date_property(self, api_latest: Paperless) -> None:
+    async def test_create_date_property(self, paperless: Paperless) -> None:
         """Test create_date property - well, lol."""
         document = Document.create_with_data(
-            api_latest, data={**PATCHWORK["documents"]["results"][0]}, fetched=True
+            paperless, data={**DATA_DOCUMENTS["results"][0]}, fetched=True
         )
         assert document.created_date == document.created
 
-    async def test_udpate(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_udpate(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test update."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        to_update = await api_latest.documents(1)
+        to_update = await paperless.documents(1)
         new_title = f"{to_update.title} Updated"
         to_update.title = new_title
         # actually call the update endpoint
@@ -140,14 +152,14 @@ class TestModelDocuments:
         await to_update.update()
         assert to_update.title == new_title
 
-    async def test_delete(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_delete(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test delete."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        to_delete = await api_latest.documents(1)
+        to_delete = await paperless.documents(1)
         resp.delete(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=204,  # Paperless-ngx responds with 204 on deletion
@@ -160,18 +172,18 @@ class TestModelDocuments:
         )
         assert not await to_delete.delete()
 
-    async def test_meta(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_meta(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test meta."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        document = await api_latest.documents(1)
+        document = await paperless.documents(1)
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents_metadata"],
+            payload=DATA_DOCUMENT_METADATA,
         )
         meta = await document.get_metadata()
         assert isinstance(meta, DocumentMeta)
@@ -182,14 +194,14 @@ class TestModelDocuments:
         for item in meta.archive_metadata:
             assert isinstance(item, DocumentMetadataType)
 
-    async def test_files(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_files(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test files."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        document = await api_latest.documents(1)
+        document = await paperless.documents(1)
         resp.get(
             re.compile(
                 r"^"
@@ -234,47 +246,47 @@ class TestModelDocuments:
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
 
-    async def test_suggestions(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_suggestions(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test suggestions."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        document = await api_latest.documents(1)
+        document = await paperless.documents(1)
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents_suggestions"],
+            payload=DATA_DOCUMENT_SUGGESTIONS,
         )
         suggestions = await document.get_suggestions()
         assert isinstance(suggestions, DocumentSuggestions)
 
-    async def test_get_next_an(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_get_next_an(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test get next asn."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
             status=200,
             payload=1337,
         )
-        asn = await api_latest.documents.get_next_asn()
+        asn = await paperless.documents.get_next_asn()
         assert isinstance(asn, int)
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
             status=500,
         )
         with pytest.raises(AsnRequestError):
-            await api_latest.documents.get_next_asn()
+            await paperless.documents.get_next_asn()
 
-    async def test_searching(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_searching(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test searching."""
         # search
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*query.*$"),
             status=200,
-            payload=PATCHWORK["documents_search"],
+            payload=DATA_DOCUMENTS_SEARCH,
         )
-        async for item in api_latest.documents.search("1337"):
+        async for item in paperless.documents.search("1337"):
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
@@ -284,26 +296,26 @@ class TestModelDocuments:
                 r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*more_like_id.*$"
             ),
             status=200,
-            payload=PATCHWORK["documents_search"],
+            payload=DATA_DOCUMENTS_SEARCH,
         )
-        async for item in api_latest.documents.more_like(1337):
+        async for item in paperless.documents.more_like(1337):
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
 
-    async def test_note_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_note_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        item = await api_latest.documents(1)
+        item = await paperless.documents(1)
         assert isinstance(item, Document)
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["document_notes"],
+            payload=DATA_DOCUMENT_NOTES,
         )
         results = await item.notes()
         assert isinstance(results, list)
@@ -312,16 +324,16 @@ class TestModelDocuments:
             assert isinstance(note, DocumentNote)
             assert isinstance(note.created, datetime.datetime)
         with pytest.raises(PrimaryKeyRequiredError):
-            item = await api_latest.documents.notes()
+            item = await paperless.documents.notes()
 
-    async def test_note_create(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_note_create(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test create."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        item = await api_latest.documents(1)
+        item = await paperless.documents(1)
         draft = item.notes.draft(note="Test note.")
         assert isinstance(draft, DocumentNoteDraft)
         backup = draft.note
@@ -333,23 +345,23 @@ class TestModelDocuments:
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["document_notes"],
+            payload=DATA_DOCUMENT_NOTES,
         )
         result = await draft.save()
         assert isinstance(result, tuple)
 
-    async def test_note_delete(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_note_delete(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test delete."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["documents"]["results"][0],
+            payload=DATA_DOCUMENTS["results"][0],
         )
-        item = await api_latest.documents(1)
+        item = await paperless.documents(1)
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["document_notes"],
+            payload=DATA_DOCUMENT_NOTES,
         )
         results = await item.notes()
         resp.delete(
@@ -362,16 +374,16 @@ class TestModelDocuments:
         assert deletion
 
     async def test_custom_field_list_wo_cache(
-        self, resp: aioresponses, api_latest: Paperless
+        self, resp: aioresponses, paperless: Paperless
     ) -> None:
         """Test custom field list without cache."""
         # request document
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
             status=200,
-            payload=PATCHWORK["documents"]["results"][1],
+            payload=DATA_DOCUMENTS["results"][1],
         )
-        item = await api_latest.documents(2)
+        item = await paperless.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
 
         # every item MUST NOT be a derived CustomFieldValue instance
@@ -381,24 +393,24 @@ class TestModelDocuments:
             assert isinstance(field, CustomFieldValue)
 
     async def test_custom_field_list_wslash_cache(
-        self, resp: aioresponses, api_latest: Paperless
+        self, resp: aioresponses, paperless: Paperless
     ) -> None:
         """Test custom fields list with cache."""
         # set custom fields cache
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK["custom_fields"],
+            payload=DATA_CUSTOM_FIELDS,
         )
-        api_latest.cache.custom_fields = await api_latest.custom_fields.as_dict()
+        paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         # request document
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
             status=200,
-            payload=PATCHWORK["documents"]["results"][1],
+            payload=DATA_DOCUMENTS["results"][1],
         )
-        item = await api_latest.documents(2)
+        item = await paperless.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
 
         # every item may be a derived class or not
@@ -407,8 +419,8 @@ class TestModelDocuments:
 
         # test if custom field is in document custom field values
         test_cf = CustomField.create_with_data(
-            api=api_latest,
-            data=PATCHWORK["custom_fields"]["results"][0],
+            api=paperless,
+            data=DATA_CUSTOM_FIELDS["results"][0],
             fetched=True,
         )
         assert test_cf in item.custom_fields
@@ -443,14 +455,14 @@ class TestModelDocuments:
 class TestModelVersion:
     """Version test cases."""
 
-    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
             status=200,
-            payload=PATCHWORK["remote_version"],
+            payload=DATA_REMOTE_VERSION,
         )
-        remote_version = await api_latest.remote_version()
+        remote_version = await paperless.remote_version()
         assert remote_version
         assert isinstance(remote_version.version, str)
         assert isinstance(remote_version.update_available, bool)
@@ -460,14 +472,14 @@ class TestModelVersion:
 class TestModelStatistics:
     """Statistics test cases."""
 
-    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
             status=200,
-            payload=PATCHWORK["statistics"],
+            payload=DATA_STATISTICS,
         )
-        stats = await api_latest.statistics()
+        stats = await paperless.statistics()
         assert stats
         assert isinstance(stats.character_count, int)
         assert isinstance(stats.document_file_type_counts, list)
@@ -479,21 +491,21 @@ class TestModelStatistics:
 class TestModelStatus:
     """Status test cases."""
 
-    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
             status=200,
-            payload=PATCHWORK["status"],
+            payload=DATA_STATUS,
         )
-        status = await api_latest.status()
+        status = await paperless.status()
         assert status
         assert isinstance(status, Status)
         assert isinstance(status.storage, StatusStorageType)
         assert isinstance(status.database, StatusDatabaseType)
         assert isinstance(status.tasks, StatusTasksType)
 
-    async def test_has_errors(self, api_latest: Paperless) -> None:
+    async def test_has_errors(self, paperless: Paperless) -> None:
         """Test has errors."""
         data = {
             "database": {
@@ -507,17 +519,17 @@ class TestModelStatus:
         }
 
         # everything fine as we initialized Status with OK values only
-        status = Status.create_with_data(api_latest, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data, fetched=True)
         assert status.has_errors is False
 
         # lets set something to ERROR
         data["database"]["status"] = "ERROR"
-        status = Status.create_with_data(api_latest, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data, fetched=True)
         assert status.has_errors is True
 
         # assume any status value is None; None values are treated as no errors
         del data["database"]["status"]
-        status = Status.create_with_data(api_latest, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data, fetched=True)
         assert status.has_errors is False
 
 
@@ -525,34 +537,34 @@ class TestModelStatus:
 class TestModelTasks:
     """Tasks test cases."""
 
-    async def test_iter(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_iter(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test iter."""
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r".*$"),
             status=200,
-            payload=PATCHWORK["tasks"],
+            payload=DATA_TASKS,
         )
-        async for item in api_latest.tasks:
+        async for item in paperless.tasks:
             assert isinstance(item, Task)
 
-    async def test_call(self, resp: aioresponses, api_latest: Paperless) -> None:
+    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test call."""
         # by pk
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
             status=200,
-            payload=PATCHWORK["tasks"][0],
+            payload=DATA_TASKS[0],
         )
-        item = await api_latest.tasks(1)
+        item = await paperless.tasks(1)
         assert item
         assert isinstance(item, Task)
         # by uuid
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
             status=200,
-            payload=PATCHWORK["tasks"],
+            payload=DATA_TASKS,
         )
-        item = await api_latest.tasks("dummy-found")
+        item = await paperless.tasks("dummy-found")
         assert item
         assert isinstance(item, Task)
         # must raise as pk doesn't exist
@@ -561,7 +573,7 @@ class TestModelTasks:
             status=404,
         )
         with pytest.raises(aiohttp.ClientResponseError):
-            await api_latest.tasks(1337)
+            await paperless.tasks(1337)
         # must raise as task_id doesn't exist
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
@@ -569,14 +581,14 @@ class TestModelTasks:
             payload=[],
         )
         with pytest.raises(TaskNotFoundError):
-            await api_latest.tasks("dummy-not-found")
+            await paperless.tasks("dummy-not-found")
 
 
 # test models/workflows.py
 class TestModelWorkflows:
     """Tasks test cases."""
 
-    async def test_helpers(self, api_latest: Paperless) -> None:
+    async def test_helpers(self, paperless: Paperless) -> None:
         """Test helpers."""
-        assert isinstance(api_latest.workflows.actions, WorkflowActionHelper)
-        assert isinstance(api_latest.workflows.triggers, WorkflowTriggerHelper)
+        assert isinstance(paperless.workflows.actions, WorkflowActionHelper)
+        assert isinstance(paperless.workflows.triggers, WorkflowTriggerHelper)

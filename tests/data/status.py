@@ -1,8 +1,6 @@
-"""Raw data constants for Paperless versions >= 2.6.0."""
+"""Status snapshot."""
 
-# mypy: ignore-errors
-
-V2_6_0_STATUS = {
+DATA_STATUS = {
     "pngx_version": "2.6.1",
     "server_os": "Linux-6.6.12-linuxkit-aarch64-with-glibc2.36",
     "install_type": "docker",

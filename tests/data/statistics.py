@@ -1,8 +1,6 @@
-"""Raw data constants for Paperless versions >= 2.15.0."""
+"""Statistics snapshot."""
 
-# mypy: ignore-errors
-
-V2_15_0_STATISTICS = {
+DATA_STATISTICS = {
     "documents_total": 1337,
     "documents_inbox": 2,
     "inbox_tag": 1,

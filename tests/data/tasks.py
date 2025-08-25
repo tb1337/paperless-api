@@ -1,0 +1,40 @@
+"""Tasks snapshot."""
+
+DATA_TASKS = [
+    {
+        "id": 1,
+        "task_id": "11112222-aaaa-bbbb-cccc-333344445555",
+        "task_file_name": "a.png",
+        "date_created": "2023-12-16T13:06:29.107815+00:00",
+        "date_done": None,
+        "type": "file",
+        "status": "STARTED",
+        "result": None,
+        "acknowledged": False,
+        "related_document": None,
+    },
+    {
+        "id": 2,
+        "task_id": "ffffeeee-9999-8888-7777-ddddccccbbbb",
+        "task_file_name": "b.png",
+        "date_created": "2023-12-16T13:06:26.117158+00:00",
+        "date_done": "2023-12-16T13:06:29.859669+00:00",
+        "type": "file",
+        "status": "SUCCESS",
+        "result": "Success. New document id 1780 created",
+        "acknowledged": False,
+        "related_document": "1780",
+    },
+    {
+        "id": 3,
+        "task_id": "abcdef12-3456-7890-abcd-ef1234567890",
+        "task_file_name": "c.png",
+        "date_created": "2023-12-16T13:04:28.175624+00:00",
+        "date_done": "2023-12-16T13:04:32.318797+00:00",
+        "type": "file",
+        "status": "SUCCESS",
+        "result": "Success. New document id 1779 created",
+        "acknowledged": False,
+        "related_document": "1779",
+    },
+]
