@@ -84,7 +84,7 @@ class Paperless(PaperlessProtocol):
     def __init__(
         self,
         url: str | URL,
-        token: str,
+        token: str | None = None,
         *,
         session: aiohttp.ClientSession | None = None,
         request_args: dict[str, Any] | None = None,
@@ -287,8 +287,9 @@ class Paperless(PaperlessProtocol):
         # add headers
         headers = {
             "Accept": f"application/json; version={self._request_api_version}",
-            "Authorization": f"Token {self._token}",
         }
+        if self._token:
+            headers["Authorization"] = f"Token {self._token}"
 
         # Merge with any user-defined headers (optional)
         if "headers" in kwargs:
