@@ -1,6 +1,6 @@
-"""Raw data constants for Paperless versions >= 1.17.0."""
+"""Document notes snapshot."""
 
-V1_17_0_DOCUMENT_NOTES = [
+DATA_DOCUMENT_NOTES = [
     {
         "id": 1,
         "note": "Sample note 1.",

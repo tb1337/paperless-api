@@ -48,7 +48,7 @@ from tests.const import (
     PAPERLESS_TEST_USER,
 )
 
-from .data import PATCHWORK
+from .data import DATA_CUSTOM_FIELDS, DATA_PATHS, DATA_TOKEN
 
 # mypy: ignore-errors
 
@@ -61,7 +61,7 @@ class TestPaperless:
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
-            payload=PATCHWORK["paths"],
+            payload=DATA_PATHS,
         )
         await api.initialize()
         assert api.is_initialized
@@ -72,7 +72,7 @@ class TestPaperless:
         resp.get(
             f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
             status=200,
-            payload=PATCHWORK["paths"],
+            payload=DATA_PATHS,
         )
         async with api:
             assert api.is_initialized
@@ -270,7 +270,7 @@ class TestPaperless:
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
             status=200,
-            payload=PATCHWORK["token"],
+            payload=DATA_TOKEN,
         )
         token = await api.generate_api_token(
             PAPERLESS_TEST_URL,
@@ -326,7 +326,7 @@ class TestPaperless:
         resp.post(
             f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
             status=200,
-            payload=PATCHWORK["token"],
+            payload=DATA_TOKEN,
         )
         token = await api.generate_api_token(
             PAPERLESS_TEST_URL,
@@ -350,10 +350,10 @@ class TestPaperless:
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
-    async def test_custom_field_draft_value_wo_cache(self, api_latest: Paperless) -> None:
+    async def test_custom_field_draft_value_wo_cache(self, paperless: Paperless) -> None:
         """Test draft custom field value without cache."""
         custom_field = CustomField.create_with_data(
-            api_latest,
+            paperless,
             data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
             fetched=True,
         )
@@ -362,20 +362,20 @@ class TestPaperless:
             assert not isinstance(field_value, value_type)
 
     async def test_custom_field_draft_value_wslash_cache(
-        self, resp: aioresponses, api_latest: Paperless
+        self, resp: aioresponses, paperless: Paperless
     ) -> None:
         """Test draft custom field value with cache."""
         # set custom fields cache
         resp.get(
             re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
             status=200,
-            payload=PATCHWORK["custom_fields"],
+            payload=DATA_CUSTOM_FIELDS,
         )
-        api_latest.cache.custom_fields = await api_latest.custom_fields.as_dict()
+        paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         custom_field = CustomField.create_with_data(
-            api=api_latest,
-            data=PATCHWORK["custom_fields"]["results"][5],
+            api=paperless,
+            data=DATA_CUSTOM_FIELDS["results"][5],
             fetched=True,
         )
         field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)

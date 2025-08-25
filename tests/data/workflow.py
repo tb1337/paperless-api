@@ -1,16 +1,8 @@
-"""Raw data constants for Paperless versions >= 2.3.0."""
-
-from tests.const import PAPERLESS_TEST_URL
+"""Workflow snapshot."""
 
 # mypy: ignore-errors
 
-V2_3_0_PATHS = {
-    "workflows": f"{PAPERLESS_TEST_URL}/api/workflows/",
-    "workflow_actions": f"{PAPERLESS_TEST_URL}/api/workflow_actions/",
-    "workflow_triggers": f"{PAPERLESS_TEST_URL}/api/workflow_triggers/",
-}
-
-V2_3_0_WORKFLOWS = {
+DATA_WORKFLOWS = {
     "count": 3,
     "next": None,
     "previous": None,
@@ -136,28 +128,28 @@ V2_3_0_WORKFLOWS = {
     ],
 }
 
-V2_3_0_WORKFLOW_ACTIONS = {
+DATA_WORKFLOW_ACTIONS = {
     "count": 0,
     "next": None,
     "previous": None,
     "all": [],
     "results": [],
 }
-for wf in V2_3_0_WORKFLOWS["results"]:
-    V2_3_0_WORKFLOW_ACTIONS["count"] += 1
+for wf in DATA_WORKFLOWS["results"]:
+    DATA_WORKFLOW_ACTIONS["count"] += 1
     for act in wf["actions"]:
-        V2_3_0_WORKFLOW_ACTIONS["all"].append(act["id"])
-        V2_3_0_WORKFLOW_ACTIONS["results"].append(act)
+        DATA_WORKFLOW_ACTIONS["all"].append(act["id"])
+        DATA_WORKFLOW_ACTIONS["results"].append(act)
 
-V2_3_0_WORKFLOW_TRIGGERS = {
+DATA_WORKFLOW_TRIGGERS = {
     "count": 0,
     "next": None,
     "previous": None,
     "all": [],
     "results": [],
 }
-for wf in V2_3_0_WORKFLOWS["results"]:
-    V2_3_0_WORKFLOW_TRIGGERS["count"] += 1
+for wf in DATA_WORKFLOWS["results"]:
+    DATA_WORKFLOW_TRIGGERS["count"] += 1
     for act in wf["triggers"]:
-        V2_3_0_WORKFLOW_TRIGGERS["all"].append(act["id"])
-        V2_3_0_WORKFLOW_TRIGGERS["results"].append(act)
+        DATA_WORKFLOW_TRIGGERS["all"].append(act["id"])
+        DATA_WORKFLOW_TRIGGERS["results"].append(act)

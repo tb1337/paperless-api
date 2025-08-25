@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Paperless-ngx REST API",
-        "version": "6.0.0 (7)",
+        "version": "6.0.0 (9)",
         "description": "OpenAPI Spec for Paperless-ngx"
     },
     "paths": {
@@ -83,55 +83,6 @@
                                     "items": {
                                         "$ref": "#/components/schemas/ApplicationConfiguration"
                                     }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "config_create",
-                "tags": [
-                    "config"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ApplicationConfigurationRequest"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ApplicationConfigurationRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/ApplicationConfigurationRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "PaperelessBasicAuthentication": []
-                    },
-                    {
-                        "tokenAuth": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/ApplicationConfiguration"
                                 }
                             }
                         },
@@ -1418,7 +1369,7 @@
         "/api/documents/": {
             "get": {
                 "operationId": "documents_list",
-                "description": "Pass a user object to serializer",
+                "description": "Document views including search",
                 "parameters": [
                     {
                         "in": "query",
@@ -1709,7 +1660,7 @@
                         "name": "created__gt",
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date"
                         }
                     },
                     {
@@ -1717,7 +1668,7 @@
                         "name": "created__gte",
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date"
                         }
                     },
                     {
@@ -1725,7 +1676,7 @@
                         "name": "created__lt",
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date"
                         }
                     },
                     {
@@ -1733,7 +1684,7 @@
                         "name": "created__lte",
                         "schema": {
                             "type": "string",
-                            "format": "date-time"
+                            "format": "date"
                         }
                     },
                     {
@@ -2089,6 +2040,14 @@
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "in": "query",
+                        "name": "query",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Advanced search query string"
                     },
                     {
                         "name": "search",
@@ -2561,7 +2520,7 @@
         "/api/documents/{id}/email/": {
             "post": {
                 "operationId": "documents_email_create",
-                "description": "Pass a user object to serializer",
+                "description": "Email the document to one or more recipients as an attachment.",
                 "parameters": [
                     {
                         "in": "path",
@@ -2580,17 +2539,17 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/EmailRequestRequest"
                             }
                         },
                         "application/x-www-form-urlencoded": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/EmailRequestRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/EmailRequestRequest"
                             }
                         }
                     },
@@ -2612,11 +2571,23 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Document"
+                                    "$ref": "#/components/schemas/EmailResponse"
                                 }
                             }
                         },
                         "description": ""
+                    },
+                    "400": {
+                        "description": "No response body"
+                    },
+                    "403": {
+                        "description": "No response body"
+                    },
+                    "404": {
+                        "description": "No response body"
+                    },
+                    "500": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -2745,7 +2716,7 @@
         },
         "/api/documents/{id}/notes/": {
             "get": {
-                "operationId": "documents_notes_retrieve",
+                "operationId": "documents_notes_list",
                 "description": "View, add, or delete notes for the document",
                 "parameters": [
                     {
@@ -2756,6 +2727,32 @@
                         },
                         "description": "A unique integer value identifying this document.",
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Note ID to delete (used only for DELETE requests)"
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "tags": [
@@ -2777,39 +2774,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer"
-                                            },
-                                            "note": {
-                                                "type": "string"
-                                            },
-                                            "created": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "user": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "username": {
-                                                        "type": "string"
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string"
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/PaginatedNotesList"
                                 }
                             }
                         },
@@ -2838,6 +2803,32 @@
                         },
                         "description": "A unique integer value identifying this document.",
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Note ID to delete (used only for DELETE requests)"
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "tags": [
@@ -2847,17 +2838,17 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/NoteCreateRequestRequest"
                             }
                         },
                         "application/x-www-form-urlencoded": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/NoteCreateRequestRequest"
                             }
                         },
                         "multipart/form-data": {
                             "schema": {
-                                "$ref": "#/components/schemas/DocumentRequest"
+                                "$ref": "#/components/schemas/NoteCreateRequestRequest"
                             }
                         }
                     },
@@ -2879,39 +2870,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer"
-                                            },
-                                            "note": {
-                                                "type": "string"
-                                            },
-                                            "created": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "user": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "username": {
-                                                        "type": "string"
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string"
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/PaginatedNotesList"
                                 }
                             }
                         },
@@ -2940,6 +2899,32 @@
                         },
                         "description": "A unique integer value identifying this document.",
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "Note ID to delete (used only for DELETE requests)"
+                    },
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "page_size",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "tags": [
@@ -2961,39 +2946,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "id": {
-                                                "type": "integer"
-                                            },
-                                            "note": {
-                                                "type": "string"
-                                            },
-                                            "created": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "user": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "integer"
-                                                    },
-                                                    "username": {
-                                                        "type": "string"
-                                                    },
-                                                    "first_name": {
-                                                        "type": "string"
-                                                    },
-                                                    "last_name": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    "$ref": "#/components/schemas/PaginatedNotesList"
                                 }
                             }
                         },
@@ -3311,7 +3264,7 @@
         "/api/documents/next_asn/": {
             "get": {
                 "operationId": "documents_next_asn_retrieve",
-                "description": "Pass a user object to serializer",
+                "description": "Get the next available Archive Serial Number (ASN) for a new document",
                 "tags": [
                     "documents"
                 ],
@@ -3331,7 +3284,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Document"
+                                    "type": "integer"
                                 }
                             }
                         },
@@ -4143,7 +4096,8 @@
         },
         "/api/mail_accounts/{id}/process/": {
             "post": {
-                "operationId": "mail_accounts_process_create",
+                "operationId": "mail_account_process",
+                "description": "Manually process the selected mail account for new messages.",
                 "parameters": [
                     {
                         "in": "path",
@@ -4194,11 +4148,14 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/MailAccount"
+                                    "$ref": "#/components/schemas/MailAccountProcessResponse"
                                 }
                             }
                         },
                         "description": ""
+                    },
+                    "404": {
+                        "description": "No response body"
                     }
                 }
             }
@@ -6734,6 +6691,14 @@
                     },
                     {
                         "in": "query",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filter tasks by Celery UUID"
+                    },
+                    {
+                        "in": "query",
                         "name": "task_name",
                         "schema": {
                             "type": "string",
@@ -6805,6 +6770,14 @@
                         },
                         "description": "A unique integer value identifying this paperless task.",
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filter tasks by Celery UUID"
                     }
                 ],
                 "tags": [
@@ -6839,6 +6812,16 @@
             "post": {
                 "operationId": "acknowledge_tasks",
                 "description": "Acknowledge a list of tasks",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filter tasks by Celery UUID"
+                    }
+                ],
                 "tags": [
                     "tasks"
                 ],
@@ -6893,6 +6876,16 @@
         "/api/tasks/run/": {
             "post": {
                 "operationId": "tasks_run_create",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "task_id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Filter tasks by Celery UUID"
+                    }
+                ],
                 "tags": [
                     "tasks"
                 ],
@@ -7505,26 +7498,6 @@
                 "tags": [
                     "users"
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserRequest"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserRequest"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UserRequest"
-                            }
-                        }
-                    },
-                    "required": true
-                },
                 "security": [
                     {
                         "PaperelessBasicAuthentication": []
@@ -7541,7 +7514,17 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/User"
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
                                 }
                             }
                         },
@@ -8478,6 +8461,9 @@
                     "user_args": {
                         "nullable": true
                     },
+                    "barcode_tag_mapping": {
+                        "nullable": true
+                    },
                     "output_type": {
                         "nullable": true,
                         "title": "Sets the output PDF type",
@@ -8611,9 +8597,70 @@
                         "nullable": true,
                         "title": "Application logo",
                         "pattern": "(?:jpg|png|gif|svg)$"
+                    },
+                    "barcodes_enabled": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode scanning"
+                    },
+                    "barcode_enable_tiff_support": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode TIFF support"
+                    },
+                    "barcode_string": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the barcode string",
+                        "maxLength": 32
+                    },
+                    "barcode_retain_split_pages": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Retains split pages"
+                    },
+                    "barcode_enable_asn": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables ASN barcode"
+                    },
+                    "barcode_asn_prefix": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the ASN barcode prefix",
+                        "maxLength": 32
+                    },
+                    "barcode_upscale": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 1.0,
+                        "nullable": true,
+                        "title": "Sets the barcode upscale factor"
+                    },
+                    "barcode_dpi": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the barcode DPI"
+                    },
+                    "barcode_max_pages": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the maximum pages for barcode"
+                    },
+                    "barcode_enable_tag": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables tag barcode"
                     }
                 },
                 "required": [
+                    "barcode_tag_mapping",
                     "id",
                     "user_args"
                 ]
@@ -8622,6 +8669,9 @@
                 "type": "object",
                 "properties": {
                     "user_args": {
+                        "nullable": true
+                    },
+                    "barcode_tag_mapping": {
                         "nullable": true
                     },
                     "output_type": {
@@ -8757,9 +8807,70 @@
                         "nullable": true,
                         "title": "Application logo",
                         "pattern": "(?:jpg|png|gif|svg)$"
+                    },
+                    "barcodes_enabled": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode scanning"
+                    },
+                    "barcode_enable_tiff_support": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode TIFF support"
+                    },
+                    "barcode_string": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the barcode string",
+                        "maxLength": 32
+                    },
+                    "barcode_retain_split_pages": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Retains split pages"
+                    },
+                    "barcode_enable_asn": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables ASN barcode"
+                    },
+                    "barcode_asn_prefix": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the ASN barcode prefix",
+                        "maxLength": 32
+                    },
+                    "barcode_upscale": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 1.0,
+                        "nullable": true,
+                        "title": "Sets the barcode upscale factor"
+                    },
+                    "barcode_dpi": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the barcode DPI"
+                    },
+                    "barcode_max_pages": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the maximum pages for barcode"
+                    },
+                    "barcode_enable_tag": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables tag barcode"
                     }
                 },
                 "required": [
+                    "barcode_tag_mapping",
                     "user_args"
                 ]
             },
@@ -9101,7 +9212,7 @@
                     },
                     "last_correspondence": {
                         "type": "string",
-                        "format": "date-time",
+                        "format": "date",
                         "readOnly": true
                     },
                     "owner": {
@@ -9468,11 +9579,12 @@
                     },
                     "created": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date"
                     },
                     "created_date": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "deprecated": true
                     },
                     "modified": {
                         "type": "string",
@@ -9647,11 +9759,12 @@
                     },
                     "created": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date"
                     },
                     "created_date": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "deprecated": true
                     },
                     "deleted_at": {
                         "type": "string",
@@ -9911,6 +10024,43 @@
                     "name"
                 ]
             },
+            "EmailRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "addresses": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "subject": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "message": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "use_archive_version": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "addresses",
+                    "message",
+                    "subject"
+                ]
+            },
+            "EmailResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
+                ]
+            },
             "FileVersionEnum": {
                 "enum": [
                     "archive",
@@ -10102,6 +10252,15 @@
                     "user_can_change",
                     "username"
                 ]
+            },
+            "MailAccountProcessResponse": {
+                "type": "object",
+                "properties": {
+                    "result": {
+                        "type": "string",
+                        "default": "OK"
+                    }
+                }
             },
             "MailAccountRequest": {
                 "type": "object",
@@ -10681,10 +10840,11 @@
                     "rotate",
                     "merge",
                     "split",
-                    "delete_pages"
+                    "delete_pages",
+                    "edit_pdf"
                 ],
                 "type": "string",
-                "description": "* `set_correspondent` - set_correspondent\n* `set_document_type` - set_document_type\n* `set_storage_path` - set_storage_path\n* `add_tag` - add_tag\n* `remove_tag` - remove_tag\n* `modify_tags` - modify_tags\n* `modify_custom_fields` - modify_custom_fields\n* `delete` - delete\n* `reprocess` - reprocess\n* `set_permissions` - set_permissions\n* `rotate` - rotate\n* `merge` - merge\n* `split` - split\n* `delete_pages` - delete_pages"
+                "description": "* `set_correspondent` - set_correspondent\n* `set_document_type` - set_document_type\n* `set_storage_path` - set_storage_path\n* `add_tag` - add_tag\n* `remove_tag` - remove_tag\n* `modify_tags` - modify_tags\n* `modify_custom_fields` - modify_custom_fields\n* `delete` - delete\n* `reprocess` - reprocess\n* `set_permissions` - set_permissions\n* `rotate` - rotate\n* `merge` - merge\n* `split` - split\n* `delete_pages` - delete_pages\n* `edit_pdf` - edit_pdf"
             },
             "MigrationStatus": {
                 "type": "object",
@@ -10713,6 +10873,18 @@
                 ],
                 "type": "string",
                 "description": "* `skip` - skip\n* `redo` - redo\n* `force` - force\n* `skip_noarchive` - skip_noarchive"
+            },
+            "NoteCreateRequestRequest": {
+                "type": "object",
+                "properties": {
+                    "note": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "note"
+                ]
             },
             "Notes": {
                 "type": "object",
@@ -11072,6 +11244,41 @@
                     }
                 }
             },
+            "PaginatedNotesList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Notes"
+                        }
+                    },
+                    "all": {
+                        "type": "array",
+                        "example": "[1, 2, 3]"
+                    }
+                }
+            },
             "PaginatedSavedViewList": {
                 "type": "object",
                 "required": [
@@ -11395,6 +11602,9 @@
                     "user_args": {
                         "nullable": true
                     },
+                    "barcode_tag_mapping": {
+                        "nullable": true
+                    },
                     "output_type": {
                         "nullable": true,
                         "title": "Sets the output PDF type",
@@ -11528,6 +11738,66 @@
                         "nullable": true,
                         "title": "Application logo",
                         "pattern": "(?:jpg|png|gif|svg)$"
+                    },
+                    "barcodes_enabled": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode scanning"
+                    },
+                    "barcode_enable_tiff_support": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables barcode TIFF support"
+                    },
+                    "barcode_string": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the barcode string",
+                        "maxLength": 32
+                    },
+                    "barcode_retain_split_pages": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Retains split pages"
+                    },
+                    "barcode_enable_asn": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables ASN barcode"
+                    },
+                    "barcode_asn_prefix": {
+                        "type": "string",
+                        "nullable": true,
+                        "title": "Sets the ASN barcode prefix",
+                        "maxLength": 32
+                    },
+                    "barcode_upscale": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 1.0,
+                        "nullable": true,
+                        "title": "Sets the barcode upscale factor"
+                    },
+                    "barcode_dpi": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the barcode DPI"
+                    },
+                    "barcode_max_pages": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64",
+                        "nullable": true,
+                        "title": "Sets the maximum pages for barcode"
+                    },
+                    "barcode_enable_tag": {
+                        "type": "boolean",
+                        "nullable": true,
+                        "title": "Enables tag barcode"
                     }
                 }
             },
@@ -11650,11 +11920,12 @@
                     },
                     "created": {
                         "type": "string",
-                        "format": "date-time"
+                        "format": "date"
                     },
                     "created_date": {
                         "type": "string",
-                        "format": "date"
+                        "format": "date",
+                        "deprecated": true
                     },
                     "deleted_at": {
                         "type": "string",
@@ -12193,46 +12464,6 @@
                     "owner": {
                         "type": "integer",
                         "nullable": true
-                    },
-                    "set_permissions": {
-                        "type": "object",
-                        "properties": {
-                            "view": {
-                                "type": "object",
-                                "properties": {
-                                    "users": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "groups": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
-                            },
-                            "change": {
-                                "type": "object",
-                                "properties": {
-                                    "users": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "groups": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "writeOnly": true
                     }
                 }
             },
@@ -12787,7 +13018,7 @@
                     "schedule_offset_days": {
                         "type": "integer",
                         "maximum": 9223372036854775807,
-                        "minimum": 0,
+                        "minimum": -9223372036854775808,
                         "format": "int64",
                         "description": "The number of days to offset the schedule trigger by."
                     },
@@ -13195,46 +13426,6 @@
                     "owner": {
                         "type": "integer",
                         "nullable": true
-                    },
-                    "set_permissions": {
-                        "type": "object",
-                        "properties": {
-                            "view": {
-                                "type": "object",
-                                "properties": {
-                                    "users": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "groups": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
-                            },
-                            "change": {
-                                "type": "object",
-                                "properties": {
-                                    "users": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    },
-                                    "groups": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "integer"
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "writeOnly": true
                     }
                 },
                 "required": [
@@ -14171,6 +14362,8 @@
                         "readOnly": true
                     },
                     "settings": {
+                        "type": "object",
+                        "additionalProperties": {},
                         "nullable": true
                     }
                 },
@@ -14182,6 +14375,8 @@
                 "type": "object",
                 "properties": {
                     "settings": {
+                        "type": "object",
+                        "additionalProperties": {},
                         "nullable": true
                     }
                 }
@@ -15089,7 +15284,7 @@
                     "schedule_offset_days": {
                         "type": "integer",
                         "maximum": 9223372036854775807,
-                        "minimum": 0,
+                        "minimum": -9223372036854775808,
                         "format": "int64",
                         "description": "The number of days to offset the schedule trigger by."
                     },
@@ -15214,7 +15409,7 @@
                     "schedule_offset_days": {
                         "type": "integer",
                         "maximum": 9223372036854775807,
-                        "minimum": 0,
+                        "minimum": -9223372036854775808,
                         "format": "int64",
                         "description": "The number of days to offset the schedule trigger by."
                     },

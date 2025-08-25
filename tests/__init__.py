@@ -7,6 +7,25 @@ from pypaperless import helpers, models
 from pypaperless.const import PaperlessResource
 from pypaperless.models import common
 
+from .data import (
+    DATA_CONFIG,
+    DATA_CORRESPONDENTS,
+    DATA_CUSTOM_FIELDS,
+    DATA_DOCUMENT_TYPES,
+    DATA_DOCUMENTS,
+    DATA_GROUPS,
+    DATA_MAIL_ACCOUNTS,
+    DATA_MAIL_RULES,
+    DATA_SAVED_VIEWS,
+    DATA_SHARE_LINKS,
+    DATA_STATUS,
+    DATA_STORAGE_PATHS,
+    DATA_TAGS,
+    DATA_TASKS,
+    DATA_USERS,
+    DATA_WORKFLOWS,
+)
+
 # mypy: ignore-errors
 
 
@@ -15,6 +34,7 @@ class ResourceTestMapping:
     """Mapping for test cases."""
 
     resource: str
+    data: dict[str, Any] | list[dict[str, Any]]
     helper_cls: type
     model_cls: type
     draft_cls: type | None = None
@@ -23,12 +43,14 @@ class ResourceTestMapping:
 
 CONFIG_MAP = ResourceTestMapping(
     PaperlessResource.CONFIG,
+    DATA_CONFIG,
     helpers.ConfigHelper,
     models.Config,
 )
 
 CORRESPONDENT_MAP = ResourceTestMapping(
     PaperlessResource.CORRESPONDENTS,
+    DATA_CORRESPONDENTS,
     helpers.CorrespondentHelper,
     models.Correspondent,
     models.CorrespondentDraft,
@@ -42,6 +64,7 @@ CORRESPONDENT_MAP = ResourceTestMapping(
 
 CUSTOM_FIELD_MAP = ResourceTestMapping(
     PaperlessResource.CUSTOM_FIELDS,
+    DATA_CUSTOM_FIELDS,
     helpers.CustomFieldHelper,
     models.CustomField,
     models.CustomFieldDraft,
@@ -53,6 +76,7 @@ CUSTOM_FIELD_MAP = ResourceTestMapping(
 
 DOCUMENT_MAP = ResourceTestMapping(
     PaperlessResource.DOCUMENTS,
+    DATA_DOCUMENTS,
     helpers.DocumentHelper,
     models.Document,
     models.DocumentDraft,
@@ -70,6 +94,7 @@ DOCUMENT_MAP = ResourceTestMapping(
 
 DOCUMENT_TYPE_MAP = ResourceTestMapping(
     PaperlessResource.DOCUMENT_TYPES,
+    DATA_DOCUMENT_TYPES,
     helpers.DocumentTypeHelper,
     models.DocumentType,
     models.DocumentTypeDraft,
@@ -83,30 +108,35 @@ DOCUMENT_TYPE_MAP = ResourceTestMapping(
 
 GROUP_MAP = ResourceTestMapping(
     PaperlessResource.GROUPS,
+    DATA_GROUPS,
     helpers.GroupHelper,
     models.Group,
 )
 
 MAIL_ACCOUNT_MAP = ResourceTestMapping(
     PaperlessResource.MAIL_ACCOUNTS,
+    DATA_MAIL_ACCOUNTS,
     helpers.MailAccountHelper,
     models.MailAccount,
 )
 
 MAIL_RULE_MAP = ResourceTestMapping(
     PaperlessResource.MAIL_RULES,
+    DATA_MAIL_RULES,
     helpers.MailRuleHelper,
     models.MailRule,
 )
 
 SAVED_VIEW_MAP = ResourceTestMapping(
     PaperlessResource.SAVED_VIEWS,
+    DATA_SAVED_VIEWS,
     helpers.SavedViewHelper,
     models.SavedView,
 )
 
 SHARE_LINK_MAP = ResourceTestMapping(
     PaperlessResource.SHARE_LINKS,
+    DATA_SHARE_LINKS,
     helpers.ShareLinkHelper,
     models.ShareLink,
     models.ShareLinkDraft,
@@ -119,12 +149,14 @@ SHARE_LINK_MAP = ResourceTestMapping(
 
 STATUS_MAP = ResourceTestMapping(
     PaperlessResource.STATUS,
+    DATA_STATUS,
     helpers.StatusHelper,
     models.Status,
 )
 
 STORAGE_PATH_MAP = ResourceTestMapping(
     PaperlessResource.STORAGE_PATHS,
+    DATA_STORAGE_PATHS,
     helpers.StoragePathHelper,
     models.StoragePath,
     models.StoragePathDraft,
@@ -139,6 +171,7 @@ STORAGE_PATH_MAP = ResourceTestMapping(
 
 TAG_MAP = ResourceTestMapping(
     PaperlessResource.TAGS,
+    DATA_TAGS,
     helpers.TagHelper,
     models.Tag,
     models.TagDraft,
@@ -155,18 +188,21 @@ TAG_MAP = ResourceTestMapping(
 
 TASK_MAP = ResourceTestMapping(
     PaperlessResource.TASKS,
+    DATA_TASKS,
     helpers.TaskHelper,
     models.Task,
 )
 
 USER_MAP = ResourceTestMapping(
     PaperlessResource.USERS,
+    DATA_USERS,
     helpers.UserHelper,
     models.User,
 )
 
 WORKFLOW_MAP = ResourceTestMapping(
     PaperlessResource.WORKFLOWS,
+    DATA_WORKFLOWS,
     helpers.WorkflowHelper,
     models.Workflow,
 )
