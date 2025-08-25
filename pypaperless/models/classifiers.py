@@ -209,7 +209,7 @@ class TagDraft(
 
 
 class CorrespondentHelper(
-    HelperBase[Correspondent],
+    HelperBase,
     helpers.SecurableMixin,
     helpers.CallableMixin[Correspondent],
     helpers.DraftableMixin[CorrespondentDraft],
@@ -225,7 +225,7 @@ class CorrespondentHelper(
 
 
 class DocumentTypeHelper(
-    HelperBase[DocumentType],
+    HelperBase,
     helpers.SecurableMixin,
     helpers.CallableMixin[DocumentType],
     helpers.DraftableMixin[DocumentTypeDraft],
@@ -241,7 +241,7 @@ class DocumentTypeHelper(
 
 
 class StoragePathHelper(
-    HelperBase[StoragePath],
+    HelperBase,
     helpers.SecurableMixin,
     helpers.CallableMixin[StoragePath],
     helpers.DraftableMixin[StoragePathDraft],
@@ -257,7 +257,7 @@ class StoragePathHelper(
 
 
 class TagHelper(
-    HelperBase[Tag],
+    HelperBase,
     helpers.SecurableMixin,
     helpers.CallableMixin[Tag],
     helpers.DraftableMixin[TagDraft],

@@ -74,10 +74,7 @@ class CustomField(
 
 
 @dataclass(init=False)
-class CustomFieldDraft(
-    PaperlessModel,
-    models.CreatableMixin,
-):
+class CustomFieldDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
     _api_path = API_PATH["custom_fields"]
@@ -90,7 +87,7 @@ class CustomFieldDraft(
 
 
 class CustomFieldHelper(
-    HelperBase[CustomField],
+    HelperBase,
     helpers.CallableMixin[CustomField],
     helpers.DraftableMixin[CustomFieldDraft],
     helpers.IterableMixin[CustomField],

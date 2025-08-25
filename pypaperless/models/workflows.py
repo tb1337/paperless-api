@@ -59,10 +59,7 @@ class WorkflowAction(PaperlessModel):
 
 
 @dataclass(init=False)
-class WorkflowTrigger(
-    PaperlessModel,
-    models.MatchingFieldsMixin,
-):
+class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     """Represent a Paperless `WorkflowTrigger`."""
 
     _api_path = API_PATH["workflow_triggers_single"]
@@ -110,7 +107,7 @@ class Workflow(PaperlessModel):
 
 
 class WorkflowActionHelper(
-    HelperBase[WorkflowAction],
+    HelperBase,
     helpers.CallableMixin[WorkflowAction],
     helpers.IterableMixin[WorkflowAction],
 ):
@@ -123,7 +120,7 @@ class WorkflowActionHelper(
 
 
 class WorkflowTriggerHelper(
-    HelperBase[WorkflowTrigger],
+    HelperBase,
     helpers.CallableMixin[WorkflowTrigger],
     helpers.IterableMixin[WorkflowTrigger],
 ):
@@ -136,7 +133,7 @@ class WorkflowTriggerHelper(
 
 
 class WorkflowHelper(
-    HelperBase[Workflow],
+    HelperBase,
     helpers.CallableMixin[Workflow],
     helpers.IterableMixin[Workflow],
 ):

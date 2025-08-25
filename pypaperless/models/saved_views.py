@@ -14,10 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class SavedView(
-    PaperlessModel,
-    models.SecurableMixin,
-):
+class SavedView(PaperlessModel, models.SecurableMixin):
     """Represent a Paperless `SavedView`."""
 
     _api_path = API_PATH["saved_views_single"]
@@ -41,7 +38,7 @@ class SavedView(
 
 
 class SavedViewHelper(
-    HelperBase[SavedView],
+    HelperBase,
     helpers.CallableMixin[SavedView],
     helpers.IterableMixin[SavedView],
     helpers.SecurableMixin,

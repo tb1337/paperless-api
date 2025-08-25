@@ -9,9 +9,7 @@ from .common import StatisticDocumentFileTypeCount
 
 
 @dataclass(init=False)
-class Statistic(
-    PaperlessModel,
-):
+class Statistic(PaperlessModel):
     """Represent Paperless `Statistic`."""
 
     _api_path = API_PATH["statistics"]
@@ -29,7 +27,7 @@ class Statistic(
     current_asn: int | None = None
 
 
-class StatisticHelper(HelperBase[Statistic]):
+class StatisticHelper(HelperBase):
     """Represent a factory for Paperless `Statistic` models."""
 
     _api_path = API_PATH["statistics"]

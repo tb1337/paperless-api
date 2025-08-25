@@ -33,23 +33,10 @@ class HelperProtocol[ResourceT](Protocol):
     _resource_cls: type[ResourceT]
 
 
-class HelperBase[ResourceT](PaperlessBase):
+class HelperBase(PaperlessBase):
     """Base class for all helpers in PyPaperless."""
 
     _resource: PaperlessResource
-    _resource_public: bool = True
-
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `HelperBase` instance."""
-        super().__init__(api)
-
-        if self._resource_public:
-            self._api.local_resources.add(self._resource)
-
-    @property
-    def is_available(self) -> bool:
-        """Return if the attached endpoint is available, or not."""
-        return self._resource in self._api.remote_resources
 
 
 @dataclass(init=False)

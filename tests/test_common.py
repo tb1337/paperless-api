@@ -84,9 +84,6 @@ class TestPaperless:
         assert api.host_version is None
         assert api.base_url == PAPERLESS_TEST_URL
 
-        assert isinstance(api.local_resources, set)
-        assert isinstance(api.remote_resources, set)
-
     async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
         """Test initialization error."""
         # simulate connection due no configuration error

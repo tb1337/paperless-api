@@ -14,10 +14,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(init=False)
-class MailAccount(
-    PaperlessModel,
-    models.SecurableMixin,
-):
+class MailAccount(PaperlessModel, models.SecurableMixin):
     """Represent a Paperless `MailAccount`."""
 
     _api_path = API_PATH["mail_accounts_single"]
@@ -43,10 +40,7 @@ class MailAccount(
 
 
 @dataclass(init=False)
-class MailRule(
-    PaperlessModel,
-    models.SecurableMixin,
-):
+class MailRule(PaperlessModel, models.SecurableMixin):
     """Represent a Paperless `MailRule`."""
 
     _api_path = API_PATH["mail_rules_single"]
@@ -84,7 +78,7 @@ class MailRule(
 
 
 class MailAccountHelper(
-    HelperBase[MailAccount],
+    HelperBase,
     helpers.CallableMixin[MailAccount],
     helpers.IterableMixin[MailAccount],
     helpers.SecurableMixin,
@@ -98,7 +92,7 @@ class MailAccountHelper(
 
 
 class MailRuleHelper(
-    HelperBase[MailRule],
+    HelperBase,
     helpers.CallableMixin[MailRule],
     helpers.IterableMixin[MailRule],
     helpers.SecurableMixin,

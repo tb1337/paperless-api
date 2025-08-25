@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from io import BytesIO
 from json.decoder import JSONDecodeError
-from typing import Any
+from typing import Any, Protocol
 
 import aiohttp
 from yarl import URL
@@ -25,29 +25,8 @@ from .models.base import HelperBase
 from .models.common import PaperlessCache
 
 
-class Paperless:
-    """Retrieves and manipulates data from and to Paperless via REST."""
-
-    _helpers_map: set[tuple[str, type[HelperBase]]] = {
-        (PaperlessResource.CONFIG, helpers.ConfigHelper),
-        (PaperlessResource.CORRESPONDENTS, helpers.CorrespondentHelper),
-        (PaperlessResource.CUSTOM_FIELDS, helpers.CustomFieldHelper),
-        (PaperlessResource.DOCUMENTS, helpers.DocumentHelper),
-        (PaperlessResource.DOCUMENT_TYPES, helpers.DocumentTypeHelper),
-        (PaperlessResource.GROUPS, helpers.GroupHelper),
-        (PaperlessResource.MAIL_ACCOUNTS, helpers.MailAccountHelper),
-        (PaperlessResource.MAIL_RULES, helpers.MailRuleHelper),
-        (PaperlessResource.SAVED_VIEWS, helpers.SavedViewHelper),
-        (PaperlessResource.SHARE_LINKS, helpers.ShareLinkHelper),
-        (PaperlessResource.STATISTICS, helpers.StatisticHelper),
-        (PaperlessResource.REMOTE_VERSION, helpers.RemoteVersionHelper),
-        (PaperlessResource.STATUS, helpers.StatusHelper),
-        (PaperlessResource.STORAGE_PATHS, helpers.StoragePathHelper),
-        (PaperlessResource.TAGS, helpers.TagHelper),
-        (PaperlessResource.TASKS, helpers.TaskHelper),
-        (PaperlessResource.USERS, helpers.UserHelper),
-        (PaperlessResource.WORKFLOWS, helpers.WorkflowHelper),
-    }
+class PaperlessProtocol(Protocol):
+    """Protocol for `Paperless` instances."""
 
     config: helpers.ConfigHelper
     correspondents: helpers.CorrespondentHelper
@@ -67,6 +46,31 @@ class Paperless:
     tasks: helpers.TaskHelper
     users: helpers.UserHelper
     workflows: helpers.WorkflowHelper
+
+
+class Paperless(PaperlessProtocol):
+    """Retrieves and manipulates data from and to Paperless via REST."""
+
+    _helper_map: dict[str, type[HelperBase]] = {
+        PaperlessResource.CONFIG: helpers.ConfigHelper,
+        PaperlessResource.CORRESPONDENTS: helpers.CorrespondentHelper,
+        PaperlessResource.CUSTOM_FIELDS: helpers.CustomFieldHelper,
+        PaperlessResource.DOCUMENTS: helpers.DocumentHelper,
+        PaperlessResource.DOCUMENT_TYPES: helpers.DocumentTypeHelper,
+        PaperlessResource.GROUPS: helpers.GroupHelper,
+        PaperlessResource.MAIL_ACCOUNTS: helpers.MailAccountHelper,
+        PaperlessResource.MAIL_RULES: helpers.MailRuleHelper,
+        PaperlessResource.SAVED_VIEWS: helpers.SavedViewHelper,
+        PaperlessResource.SHARE_LINKS: helpers.ShareLinkHelper,
+        PaperlessResource.STATISTICS: helpers.StatisticHelper,
+        PaperlessResource.REMOTE_VERSION: helpers.RemoteVersionHelper,
+        PaperlessResource.STATUS: helpers.StatusHelper,
+        PaperlessResource.STORAGE_PATHS: helpers.StoragePathHelper,
+        PaperlessResource.TAGS: helpers.TagHelper,
+        PaperlessResource.TASKS: helpers.TaskHelper,
+        PaperlessResource.USERS: helpers.UserHelper,
+        PaperlessResource.WORKFLOWS: helpers.WorkflowHelper,
+    }
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
@@ -99,8 +103,6 @@ class Paperless:
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
         self._initialized = False
-        self._local_resources: set[PaperlessResource] = set()
-        self._remote_resources: set[PaperlessResource] = set()
         self._request_api_version = request_api_version or API_VERSION
         self._request_args = request_args or {}
         self._session = session
@@ -135,16 +137,6 @@ class Paperless:
     def host_version(self) -> str | None:
         """Return the version of the Paperless host."""
         return self._version
-
-    @property
-    def local_resources(self) -> set[PaperlessResource]:
-        """Return a set of locally available resources."""
-        return self._local_resources
-
-    @property
-    def remote_resources(self) -> set[PaperlessResource]:
-        """Return a set of available resources of the Paperless host."""
-        return self._remote_resources
 
     @staticmethod
     def _create_base_url(url: str | URL) -> URL:
@@ -258,31 +250,9 @@ class Paperless:
             except (aiohttp.ClientResponseError, JSONDecodeError) as exc:
                 raise InitializationError from exc
 
-            self._remote_resources = {
-                res
-                for res in PaperlessResource
-                if res
-                not in {
-                    PaperlessResource.UNKNOWN,
-                    PaperlessResource.CONSUMPTION_TEMPLATES,
-                }
-            }
-
         # initialize helpers
-        for attribute, helper in self._helpers_map:
-            setattr(self, f"{attribute}", helper(self))
-
-        unused = self._remote_resources.difference(self._local_resources)
-        missing = self._local_resources.difference(self._remote_resources)
-
-        if len(unused) > 0:
-            self.logger.debug("Unused features: %s", ", ".join(unused))
-
-        if len(missing) > 0:
-            self.logger.warning(
-                "Outdated version detected. Consider pulling the latest version of Paperless-ngx."
-            )
-            self.logger.warning("Support for Paperless-ngx <v2.15.0 will expire 07/01/2025.")
+        for attr, helper_cls in self._helper_map.items():
+            setattr(self, attr, helper_cls(self))
 
         self._initialized = True
         self.logger.info("Initialized.")
