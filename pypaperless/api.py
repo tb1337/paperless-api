@@ -80,7 +80,7 @@ class Paperless:
     def __init__(
         self,
         url: str | URL,
-        token: str = None,
+        token: str | None = None,
         *,
         session: aiohttp.ClientSession | None = None,
         request_args: dict[str, Any] | None = None,
