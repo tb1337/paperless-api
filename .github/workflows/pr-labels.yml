@@ -6,7 +6,6 @@ on:
   pull_request_target:
     types:
       - opened
-      - synchronize
       - labeled
       - unlabeled
   workflow_call:
