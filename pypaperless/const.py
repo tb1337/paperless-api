@@ -16,6 +16,7 @@ GROUPS = "groups"  # pylint: disable=invalid-name
 LOGS = "logs"  # pylint: disable=invalid-name
 MAIL_ACCOUNTS = "mail_accounts"  # pylint: disable=invalid-name
 MAIL_RULES = "mail_rules"  # pylint: disable=invalid-name
+PROCESSED_MAIL = "processed_mail"  # pylint: disable=invalid-name
 SAVED_VIEWS = "saved_views"  # pylint: disable=invalid-name
 SHARE_LINKS = "share_links"  # pylint: disable=invalid-name
 STATISTICS = "statistics"  # pylint: disable=invalid-name
@@ -58,6 +59,8 @@ API_PATH = {
     f"{MAIL_ACCOUNTS}_single": f"/api/{MAIL_ACCOUNTS}/{{pk}}/",
     f"{MAIL_RULES}": f"/api/{MAIL_RULES}/",
     f"{MAIL_RULES}_single": f"/api/{MAIL_RULES}/{{pk}}/",
+    f"{PROCESSED_MAIL}": f"/api/{PROCESSED_MAIL}/",
+    f"{PROCESSED_MAIL}_single": f"/api/{PROCESSED_MAIL}/{{pk}}/",
     f"{SAVED_VIEWS}": f"/api/{SAVED_VIEWS}/",
     f"{SAVED_VIEWS}_single": f"/api/{SAVED_VIEWS}/{{pk}}/",
     f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
@@ -95,6 +98,7 @@ class PaperlessResource(StrEnum):
     LOGS = LOGS
     MAIL_ACCOUNTS = MAIL_ACCOUNTS
     MAIL_RULES = MAIL_RULES
+    PROCESSED_MAIL = PROCESSED_MAIL
     SAVED_VIEWS = SAVED_VIEWS
     SHARE_LINKS = SHARE_LINKS
     STATISTICS = STATISTICS

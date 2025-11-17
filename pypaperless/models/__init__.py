@@ -19,7 +19,7 @@ from .documents import (
     DocumentNote,
     DocumentNoteDraft,
 )
-from .mails import MailAccount, MailRule
+from .mails import MailAccount, MailRule, ProcessedMail
 from .pages import Page
 from .permissions import Group, User
 from .remote_version import RemoteVersion
@@ -47,6 +47,7 @@ __all__ = (
     "MailAccount",
     "MailRule",
     "Page",
+    "ProcessedMail",
     "RemoteVersion",
     "SavedView",
     "ShareLink",

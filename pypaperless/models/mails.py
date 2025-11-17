@@ -77,6 +77,30 @@ class MailRule(PaperlessModel, models.SecurableMixin):
         self._api_path = self._api_path.format(pk=data.get("id"))
 
 
+@dataclass(init=False)
+class ProcessedMail(PaperlessModel):
+    """Represent a Paperless `ProcessedMail`."""
+
+    _api_path = API_PATH["processed_mail_single"]
+
+    id: int | None = None
+    owner: int | None = None
+    rule: int | None = None
+    folder: str | None = None
+    uid: str | None = None
+    subject: str | None = None
+    received: datetime.datetime | None = None
+    processed: datetime.datetime | None = None
+    status: str | None = None
+    error: str | None = None
+
+    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+        """Initialize a `ProcessedMail` instance."""
+        super().__init__(api, data)
+
+        self._api_path = self._api_path.format(pk=data.get("id"))
+
+
 class MailAccountHelper(
     HelperBase,
     helpers.CallableMixin[MailAccount],
@@ -103,3 +127,17 @@ class MailRuleHelper(
     _resource = PaperlessResource.MAIL_RULES
 
     _resource_cls = MailRule
+
+
+class ProcessedMailHelper(
+    HelperBase,
+    helpers.SecurableMixin,
+    helpers.CallableMixin[ProcessedMail],
+    helpers.IterableMixin[ProcessedMail],
+):
+    """Represent a factory for Paperless `ProcessedMail` models."""
+
+    _api_path = API_PATH["processed_mail"]
+    _resource = PaperlessResource.PROCESSED_MAIL
+
+    _resource_cls = ProcessedMail
