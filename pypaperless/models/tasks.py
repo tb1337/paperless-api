@@ -1,5 +1,6 @@
 """Provide `Task` related models and helpers."""
 
+import datetime
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -8,7 +9,7 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
 
 from .base import HelperBase, PaperlessModel
-from .common import TaskStatusType
+from .common import TaskStatusType, TaskType
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -22,10 +23,11 @@ class Task(PaperlessModel):
 
     id: int | None = None
     task_id: str | None = None
+    task_name: str | None = None
     task_file_name: str | None = None
-    date_created: str | None = None
-    date_done: str | None = None
-    type: str | None = None
+    date_created: datetime.datetime | None = None
+    date_done: datetime.datetime | None = None
+    type: TaskType | None = None
     status: TaskStatusType | None = None
     result: str | None = None
     acknowledged: bool | None = None

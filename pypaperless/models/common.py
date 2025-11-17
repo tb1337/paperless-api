@@ -386,13 +386,31 @@ class StatusTasksType:
 
 
 # tasks
+class TaskType(Enum):
+    """Represent a subtype of `Task`."""
+
+    AUTO = "auto_task"
+    SCHEDULED = "scheduled_task"
+    MANUAL = "manual_task"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "TaskType":
+        """Set default member on unknown value."""
+        return TaskType.UNKNOWN
+
+
+# tasks
 class TaskStatusType(Enum):
     """Represent a subtype of `Task`."""
 
+    FAILURE = "FAILURE"
     PENDING = "PENDING"
+    RECEIVED = "RECEIVED"
+    RETRY = "RETRY"
+    REVOKED = "REVOKED"
     STARTED = "STARTED"
     SUCCESS = "SUCCESS"
-    FAILURE = "FAILURE"
     UNKNOWN = "UNKNOWN"
 
     @classmethod
@@ -406,6 +424,9 @@ class WorkflowActionType(Enum):
     """Represent a subtype of `Workflow`."""
 
     ASSIGNMENT = 1
+    REMOVAL = 2
+    EMAIL = 3
+    WEBHOOK = 4
     UNKNOWN = -1
 
     @classmethod
@@ -415,18 +436,61 @@ class WorkflowActionType(Enum):
 
 
 # workflows
+@dataclass(kw_only=True)
+class WorkflowActionEmailType:
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    to: str | None = None
+    subject: str | None = None
+    body: str | None = None
+    include_document: bool | None = None
+
+
+@dataclass(kw_only=True)
+class WorkflowActionWebhookType:
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    url: str | None = None
+    use_params: bool | None = None
+    as_json: bool | None = None
+    params: dict[str, Any] | None = None
+    body: str | None = None
+    headers: dict[str, str] | None = None
+    include_document: bool | None = None
+
+
+# workflows
 class WorkflowTriggerType(Enum):
     """Represent a subtype of `Workflow`."""
 
     CONSUMPTION = 1
     DOCUMENT_ADDED = 2
     DOCUMENT_UPDATED = 3
+    SCHEDULED = 4
     UNKNOWN = -1
 
     @classmethod
     def _missing_(cls: type, *_: object) -> "WorkflowTriggerType":
         """Set default member on unknown value."""
         return WorkflowTriggerType.UNKNOWN
+
+
+# workflows
+class WorkflowTriggerScheduleDateFieldType(Enum):
+    """Represent a subtype of `WorkflowTrigger`."""
+
+    ADDED = "added"
+    CREATED = "created"
+    MODIFIED = "modified"
+    CUSTOM_FIELD = "custom_field"
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerScheduleDateFieldType":
+        """Set default member on unknown value."""
+        return WorkflowTriggerScheduleDateFieldType.UNKNOWN
 
 
 # workflows
