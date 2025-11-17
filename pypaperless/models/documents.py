@@ -6,7 +6,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Self, cast, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import AsnRequestError, ItemNotFoundError, PrimaryKeyRequiredError
+from pypaperless.exceptions import (
+    AsnRequestError,
+    ItemNotFoundError,
+    PrimaryKeyRequiredError,
+    SendEmailError,
+)
 from pypaperless.models.utils import object_to_dict_value
 
 from .base import HelperBase, PaperlessModel, PaperlessModelData
@@ -765,3 +770,40 @@ class DocumentHelper(
         async with self.reduce(query=query):
             async for item in self:
                 yield item
+
+    async def email(
+        self,
+        documents: int | list[int],
+        *,
+        addresses: str,
+        subject: str,
+        message: str,
+        use_archive_version: bool = True,
+    ) -> None:
+        """Email documents to one or more recipients as an attachment.
+
+        Example:
+        -------
+        ```python
+        # email document directly...
+        await paperless.documents.email(
+            [23, 42],
+            addresses="example@example.com, another@example.com",
+            subject="Subject",
+            message="Message"
+        )
+        ```
+
+        """
+        data = {
+            "documents": [documents] if isinstance(documents, int) else documents,
+            "addresses": addresses,
+            "subject": subject,
+            "message": message,
+            "use_archive_version": use_archive_version,
+        }
+        async with self._api.request("post", API_PATH["documents_email"], json=data) as res:
+            try:
+                res.raise_for_status()
+            except Exception as exc:
+                raise SendEmailError from exc

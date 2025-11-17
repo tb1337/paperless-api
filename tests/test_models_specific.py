@@ -13,6 +13,7 @@ from pypaperless.exceptions import (
     AsnRequestError,
     DraftFieldRequiredError,
     PrimaryKeyRequiredError,
+    SendEmailError,
     TaskNotFoundError,
 )
 from pypaperless.models import (
@@ -449,6 +450,31 @@ class TestModelDocuments:
         # test add field value
         item.custom_fields += test_cf.draft_value(1337)
         assert test_cf in item.custom_fields
+
+    async def test_email(self, resp: aioresponses, paperless: Paperless) -> None:
+        """Test sending emails."""
+        # successful email sending
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
+            status=200,
+            payload={"message": "Email sent"},
+        )
+        await paperless.documents.email(
+            documents=1,
+            addresses="test@example.org",
+            subject="Test Email",
+            message="Test Message",
+        )
+
+        # unsuccessful email sending
+        resp.post(f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}", status=400)
+        with pytest.raises(SendEmailError):
+            await paperless.documents.email(
+                documents=[1, 2],
+                addresses="test@example.org",
+                subject="Test Email",
+                message="Test Message",
+            )
 
 
 # test models/remote_version.py

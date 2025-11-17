@@ -95,6 +95,10 @@ class PrimaryKeyRequiredError(PaperlessError):
     """Raise when trying to access model data without supplying a pk."""
 
 
+class SendEmailError(PaperlessError):
+    """Raise when sending email for a document fails."""
+
+
 # Tasks
 
 
