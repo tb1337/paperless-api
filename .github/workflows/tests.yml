@@ -53,7 +53,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: ⬇️ Download coverage data
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@v6.0.0
       - name: 🚀 Upload coverage report
         uses: codecov/codecov-action@v5.5.0
         with:
