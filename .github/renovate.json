@@ -42,6 +42,11 @@
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "addLabels": ["docker", "skip-changelog"],
+      "rangeStrategy": "pin"
     }
   ]
 }
