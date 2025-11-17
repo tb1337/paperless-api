@@ -35,7 +35,9 @@ from pypaperless.models.common import (
     ShareLinkFileVersionType,
     StatusType,
     TaskStatusType,
+    TaskType,
     WorkflowActionType,
+    WorkflowTriggerScheduleDateFieldType,
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
@@ -345,9 +347,14 @@ class TestPaperless:
         assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
         assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
         assert StatusType(never_str) == StatusType.UNKNOWN
+        assert TaskType(never_str) == TaskType.UNKNOWN
         assert TaskStatusType(never_str) == TaskStatusType.UNKNOWN
         assert WorkflowActionType(never_int) == WorkflowActionType.UNKNOWN
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
+        assert (
+            WorkflowTriggerScheduleDateFieldType(never_str)
+            == WorkflowTriggerScheduleDateFieldType.UNKNOWN
+        )
         assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
 
     async def test_custom_field_draft_value_wo_cache(self, paperless: Paperless) -> None:
