@@ -173,6 +173,8 @@ class Tag(
     text_color: str | None = None
     is_inbox_tag: bool | None = None
     document_count: int | None = None
+    parent: int | None = None
+    children: list[Tag] | None = None  # noqa: F821
 
     def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
         """Initialize a `Tag` instance."""
