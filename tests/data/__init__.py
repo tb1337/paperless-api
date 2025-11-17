@@ -13,7 +13,7 @@ from .document_types import DATA_DOCUMENT_TYPES
 from .documents import DATA_DOCUMENTS
 from .documents_search import DATA_DOCUMENTS_SEARCH
 from .groups import DATA_GROUPS
-from .mail import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES
+from .mail import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES, DATA_PROCESSED_MAIL
 from .object_permissions import DATA_OBJECT_PERMISSIONS
 from .paths import DATA_PATHS
 from .remote_version import DATA_REMOTE_VERSION
@@ -55,6 +55,7 @@ __all__ = (
     "DATA_MAIL_RULES",
     "DATA_OBJECT_PERMISSIONS",
     "DATA_PATHS",
+    "DATA_PROCESSED_MAIL",
     "DATA_REMOTE_VERSION",
     "DATA_SAVED_VIEWS",
     "DATA_SCHEMA",

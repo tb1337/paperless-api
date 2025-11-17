@@ -36,6 +36,7 @@ class PaperlessProtocol(Protocol):
     groups: helpers.GroupHelper
     mail_accounts: helpers.MailAccountHelper
     mail_rules: helpers.MailRuleHelper
+    processed_mail: helpers.ProcessedMailHelper
     saved_views: helpers.SavedViewHelper
     share_links: helpers.ShareLinkHelper
     statistics: helpers.StatisticHelper
@@ -60,6 +61,7 @@ class Paperless(PaperlessProtocol):
         PaperlessResource.GROUPS: helpers.GroupHelper,
         PaperlessResource.MAIL_ACCOUNTS: helpers.MailAccountHelper,
         PaperlessResource.MAIL_RULES: helpers.MailRuleHelper,
+        PaperlessResource.PROCESSED_MAIL: helpers.ProcessedMailHelper,
         PaperlessResource.SAVED_VIEWS: helpers.SavedViewHelper,
         PaperlessResource.SHARE_LINKS: helpers.ShareLinkHelper,
         PaperlessResource.STATISTICS: helpers.StatisticHelper,
