@@ -58,3 +58,48 @@ DATA_MAIL_RULES = {
         }
     ],
 }
+
+DATA_PROCESSED_MAIL = {
+    "count": 3,
+    "next": None,
+    "previous": None,
+    "all": [1, 2, 3],
+    "results": [
+        {
+            "id": 1,
+            "owner": 1,
+            "rule": 1,
+            "folder": "INBOX",
+            "uid": "abcdef",
+            "subject": "Invoice #1",
+            "received": "2025-11-16T08:18:25+01:00",
+            "processed": "2025-11-16T11:00:17.838202+01:00",
+            "status": "SUCCESS",
+            "error": None,
+        },
+        {
+            "id": 2,
+            "owner": 1,
+            "rule": 1,
+            "folder": "INBOX",
+            "uid": "fedcba",
+            "subject": "Invoice #2",
+            "received": "2025-11-16T07:56:16+01:00",
+            "processed": "2025-11-16T08:00:17.660439+01:00",
+            "status": "SUCCESS",
+            "error": None,
+        },
+        {
+            "id": 3,
+            "owner": 1,
+            "rule": 1,
+            "folder": "INBOX",
+            "uid": "123456",
+            "subject": "Invoice #3",
+            "received": "2025-11-16T13:54:23+01:00",
+            "processed": "2025-11-16T14:00:17.846562+01:00",
+            "status": "SUCCESS",
+            "error": None,
+        },
+    ],
+}

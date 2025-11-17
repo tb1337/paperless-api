@@ -16,6 +16,7 @@ from .data import (
     DATA_GROUPS,
     DATA_MAIL_ACCOUNTS,
     DATA_MAIL_RULES,
+    DATA_PROCESSED_MAIL,
     DATA_SAVED_VIEWS,
     DATA_SHARE_LINKS,
     DATA_STATUS,
@@ -125,6 +126,13 @@ MAIL_RULE_MAP = ResourceTestMapping(
     DATA_MAIL_RULES,
     helpers.MailRuleHelper,
     models.MailRule,
+)
+
+PROCESSED_MAIL_MAP = ResourceTestMapping(
+    PaperlessResource.PROCESSED_MAIL,
+    DATA_PROCESSED_MAIL,
+    helpers.ProcessedMailHelper,
+    models.ProcessedMail,
 )
 
 SAVED_VIEW_MAP = ResourceTestMapping(
