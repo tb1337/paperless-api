@@ -517,7 +517,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = ">=3.12.15" },
+    { name = "aiohttp", specifier = ">=3.13.2" },
     { name = "yarl", specifier = ">=1.20.1" },
 ]
 
