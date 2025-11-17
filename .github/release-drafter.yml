@@ -32,6 +32,10 @@ categories:
     labels:
       - "dependencies"
 
+  - title: "⬆️ Dev Dependency updates"
+    labels:
+      - "dev-deps"
+
 version-resolver:
   major:
     labels:
@@ -46,6 +50,7 @@ version-resolver:
       - "bugfix"
       - "ci"
       - "dependencies"
+      - "dev-deps"
       - "enhancement"
       - "performance"
       - "refactor"
