@@ -19,7 +19,7 @@ from dataclasses import MISSING, asdict, fields, is_dataclass
 from datetime import date, datetime
 from enum import Enum
 from types import NoneType, UnionType
-from typing import TYPE_CHECKING, Any, Union, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, ForwardRef, Union, get_args, get_origin, get_type_hints
 
 import pypaperless.models.base as paperless_base
 
@@ -137,7 +137,7 @@ def dict_value_to_object(  # noqa: C901, PLR0915
                     value.get(field.name),
                     field.type,
                     field.default,
-                    _api,
+                    _api=_api,
                 )
                 for field in fields(value_type)
             }
@@ -214,6 +214,14 @@ def dict_value_to_object(  # noqa: C901, PLR0915
         return float(value)
     if value_type is int and isinstance(value, str) and value.isnumeric():
         return int(value)
+
+    # handle ForwardRef - pypaperless addition
+    if isinstance(value_type, ForwardRef):
+        try:
+            if hasattr(value_type, "__owner__") and (owner := value_type.__owner__):
+                return owner.create_with_data(api=_api, data=value, fetched=True)
+        except (NameError, AttributeError, TypeError):
+            pass
 
     # If we reach this point, we could not match the value with the type and we raise
     if not isinstance(value, value_type):
