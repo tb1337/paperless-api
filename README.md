@@ -9,7 +9,7 @@
 [![Linting][linting-badge]][linting-url]
 [![Typing][typing-badge]][typing-url]
 
-Little asynchronous client for *Paperless-ngx*, written in Python. You should at least use Python `>=3.12`.
+Little asynchronous client for *Paperless-ngx*, written in Python. You should at least use Python `>=3.14`.
 
 ## Features
 
