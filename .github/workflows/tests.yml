@@ -12,9 +12,6 @@ on:
       - "tests/**"
   workflow_dispatch:
 
-env:
-  DEFAULT_PYTHON: "3.14"
-
 jobs:
   pytest:
     name: Python ${{ matrix.python }}
@@ -25,11 +22,11 @@ jobs:
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v6.0.1
-      - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
+      - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
         uses: actions/setup-python@v6.1.0
         with:
-          python-version: ${{ env.DEFAULT_PYTHON }}
+          python-version: ${{ matrix.python }}
       - name: 🏗 Set up uv
         run: |
           pipx install uv
