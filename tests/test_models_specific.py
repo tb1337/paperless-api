@@ -291,6 +291,18 @@ class TestModelDocuments:
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
+        # custom_field_query
+        resp.get(
+            re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*custom_field_query.*$"
+            ),
+            status=200,
+            payload=DATA_DOCUMENTS_SEARCH,
+        )
+        async for item in paperless.documents.search(custom_field_query="1337"):
+            assert isinstance(item, Document)
+            assert item.has_search_hit
+            assert isinstance(item.search_hit, DocumentSearchHitType)
         # more_like
         resp.get(
             re.compile(
