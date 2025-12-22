@@ -760,14 +760,24 @@ class DocumentHelper(
             async for item in self:
                 yield item
 
-    async def search(self, query: str) -> AsyncGenerator[Document]:
-        """Lookup documents by a search query.
+    async def search(
+        self, query: str | None = None, custom_field_query: str | None = None
+    ) -> AsyncGenerator[Document]:
+        """Lookup documents by a search query and/or custom_field_query.
+
+        If none of both are provided, all documents are returned.
 
         Shortcut function. Same behaviour is possible using `reduce()`.
 
         Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
         """
-        async with self.reduce(query=query):
+        querykwargs = {}
+        if query is not None:
+            querykwargs["query"] = query
+        if custom_field_query is not None:
+            querykwargs["custom_field_query"] = custom_field_query
+
+        async with self.reduce(**querykwargs):
             async for item in self:
                 yield item
 
