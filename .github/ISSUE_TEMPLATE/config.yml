@@ -1,0 +1,6 @@
+---
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/tb1337/pypaperless/tree/main/docs
+    about: Check the documentation for guides and examples
