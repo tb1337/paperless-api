@@ -16,6 +16,8 @@ Some *Paperless-ngx* resources provide more features as others, especially when 
 - [Binary image/pdf data](#binary-imagepdf-data)
 - [Lookup specific documents](#lookup-specific-documents)
   - [1. Search query](#1-search-query)
+    - [With query](#with-query)
+    - [With custom\_field\_query](#with-custom_field_query)
   - [2. More like](#2-more-like)
   - [Search results](#search-results)
 - [Metadata](#metadata)
@@ -59,8 +61,17 @@ If you want to search for documents, *Paperless-ngx* offers two possibilities to
 
 Search query documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
 
+#### With query
+
 ```python
 async for document in paperless.documents.search("type:invoice"):
+    # do something
+```
+
+or
+
+```python
+async for document in paperless.documents.search(query="type:invoice"):
     # do something
 ```
 
@@ -70,6 +81,24 @@ async for document in paperless.documents.search("type:invoice"):
 > `GET` `https://localhost:8000/api/documents/?page=2&query=type%3Ainvoice` <br>
 > `...` <br>
 > `GET` `https://localhost:8000/api/documents/?page=19&query=type%3Ainvoice`
+
+#### With custom_field_query
+
+Custom field query documentation: https://docs.paperless-ngx.com/api/#filtering-by-custom-fields
+
+```python
+async for document in paperless.documents.search(
+  custom_field_query='["field_name","gte",10000]'
+):
+    # do something
+```
+
+> [!NOTE]
+> The code above executes many http requests, depending on the count of your matched documents: <br>
+> `GET` `https://localhost:8000/api/documents/?page=1&custom_field_query=%5B%22field_name%22,%22gte%22,10000%5D` <br>
+> `GET` `https://localhost:8000/api/documents/?page=2&custom_field_query=%5B%22field_name%22,%22gte%22,10000%5D` <br>
+> `...` <br>
+> `GET` `https://localhost:8000/api/documents/?page=19&custom_field_query=%5B%22field_name%22,%22gte%22,10000%5D`
 
 ### 2. More like
 
