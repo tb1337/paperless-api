@@ -831,7 +831,7 @@ dev = [
     { name = "covdefaults", specifier = ">=2.3.0" },
     { name = "coverage", specifier = ">=7.13.0" },
     { name = "mypy", specifier = ">=1.18.2" },
-    { name = "pre-commit", specifier = ">=4.4.0" },
+    { name = "pre-commit", specifier = ">=4.5.1" },
     { name = "pre-commit-hooks", specifier = ">=6.0.0" },
     { name = "pylint", specifier = ">=4.0.4" },
     { name = "pytest", specifier = ">=9.0.1" },
