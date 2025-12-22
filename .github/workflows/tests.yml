@@ -55,7 +55,7 @@ jobs:
       - name: ⬇️ Download coverage data
         uses: actions/download-artifact@v6.0.0
       - name: 🚀 Upload coverage report
-        uses: codecov/codecov-action@v5.5.1
+        uses: codecov/codecov-action@v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
