@@ -1,0 +1,39 @@
+---
+name: Feature Request
+description: Suggest an idea or enhancement for pypaperless
+title: '[FEATURE] '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Note on Response Times
+
+        I'm currently on parental leave and available only on a limited basis. If you're able to implement this feature and submit a pull request, that would be greatly appreciated and will help get this feature added much faster! 🙏
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of the feature you'd like to see.
+      placeholder: Describe the feature...
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe the problem or use case this feature would solve.
+      placeholder: What problem does this solve?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: implementation-offer
+    attributes:
+      label: Implementation Offer
+      description: How can you help with this feature?
+      options:
+        - label: I'm willing to implement this feature and submit a PR
+        - label: I can help with testing
+        - label: I can help with documentation
