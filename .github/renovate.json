@@ -15,6 +15,10 @@
       "enabled": false
     },
     {
+      "matchDepNames": ["python"],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": ["lockFileMaintenance"],
       "addLabels": ["skip-changelog"]
     },
