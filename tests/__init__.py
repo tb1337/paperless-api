@@ -93,6 +93,29 @@ DOCUMENT_MAP = ResourceTestMapping(
     },
 )
 
+DOCUMENT_MAP_WITH_CUSTOM_FIELDS = ResourceTestMapping(
+    PaperlessResource.DOCUMENTS,
+    DATA_DOCUMENTS,
+    helpers.DocumentHelper,
+    models.Document,
+    models.DocumentDraft,
+    {
+        "document": b"...example...content...",
+        "tags": [1, 2, 3],
+        "correspondent": 1,
+        "document_type": 1,
+        "storage_path": 1,
+        "title": "New Document",
+        "created": None,
+        "archive_serial_number": 1,
+        "custom_fields": {
+            1: True,
+            3: 42,
+            6: "Example",
+        },
+    },
+)
+
 DOCUMENT_TYPE_MAP = ResourceTestMapping(
     PaperlessResource.DOCUMENT_TYPES,
     DATA_DOCUMENT_TYPES,

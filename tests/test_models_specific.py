@@ -47,7 +47,7 @@ from pypaperless.models.documents import (
 )
 from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHelper
 
-from . import DOCUMENT_MAP
+from . import DOCUMENT_MAP, DOCUMENT_MAP_WITH_CUSTOM_FIELDS
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
@@ -109,6 +109,26 @@ class TestModelDocuments:
     async def test_create(self, resp: aioresponses, paperless: Paperless) -> None:
         """Test create."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
+        draft = paperless.documents.draft(**defaults)
+        assert isinstance(draft, DocumentDraft)
+        backup = draft.document
+        draft.document = None
+        with pytest.raises(DraftFieldRequiredError):
+            await draft.save()
+        draft.document = backup
+        # actually call the create endpoint
+        resp.post(
+            f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
+            status=200,
+            payload="11112222-3333-4444-5555-666677778888",
+        )
+        await draft.save()
+
+    async def test_create_with_custom_fields(
+        self, resp: aioresponses, paperless: Paperless
+    ) -> None:
+        """Test create with custom fields."""
+        defaults = DOCUMENT_MAP_WITH_CUSTOM_FIELDS.draft_defaults or {}
         draft = paperless.documents.draft(**defaults)
         assert isinstance(draft, DocumentDraft)
         backup = draft.document

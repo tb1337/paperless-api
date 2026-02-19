@@ -251,7 +251,7 @@ class DocumentDraft(PaperlessModel, models.CreatableMixin):
     storage_path: int | None = None
     tags: int | list[int] | None = None
     archive_serial_number: int | None = None
-    custom_fields: list[int] | None = None
+    custom_fields: list[int] | dict[int, Any] | None = None
 
     def _serialize(self) -> dict[str, Any]:
         """Serialize."""
