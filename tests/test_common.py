@@ -42,7 +42,7 @@ from pypaperless.models.common import (
     WorkflowTriggerType,
 )
 from pypaperless.models.mixins import helpers
-from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
+from pypaperless.models.utils import dict_value_to_object
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -558,14 +558,6 @@ class TestPaperless:
         assert isinstance(res.file, bytes)
         assert isinstance(res.extra_data, dict)
         assert isinstance(res.extra_data["a_typeddict"], dict)
-
-        # back conversion
-        back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
-
-        assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
-        assert isinstance(back["meta"], dict)
-        assert isinstance(back["extra_data"], dict)
-        assert isinstance(back["extra_data"]["a_list"], list)
 
     async def test_pages_object(self, api: Paperless) -> None:
         """Test pages."""

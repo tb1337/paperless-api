@@ -14,6 +14,7 @@ Thanks for the excellent work, guys!
 # mypy: ignore-errors
 # pylint: disable=all
 
+import json
 import logging
 from dataclasses import MISSING, asdict, fields, is_dataclass
 from datetime import date, datetime
@@ -55,7 +56,7 @@ def _is_typeddict(cls: type) -> bool:
 def object_to_dict_value(value: Any) -> Any:
     """Convert object values to their correspondending json values."""
     if isinstance(value, dict):
-        return {k: object_to_dict_value(v) for k, v in value.items()}
+        return json.dumps({k: object_to_dict_value(v) for k, v in value.items()})
     if isinstance(value, list):
         return [object_to_dict_value(item) for item in value]
     if isinstance(value, Enum):
