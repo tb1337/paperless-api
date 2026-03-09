@@ -12,7 +12,7 @@ class CreatableMixin:
     _create_required_fields: ClassVar[set[str]]
     model_fields: ClassVar[dict[str, Any]]  # provided by BaseModel
 
-    def _serialize(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         """Serialize draft fields for API submission."""
         data = {
             "json": {

@@ -4,7 +4,7 @@ import contextlib
 import datetime
 import re
 from enum import Enum, StrEnum
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -19,18 +19,18 @@ if TYPE_CHECKING:
 
 
 # custom_fields
-class CustomFieldExtraDataSelectOptions(TypedDict, total=False):
+class CustomFieldExtraDataSelectOptions(BaseModel):
     """Represent the `extra_data.select_options` field of a `CustomField`."""
 
-    id: str | None
-    label: str | None
+    id: str | None = None
+    label: str | None = None
 
 
-class CustomFieldExtraData(TypedDict, total=False):
+class CustomFieldExtraData(BaseModel):
     """Represent the `extra_data` field of a `CustomField`."""
 
-    default_currency: str | None
-    select_options: list[CustomFieldExtraDataSelectOptions | None]
+    default_currency: str | None = None
+    select_options: list[CustomFieldExtraDataSelectOptions | None] = Field(default_factory=list)
 
 
 class CustomFieldType(Enum):
@@ -124,8 +124,8 @@ class CustomFieldMonetaryValue(CustomFieldValue):
         """Return the currency of the `value` field."""
         if self.value and (match := re.match(r"^([a-zA-Z]{3})", self.value)):
             return match.group(1) if match else self.value
-        if self.extra_data and (default_currency := self.extra_data.get("default_currency", None)):
-            return default_currency
+        if self.extra_data and self.extra_data.default_currency:
+            return self.extra_data.default_currency
         return ""
 
     @currency.setter
@@ -163,14 +163,14 @@ class CustomFieldSelectValue(CustomFieldValue):
         """Return the list of labels of the `CustomField`."""
         if not self.extra_data:
             return []
-        return self.extra_data["select_options"]
+        return self.extra_data.select_options
 
     @property
     def label(self) -> str | None:
         """Return the label for `value` or fall back to `None`."""
         for opt in self.labels:
-            if opt and opt["id"] == self.value:
-                return opt["label"]
+            if opt and opt.id == self.value:
+                return opt.label
         return None
 
 

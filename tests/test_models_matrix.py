@@ -286,7 +286,7 @@ class TestReadWrite:
             status_code=200,
             json={
                 "id": len(mapping.data["results"]),
-                **draft._serialize(),  # pylint: disable=protected-access
+                **draft.serialize(),
             },
         )
         new_pk = await service.save(draft)

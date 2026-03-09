@@ -3,13 +3,11 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr
+from pydantic import BaseModel, ConfigDict, PrivateAttr, TypeAdapter
 
 from pypaperless.const import API_PATH
 
 if TYPE_CHECKING:
-    from pydantic import TypeAdapter
-
     from pypaperless import Paperless
 
 
@@ -63,7 +61,7 @@ class PaperlessModel(BaseModel):
         """
         return cls(client=client, data=data, **data)
 
-    def _apply_data(self) -> None:
+    def apply_data(self) -> None:
         """Apply data from `self._data` to model fields.
 
         Used by services after update operations to refresh model state.
@@ -75,15 +73,13 @@ class PaperlessModel(BaseModel):
                     try:
                         adapter = self._get_type_adapter(field_name, field_info.annotation)
                         value = adapter.validate_python(value)
-                    except Exception:  # noqa: BLE001
+                    except (ValueError, TypeError):
                         pass
                 setattr(self, field_name, value)
 
     @classmethod
-    def _get_type_adapter(cls, field_name: str, annotation: type) -> "TypeAdapter":
+    def _get_type_adapter(cls, field_name: str, annotation: type) -> TypeAdapter:
         """Return a cached TypeAdapter for the given field."""
-        from pydantic import TypeAdapter
-
         cache_attr = "__type_adapters__"
         cache: dict[str, TypeAdapter] = getattr(cls, cache_attr, None) or {}
         if field_name not in cache:

@@ -24,6 +24,7 @@ from pypaperless.models.base import PaperlessModel
 from pypaperless.models.common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
+    CustomFieldExtraData,
     CustomFieldIntegerValue,
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
@@ -419,13 +420,13 @@ class TestPaperless:
         field.amount = 123.45678
         assert field.amount == 123.46  # round
 
-        field.extra_data = {"default_currency": "USD"}
+        field.extra_data = CustomFieldExtraData(default_currency="USD")
         assert field.value == "EUR123.46"
 
         field.value = "123.45"  # no currency
         assert field.currency == "USD"
 
-        field.extra_data = {}
+        field.extra_data = CustomFieldExtraData()
         assert field.currency == ""
 
         field.currency = "EUR"

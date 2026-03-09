@@ -196,13 +196,15 @@ class Document(
             kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-        from pypaperless.services.documents import DocumentNoteService
+        from pypaperless.services.documents import (  # pylint: disable=import-outside-toplevel
+            DocumentNoteService,
+        )
 
         self._notes = DocumentNoteService(client, data.get("id"))
 
-    def _apply_data(self) -> None:
+    def apply_data(self) -> None:
         """Apply data from `self._data` to model fields, converting custom_fields."""
-        super()._apply_data()
+        super().apply_data()
         if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
             self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
 
@@ -265,12 +267,12 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
     archive_serial_number: int | None = None
     custom_fields: list[int] | None = None
 
-    def _serialize(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         """Serialize."""
         data = {
             "form": {
                 name: object_to_dict_value(getattr(self, name))
-                for name in self.__class__.model_fields
+                for name in self.__class__.model_fields  # pylint: disable=not-an-iterable
                 if name not in {"document", "filename"}
             }
         }

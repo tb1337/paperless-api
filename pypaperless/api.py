@@ -1,8 +1,8 @@
 """PyPaperless."""
 
-import json
 import logging
 from io import BytesIO
+from json import JSONDecodeError
 from typing import Any
 
 import httpx
@@ -128,6 +128,25 @@ class Paperless:
         data_fields: dict[str, Any] = {}
         file_fields: list[tuple[str, Any]] = []
 
+        def _add_file_value(name: str, value: tuple | bytes) -> None:
+            if isinstance(value, tuple):
+                if len(value) == 2:
+                    file_fields.append((name, (f"{value[1]}", BytesIO(value[0]))))
+                else:
+                    file_fields.append((name, BytesIO(value[0])))
+            else:
+                file_fields.append((name, BytesIO(value)))
+
+        def _add_data_value(name: str, value: Any) -> None:
+            if name in data_fields:
+                existing = data_fields[name]
+                if isinstance(existing, list):
+                    existing.append(f"{value}")
+                else:
+                    data_fields[name] = [existing, f"{value}"]
+            else:
+                data_fields[name] = f"{value}"
+
         def _add_form_value(name: str | None, value: Any) -> None:
             if value is None:
                 return
@@ -139,24 +158,12 @@ class Paperless:
                 for list_value in value:
                     _add_form_value(name, list_value)
                 return
-            if isinstance(value, tuple) and name is not None:
-                if len(value) == 2:
-                    file_fields.append((name, (f"{value[1]}", BytesIO(value[0]))))
-                else:
-                    file_fields.append((name, BytesIO(value[0])))
+            if name is None:
                 return
-            if isinstance(value, bytes) and name is not None:
-                file_fields.append((name, BytesIO(value)))
-                return
-            if name is not None:
-                if name in data_fields:
-                    existing = data_fields[name]
-                    if isinstance(existing, list):
-                        existing.append(f"{value}")
-                    else:
-                        data_fields[name] = [existing, f"{value}"]
-                else:
-                    data_fields[name] = f"{value}"
+            if isinstance(value, (tuple, bytes)):
+                _add_file_value(name, value)
+            else:
+                _add_data_value(name, value)
 
         _add_form_value(None, data)
         return data_fields, file_fields
@@ -197,7 +204,7 @@ class Paperless:
             data = res.json()
             res.raise_for_status()
             return str(data["token"])
-        except (json.JSONDecodeError, KeyError) as exc:
+        except (JSONDecodeError, KeyError) as exc:
             message = "Token is missing in response."
             raise BadJsonResponseError(message) from exc
         except httpx.HTTPStatusError as exc:

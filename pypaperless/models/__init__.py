@@ -5,11 +5,6 @@ from .config import Config
 from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
 from .document_types import DocumentType, DocumentTypeDraft
-from .storage_paths import StoragePath, StoragePathDraft
-from .tags import Tag, TagDraft
-
-# Resolve forward reference to CustomField in PaperlessCache
-PaperlessCache.model_rebuild()
 from .documents import (
     Document,
     DocumentDraft,
@@ -25,8 +20,13 @@ from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
 from .statistics import Statistic
 from .status import Status
+from .storage_paths import StoragePath, StoragePathDraft
+from .tags import Tag, TagDraft
 from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
+
+# Resolve forward reference to CustomField in PaperlessCache
+PaperlessCache.model_rebuild()
 
 __all__ = (
     "Config",

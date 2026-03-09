@@ -24,9 +24,12 @@ def object_to_dict_value(value: Any) -> Any:
         return value.value
     if isinstance(value, (date, datetime)):
         return _dateobj_to_str(value)
-    if isinstance(value, paperless_base.PaperlessModelData):
-        return object_to_dict_value(value.serialize())
-    if isinstance(value, BaseModel):
-        return object_to_dict_value(value.model_dump(mode="json"))
+    if isinstance(value, (paperless_base.PaperlessModelData, BaseModel)):
+        serialized = (
+            value.serialize()
+            if isinstance(value, paperless_base.PaperlessModelData)
+            else value.model_dump(mode="json")
+        )
+        return object_to_dict_value(serialized)
 
     return value

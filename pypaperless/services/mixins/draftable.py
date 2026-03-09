@@ -47,8 +47,8 @@ class DraftableMixin(ServiceProtocol[ResourceT]):
 
         """
         draft.validate_draft()  # type: ignore[attr-defined]
-        kwdict = draft._serialize()  # type: ignore[attr-defined] # noqa: SLF001
-        res = await self._client.request_json("post", draft._api_path, **kwdict)  # noqa: SLF001
+        kwdict = draft.serialize()  # type: ignore[attr-defined]
+        res = await self._client.request_json("post", draft._api_path, **kwdict)  # noqa: SLF001 # pylint: disable=protected-access
 
         if isinstance(res, dict):
             return int(res["id"])
