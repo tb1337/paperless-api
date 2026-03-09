@@ -1,18 +1,18 @@
-"""Provide `MailRule` related models and services."""
+"""Provide `MailRule` related models."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import ServiceBase, PaperlessModel
-from .mixins import services, models
+from . import mixins
+from .base import PaperlessModel
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class MailAccount(PaperlessModel, models.SecurableMixin):
+class MailAccount(PaperlessModel, mixins.SecurableMixin):
     """Represent a Paperless `MailAccount`."""
 
     _api_path: ClassVar[str] = API_PATH["mail_accounts_single"]
@@ -36,7 +36,7 @@ class MailAccount(PaperlessModel, models.SecurableMixin):
         self._format_api_path(data)
 
 
-class MailRule(PaperlessModel, models.SecurableMixin):
+class MailRule(PaperlessModel, mixins.SecurableMixin):
     """Represent a Paperless `MailRule`."""
 
     _api_path: ClassVar[str] = API_PATH["mail_rules_single"]
@@ -92,45 +92,3 @@ class ProcessedMail(PaperlessModel):
         """Initialize a `ProcessedMail` instance."""
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-
-
-class MailAccountService(
-    ServiceBase,
-    services.CallableMixin[MailAccount],
-    services.IterableMixin[MailAccount],
-    services.SecurableMixin,
-):
-    """Represent a factory for Paperless `MailAccount` models."""
-
-    _api_path = API_PATH["mail_accounts"]
-    _resource = PaperlessResource.MAIL_ACCOUNTS
-
-    _resource_cls = MailAccount
-
-
-class MailRuleService(
-    ServiceBase,
-    services.CallableMixin[MailRule],
-    services.IterableMixin[MailRule],
-    services.SecurableMixin,
-):
-    """Represent a factory for Paperless `MailRule` models."""
-
-    _api_path = API_PATH["mail_rules"]
-    _resource = PaperlessResource.MAIL_RULES
-
-    _resource_cls = MailRule
-
-
-class ProcessedMailService(
-    ServiceBase,
-    services.SecurableMixin,
-    services.CallableMixin[ProcessedMail],
-    services.IterableMixin[ProcessedMail],
-):
-    """Represent a factory for Paperless `ProcessedMail` models."""
-
-    _api_path = API_PATH["processed_mail"]
-    _resource = PaperlessResource.PROCESSED_MAIL
-
-    _resource_cls = ProcessedMail

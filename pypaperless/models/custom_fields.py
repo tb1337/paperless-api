@@ -1,10 +1,11 @@
-"""Provide `CustomField` related models and services."""
+"""Provide `CustomField` related models."""
 
 from typing import TYPE_CHECKING, Any, ClassVar, overload
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import PaperlessModel, ServiceBase
+from . import mixins
+from .base import PaperlessModel
 from .common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldExtraData,
@@ -12,7 +13,6 @@ from .common import (
     CustomFieldValue,
     CustomFieldValueT,
 )
-from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -68,7 +68,7 @@ class CustomField(
         return CustomFieldValue(field=self.id, value=value)
 
 
-class CustomFieldDraft(PaperlessModel, models.CreatableMixin):
+class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["custom_fields"]
@@ -78,20 +78,3 @@ class CustomFieldDraft(PaperlessModel, models.CreatableMixin):
     name: str | None = None
     data_type: CustomFieldType | None = None
     extra_data: CustomFieldExtraData | None = None
-
-
-class CustomFieldService(
-    ServiceBase,
-    services.CallableMixin[CustomField],
-    services.DraftableMixin[CustomFieldDraft],
-    services.IterableMixin[CustomField],
-    services.UpdatableMixin[CustomField],
-    services.DeletableMixin[CustomField],
-):
-    """Represent a factory for Paperless `CustomField` models."""
-
-    _api_path = API_PATH["custom_fields"]
-    _resource = PaperlessResource.CUSTOM_FIELDS
-
-    _draft_cls = CustomFieldDraft
-    _resource_cls = CustomField

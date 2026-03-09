@@ -1,6 +1,7 @@
 """DeletableMixin for PyPaperless services."""
 
-from pypaperless.models.base import ResourceT, ServiceProtocol
+from pypaperless.models.base import ResourceT
+from pypaperless.services.base import ServiceProtocol
 
 
 class DeletableMixin(ServiceProtocol[ResourceT]):

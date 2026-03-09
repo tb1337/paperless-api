@@ -1,18 +1,12 @@
 """PyPaperless models."""
 
-from .classifiers import (
-    Correspondent,
-    CorrespondentDraft,
-    DocumentType,
-    DocumentTypeDraft,
-    StoragePath,
-    StoragePathDraft,
-    Tag,
-    TagDraft,
-)
 from .common import PaperlessCache
 from .config import Config
+from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
+from .document_types import DocumentType, DocumentTypeDraft
+from .storage_paths import StoragePath, StoragePathDraft
+from .tags import Tag, TagDraft
 
 # Resolve forward reference to CustomField in PaperlessCache
 PaperlessCache.model_rebuild()

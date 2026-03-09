@@ -18,8 +18,8 @@ from .exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from .models.base import ServiceBase
 from .models.common import PaperlessCache
+from .services.base import ServiceBase
 
 
 class PaperlessProtocol(Protocol):

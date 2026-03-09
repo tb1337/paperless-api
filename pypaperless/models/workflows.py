@@ -1,10 +1,11 @@
-"""Provide `Workflow` related models and services."""
+"""Provide `Workflow` related models."""
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import PaperlessModel, ServiceBase
+from . import mixins
+from .base import PaperlessModel
 from .common import (
     WorkflowActionEmailType,
     WorkflowActionType,
@@ -13,7 +14,6 @@ from .common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
-from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -64,7 +64,7 @@ class WorkflowAction(PaperlessModel):
         self._format_api_path(data)
 
 
-class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
+class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     """Represent a Paperless `WorkflowTrigger`."""
 
     _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]
@@ -113,75 +113,3 @@ class Workflow(PaperlessModel):
         """Initialize a `Workflow` instance."""
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-
-
-class WorkflowActionService(
-    ServiceBase,
-    services.CallableMixin[WorkflowAction],
-    services.IterableMixin[WorkflowAction],
-):
-    """Represent a factory for Paperless `WorkflowAction` models."""
-
-    _api_path = API_PATH["workflow_actions"]
-    _resource = PaperlessResource.WORKFLOW_ACTIONS
-
-    _resource_cls = WorkflowAction
-
-
-class WorkflowTriggerService(
-    ServiceBase,
-    services.CallableMixin[WorkflowTrigger],
-    services.IterableMixin[WorkflowTrigger],
-):
-    """Represent a factory for Paperless `WorkflowTrigger` models."""
-
-    _api_path = API_PATH["workflow_triggers"]
-    _resource = PaperlessResource.WORKFLOW_TRIGGERS
-
-    _resource_cls = WorkflowTrigger
-
-
-class WorkflowService(
-    ServiceBase,
-    services.CallableMixin[Workflow],
-    services.IterableMixin[Workflow],
-):
-    """Represent a factory for Paperless `Workflow` models."""
-
-    _api_path = API_PATH["workflows"]
-    _resource = PaperlessResource.WORKFLOWS
-
-    _resource_cls = Workflow
-
-    def __init__(self, client: "Paperless") -> None:
-        """Initialize a `WorkflowService` instance."""
-        super().__init__(client)
-
-        self._actions = WorkflowActionService(client)
-        self._triggers = WorkflowTriggerService(client)
-
-    @property
-    def actions(self) -> WorkflowActionService:
-        """Return the attached `WorkflowActionService` instance.
-
-        Example:
-        -------
-        ```python
-        wf_action = await paperless.workflows.actions(5)
-        ```
-
-        """
-        return self._actions
-
-    @property
-    def triggers(self) -> WorkflowTriggerService:
-        """Return the attached `WorkflowTriggerService` instance.
-
-        Example:
-        -------
-        ```python
-        wf_trigger = await paperless.workflows.triggers(23)
-        ```
-
-        """
-        return self._triggers

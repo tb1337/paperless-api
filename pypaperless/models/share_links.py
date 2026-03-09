@@ -1,13 +1,13 @@
-"""Provide `ShareLink` related models and services."""
+"""Provide `ShareLink` related models."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import PaperlessModel, ServiceBase
+from . import mixins
+from .base import PaperlessModel
 from .common import ShareLinkFileVersionType
-from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -33,7 +33,7 @@ class ShareLink(
         self._format_api_path(data)
 
 
-class ShareLinkDraft(PaperlessModel, models.CreatableMixin):
+class ShareLinkDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["share_links"]
@@ -43,20 +43,3 @@ class ShareLinkDraft(PaperlessModel, models.CreatableMixin):
     expiration: datetime.datetime | None = None
     document: int | None = None
     file_version: ShareLinkFileVersionType | None = None
-
-
-class ShareLinkService(
-    ServiceBase,
-    services.CallableMixin[ShareLink],
-    services.DraftableMixin[ShareLinkDraft],
-    services.IterableMixin[ShareLink],
-    services.UpdatableMixin[ShareLink],
-    services.DeletableMixin[ShareLink],
-):
-    """Represent a factory for Paperless `ShareLink` models."""
-
-    _api_path = API_PATH["share_links"]
-    _resource = PaperlessResource.SHARE_LINKS
-
-    _draft_cls = ShareLinkDraft
-    _resource_cls = ShareLink

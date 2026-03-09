@@ -4,8 +4,8 @@ from collections.abc import AsyncIterator
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Self
 
-from pypaperless.models.base import PaperlessBase
 from pypaperless.models.pages import Page
+from pypaperless.services.base import PaperlessBase
 
 if TYPE_CHECKING:
     from pypaperless import Paperless

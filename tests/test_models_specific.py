@@ -45,7 +45,7 @@ from pypaperless.models.documents import (
     DocumentSuggestions,
     DownloadedDocument,
 )
-from pypaperless.models.workflows import WorkflowActionService, WorkflowTriggerService
+from pypaperless.services.workflows import WorkflowActionService, WorkflowTriggerService
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL

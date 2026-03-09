@@ -11,8 +11,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
-    from .classifiers import Correspondent, DocumentType, StoragePath, Tag
+    from .correspondents import Correspondent
     from .custom_fields import CustomField
+    from .document_types import DocumentType
+    from .storage_paths import StoragePath
+    from .tags import Tag
 
 
 # custom_fields

@@ -1,12 +1,11 @@
-"""Provide `User` and 'Group' related models and services."""
+"""Provide `User` and 'Group' related models."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import ServiceBase, PaperlessModel
-from .mixins import services
+from .base import PaperlessModel
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -52,29 +51,3 @@ class User(PaperlessModel):
         """Initialize a `User` instance."""
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-
-
-class GroupService(
-    ServiceBase,
-    services.CallableMixin[Group],
-    services.IterableMixin[Group],
-):
-    """Represent a factory for Paperless `Group` models."""
-
-    _api_path = API_PATH["groups"]
-    _resource = PaperlessResource.GROUPS
-
-    _resource_cls = Group
-
-
-class UserService(
-    ServiceBase,
-    services.CallableMixin[User],
-    services.IterableMixin[User],
-):
-    """Represent a factory for Paperless `User` models."""
-
-    _api_path = API_PATH["users"]
-    _resource = PaperlessResource.USERS
-
-    _resource_cls = User

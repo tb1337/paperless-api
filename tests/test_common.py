@@ -20,7 +20,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 from pypaperless.models import CustomField, Page
-from pypaperless.models.base import PaperlessModel, ServiceBase
+from pypaperless.models.base import PaperlessModel
 from pypaperless.models.common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
@@ -38,8 +38,9 @@ from pypaperless.models.common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
-from pypaperless.models.mixins import services
 from pypaperless.models.utils import object_to_dict_value
+from pypaperless.services import mixins as service_mixins
+from pypaperless.services.base import ServiceBase
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -546,7 +547,7 @@ class TestPaperless:
         class TestResource(PaperlessModel):
             """Test Resource."""
 
-        class TestService(ServiceBase, services.DraftableMixin):
+        class TestService(ServiceBase, service_mixins.DraftableMixin):
             """Test Service."""
 
             _api_path = "any.url"

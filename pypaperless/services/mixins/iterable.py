@@ -4,8 +4,9 @@ from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self
 
-from pypaperless.models.base import ServiceProtocol, ResourceT
-from pypaperless.models.generators import PageGenerator
+from pypaperless.models.base import ResourceT
+from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.generators import PageGenerator
 
 if TYPE_CHECKING:
     from pypaperless.models import Page

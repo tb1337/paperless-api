@@ -3,7 +3,8 @@
 from typing import Any
 
 from pypaperless.exceptions import DraftNotSupportedError
-from pypaperless.models.base import ResourceT, ServiceProtocol
+from pypaperless.models.base import ResourceT
+from pypaperless.services.base import ServiceProtocol
 
 
 class DraftableMixin(ServiceProtocol[ResourceT]):

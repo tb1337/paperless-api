@@ -1,4 +1,4 @@
-"""PermissionFieldsMixin for PyPaperless models."""
+"""MatchingFieldsMixin for PyPaperless models."""
 
 from pydantic import BaseModel
 

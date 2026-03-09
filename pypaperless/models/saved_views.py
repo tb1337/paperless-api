@@ -1,18 +1,18 @@
-"""Provide `SavedView` related models and services."""
+"""Provide `SavedView` related models."""
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import ServiceBase, PaperlessModel
+from . import mixins
+from .base import PaperlessModel
 from .common import SavedViewFilterRuleType
-from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class SavedView(PaperlessModel, models.SecurableMixin):
+class SavedView(PaperlessModel, mixins.SecurableMixin):
     """Represent a Paperless `SavedView`."""
 
     _api_path: ClassVar[str] = API_PATH["saved_views_single"]
@@ -32,17 +32,3 @@ class SavedView(PaperlessModel, models.SecurableMixin):
         """Initialize a `SavedView` instance."""
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-
-
-class SavedViewService(
-    ServiceBase,
-    services.CallableMixin[SavedView],
-    services.IterableMixin[SavedView],
-    services.SecurableMixin,
-):
-    """Represent a factory for Paperless `SavedView` models."""
-
-    _api_path = API_PATH["saved_views"]
-    _resource = PaperlessResource.SAVED_VIEWS
-
-    _resource_cls = SavedView
