@@ -48,6 +48,11 @@ class PaperlessModel(BaseModel):
         if format_kwargs["pk"] is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(**format_kwargs))
 
+    @classmethod
+    def format_api_path(cls, **kwargs: Any) -> str:
+        """Return the formatted API path for this model class."""
+        return cls._api_path.format(**kwargs)
+
     @final
     @classmethod
     def create_with_data(

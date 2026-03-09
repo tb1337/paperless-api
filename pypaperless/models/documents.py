@@ -196,7 +196,7 @@ class Document(
             kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
         super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-        from pypaperless.services.documents import (  # pylint: disable=import-outside-toplevel
+        from pypaperless.services.documents import (  # noqa: PLC0415 # pylint: disable=import-outside-toplevel
             DocumentNoteService,
         )
 

@@ -35,7 +35,7 @@ class CallableMixin(ServiceProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params["full_perms"] = "true"
 
-        api_path = self._resource_cls._api_path.format(pk=pk)
+        api_path = self._resource_cls.format_api_path(pk=pk)
         data = await self._client.request_json("get", api_path, params=params or None)
 
         return self._resource_cls.create_with_data(self._client, data)

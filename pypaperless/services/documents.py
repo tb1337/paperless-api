@@ -37,7 +37,7 @@ class DocumentSuggestionsService(ServiceBase):
 
     async def __call__(self, pk: int) -> DocumentSuggestions:
         """Request exactly one resource item."""
-        api_path = self._resource_cls._api_path.format(pk=pk)
+        api_path = self._resource_cls.format_api_path(pk=pk)
         data = await self._client.request_json("get", api_path)
         data["id"] = pk
 
@@ -80,9 +80,9 @@ class DocumentSubServiceBase(ServiceBase):
             parts = content_disposition.split(";")
             data["disposition_type"] = parts[0].strip()
             for part in parts[1:]:
-                part = part.strip()
-                if part.startswith("filename="):
-                    data["disposition_filename"] = part.split("=", 1)[1].strip('"')
+                stripped = part.strip()
+                if stripped.startswith("filename="):
+                    data["disposition_filename"] = stripped.split("=", 1)[1].strip('"')
 
         return self._resource_cls.create_with_data(self._client, data)
 

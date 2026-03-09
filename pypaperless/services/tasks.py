@@ -56,6 +56,6 @@ class TaskService(ServiceBase):
             except IndexError as exc:
                 raise TaskNotFoundError(task_id) from exc
         else:
-            api_path = self._resource_cls._api_path.format(pk=task_id)
+            api_path = self._resource_cls.format_api_path(pk=task_id)
             data = await self._client.request_json("get", api_path)
             return self._resource_cls.create_with_data(self._client, data)
