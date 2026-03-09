@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
 
-from .base import ServiceBase, PaperlessModel
+from .base import PaperlessModel, ServiceBase
 from .common import TaskStatusType, TaskType
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ class TaskService(ServiceBase):
         """
         res = await self._client.request_json("get", self._api_path)
         for data in res:
-            yield self._resource_cls.create_with_data(self._client, data, fetched=True)
+            yield self._resource_cls.create_with_data(self._client, data)
 
     async def __call__(self, task_id: int | str) -> Task:
         """Request exactly one task by id.
@@ -81,14 +81,10 @@ class TaskService(ServiceBase):
             }
             res = await self._client.request_json("get", self._api_path, params=params)
             try:
-                item = self._resource_cls.create_with_data(self._client, res.pop(), fetched=True)
+                return self._resource_cls.create_with_data(self._client, res.pop())
             except IndexError as exc:
                 raise TaskNotFoundError(task_id) from exc
         else:
-            data = {
-                "id": task_id,
-            }
-            item = self._resource_cls.create_with_data(self._client, data)
-            await item.load()
-
-        return item
+            api_path = self._resource_cls._api_path.format(pk=task_id)
+            data = await self._client.request_json("get", api_path)
+            return self._resource_cls.create_with_data(self._client, data)

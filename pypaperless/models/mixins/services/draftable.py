@@ -3,11 +3,11 @@
 from typing import Any
 
 from pypaperless.exceptions import DraftNotSupportedError
-from pypaperless.models.base import ServiceProtocol, ResourceT
+from pypaperless.models.base import ResourceT, ServiceProtocol
 
 
 class DraftableMixin(ServiceProtocol[ResourceT]):
-    """Provide the `draft` method for PyPaperless services."""
+    """Provide the `draft` and `save` methods for PyPaperless services."""
 
     _draft_cls: type[ResourceT]
 
@@ -27,4 +27,28 @@ class DraftableMixin(ServiceProtocol[ResourceT]):
             raise DraftNotSupportedError(message)
         kwargs.update({"id": -1})
 
-        return self._draft_cls.create_with_data(self._client, data=kwargs, fetched=True)
+        return self._draft_cls.create_with_data(self._client, data=kwargs)
+
+    async def save(self, draft: ResourceT) -> int | str:
+        """Create a new `resource item` in Paperless.
+
+        Return the created item `id`, or a `task_id` in case of documents.
+
+        Example:
+        -------
+        ```python
+        draft = paperless.documents.draft(document=bytes(...))
+        draft.title = "Add a title"
+
+        # request Paperless to store the new item
+        await paperless.documents.save(draft)
+        ```
+
+        """
+        draft.validate_draft()  # type: ignore[attr-defined]
+        kwdict = draft._serialize()  # type: ignore[attr-defined] # noqa: SLF001
+        res = await self._client.request_json("post", draft._api_path, **kwdict)  # noqa: SLF001
+
+        if isinstance(res, dict):
+            return int(res["id"])
+        return str(res)

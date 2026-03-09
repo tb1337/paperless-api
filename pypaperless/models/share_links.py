@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import ServiceBase, PaperlessModel
+from .base import PaperlessModel, ServiceBase
 from .common import ShareLinkFileVersionType
-from .mixins import services, models
+from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -15,8 +15,6 @@ if TYPE_CHECKING:
 
 class ShareLink(
     PaperlessModel,
-    models.DeletableMixin,
-    models.UpdatableMixin,
 ):
     """Represent a Paperless `ShareLink`."""
 
@@ -52,6 +50,8 @@ class ShareLinkService(
     services.CallableMixin[ShareLink],
     services.DraftableMixin[ShareLinkDraft],
     services.IterableMixin[ShareLink],
+    services.UpdatableMixin[ShareLink],
+    services.DeletableMixin[ShareLink],
 ):
     """Represent a factory for Paperless `ShareLink` models."""
 

@@ -375,7 +375,6 @@ class TestPaperless:
         custom_field = CustomField.create_with_data(
             paperless,
             data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
-            fetched=True,
         )
         field_value = custom_field.draft_value(1337)
         for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
@@ -399,7 +398,6 @@ class TestPaperless:
         custom_field = CustomField.create_with_data(
             client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][5],
-            fetched=True,
         )
         field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)
         assert isinstance(field_value, CustomFieldIntegerValue)
@@ -511,7 +509,7 @@ class TestPaperless:
             data["all"].append(i)
             data["results"].append({"id": i})
 
-        page = Page.create_with_data(api, data=data, fetched=True)
+        page = Page.create_with_data(api, data=data)
         page._resource_cls = TestResource  # pylint: disable=protected-access
 
         assert isinstance(page, Page)

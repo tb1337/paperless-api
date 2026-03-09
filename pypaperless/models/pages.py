@@ -62,9 +62,9 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
         """
 
         def mapper(data: dict[str, Any]) -> ResourceT:
-            return self._resource_cls.create_with_data(self._client, data, fetched=True)
+            return self._resource_cls.create_with_data(self._client, data)
 
-        return list(map(mapper, self._data["results"]))
+        return list(map(mapper, self.results))
 
     @property
     def is_last_page(self) -> bool:

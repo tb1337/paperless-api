@@ -1,6 +1,8 @@
 """CallableMixin for PyPaperless services."""
 
-from pypaperless.models.base import ServiceProtocol, ResourceT
+from typing import Any
+
+from pypaperless.models.base import ResourceT, ServiceProtocol
 
 
 class CallableMixin(ServiceProtocol[ResourceT]):
@@ -20,20 +22,19 @@ class CallableMixin(ServiceProtocol[ResourceT]):
         # request a document
         document = await paperless.documents(42)
 
-        # initialize a model and request it later
+        # initialize a model without fetching data
         document = await paperless.documents(42, lazy=True)
         ```
 
         """
-        data = {
-            "id": pk,
-        }
-        item = self._resource_cls.create_with_data(self._client, data)
+        if lazy:
+            return self._resource_cls.create_with_data(self._client, {"id": pk})
 
-        # set requesting full permissions
+        params: dict[str, Any] = {}
         if getattr(self, "_request_full_perms", False):
-            item._params.update({"full_perms": "true"})  # noqa: SLF001
+            params["full_perms"] = "true"
 
-        if not lazy:
-            await item.load()
-        return item
+        api_path = self._resource_cls._api_path.format(pk=pk)
+        data = await self._client.request_json("get", api_path, params=params or None)
+
+        return self._resource_cls.create_with_data(self._client, data)

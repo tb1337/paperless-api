@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import ServiceBase, PaperlessModel
-from .mixins import services, models
+from .base import PaperlessModel, ServiceBase
+from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -16,8 +16,6 @@ class Correspondent(
     PaperlessModel,
     models.MatchingFieldsMixin,
     models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `Correspondent`."""
 
@@ -59,8 +57,6 @@ class DocumentType(
     PaperlessModel,
     models.MatchingFieldsMixin,
     models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `DocumentType`."""
 
@@ -102,8 +98,6 @@ class StoragePath(
     PaperlessModel,
     models.MatchingFieldsMixin,
     models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `StoragePath`."""
 
@@ -148,8 +142,6 @@ class Tag(
     PaperlessModel,
     models.MatchingFieldsMixin,
     models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `Tag`."""
 
@@ -203,6 +195,8 @@ class CorrespondentService(
     services.CallableMixin[Correspondent],
     services.DraftableMixin[CorrespondentDraft],
     services.IterableMixin[Correspondent],
+    services.UpdatableMixin[Correspondent],
+    services.DeletableMixin[Correspondent],
 ):
     """Represent a factory for Paperless `Correspondent` models."""
 
@@ -219,6 +213,8 @@ class DocumentTypeService(
     services.CallableMixin[DocumentType],
     services.DraftableMixin[DocumentTypeDraft],
     services.IterableMixin[DocumentType],
+    services.UpdatableMixin[DocumentType],
+    services.DeletableMixin[DocumentType],
 ):
     """Represent a factory for Paperless `DocumentType` models."""
 
@@ -235,6 +231,8 @@ class StoragePathService(
     services.CallableMixin[StoragePath],
     services.DraftableMixin[StoragePathDraft],
     services.IterableMixin[StoragePath],
+    services.UpdatableMixin[StoragePath],
+    services.DeletableMixin[StoragePath],
 ):
     """Represent a factory for Paperless `StoragePath` models."""
 
@@ -251,6 +249,8 @@ class TagService(
     services.CallableMixin[Tag],
     services.DraftableMixin[TagDraft],
     services.IterableMixin[Tag],
+    services.UpdatableMixin[Tag],
+    services.DeletableMixin[Tag],
 ):
     """Represent a factory for Paperless `Tag` models."""
 

@@ -26,7 +26,7 @@ from .common import (
     RetrieveFileMode,
 )
 from .custom_fields import CustomField
-from .mixins import services, models
+from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -164,8 +164,6 @@ class DocumentCustomFieldList(PaperlessModelData):
 class Document(
     PaperlessModel,
     models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `Document`."""
 
@@ -303,29 +301,6 @@ class DocumentNote(PaperlessModel):
 
         self._format_api_path(data, pk=data.get("document"))
 
-    async def delete(self) -> bool:
-        """Delete a `resource item` from DRF. There is no point of return.
-
-        Return `True` when deletion was successful, `False` otherwise.
-
-        Example:
-        -------
-        ```python
-        # request document notes
-        notes = await paperless.documents.notes(42)
-
-        for note in notes:
-            if await note.delete():
-                print("Successfully deleted the note!")
-        ```
-
-        """
-        params = {
-            "id": self.id,
-        }
-        res = await self._client.request("delete", self._api_path, params=params)
-        return res.status_code in {200, 204}  # backward compatibility
-
 
 class DocumentNoteDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
@@ -383,42 +358,6 @@ class DownloadedDocument(PaperlessModel):
     disposition_filename: str | None = None
     disposition_type: str | None = None
 
-    async def load(self) -> None:
-        """Get `raw data` from DRF."""
-        self._format_api_path(self._data)
-
-        params = {
-            "original": "true" if self._data.get("original", False) else "false",
-        }
-
-        res = await self._client.request("get", self._api_path, params=params)
-        self._data.update(
-            {
-                "content": res.content,
-                "content_type": res.headers.get("content-type"),
-            }
-        )
-
-        content_disposition = res.headers.get("content-disposition")
-        if content_disposition is not None:
-            # Parse content-disposition header
-            parts = content_disposition.split(";")
-            disposition_type = parts[0].strip()
-            disposition_filename = None
-            for part in parts[1:]:
-                part = part.strip()
-                if part.startswith("filename="):
-                    disposition_filename = part.split("=", 1)[1].strip('"')
-            self._data.update(
-                {
-                    "disposition_filename": disposition_filename,
-                    "disposition_type": disposition_type,
-                }
-            )
-
-        self._apply_data()
-        self._fetched = True
-
 
 class DocumentSuggestions(PaperlessModel):
     """Represent a Paperless `Document` suggestions."""
@@ -449,13 +388,11 @@ class DocumentSuggestionsService(ServiceBase):
 
     async def __call__(self, pk: int) -> DocumentSuggestions:
         """Request exactly one resource item."""
-        data = {
-            "id": pk,
-        }
-        item = self._resource_cls.create_with_data(self._client, data)
-        await item.load()
+        api_path = self._resource_cls._api_path.format(pk=pk)
+        data = await self._client.request_json("get", api_path)
+        data["id"] = pk
 
-        return item
+        return self._resource_cls.create_with_data(self._client, data)
 
 
 class DocumentSubServiceBase(ServiceBase):
@@ -475,16 +412,30 @@ class DocumentSubServiceBase(ServiceBase):
         original: bool,
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
-        data = {
+        params = {
+            "original": "true" if original else "false",
+        }
+
+        res = await self._client.request("get", api_path.format(pk=pk), params=params)
+
+        data: dict[str, Any] = {
             "id": pk,
             "mode": mode,
             "original": original,
+            "content": res.content,
+            "content_type": res.headers.get("content-type"),
         }
-        item = self._resource_cls.create_with_data(self._client, data)
-        object.__setattr__(item, "_api_path", api_path)
-        await item.load()
 
-        return item
+        content_disposition = res.headers.get("content-disposition")
+        if content_disposition is not None:
+            parts = content_disposition.split(";")
+            data["disposition_type"] = parts[0].strip()
+            for part in parts[1:]:
+                part = part.strip()
+                if part.startswith("filename="):
+                    data["disposition_filename"] = part.split("=", 1)[1].strip('"')
+
+        return self._resource_cls.create_with_data(self._client, data)
 
 
 class DocumentFileDownloadService(DocumentSubServiceBase):
@@ -587,7 +538,6 @@ class DocumentNoteService(ServiceBase):
                     if self._client.host_api_version >= 8
                     else item["user"],
                 },
-                fetched=True,
             )
             for item in res
         ]
@@ -618,8 +568,31 @@ class DocumentNoteService(ServiceBase):
         return DocumentNoteDraft.create_with_data(
             self._client,
             data=kwargs,
-            fetched=True,
         )
+
+    async def save(self, draft: DocumentNoteDraft) -> tuple[int, int]:
+        """Create a new `DocumentNote` in Paperless.
+
+        Return a tuple of (note_id, document_id).
+        """
+        draft.validate_draft()
+        kwdict = draft._serialize()  # noqa: SLF001
+        res = await self._client.request_json("post", draft._api_path, **kwdict)  # noqa: SLF001
+        return (
+            cast("int", max(item.get("id") for item in res)),
+            cast("int", kwdict["json"]["document"]),
+        )
+
+    async def delete(self, note: DocumentNote) -> bool:
+        """Delete a document note.
+
+        Return `True` when deletion was successful, `False` otherwise.
+        """
+        params = {
+            "id": note.id,
+        }
+        res = await self._client.request("delete", note._api_path, params=params)  # noqa: SLF001
+        return res.status_code in {200, 204}
 
 
 class DocumentService(
@@ -628,6 +601,8 @@ class DocumentService(
     services.CallableMixin[Document],
     services.DraftableMixin[DocumentDraft],
     services.IterableMixin[Document],
+    services.UpdatableMixin[Document],
+    services.DeletableMixin[Document],
 ):
     """Represent a factory for Paperless `Document` models."""
 

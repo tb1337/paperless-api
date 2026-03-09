@@ -10,7 +10,7 @@ from pypaperless.models.common import (
     StatusType,
 )
 
-from .base import ServiceBase, PaperlessModel
+from .base import PaperlessModel, ServiceBase
 
 
 class Status(PaperlessModel):
@@ -55,4 +55,4 @@ class StatusService(ServiceBase):
     async def __call__(self) -> Status:
         """Request the `Status` model data."""
         res = await self._client.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._client, res, fetched=True)
+        return self._resource_cls.create_with_data(self._client, res)

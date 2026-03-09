@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import ServiceBase, PaperlessModel
+from .base import PaperlessModel, ServiceBase
 from .common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldExtraData,
@@ -12,7 +12,7 @@ from .common import (
     CustomFieldValue,
     CustomFieldValueT,
 )
-from .mixins import services, models
+from .mixins import models, services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -20,8 +20,6 @@ if TYPE_CHECKING:
 
 class CustomField(
     PaperlessModel,
-    models.UpdatableMixin,
-    models.DeletableMixin,
 ):
     """Represent a Paperless `CustomField`."""
 
@@ -87,6 +85,8 @@ class CustomFieldService(
     services.CallableMixin[CustomField],
     services.DraftableMixin[CustomFieldDraft],
     services.IterableMixin[CustomField],
+    services.UpdatableMixin[CustomField],
+    services.DeletableMixin[CustomField],
 ):
     """Represent a factory for Paperless `CustomField` models."""
 

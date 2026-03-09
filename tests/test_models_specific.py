@@ -97,17 +97,9 @@ class TestModelDocuments:
 
     async def test_lazy(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test laziness."""
-        document = Document(paperless, data={"id": 1})
-        assert not document.is_fetched
-
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENTS["results"][0],
-        )
-        await document.load()
-        assert document.is_fetched
+        document = await paperless.documents(42, lazy=True)
+        assert document.id == 42
+        assert document.title is None
 
     async def test_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test create."""
@@ -117,7 +109,7 @@ class TestModelDocuments:
         backup = draft.document
         draft.document = None
         with pytest.raises(DraftFieldRequiredError):
-            await draft.save()
+            await paperless.documents.save(draft)
         draft.document = backup
         # actually call the create endpoint
         httpx_mock.add_response(
@@ -126,13 +118,11 @@ class TestModelDocuments:
             status_code=200,
             json="11112222-3333-4444-5555-666677778888",
         )
-        await draft.save()
+        await paperless.documents.save(draft)
 
     async def test_create_date_property(self, paperless: Paperless) -> None:
         """Test create_date property - well, lol."""
-        document = Document.create_with_data(
-            paperless, data={**DATA_DOCUMENTS["results"][0]}, fetched=True
-        )
+        document = Document.create_with_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
         assert document.created_date == document.created
 
     async def test_udpate(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
@@ -156,7 +146,7 @@ class TestModelDocuments:
                 "title": new_title,
             },
         )
-        await to_update.update()
+        await paperless.documents.update(to_update)
         assert to_update.title == new_title
 
     async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
@@ -173,14 +163,14 @@ class TestModelDocuments:
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=204,  # Paperless-ngx responds with 204 on deletion
         )
-        assert await to_delete.delete()
+        assert await paperless.documents.delete(to_delete)
         # test deletion failed
         httpx_mock.add_response(
             method="DELETE",
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=404,  # we send another status code
         )
-        assert not await to_delete.delete()
+        assert not await paperless.documents.delete(to_delete)
 
     async def test_meta(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test meta."""
@@ -377,7 +367,7 @@ class TestModelDocuments:
         backup = draft.note
         draft.note = None
         with pytest.raises(DraftFieldRequiredError):
-            await draft.save()
+            await item.notes.save(draft)
         draft.note = backup
         # actually call the create endpoint
         httpx_mock.add_response(
@@ -386,7 +376,7 @@ class TestModelDocuments:
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
-        result = await draft.save()
+        result = await item.notes.save(draft)
         assert isinstance(result, tuple)
 
     async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
@@ -412,7 +402,7 @@ class TestModelDocuments:
             ),
             status_code=204,  # Paperless-ngx responds with 204 on deletion
         )
-        deletion = await results.pop().delete()
+        deletion = await item.notes.delete(results.pop())
         assert deletion
 
     async def test_custom_field_list_wo_cache(
@@ -466,7 +456,6 @@ class TestModelDocuments:
         test_cf = CustomField.create_with_data(
             client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][0],
-            fetched=True,
         )
         assert test_cf in item.custom_fields
         assert isinstance(item.custom_fields.get(test_cf), CustomFieldValue)
@@ -595,17 +584,17 @@ class TestModelStatus:
         }
 
         # everything fine as we initialized Status with OK values only
-        status = Status.create_with_data(paperless, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data)
         assert status.has_errors is False
 
         # lets set something to ERROR
         data["database"]["status"] = "ERROR"
-        status = Status.create_with_data(paperless, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data)
         assert status.has_errors is True
 
         # assume any status value is None; None values are treated as no errors
         del data["database"]["status"]
-        status = Status.create_with_data(paperless, data=data, fetched=True)
+        status = Status.create_with_data(paperless, data=data)
         assert status.has_errors is False
 
 
