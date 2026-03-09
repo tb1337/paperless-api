@@ -1,10 +1,10 @@
-"""Provide `Statistics` related models and helpers."""
+"""Provide `Statistics` related models and services."""
 
 from typing import ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
+from .base import ServiceBase, PaperlessModel
 from .common import StatisticDocumentFileTypeCount
 
 
@@ -26,7 +26,7 @@ class Statistic(PaperlessModel):
     current_asn: int | None = None
 
 
-class StatisticHelper(HelperBase):
+class StatisticService(ServiceBase):
     """Represent a factory for Paperless `Statistic` models."""
 
     _api_path = API_PATH["statistics"]
@@ -36,5 +36,5 @@ class StatisticHelper(HelperBase):
 
     async def __call__(self) -> Statistic:
         """Request the `Statistic` model data."""
-        res = await self._api.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._api, res, fetched=True)
+        res = await self._client.request_json("get", self._api_path)
+        return self._resource_cls.create_with_data(self._client, res, fetched=True)

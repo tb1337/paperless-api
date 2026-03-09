@@ -1,12 +1,12 @@
-"""Provide `Correspondent`, `DocumentType`, `StoragePath` and `Tag` related models and helpers."""
+"""Provide `Correspondent`, `DocumentType`, `StoragePath` and `Tag` related models and services."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
-from .mixins import helpers, models
+from .base import ServiceBase, PaperlessModel
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -29,9 +29,9 @@ class Correspondent(
     document_count: int | None = None
     last_correspondence: datetime.date | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Correspondent` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -71,9 +71,9 @@ class DocumentType(
     name: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentType` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -115,9 +115,9 @@ class StoragePath(
     path: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `StoragePath` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -165,9 +165,9 @@ class Tag(
     parent: int | None = None
     children: list["Tag"] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Tag` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -197,12 +197,12 @@ class TagDraft(
     owner: int | None = None
 
 
-class CorrespondentHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[Correspondent],
-    helpers.DraftableMixin[CorrespondentDraft],
-    helpers.IterableMixin[Correspondent],
+class CorrespondentService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[Correspondent],
+    services.DraftableMixin[CorrespondentDraft],
+    services.IterableMixin[Correspondent],
 ):
     """Represent a factory for Paperless `Correspondent` models."""
 
@@ -213,12 +213,12 @@ class CorrespondentHelper(
     _resource_cls = Correspondent
 
 
-class DocumentTypeHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[DocumentType],
-    helpers.DraftableMixin[DocumentTypeDraft],
-    helpers.IterableMixin[DocumentType],
+class DocumentTypeService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[DocumentType],
+    services.DraftableMixin[DocumentTypeDraft],
+    services.IterableMixin[DocumentType],
 ):
     """Represent a factory for Paperless `DocumentType` models."""
 
@@ -229,12 +229,12 @@ class DocumentTypeHelper(
     _resource_cls = DocumentType
 
 
-class StoragePathHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[StoragePath],
-    helpers.DraftableMixin[StoragePathDraft],
-    helpers.IterableMixin[StoragePath],
+class StoragePathService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[StoragePath],
+    services.DraftableMixin[StoragePathDraft],
+    services.IterableMixin[StoragePath],
 ):
     """Represent a factory for Paperless `StoragePath` models."""
 
@@ -245,12 +245,12 @@ class StoragePathHelper(
     _resource_cls = StoragePath
 
 
-class TagHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[Tag],
-    helpers.DraftableMixin[TagDraft],
-    helpers.IterableMixin[Tag],
+class TagService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[Tag],
+    services.DraftableMixin[TagDraft],
+    services.IterableMixin[Tag],
 ):
     """Represent a factory for Paperless `Tag` models."""
 

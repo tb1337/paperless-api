@@ -1,9 +1,9 @@
-"""CallableMixin for PyPaperless helpers."""
+"""CallableMixin for PyPaperless services."""
 
-from pypaperless.models.base import HelperProtocol, ResourceT
+from pypaperless.models.base import ServiceProtocol, ResourceT
 
 
-class CallableMixin(HelperProtocol[ResourceT]):
+class CallableMixin(ServiceProtocol[ResourceT]):
     """Provide methods for calling a specific resource item."""
 
     async def __call__(
@@ -28,7 +28,7 @@ class CallableMixin(HelperProtocol[ResourceT]):
         data = {
             "id": pk,
         }
-        item = self._resource_cls.create_with_data(self._api, data)
+        item = self._resource_cls.create_with_data(self._client, data)
 
         # set requesting full permissions
         if getattr(self, "_request_full_perms", False):

@@ -1,4 +1,4 @@
-"""Mixins for PyPaperless helpers."""
+"""Mixins for PyPaperless services."""
 
 from .callable import CallableMixin
 from .draftable import DraftableMixin

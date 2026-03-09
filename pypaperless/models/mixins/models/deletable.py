@@ -27,5 +27,5 @@ class DeletableMixin(_Base):
         ```
 
         """
-        res = await self._api.request("delete", self._api_path)
+        res = await self._client.request("delete", self._api_path)
         return res.status_code == 204

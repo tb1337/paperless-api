@@ -19,22 +19,22 @@ class PaperlessBase:
 
     _api_path = API_PATH["index"]
 
-    def __init__(self, api: "Paperless") -> None:
+    def __init__(self, client: "Paperless") -> None:
         """Initialize a `PaperlessBase` instance."""
-        self._api = api
+        self._client = client
 
 
-class HelperProtocol[ResourceT](Protocol):
-    """Protocol for any `HelperBase` instances and its ancestors."""
+class ServiceProtocol[ResourceT](Protocol):
+    """Protocol for any `ServiceBase` instances and its ancestors."""
 
-    _api: "Paperless"
+    _client: "Paperless"
     _api_path: str
     _resource: PaperlessResource
     _resource_cls: type[ResourceT]
 
 
-class HelperBase(PaperlessBase):
-    """Base class for all helpers in PyPaperless."""
+class ServiceBase(PaperlessBase):
+    """Base class for all services in PyPaperless."""
 
     _resource: PaperlessResource
 
@@ -42,7 +42,7 @@ class HelperBase(PaperlessBase):
 class PaperlessModelProtocol(Protocol):
     """Protocol for any `PaperlessModel` instances and its ancestors."""
 
-    _api: "Paperless"
+    _client: "Paperless"
     _api_path: str
     _data: dict[str, Any]
     _fetched: bool
@@ -65,15 +65,15 @@ class PaperlessModel(BaseModel):
     _api_path: ClassVar[str] = API_PATH["index"]
 
     # Private attributes - not part of the Pydantic model schema
-    _api: "Paperless" = PrivateAttr()
+    _client: "Paperless" = PrivateAttr()
     _data: dict[str, Any] = PrivateAttr(default_factory=dict)
     _fetched: bool = PrivateAttr(default=False)
     _params: dict[str, Any] = PrivateAttr(default_factory=dict)
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `PaperlessModel` instance."""
         super().__init__(**kwargs)
-        self._api = api
+        self._client = client
         self._data = dict(data)
         self._fetched = False
         self._params = {}
@@ -91,8 +91,8 @@ class PaperlessModel(BaseModel):
 
         Example:
             class Document(PaperlessModel):
-                def __init__(self, api, data, **kwargs):
-                    super().__init__(api, data, **kwargs)
+                def __init__(self, client, data, **kwargs):
+                    super().__init__(client, data, **kwargs)
                     self._format_api_path(data)
 
         """
@@ -104,7 +104,7 @@ class PaperlessModel(BaseModel):
     @classmethod
     def create_with_data(
         cls,
-        api: "Paperless",
+        client: "Paperless",
         data: dict[str, Any],
         *,
         fetched: bool = False,
@@ -115,7 +115,7 @@ class PaperlessModel(BaseModel):
 
         Example: `document = Document.create_with_data(...)`
         """
-        item = cls(api=api, data=data, **data)
+        item = cls(client=client, data=data, **data)
 
         item._fetched = fetched
         return item
@@ -127,7 +127,7 @@ class PaperlessModel(BaseModel):
 
     async def load(self) -> None:
         """Get `model data` from DRF."""
-        data = await self._api.request_json("get", self._api_path, params=self._params)
+        data = await self._client.request_json("get", self._api_path, params=self._params)
 
         self._data.update(data)
         self._apply_data()
@@ -171,7 +171,7 @@ class PaperlessModelData(ABC):
 
     @classmethod
     @abstractmethod
-    def unserialize(cls, api: "Paperless", data: Any) -> Self:
+    def unserialize(cls, client: "Paperless", data: Any) -> Self:
         """Return a new instance of `cls` from `data`."""
 
     @abstractmethod

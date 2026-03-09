@@ -1,12 +1,12 @@
-"""Provide `MailRule` related models and helpers."""
+"""Provide `MailRule` related models and services."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
-from .mixins import helpers, models
+from .base import ServiceBase, PaperlessModel
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -30,9 +30,9 @@ class MailAccount(PaperlessModel, models.SecurableMixin):
     account_type: int | None = None
     expiration: datetime.datetime | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailAccount` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -66,9 +66,9 @@ class MailRule(PaperlessModel, models.SecurableMixin):
     consumption_scope: int | None = None
     pdf_layout: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailRule` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -88,17 +88,17 @@ class ProcessedMail(PaperlessModel):
     status: str | None = None
     error: str | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `ProcessedMail` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
-class MailAccountHelper(
-    HelperBase,
-    helpers.CallableMixin[MailAccount],
-    helpers.IterableMixin[MailAccount],
-    helpers.SecurableMixin,
+class MailAccountService(
+    ServiceBase,
+    services.CallableMixin[MailAccount],
+    services.IterableMixin[MailAccount],
+    services.SecurableMixin,
 ):
     """Represent a factory for Paperless `MailAccount` models."""
 
@@ -108,11 +108,11 @@ class MailAccountHelper(
     _resource_cls = MailAccount
 
 
-class MailRuleHelper(
-    HelperBase,
-    helpers.CallableMixin[MailRule],
-    helpers.IterableMixin[MailRule],
-    helpers.SecurableMixin,
+class MailRuleService(
+    ServiceBase,
+    services.CallableMixin[MailRule],
+    services.IterableMixin[MailRule],
+    services.SecurableMixin,
 ):
     """Represent a factory for Paperless `MailRule` models."""
 
@@ -122,11 +122,11 @@ class MailRuleHelper(
     _resource_cls = MailRule
 
 
-class ProcessedMailHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[ProcessedMail],
-    helpers.IterableMixin[ProcessedMail],
+class ProcessedMailService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[ProcessedMail],
+    services.IterableMixin[ProcessedMail],
 ):
     """Represent a factory for Paperless `ProcessedMail` models."""
 

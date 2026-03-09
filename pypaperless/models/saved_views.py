@@ -1,12 +1,12 @@
-"""Provide `SavedView` related models and helpers."""
+"""Provide `SavedView` related models and services."""
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
+from .base import ServiceBase, PaperlessModel
 from .common import SavedViewFilterRuleType
-from .mixins import helpers, models
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -28,17 +28,17 @@ class SavedView(PaperlessModel, models.SecurableMixin):
     display_mode: str | None = None
     display_fields: list[str] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `SavedView` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
-class SavedViewHelper(
-    HelperBase,
-    helpers.CallableMixin[SavedView],
-    helpers.IterableMixin[SavedView],
-    helpers.SecurableMixin,
+class SavedViewService(
+    ServiceBase,
+    services.CallableMixin[SavedView],
+    services.IterableMixin[SavedView],
+    services.SecurableMixin,
 ):
     """Represent a factory for Paperless `SavedView` models."""
 

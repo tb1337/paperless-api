@@ -1,13 +1,13 @@
-"""Provide `ShareLink` related models and helpers."""
+"""Provide `ShareLink` related models and services."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
+from .base import ServiceBase, PaperlessModel
 from .common import ShareLinkFileVersionType
-from .mixins import helpers, models
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -29,9 +29,9 @@ class ShareLink(
     document: int | None = None
     file_version: ShareLinkFileVersionType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `ShareLink` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -47,11 +47,11 @@ class ShareLinkDraft(PaperlessModel, models.CreatableMixin):
     file_version: ShareLinkFileVersionType | None = None
 
 
-class ShareLinkHelper(
-    HelperBase,
-    helpers.CallableMixin[ShareLink],
-    helpers.DraftableMixin[ShareLinkDraft],
-    helpers.IterableMixin[ShareLink],
+class ShareLinkService(
+    ServiceBase,
+    services.CallableMixin[ShareLink],
+    services.DraftableMixin[ShareLinkDraft],
+    services.IterableMixin[ShareLink],
 ):
     """Represent a factory for Paperless `ShareLink` models."""
 

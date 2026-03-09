@@ -1,10 +1,10 @@
-"""Provide `CustomField` related models and helpers."""
+"""Provide `CustomField` related models and services."""
 
 from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
+from .base import ServiceBase, PaperlessModel
 from .common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldExtraData,
@@ -12,7 +12,7 @@ from .common import (
     CustomFieldValue,
     CustomFieldValueT,
 )
-from .mixins import helpers, models
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -33,9 +33,9 @@ class CustomField(
     extra_data: CustomFieldExtraData | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `CustomField` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
     @overload
@@ -52,7 +52,7 @@ class CustomField(
         expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
-        cache = self._api.cache.custom_fields
+        cache = self._client.cache.custom_fields
 
         if cache and self.id in cache:
             klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
@@ -82,11 +82,11 @@ class CustomFieldDraft(PaperlessModel, models.CreatableMixin):
     extra_data: CustomFieldExtraData | None = None
 
 
-class CustomFieldHelper(
-    HelperBase,
-    helpers.CallableMixin[CustomField],
-    helpers.DraftableMixin[CustomFieldDraft],
-    helpers.IterableMixin[CustomField],
+class CustomFieldService(
+    ServiceBase,
+    services.CallableMixin[CustomField],
+    services.DraftableMixin[CustomFieldDraft],
+    services.IterableMixin[CustomField],
 ):
     """Represent a factory for Paperless `CustomField` models."""
 

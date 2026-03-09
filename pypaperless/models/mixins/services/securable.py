@@ -1,14 +1,14 @@
-"""SecurableMixin for PyPaperless helpers."""
+"""SecurableMixin for PyPaperless services."""
 
 
 class SecurableMixin:
-    """Provide the `request_full_permissions` property for PyPaperless helpers."""
+    """Provide the `request_full_permissions` property for PyPaperless services."""
 
     _request_full_perms: bool = False
 
     @property
     def request_permissions(self) -> bool:
-        """Return whether the helper requests items with the `permissions` table, or not.
+        """Return whether the service requests items with the `permissions` table, or not.
 
         Documentation: https://docs.paperless-ngx.com/api/#permissions
         """
@@ -16,7 +16,7 @@ class SecurableMixin:
 
     @request_permissions.setter
     def request_permissions(self, value: bool) -> None:
-        """Set whether the helper requests items with the `permissions` table, or not.
+        """Set whether the service requests items with the `permissions` table, or not.
 
         Documentation: https://docs.paperless-ngx.com/api/#permissions
         """

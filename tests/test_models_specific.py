@@ -45,7 +45,7 @@ from pypaperless.models.documents import (
     DocumentSuggestions,
     DownloadedDocument,
 )
-from pypaperless.models.workflows import WorkflowActionHelper, WorkflowTriggerHelper
+from pypaperless.models.workflows import WorkflowActionService, WorkflowTriggerService
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
@@ -464,7 +464,7 @@ class TestModelDocuments:
 
         # test if custom field is in document custom field values
         test_cf = CustomField.create_with_data(
-            api=paperless,
+            client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][0],
             fetched=True,
         )
@@ -669,7 +669,7 @@ class TestModelTasks:
 class TestModelWorkflows:
     """Tasks test cases."""
 
-    async def test_helpers(self, paperless: Paperless) -> None:
-        """Test helpers."""
-        assert isinstance(paperless.workflows.actions, WorkflowActionHelper)
-        assert isinstance(paperless.workflows.triggers, WorkflowTriggerHelper)
+    async def test_services(self, paperless: Paperless) -> None:
+        """Test services."""
+        assert isinstance(paperless.workflows.actions, WorkflowActionService)
+        assert isinstance(paperless.workflows.triggers, WorkflowTriggerService)

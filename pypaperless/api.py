@@ -7,7 +7,7 @@ from typing import Any, Protocol
 
 import httpx
 
-from . import helpers
+from . import services
 from .const import API_PATH, API_VERSION, PaperlessResource
 from .exceptions import (
     BadJsonResponseError,
@@ -18,57 +18,57 @@ from .exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from .models.base import HelperBase
+from .models.base import ServiceBase
 from .models.common import PaperlessCache
 
 
 class PaperlessProtocol(Protocol):
     """Protocol for `Paperless` instances."""
 
-    config: helpers.ConfigHelper
-    correspondents: helpers.CorrespondentHelper
-    custom_fields: helpers.CustomFieldHelper
-    documents: helpers.DocumentHelper
-    document_types: helpers.DocumentTypeHelper
-    groups: helpers.GroupHelper
-    mail_accounts: helpers.MailAccountHelper
-    mail_rules: helpers.MailRuleHelper
-    processed_mail: helpers.ProcessedMailHelper
-    saved_views: helpers.SavedViewHelper
-    share_links: helpers.ShareLinkHelper
-    statistics: helpers.StatisticHelper
-    remote_version: helpers.RemoteVersionHelper
-    status: helpers.StatusHelper
-    storage_paths: helpers.StoragePathHelper
-    tags: helpers.TagHelper
-    tasks: helpers.TaskHelper
-    users: helpers.UserHelper
-    workflows: helpers.WorkflowHelper
+    config: services.ConfigService
+    correspondents: services.CorrespondentService
+    custom_fields: services.CustomFieldService
+    documents: services.DocumentService
+    document_types: services.DocumentTypeService
+    groups: services.GroupService
+    mail_accounts: services.MailAccountService
+    mail_rules: services.MailRuleService
+    processed_mail: services.ProcessedMailService
+    saved_views: services.SavedViewService
+    share_links: services.ShareLinkService
+    statistics: services.StatisticService
+    remote_version: services.RemoteVersionService
+    status: services.StatusService
+    storage_paths: services.StoragePathService
+    tags: services.TagService
+    tasks: services.TaskService
+    users: services.UserService
+    workflows: services.WorkflowService
 
 
 class Paperless(PaperlessProtocol):
     """Retrieves and manipulates data from and to Paperless via REST."""
 
-    _helper_map: dict[str, type[HelperBase]] = {
-        PaperlessResource.CONFIG: helpers.ConfigHelper,
-        PaperlessResource.CORRESPONDENTS: helpers.CorrespondentHelper,
-        PaperlessResource.CUSTOM_FIELDS: helpers.CustomFieldHelper,
-        PaperlessResource.DOCUMENTS: helpers.DocumentHelper,
-        PaperlessResource.DOCUMENT_TYPES: helpers.DocumentTypeHelper,
-        PaperlessResource.GROUPS: helpers.GroupHelper,
-        PaperlessResource.MAIL_ACCOUNTS: helpers.MailAccountHelper,
-        PaperlessResource.MAIL_RULES: helpers.MailRuleHelper,
-        PaperlessResource.PROCESSED_MAIL: helpers.ProcessedMailHelper,
-        PaperlessResource.SAVED_VIEWS: helpers.SavedViewHelper,
-        PaperlessResource.SHARE_LINKS: helpers.ShareLinkHelper,
-        PaperlessResource.STATISTICS: helpers.StatisticHelper,
-        PaperlessResource.REMOTE_VERSION: helpers.RemoteVersionHelper,
-        PaperlessResource.STATUS: helpers.StatusHelper,
-        PaperlessResource.STORAGE_PATHS: helpers.StoragePathHelper,
-        PaperlessResource.TAGS: helpers.TagHelper,
-        PaperlessResource.TASKS: helpers.TaskHelper,
-        PaperlessResource.USERS: helpers.UserHelper,
-        PaperlessResource.WORKFLOWS: helpers.WorkflowHelper,
+    _service_map: dict[str, type[ServiceBase]] = {
+        PaperlessResource.CONFIG: services.ConfigService,
+        PaperlessResource.CORRESPONDENTS: services.CorrespondentService,
+        PaperlessResource.CUSTOM_FIELDS: services.CustomFieldService,
+        PaperlessResource.DOCUMENTS: services.DocumentService,
+        PaperlessResource.DOCUMENT_TYPES: services.DocumentTypeService,
+        PaperlessResource.GROUPS: services.GroupService,
+        PaperlessResource.MAIL_ACCOUNTS: services.MailAccountService,
+        PaperlessResource.MAIL_RULES: services.MailRuleService,
+        PaperlessResource.PROCESSED_MAIL: services.ProcessedMailService,
+        PaperlessResource.SAVED_VIEWS: services.SavedViewService,
+        PaperlessResource.SHARE_LINKS: services.ShareLinkService,
+        PaperlessResource.STATISTICS: services.StatisticService,
+        PaperlessResource.REMOTE_VERSION: services.RemoteVersionService,
+        PaperlessResource.STATUS: services.StatusService,
+        PaperlessResource.STORAGE_PATHS: services.StoragePathService,
+        PaperlessResource.TAGS: services.TagService,
+        PaperlessResource.TASKS: services.TaskService,
+        PaperlessResource.USERS: services.UserService,
+        PaperlessResource.WORKFLOWS: services.WorkflowService,
     }
 
     async def __aenter__(self) -> "Paperless":
@@ -252,9 +252,9 @@ class Paperless(PaperlessProtocol):
         except (httpx.HTTPStatusError, ValueError) as exc:
             raise InitializationError from exc
 
-        # initialize helpers
-        for attr, helper_cls in self._helper_map.items():
-            setattr(self, attr, helper_cls(self))
+        # initialize services
+        for attr, service_cls in self._service_map.items():
+            setattr(self, attr, service_cls(self))
 
         self._initialized = True
         self.logger.info("Initialized.")

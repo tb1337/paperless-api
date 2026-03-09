@@ -1,17 +1,17 @@
-"""IterableMixin for PyPaperless helpers."""
+"""IterableMixin for PyPaperless services."""
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self
 
-from pypaperless.models.base import HelperProtocol, ResourceT
+from pypaperless.models.base import ServiceProtocol, ResourceT
 from pypaperless.models.generators import PageGenerator
 
 if TYPE_CHECKING:
     from pypaperless.models import Page
 
 
-class IterableMixin(HelperProtocol[ResourceT]):
+class IterableMixin(ServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
     _aiter_filters: dict[str, str | int] | None
@@ -122,4 +122,4 @@ class IterableMixin(HelperProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params.update({"full_perms": "true"})
 
-        return PageGenerator(self._api, self._api_path, self._resource_cls, params=params)
+        return PageGenerator(self._client, self._api_path, self._resource_cls, params=params)

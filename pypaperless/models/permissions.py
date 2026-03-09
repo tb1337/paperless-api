@@ -1,12 +1,12 @@
-"""Provide `User` and 'Group' related models and helpers."""
+"""Provide `User` and 'Group' related models and services."""
 
 import datetime
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
-from .mixins import helpers
+from .base import ServiceBase, PaperlessModel
+from .mixins import services
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -21,9 +21,9 @@ class Group(PaperlessModel):
     name: str | None = None
     permissions: list[str] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Group` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -48,16 +48,16 @@ class User(PaperlessModel):
     inherited_permissions: list[str] | None = None
     is_mfa_enabled: bool | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `User` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
-class GroupHelper(
-    HelperBase,
-    helpers.CallableMixin[Group],
-    helpers.IterableMixin[Group],
+class GroupService(
+    ServiceBase,
+    services.CallableMixin[Group],
+    services.IterableMixin[Group],
 ):
     """Represent a factory for Paperless `Group` models."""
 
@@ -67,10 +67,10 @@ class GroupHelper(
     _resource_cls = Group
 
 
-class UserHelper(
-    HelperBase,
-    helpers.CallableMixin[User],
-    helpers.IterableMixin[User],
+class UserService(
+    ServiceBase,
+    services.CallableMixin[User],
+    services.IterableMixin[User],
 ):
     """Represent a factory for Paperless `User` models."""
 

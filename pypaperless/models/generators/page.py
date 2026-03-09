@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class PageGenerator(PaperlessBase, AsyncIterator):
     """Iterator for DRF paginated endpoints.
 
-    `api`: An instance of :class:`Paperless`.
+    `client`: An instance of :class:`Paperless`.
     `url`: A url returning DRF page contents.
     `resource`: A target resource model type for mapping results with.
     `params`: Optional dict of query string parameters.
@@ -31,14 +31,14 @@ class PageGenerator(PaperlessBase, AsyncIterator):
         if self._page is not None and self._page.is_last_page:
             raise StopAsyncIteration
 
-        res = await self._api.request_json("get", self._url, params=self.params)
+        res = await self._client.request_json("get", self._url, params=self.params)
         data = {
             **res,
             "_api_path": self._url,
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }
-        self._page = Page.create_with_data(self._api, data, fetched=True)
+        self._page = Page.create_with_data(self._client, data, fetched=True)
         # dirty attach the resource to the data class
         self._page._resource_cls = self._resource_cls  # noqa: SLF001
 
@@ -50,13 +50,13 @@ class PageGenerator(PaperlessBase, AsyncIterator):
 
     def __init__(
         self,
-        api: "Paperless",
+        client: "Paperless",
         url: str,
         resource_cls: type,
         params: dict[str, Any] | None = None,
     ) -> None:
         """Initialize `PageGenerator` class instance."""
-        super().__init__(api)
+        super().__init__(client)
 
         self._page = None
         self._resource_cls = resource_cls

@@ -222,7 +222,7 @@ class MasterDataInstance(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    api: "Paperless"
+    client: "Paperless"
     is_initialized: bool = False
 
     correspondents: list["Correspondent"] = Field(default_factory=list)

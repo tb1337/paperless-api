@@ -1,4 +1,4 @@
-"""Provide `Document` related models and helpers."""
+"""Provide `Document` related models and services."""
 
 import datetime
 from collections.abc import AsyncGenerator, Iterator
@@ -15,7 +15,7 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models.utils import object_to_dict_value
 
-from .base import HelperBase, PaperlessModel, PaperlessModelData
+from .base import PaperlessModel, PaperlessModelData, ServiceBase
 from .common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldType,
@@ -26,7 +26,7 @@ from .common import (
     RetrieveFileMode,
 )
 from .custom_fields import CustomField
-from .mixins import helpers, models
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -35,13 +35,13 @@ if TYPE_CHECKING:
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
 
-    def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
+    def __init__(self, client: "Paperless", data: list[dict[str, Any]]) -> None:
         """Initialize a `DocumentCustomFieldList` instance."""
-        self._api = api
+        self._client = client
         self._data = data
         self._fields: list[CustomFieldValue] = []
 
-        cache = api.cache.custom_fields
+        cache = client.cache.custom_fields
 
         for item in data:
             if cache and (field := cache.get(item["field"], None)):
@@ -149,12 +149,12 @@ class DocumentCustomFieldList(PaperlessModelData):
         raise ItemNotFoundError
 
     @classmethod
-    def unserialize(cls, api: "Paperless", data: list[dict[str, Any]]) -> Self:
+    def unserialize(cls, client: "Paperless", data: list[dict[str, Any]]) -> Self:
         """Return a new instance of `cls` from `data`.
 
         Primarily used by `dict_value_to_object` when instantiating model classes.
         """
-        return cls(api, data=data)
+        return cls(client, data=data)
 
     def serialize(self) -> list[dict[str, Any]]:
         """Serialize the class data."""
@@ -171,7 +171,7 @@ class Document(
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
 
-    _notes: "DocumentNoteHelper" = PrivateAttr()
+    _notes: "DocumentNoteService" = PrivateAttr()
 
     id: int | None = None
     correspondent: int | None = None
@@ -193,23 +193,23 @@ class Document(
     mime_type: str | None = None
     search_hit_: DocumentSearchHitType | None = Field(default=None, alias="__search_hit__")
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Document` instance."""
         # Convert custom_fields list to DocumentCustomFieldList before pydantic validation
         if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
-            kwargs["custom_fields"] = DocumentCustomFieldList(api, kwargs["custom_fields"])
-        super().__init__(api, data, **kwargs)
+            kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
-        self._notes = DocumentNoteHelper(api, data.get("id"))
+        self._notes = DocumentNoteService(client, data.get("id"))
 
     def _apply_data(self) -> None:
         """Apply data from `self._data` to model fields, converting custom_fields."""
         super()._apply_data()
         if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList(self._api, self._data["custom_fields"])
+            self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
 
     @property
-    def notes(self) -> "DocumentNoteHelper":
+    def notes(self) -> "DocumentNoteService":
         """Return the notes helper for this document."""
         return self._notes
 
@@ -230,23 +230,23 @@ class Document(
 
     async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.download(cast("int", self.id), original=original)
+        return await self._client.documents.download(cast("int", self.id), original=original)
 
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
-        return await self._api.documents.metadata(cast("int", self.id))
+        return await self._client.documents.metadata(cast("int", self.id))
 
     async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.preview(cast("int", self.id), original=original)
+        return await self._client.documents.preview(cast("int", self.id), original=original)
 
     async def get_suggestions(self) -> "DocumentSuggestions":
         """Request and return the `DocumentSuggestions` class."""
-        return await self._api.documents.suggestions(cast("int", self.id))
+        return await self._client.documents.suggestions(cast("int", self.id))
 
     async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.thumbnail(cast("int", self.id), original=original)
+        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
 
 
 class DocumentDraft(PaperlessModel, models.CreatableMixin):
@@ -297,9 +297,9 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentNote` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
 
         self._format_api_path(data, pk=data.get("document"))
 
@@ -323,7 +323,7 @@ class DocumentNote(PaperlessModel):
         params = {
             "id": self.id,
         }
-        res = await self._api.request("delete", self._api_path, params=params)
+        res = await self._client.request("delete", self._api_path, params=params)
         return res.status_code in {200, 204}  # backward compatibility
 
 
@@ -337,9 +337,9 @@ class DocumentNoteDraft(PaperlessModel, models.CreatableMixin):
     note: str | None = None
     document: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentNoteDraft` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
 
         self._format_api_path(data, pk=data.get("document"))
 
@@ -363,9 +363,9 @@ class DocumentMeta(PaperlessModel):
     archive_size: int | None = None
     archive_metadata: list[DocumentMetadataType] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentMeta` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
 
         self._format_api_path(data)
 
@@ -391,7 +391,7 @@ class DownloadedDocument(PaperlessModel):
             "original": "true" if self._data.get("original", False) else "false",
         }
 
-        res = await self._api.request("get", self._api_path, params=params)
+        res = await self._client.request("get", self._api_path, params=params)
         self._data.update(
             {
                 "content": res.content,
@@ -432,14 +432,14 @@ class DocumentSuggestions(PaperlessModel):
     storage_paths: list[int] | None = None
     dates: list[datetime.date] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentSuggestions` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
 
         self._format_api_path(data)
 
 
-class DocumentSuggestionsHelper(HelperBase):
+class DocumentSuggestionsService(ServiceBase):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
     _api_path = API_PATH["documents_suggestions"]
@@ -452,13 +452,13 @@ class DocumentSuggestionsHelper(HelperBase):
         data = {
             "id": pk,
         }
-        item = self._resource_cls.create_with_data(self._api, data)
+        item = self._resource_cls.create_with_data(self._client, data)
         await item.load()
 
         return item
 
 
-class DocumentSubHelperBase(HelperBase):
+class DocumentSubServiceBase(ServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_suggestions"]
@@ -480,14 +480,14 @@ class DocumentSubHelperBase(HelperBase):
             "mode": mode,
             "original": original,
         }
-        item = self._resource_cls.create_with_data(self._api, data)
+        item = self._resource_cls.create_with_data(self._client, data)
         object.__setattr__(item, "_api_path", api_path)
         await item.load()
 
         return item
 
 
-class DocumentFileDownloadHelper(DocumentSubHelperBase):
+class DocumentFileDownloadService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_download"]
@@ -504,7 +504,7 @@ class DocumentFileDownloadHelper(DocumentSubHelperBase):
         )
 
 
-class DocumentFilePreviewHelper(DocumentSubHelperBase):
+class DocumentFilePreviewService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_preview"]
@@ -521,7 +521,7 @@ class DocumentFilePreviewHelper(DocumentSubHelperBase):
         )
 
 
-class DocumentFileThumbnailHelper(DocumentSubHelperBase):
+class DocumentFileThumbnailService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_thumbnail"]
@@ -538,7 +538,7 @@ class DocumentFileThumbnailHelper(DocumentSubHelperBase):
         )
 
 
-class DocumentMetaHelper(HelperBase, helpers.CallableMixin[DocumentMeta]):
+class DocumentMetaService(ServiceBase, services.CallableMixin[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
@@ -547,7 +547,7 @@ class DocumentMetaHelper(HelperBase, helpers.CallableMixin[DocumentMeta]):
     _resource_cls = DocumentMeta
 
 
-class DocumentNoteHelper(HelperBase):
+class DocumentNoteService(ServiceBase):
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = API_PATH["documents_notes"]
@@ -555,9 +555,9 @@ class DocumentNoteHelper(HelperBase):
 
     _resource_cls = DocumentNote
 
-    def __init__(self, api: "Paperless", attached_to: int | None = None) -> None:
-        """Initialize a `DocumentHelper` instance."""
-        super().__init__(api)
+    def __init__(self, client: "Paperless", attached_to: int | None = None) -> None:
+        """Initialize a `DocumentService` instance."""
+        super().__init__(client)
 
         self._attached_to = attached_to
 
@@ -567,7 +567,7 @@ class DocumentNoteHelper(HelperBase):
     ) -> list[DocumentNote]:
         """Request and return the documents `DocumentNote` list."""
         doc_pk = self._get_document_pk(pk)
-        res = await self._api.request_json("get", self._get_api_path(doc_pk))
+        res = await self._client.request_json("get", self._get_api_path(doc_pk))
 
         # We have to transform data here slightly.
         # There are two major differences in the data depending on which endpoint is requested.
@@ -579,11 +579,13 @@ class DocumentNoteHelper(HelperBase):
         #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
         return [
             self._resource_cls.create_with_data(
-                self._api,
+                self._client,
                 {
                     **item,
                     "document": doc_pk,
-                    "user": item["user"]["id"] if self._api.host_api_version >= 8 else item["user"],
+                    "user": item["user"]["id"]
+                    if self._client.host_api_version >= 8
+                    else item["user"],
                 },
                 fetched=True,
             )
@@ -614,18 +616,18 @@ class DocumentNoteHelper(HelperBase):
         """
         kwargs.update({"document": self._get_document_pk(pk)})
         return DocumentNoteDraft.create_with_data(
-            self._api,
+            self._client,
             data=kwargs,
             fetched=True,
         )
 
 
-class DocumentHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[Document],
-    helpers.DraftableMixin[DocumentDraft],
-    helpers.IterableMixin[Document],
+class DocumentService(
+    ServiceBase,
+    services.SecurableMixin,
+    services.CallableMixin[Document],
+    services.DraftableMixin[DocumentDraft],
+    services.IterableMixin[Document],
 ):
     """Represent a factory for Paperless `Document` models."""
 
@@ -635,19 +637,19 @@ class DocumentHelper(
     _draft_cls = DocumentDraft
     _resource_cls = Document
 
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `DocumentHelper` instance."""
-        super().__init__(api)
+    def __init__(self, client: "Paperless") -> None:
+        """Initialize a `DocumentService` instance."""
+        super().__init__(client)
 
-        self._download = DocumentFileDownloadHelper(api)
-        self._meta = DocumentMetaHelper(api)
-        self._notes = DocumentNoteHelper(api)
-        self._preview = DocumentFilePreviewHelper(api)
-        self._suggestions = DocumentSuggestionsHelper(api)
-        self._thumbnail = DocumentFileThumbnailHelper(api)
+        self._download = DocumentFileDownloadService(client)
+        self._meta = DocumentMetaService(client)
+        self._notes = DocumentNoteService(client)
+        self._preview = DocumentFilePreviewService(client)
+        self._suggestions = DocumentSuggestionsService(client)
+        self._thumbnail = DocumentFileThumbnailService(client)
 
     @property
-    def download(self) -> DocumentFileDownloadHelper:
+    def download(self) -> DocumentFileDownloadService:
         """Download the contents of an archived file.
 
         Example:
@@ -666,8 +668,8 @@ class DocumentHelper(
         return self._download
 
     @property
-    def metadata(self) -> DocumentMetaHelper:
-        """Return the attached `DocumentMetaHelper` instance.
+    def metadata(self) -> DocumentMetaService:
+        """Return the attached `DocumentMetaService` instance.
 
         Example:
         -------
@@ -684,8 +686,8 @@ class DocumentHelper(
         return self._meta
 
     @property
-    def notes(self) -> DocumentNoteHelper:
-        """Return the attached `DocumentNoteHelper` instance.
+    def notes(self) -> DocumentNoteService:
+        """Return the attached `DocumentNoteService` instance.
 
         Example:
         -------
@@ -702,7 +704,7 @@ class DocumentHelper(
         return self._notes
 
     @property
-    def preview(self) -> DocumentFilePreviewHelper:
+    def preview(self) -> DocumentFilePreviewService:
         """Preview the contents of an archived file.
 
         Example:
@@ -721,8 +723,8 @@ class DocumentHelper(
         return self._preview
 
     @property
-    def suggestions(self) -> DocumentSuggestionsHelper:
-        """Return the attached `DocumentSuggestionsHelper` instance.
+    def suggestions(self) -> DocumentSuggestionsService:
+        """Return the attached `DocumentSuggestionsService` instance.
 
         Example:
         -------
@@ -740,7 +742,7 @@ class DocumentHelper(
         return self._suggestions
 
     @property
-    def thumbnail(self) -> DocumentFileThumbnailHelper:
+    def thumbnail(self) -> DocumentFileThumbnailService:
         """Download the contents of a thumbnail file.
 
         Example:
@@ -760,7 +762,7 @@ class DocumentHelper(
 
     async def get_next_asn(self) -> int:
         """Request the next archive serial number from DRF."""
-        res = await self._api.request("get", API_PATH["documents_next_asn"])
+        res = await self._client.request("get", API_PATH["documents_next_asn"])
         try:
             res.raise_for_status()
             return int(res.text)
@@ -830,7 +832,7 @@ class DocumentHelper(
             "message": message,
             "use_archive_version": use_archive_version,
         }
-        res = await self._api.request("post", API_PATH["documents_email"], json=data)
+        res = await self._client.request("post", API_PATH["documents_email"], json=data)
         try:
             res.raise_for_status()
         except Exception as exc:

@@ -67,7 +67,7 @@ class UpdatableMixin(_Base):
 
         self._check_permissions_field(changed)
 
-        self._data = await self._api.request_json(
+        self._data = await self._client.request_json(
             "patch",
             self._api_path,
             json=changed,
@@ -83,7 +83,7 @@ class UpdatableMixin(_Base):
 
         self._check_permissions_field(data)
 
-        self._data = await self._api.request_json(
+        self._data = await self._client.request_json(
             "put",
             self._api_path,
             json=data,

@@ -20,7 +20,7 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 from pypaperless.models import CustomField, Page
-from pypaperless.models.base import HelperBase, PaperlessModel
+from pypaperless.models.base import PaperlessModel, ServiceBase
 from pypaperless.models.common import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
@@ -38,7 +38,7 @@ from pypaperless.models.common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
-from pypaperless.models.mixins import helpers
+from pypaperless.models.mixins import services
 from pypaperless.models.utils import object_to_dict_value
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
@@ -397,7 +397,7 @@ class TestPaperless:
         paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         custom_field = CustomField.create_with_data(
-            api=paperless,
+            client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][5],
             fetched=True,
         )
@@ -548,15 +548,15 @@ class TestPaperless:
         class TestResource(PaperlessModel):
             """Test Resource."""
 
-        class TestHelper(HelperBase, helpers.DraftableMixin):
-            """Test Helper."""
+        class TestService(ServiceBase, services.DraftableMixin):
+            """Test Service."""
 
             _api_path = "any.url"
             _resource = "test"
             # draft_cls - we "forgot" to set a draft class, which will raise
             _resource_cls = TestResource
 
-        helper = TestHelper(api)
+        service = TestService(api)
         with pytest.raises(DraftNotSupportedError):
             # ... there it is
-            helper.draft()
+            service.draft()

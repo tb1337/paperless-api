@@ -1,10 +1,10 @@
-"""Provide `Workflow` related models and helpers."""
+"""Provide `Workflow` related models and services."""
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
-from .base import HelperBase, PaperlessModel
+from .base import PaperlessModel, ServiceBase
 from .common import (
     WorkflowActionEmailType,
     WorkflowActionType,
@@ -13,7 +13,7 @@ from .common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
-from .mixins import helpers, models
+from .mixins import services, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -58,9 +58,9 @@ class WorkflowAction(PaperlessModel):
     email: WorkflowActionEmailType | None = None
     webhook: WorkflowActionWebhookType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `WorkflowAction` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -91,9 +91,9 @@ class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     schedule_date_field: WorkflowTriggerScheduleDateFieldType | None = None
     schedule_date_custom_field: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `WorkflowTrigger` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
@@ -109,16 +109,16 @@ class Workflow(PaperlessModel):
     actions: list[Any] | None = None
     triggers: list[Any] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
-        super().__init__(api, data, **kwargs)
+        super().__init__(client, data, **kwargs)
         self._format_api_path(data)
 
 
-class WorkflowActionHelper(
-    HelperBase,
-    helpers.CallableMixin[WorkflowAction],
-    helpers.IterableMixin[WorkflowAction],
+class WorkflowActionService(
+    ServiceBase,
+    services.CallableMixin[WorkflowAction],
+    services.IterableMixin[WorkflowAction],
 ):
     """Represent a factory for Paperless `WorkflowAction` models."""
 
@@ -128,10 +128,10 @@ class WorkflowActionHelper(
     _resource_cls = WorkflowAction
 
 
-class WorkflowTriggerHelper(
-    HelperBase,
-    helpers.CallableMixin[WorkflowTrigger],
-    helpers.IterableMixin[WorkflowTrigger],
+class WorkflowTriggerService(
+    ServiceBase,
+    services.CallableMixin[WorkflowTrigger],
+    services.IterableMixin[WorkflowTrigger],
 ):
     """Represent a factory for Paperless `WorkflowTrigger` models."""
 
@@ -141,10 +141,10 @@ class WorkflowTriggerHelper(
     _resource_cls = WorkflowTrigger
 
 
-class WorkflowHelper(
-    HelperBase,
-    helpers.CallableMixin[Workflow],
-    helpers.IterableMixin[Workflow],
+class WorkflowService(
+    ServiceBase,
+    services.CallableMixin[Workflow],
+    services.IterableMixin[Workflow],
 ):
     """Represent a factory for Paperless `Workflow` models."""
 
@@ -153,16 +153,16 @@ class WorkflowHelper(
 
     _resource_cls = Workflow
 
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `WorkflowHelper` instance."""
-        super().__init__(api)
+    def __init__(self, client: "Paperless") -> None:
+        """Initialize a `WorkflowService` instance."""
+        super().__init__(client)
 
-        self._actions = WorkflowActionHelper(api)
-        self._triggers = WorkflowTriggerHelper(api)
+        self._actions = WorkflowActionService(client)
+        self._triggers = WorkflowTriggerService(client)
 
     @property
-    def actions(self) -> WorkflowActionHelper:
-        """Return the attached `WorkflowActionHelper` instance.
+    def actions(self) -> WorkflowActionService:
+        """Return the attached `WorkflowActionService` instance.
 
         Example:
         -------
@@ -174,8 +174,8 @@ class WorkflowHelper(
         return self._actions
 
     @property
-    def triggers(self) -> WorkflowTriggerHelper:
-        """Return the attached `WorkflowTriggerHelper` instance.
+    def triggers(self) -> WorkflowTriggerService:
+        """Return the attached `WorkflowTriggerService` instance.
 
         Example:
         -------

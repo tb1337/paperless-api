@@ -34,7 +34,7 @@ class CreatableMixin(_Base):
         """
         self.validate_draft()
         kwdict = self._serialize()
-        res = await self._api.request_json("post", self._api_path, **kwdict)
+        res = await self._client.request_json("post", self._api_path, **kwdict)
 
         if type(self).__name__ == "DocumentNoteDraft":
             return (
