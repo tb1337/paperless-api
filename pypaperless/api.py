@@ -1,14 +1,11 @@
 """PyPaperless."""
 
+import json
 import logging
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 from io import BytesIO
-from json.decoder import JSONDecodeError
 from typing import Any, Protocol
 
-import aiohttp
-from yarl import URL
+import httpx
 
 from . import helpers
 from .const import API_PATH, API_VERSION, PaperlessResource
@@ -85,29 +82,28 @@ class Paperless(PaperlessProtocol):
 
     def __init__(
         self,
-        url: str | URL,
+        url: str,
         token: str | None = None,
         *,
-        session: aiohttp.ClientSession | None = None,
+        client: httpx.AsyncClient | None = None,
         request_args: dict[str, Any] | None = None,
         request_api_version: int | None = None,
     ) -> None:
         """Initialize a `Paperless` instance.
 
-        You have to permit either a session, or an url / token pair.
+        You have to permit either a client, or an url / token pair.
 
-        `url`: A hostname or IP-address as string, or yarl.URL object.
+        `url`: A hostname or IP-address as string.
         `token`: An api token created in Paperless Django settings, or via the helper function.
-        `session`: A custom `PaperlessSession` object, if existing.
-        `request_args` are passed to each request method call as additional kwargs,
-        ssl stuff for example. You should read the aiohttp docs to learn more about it.
+        `client`: A custom `httpx.AsyncClient` object, if existing.
+        `request_args` are passed to each request method call as additional kwargs.
         """
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
         self._initialized = False
         self._request_api_version = request_api_version or API_VERSION
         self._request_args = request_args or {}
-        self._session = session
+        self._client = client
         self._token = token
 
         self._api_version = API_VERSION
@@ -118,7 +114,7 @@ class Paperless(PaperlessProtocol):
     @property
     def base_url(self) -> str:
         """Return the base url of the Paperless api endpoint."""
-        return str(self._base_url)
+        return self._base_url
 
     @property
     def cache(self) -> PaperlessCache:
@@ -141,33 +137,27 @@ class Paperless(PaperlessProtocol):
         return self._version
 
     @staticmethod
-    def _create_base_url(url: str | URL) -> URL:
-        """Create URL from string or URL and prepare for further use."""
-        # reverse compatibility, fall back to https
-        if isinstance(url, str):
-            if "://" not in url:
-                url = f"https://{url}"
-            url = url.rstrip("/")
-        url = URL(url)
-
-        # scheme check. fall back to https
-        if url.scheme not in ("https", "http"):
-            url = URL(url).with_scheme("https")
-
+    def _create_base_url(url: str) -> str:
+        """Create URL from string and prepare for further use."""
+        url = url.rstrip("/")
+        if "://" not in url:
+            url = f"https://{url}"
+        if not url.startswith(("https://", "http://")):
+            url = f"https://{url}"
         return url
 
     @staticmethod
-    def _process_form(data: dict[str, Any]) -> aiohttp.FormData:
-        """Process form data and create a `aiohttp.FormData` object.
+    def _process_form(data: dict[str, Any]) -> tuple[dict[str, Any], list[tuple[str, Any]]]:
+        """Process form data and create httpx-compatible data/files tuples.
 
-        Every field item gets converted to a string-like object.
+        Returns a tuple of (data_fields, file_fields) for httpx.
         """
-        form = aiohttp.FormData(quote_fields=False)
+        data_fields: dict[str, Any] = {}
+        file_fields: list[tuple[str, Any]] = []
 
-        def _add_form_value(name: str | None, value: Any) -> Any:
+        def _add_form_value(name: str | None, value: Any) -> None:
             if value is None:
                 return
-            params = {}
             if isinstance(value, dict):
                 for dict_key, dict_value in value.items():
                     _add_form_value(dict_key, dict_value)
@@ -176,24 +166,34 @@ class Paperless(PaperlessProtocol):
                 for list_value in value:
                     _add_form_value(name, list_value)
                 return
-            if isinstance(value, tuple):
+            if isinstance(value, tuple) and name is not None:
                 if len(value) == 2:
-                    params["filename"] = f"{value[1]}"
-                value = value[0]
+                    file_fields.append((name, (f"{value[1]}", BytesIO(value[0]))))
+                else:
+                    file_fields.append((name, BytesIO(value[0])))
+                return
+            if isinstance(value, bytes) and name is not None:
+                file_fields.append((name, BytesIO(value)))
+                return
             if name is not None:
-                form.add_field(
-                    name, BytesIO(value) if isinstance(value, bytes) else f"{value}", **params
-                )
+                if name in data_fields:
+                    existing = data_fields[name]
+                    if isinstance(existing, list):
+                        existing.append(f"{value}")
+                    else:
+                        data_fields[name] = [existing, f"{value}"]
+                else:
+                    data_fields[name] = f"{value}"
 
         _add_form_value(None, data)
-        return form
+        return data_fields, file_fields
 
     @staticmethod
     async def generate_api_token(
         url: str,
         username: str,
         password: str,
-        session: aiohttp.ClientSession | None = None,
+        client: httpx.AsyncClient | None = None,
     ) -> str:
         """Request Paperless to generate an api token for the given credentials.
 
@@ -212,45 +212,45 @@ class Paperless(PaperlessProtocol):
         ```
 
         """
-        external_session = session is not None
-        session = session or aiohttp.ClientSession()
+        external_client = client is not None
+        client = client or httpx.AsyncClient()
         try:
             url = url.rstrip("/")
-            json = {
+            json_data = {
                 "username": username,
                 "password": password,
             }
-            res = await session.request("post", f"{url}{API_PATH['token']}", json=json)
-            data = await res.json()
+            res = await client.post(f"{url}{API_PATH['token']}", json=json_data)
+            data = res.json()
             res.raise_for_status()
             return str(data["token"])
-        except (JSONDecodeError, KeyError) as exc:
+        except (json.JSONDecodeError, KeyError) as exc:
             message = "Token is missing in response."
             raise BadJsonResponseError(message) from exc
-        except aiohttp.ClientResponseError as exc:
+        except httpx.HTTPStatusError as exc:
             raise JsonResponseWithError(payload={"error": data}) from exc
         finally:
-            if not external_session:
-                await session.close()
+            if not external_client:
+                await client.aclose()
 
     async def close(self) -> None:
         """Clean up connection."""
-        if self._session:
-            await self._session.close()
+        if self._client:
+            await self._client.aclose()
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
         """Initialize and test the connection to DRF."""
-        async with self.request("get", API_PATH["index"]) as res:
-            try:
-                res.raise_for_status()
-                self._api_version = self._request_api_version or int(
-                    res.headers.get("x-api-version", API_VERSION)
-                )
-                self._version = res.headers.get("x-version", None)
-                await res.json()
-            except (aiohttp.ClientResponseError, JSONDecodeError) as exc:
-                raise InitializationError from exc
+        res = await self.request("get", API_PATH["index"])
+        try:
+            res.raise_for_status()
+            self._api_version = self._request_api_version or int(
+                res.headers.get("x-api-version", API_VERSION)
+            )
+            self._version = res.headers.get("x-version", None)
+            res.json()
+        except (httpx.HTTPStatusError, ValueError) as exc:
+            raise InitializationError from exc
 
         # initialize helpers
         for attr, helper_cls in self._helper_map.items():
@@ -259,35 +259,33 @@ class Paperless(PaperlessProtocol):
         self._initialized = True
         self.logger.info("Initialized.")
 
-    @asynccontextmanager
     async def request(  # noqa: PLR0913 # pylint: disable=too-many-positional-arguments
         self,
         method: str,
         path: str,
         json: dict[str, Any] | None = None,
-        data: dict[str, Any] | aiohttp.FormData | None = None,
+        data: dict[str, Any] | None = None,
         form: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
         **kwargs: Any,
-    ) -> AsyncGenerator[aiohttp.ClientResponse]:
-        """Send a request to the Paperless api and return the `aiohttp.ClientResponse`.
+    ) -> httpx.Response:
+        """Send a request to the Paperless api and return the `httpx.Response`.
 
-        This method provides a little interface for utilizing `aiohttp.FormData`.
+        This method provides a little interface for utilizing multipart form data.
 
         `method`: A http method: get, post, patch, put, delete, head, options
         `path`: A path to the endpoint or a string url.
         `json`: A dict containing the json data.
         `data`: A dict containing the data to send in the request body.
-        `form`: A dict with form data, which gets converted to `aiohttp.FormData`
-        and replaces `data`.
+        `form`: A dict with form data, which gets converted to multipart form data.
         `params`: A dict with query parameters.
-        `kwargs`: Optional attributes for the `aiohttp.ClientSession.request` method.
+        `kwargs`: Optional attributes for the `httpx.AsyncClient.request` method.
         """
-        if self._session is None:
-            self._session = aiohttp.ClientSession()
+        if self._client is None:
+            self._client = httpx.AsyncClient()
 
         # add headers
-        headers = {
+        headers: dict[str, str] = {
             "Accept": f"application/json; version={self._request_api_version}",
         }
         if self._token:
@@ -302,32 +300,34 @@ class Paperless(PaperlessProtocol):
         # add request args
         kwargs.update(self._request_args)
 
-        # overwrite data with a form, when there is a form payload
+        # overwrite data with form data when there is a form payload
+        files = None
         if isinstance(form, dict):
-            data = self._process_form(form)
+            data, files = self._process_form(form)
 
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
 
         try:
-            res = await self._session.request(
-                method=method,
+            res = await self._client.request(
+                method=method.upper(),
                 url=url,
                 json=json,
                 data=data,
+                files=files,
                 params=params,
                 **kwargs,
             )
-            self.logger.debug("%s (%d): %s", method.upper(), res.status, res.url)
-        except aiohttp.ClientConnectionError as err:
+            self.logger.debug("%s (%d): %s", method.upper(), res.status_code, res.url)
+        except httpx.ConnectError as err:
             raise PaperlessConnectionError from err
 
         # error handling for 401 and 403 codes
-        if res.status == 401:
+        if res.status_code == 401:
             try:
-                error_data = await res.json()
+                error_data = res.json()
                 detail = error_data.get("detail", "")
-            except JSONDecodeError:
+            except ValueError:
                 detail = ""
 
             if "inactive" in detail.lower() or "deleted" in detail.lower():
@@ -335,10 +335,10 @@ class Paperless(PaperlessProtocol):
 
             raise PaperlessInvalidTokenError(res)
 
-        if res.status == 403:
+        if res.status_code == 403:
             raise PaperlessForbiddenError(res)
 
-        yield res
+        return res
 
     async def request_json(
         self,
@@ -347,18 +347,25 @@ class Paperless(PaperlessProtocol):
         **kwargs: Any,
     ) -> Any:
         """Make a request to the api and parse response json to dict."""
-        async with self.request(method, endpoint, **kwargs) as res:
-            if res.content_type != "application/json":
-                raise BadJsonResponseError(res)
+        res = await self.request(method, endpoint, **kwargs)
 
+        content_type = res.headers.get("content-type", "")
+
+        if res.status_code == 400 and "application/json" in content_type:
             try:
-                payload = await res.json()
+                payload = res.json()
             except ValueError:
                 raise BadJsonResponseError(res) from None
+            raise JsonResponseWithError(payload)
 
-            if res.status == 400:
-                raise JsonResponseWithError(payload)
+        res.raise_for_status()
 
-            res.raise_for_status()
+        if "application/json" not in content_type:
+            raise BadJsonResponseError(res)
+
+        try:
+            payload = res.json()
+        except ValueError:
+            raise BadJsonResponseError(res) from None
 
         return payload

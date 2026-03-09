@@ -3,9 +3,10 @@
 import contextlib
 import datetime
 import re
-from dataclasses import dataclass, field
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -15,14 +16,14 @@ if TYPE_CHECKING:
 
 
 # custom_fields
-class CustomFieldExtraDataSelectOptions(TypedDict):
+class CustomFieldExtraDataSelectOptions(TypedDict, total=False):
     """Represent the `extra_data.select_options` field of a `CustomField`."""
 
     id: str | None
     label: str | None
 
 
-class CustomFieldExtraData(TypedDict):
+class CustomFieldExtraData(TypedDict, total=False):
     """Represent the `extra_data` field of a `CustomField`."""
 
     default_currency: str | None
@@ -50,8 +51,7 @@ class CustomFieldType(Enum):
 
 
 # documents
-@dataclass(kw_only=True)
-class CustomFieldValue:
+class CustomFieldValue(BaseModel):
     """Represent a subtype of `CustomField`."""
 
     field: int | None = None
@@ -64,53 +64,57 @@ class CustomFieldValue:
 CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
 
 
-@dataclass(kw_only=True)
 class CustomFieldBooleanValue(CustomFieldValue):
     """Represent a boolean `CustomFieldValue`."""
 
     value: bool | None = None
 
 
-@dataclass(kw_only=True)
 class CustomFieldDateValue(CustomFieldValue):
     """Represent a date `CustomFieldValue`."""
 
     value: datetime.date | str | None = None
 
-    def __post_init__(self) -> None:
-        """Convert the value to a datetime."""
-        if isinstance(self.value, str):
+    @field_validator("value", mode="before")
+    @classmethod
+    def _parse_date(cls, v: Any) -> datetime.date | str | None:
+        """Convert the value to a date."""
+        if isinstance(v, str):
             with contextlib.suppress(ValueError):
-                dt = datetime.datetime.fromisoformat(self.value)
-                self.value = dt.date()
+                dt = datetime.datetime.fromisoformat(v)
+                return dt.date()
+        return v
 
 
-@dataclass(kw_only=True)
 class CustomFieldDocumentLinkValue(CustomFieldValue):
     """Represent a document link `CustomFieldValue`."""
 
-    value: list[int] | None = None
+    value: list[int] | int | None = None
 
 
-@dataclass(kw_only=True)
 class CustomFieldFloatValue(CustomFieldValue):
     """Represent a float `CustomFieldValue`."""
 
     value: float | None = None
 
 
-@dataclass(kw_only=True)
 class CustomFieldIntegerValue(CustomFieldValue):
     """Represent an integer `CustomFieldValue`."""
 
     value: int | None = None
 
 
-@dataclass(kw_only=True)
 class CustomFieldMonetaryValue(CustomFieldValue):
     """Represent a monetary `CustomFieldValue`."""
 
     value: str | None = None
+
+    @field_validator("value", mode="before")
+    @classmethod
+    def _coerce_value_to_str(cls, v: Any) -> str | None:
+        if v is None:
+            return None
+        return str(v)
 
     @property
     def currency(self) -> str | None:
@@ -146,7 +150,6 @@ class CustomFieldMonetaryValue(CustomFieldValue):
         self.value = f"{self.currency}{new_amount:.2f}"
 
 
-@dataclass(kw_only=True)
 class CustomFieldSelectValue(CustomFieldValue):
     """Represent a select `CustomFieldValue`."""
 
@@ -168,14 +171,12 @@ class CustomFieldSelectValue(CustomFieldValue):
         return None
 
 
-@dataclass(kw_only=True)
 class CustomFieldStringValue(CustomFieldValue):
     """Represent a string `CustomFieldValue`."""
 
     value: str | None = None
 
 
-@dataclass(kw_only=True)
 class CustomFieldURLValue(CustomFieldValue):
     """Represent an url `CustomFieldValue`."""
 
@@ -196,8 +197,7 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
 
 
 # documents
-@dataclass(kw_only=True)
-class DocumentMetadataType:
+class DocumentMetadataType(BaseModel):
     """Represent a subtype of `DocumentMeta`."""
 
     namespace: str | None = None
@@ -207,8 +207,7 @@ class DocumentMetadataType:
 
 
 # documents
-@dataclass(kw_only=True)
-class DocumentSearchHitType:
+class DocumentSearchHitType(BaseModel):
     """Represent a subtype of `Document`."""
 
     score: float | None = None
@@ -218,18 +217,19 @@ class DocumentSearchHitType:
 
 
 # api
-@dataclass(kw_only=True)
-class MasterDataInstance:
+class MasterDataInstance(BaseModel):
     """Represent a `MasterDataInstance`."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     api: "Paperless"
     is_initialized: bool = False
 
-    correspondents: list["Correspondent"] = field(default_factory=list)
-    custom_fields: list["CustomField"] = field(default_factory=list)
-    document_types: list["DocumentType"] = field(default_factory=list)
-    storage_paths: list["StoragePath"] = field(default_factory=list)
-    tags: list["Tag"] = field(default_factory=list)
+    correspondents: list["Correspondent"] = []
+    custom_fields: list["CustomField"] = []
+    document_types: list["DocumentType"] = []
+    storage_paths: list["StoragePath"] = []
+    tags: list["Tag"] = []
 
 
 # mixins/models/data_fields, used for classifiers
@@ -252,29 +252,26 @@ class MatchingAlgorithmType(Enum):
 
 
 # api
-@dataclass(kw_only=True)
-class PaperlessCache:
+class PaperlessCache(BaseModel):
     """Represent a Paperless cache object."""
 
     custom_fields: dict[int, "CustomField"] | None = None
 
 
 # mixins/models/securable
-@dataclass(kw_only=True)
-class PermissionSetType:
+class PermissionSetType(BaseModel):
     """Represent a Paperless permission set."""
 
-    users: list[int] = field(default_factory=list)
-    groups: list[int] = field(default_factory=list)
+    users: list[int] = []
+    groups: list[int] = []
 
 
 # mixins/models/securable
-@dataclass(kw_only=True)
-class PermissionTableType:
+class PermissionTableType(BaseModel):
     """Represent a Paperless permissions type."""
 
-    view: PermissionSetType = field(default_factory=PermissionSetType)
-    change: PermissionSetType = field(default_factory=PermissionSetType)
+    view: PermissionSetType = PermissionSetType()
+    change: PermissionSetType = PermissionSetType()
 
 
 # documents
@@ -287,8 +284,7 @@ class RetrieveFileMode(StrEnum):
 
 
 # saved_views
-@dataclass(kw_only=True)
-class SavedViewFilterRuleType:
+class SavedViewFilterRuleType(BaseModel):
     """Represent a subtype of `SavedView`."""
 
     rule_type: int | None = None
@@ -310,8 +306,7 @@ class ShareLinkFileVersionType(Enum):
 
 
 # statistics
-@dataclass(kw_only=True)
-class StatisticDocumentFileTypeCount:
+class StatisticDocumentFileTypeCount(BaseModel):
     """Represent a Paperless statistics file type count."""
 
     mime_type: str | None = None
@@ -334,17 +329,15 @@ class StatusType(Enum):
 
 
 # status
-@dataclass(kw_only=True)
-class StatusDatabaseMigrationStatusType:
+class StatusDatabaseMigrationStatusType(BaseModel):
     """Represent a subtype of `StatusDatabaseType`."""
 
     latest_migration: str | None = None
-    unapplied_migrations: list[str] = field(default_factory=list)
+    unapplied_migrations: list[str] = []
 
 
 # status
-@dataclass(kw_only=True)
-class StatusDatabaseType:
+class StatusDatabaseType(BaseModel):
     """Represent a subtype of `Status`."""
 
     type: str | None = None
@@ -355,8 +348,7 @@ class StatusDatabaseType:
 
 
 # status
-@dataclass(kw_only=True)
-class StatusStorageType:
+class StatusStorageType(BaseModel):
     """Represent a subtype of `Status`."""
 
     total: int | None = None
@@ -364,8 +356,7 @@ class StatusStorageType:
 
 
 # status
-@dataclass(kw_only=True)
-class StatusTasksType:
+class StatusTasksType(BaseModel):
     """Represent a subtype of `Status`."""
 
     redis_url: str | None = None
@@ -436,8 +427,7 @@ class WorkflowActionType(Enum):
 
 
 # workflows
-@dataclass(kw_only=True)
-class WorkflowActionEmailType:
+class WorkflowActionEmailType(BaseModel):
     """Represent a subtype of `WorkflowAction`."""
 
     id: int | None = None
@@ -447,8 +437,7 @@ class WorkflowActionEmailType:
     include_document: bool | None = None
 
 
-@dataclass(kw_only=True)
-class WorkflowActionWebhookType:
+class WorkflowActionWebhookType(BaseModel):
     """Represent a subtype of `WorkflowAction`."""
 
     id: int | None = None

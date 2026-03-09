@@ -3,9 +3,9 @@
 import datetime
 import re
 
-import aiohttp
+import httpx
 import pytest
-from aioresponses import aioresponses
+from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
@@ -70,22 +70,24 @@ from .data import (
 class TestModelConfig:
     """Config test cases."""
 
-    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
-            status=200,
-            payload=DATA_CONFIG[0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_CONFIG[0],
         )
         item = await paperless.config(1)
         assert item
         assert isinstance(item, Config)
         # must raise as 1337 doesn't exist
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1337),
-            status=404,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1337),
+            status_code=404,
         )
-        with pytest.raises(aiohttp.ClientResponseError):
+        with pytest.raises(httpx.HTTPStatusError):
             await paperless.config(1337)
 
 
@@ -93,20 +95,21 @@ class TestModelConfig:
 class TestModelDocuments:
     """Documents test cases."""
 
-    async def test_lazy(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_lazy(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test laziness."""
         document = Document(paperless, data={"id": 1})
         assert not document.is_fetched
 
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         await document.load()
         assert document.is_fetched
 
-    async def test_create(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test create."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
         draft = paperless.documents.draft(**defaults)
@@ -117,10 +120,11 @@ class TestModelDocuments:
             await draft.save()
         draft.document = backup
         # actually call the create endpoint
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
-            status=200,
-            payload="11112222-3333-4444-5555-666677778888",
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
+            status_code=200,
+            json="11112222-3333-4444-5555-666677778888",
         )
         await draft.save()
 
@@ -131,21 +135,23 @@ class TestModelDocuments:
         )
         assert document.created_date == document.created
 
-    async def test_udpate(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_udpate(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test update."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         to_update = await paperless.documents(1)
         new_title = f"{to_update.title} Updated"
         to_update.title = new_title
         # actually call the update endpoint
-        resp.patch(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload={
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json={
                 **to_update._data,  # pylint: disable=protected-access
                 "title": new_title,
             },
@@ -153,38 +159,43 @@ class TestModelDocuments:
         await to_update.update()
         assert to_update.title == new_title
 
-    async def test_delete(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test delete."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         to_delete = await paperless.documents(1)
-        resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=204,  # Paperless-ngx responds with 204 on deletion
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=204,  # Paperless-ngx responds with 204 on deletion
         )
         assert await to_delete.delete()
         # test deletion failed
-        resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=404,  # we send another status code
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=404,  # we send another status code
         )
         assert not await to_delete.delete()
 
-    async def test_meta(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_meta(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test meta."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         document = await paperless.documents(1)
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENT_METADATA,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_METADATA,
         )
         meta = await document.get_metadata()
         assert isinstance(meta, DocumentMeta)
@@ -195,140 +206,153 @@ class TestModelDocuments:
         for item in meta.archive_metadata:
             assert isinstance(item, DocumentMetadataType)
 
-    async def test_files(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test files."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         document = await paperless.documents(1)
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^"
                 + f"{PAPERLESS_TEST_URL}{API_PATH['documents_download']}".format(pk=1)
                 + r"\?.*$"
             ),
-            status=200,
+            status_code=200,
             headers={
                 "Content-Type": "application/pdf",
                 "Content-Disposition": "attachment;filename=any_filename.pdf",
             },
-            body=b"Binary data: download",
+            content=b"Binary data: download",
         )
         download = await document.get_download()
         assert isinstance(download, DownloadedDocument)
         assert download.mode == RetrieveFileMode.DOWNLOAD
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^"
                 + f"{PAPERLESS_TEST_URL}{API_PATH['documents_preview']}".format(pk=1)
                 + r"\?.*$"
             ),
-            status=200,
+            status_code=200,
             headers={
                 "Content-Type": "application/pdf",
             },
-            body=b"Binary data: preview",
+            content=b"Binary data: preview",
         )
         preview = await document.get_preview()
         assert isinstance(preview, DownloadedDocument)
         assert preview.mode == RetrieveFileMode.PREVIEW
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^"
                 + f"{PAPERLESS_TEST_URL}{API_PATH['documents_thumbnail']}".format(pk=1)
                 + r"\?.*$"
             ),
-            status=200,
-            body=b"Binary data: thumbnail",
+            status_code=200,
+            content=b"Binary data: thumbnail",
         )
         thumbnail = await document.get_thumbnail()
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
 
-    async def test_suggestions(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_suggestions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test suggestions."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         document = await paperless.documents(1)
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENT_SUGGESTIONS,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_SUGGESTIONS,
         )
         suggestions = await document.get_suggestions()
         assert isinstance(suggestions, DocumentSuggestions)
 
-    async def test_get_next_an(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_get_next_an(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test get next asn."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
-            status=200,
-            payload=1337,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
+            status_code=200,
+            json=1337,
         )
         asn = await paperless.documents.get_next_asn()
         assert isinstance(asn, int)
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
-            status=500,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
+            status_code=500,
         )
         with pytest.raises(AsnRequestError):
             await paperless.documents.get_next_asn()
 
-    async def test_searching(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_searching(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test searching."""
         # search
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*query.*$"),
-            status=200,
-            payload=DATA_DOCUMENTS_SEARCH,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*query.*$"),
+            status_code=200,
+            json=DATA_DOCUMENTS_SEARCH,
         )
         async for item in paperless.documents.search("1337"):
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
         # custom_field_query
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*custom_field_query.*$"
             ),
-            status=200,
-            payload=DATA_DOCUMENTS_SEARCH,
+            status_code=200,
+            json=DATA_DOCUMENTS_SEARCH,
         )
         async for item in paperless.documents.search(custom_field_query="1337"):
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
         # more_like
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*more_like_id.*$"
             ),
-            status=200,
-            payload=DATA_DOCUMENTS_SEARCH,
+            status_code=200,
+            json=DATA_DOCUMENTS_SEARCH,
         )
         async for item in paperless.documents.more_like(1337):
             assert isinstance(item, Document)
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHitType)
 
-    async def test_note_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_note_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
         assert isinstance(item, Document)
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENT_NOTES,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
         )
         results = await item.notes()
         assert isinstance(results, list)
@@ -339,12 +363,13 @@ class TestModelDocuments:
         with pytest.raises(PrimaryKeyRequiredError):
             item = await paperless.documents.notes()
 
-    async def test_note_create(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_note_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test create."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
         draft = item.notes.draft(note="Test note.")
@@ -355,46 +380,51 @@ class TestModelDocuments:
             await draft.save()
         draft.note = backup
         # actually call the create endpoint
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENT_NOTES,
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
         )
         result = await draft.save()
         assert isinstance(result, tuple)
 
-    async def test_note_delete(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test delete."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
-            status=200,
-            payload=DATA_DOCUMENT_NOTES,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
         )
         results = await item.notes()
-        resp.delete(
-            re.compile(
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
                 r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
             ),
-            status=204,  # Paperless-ngx responds with 204 on deletion
+            status_code=204,  # Paperless-ngx responds with 204 on deletion
         )
         deletion = await results.pop().delete()
         assert deletion
 
     async def test_custom_field_list_wo_cache(
-        self, resp: aioresponses, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: Paperless
     ) -> None:
         """Test custom field list without cache."""
         # request document
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][1],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][1],
         )
         item = await paperless.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
@@ -406,22 +436,24 @@ class TestModelDocuments:
             assert isinstance(field, CustomFieldValue)
 
     async def test_custom_field_list_wslash_cache(
-        self, resp: aioresponses, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: Paperless
     ) -> None:
         """Test custom fields list with cache."""
         # set custom fields cache
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
-            status=200,
-            payload=DATA_CUSTOM_FIELDS,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_CUSTOM_FIELDS,
         )
         paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         # request document
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
-            status=200,
-            payload=DATA_DOCUMENTS["results"][1],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][1],
         )
         item = await paperless.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
@@ -463,13 +495,14 @@ class TestModelDocuments:
         item.custom_fields += test_cf.draft_value(1337)
         assert test_cf in item.custom_fields
 
-    async def test_email(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_email(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test sending emails."""
         # successful email sending
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
-            status=200,
-            payload={"message": "Email sent"},
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
+            status_code=200,
+            json={"message": "Email sent"},
         )
         await paperless.documents.email(
             documents=1,
@@ -479,7 +512,9 @@ class TestModelDocuments:
         )
 
         # unsuccessful email sending
-        resp.post(f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}", status=400)
+        httpx_mock.add_response(
+            method="POST", url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}", status_code=400
+        )
         with pytest.raises(SendEmailError):
             await paperless.documents.email(
                 documents=[1, 2],
@@ -493,12 +528,13 @@ class TestModelDocuments:
 class TestModelVersion:
     """Version test cases."""
 
-    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
-            status=200,
-            payload=DATA_REMOTE_VERSION,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
+            status_code=200,
+            json=DATA_REMOTE_VERSION,
         )
         remote_version = await paperless.remote_version()
         assert remote_version
@@ -510,12 +546,13 @@ class TestModelVersion:
 class TestModelStatistics:
     """Statistics test cases."""
 
-    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
-            status=200,
-            payload=DATA_STATISTICS,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
+            status_code=200,
+            json=DATA_STATISTICS,
         )
         stats = await paperless.statistics()
         assert stats
@@ -529,12 +566,13 @@ class TestModelStatistics:
 class TestModelStatus:
     """Status test cases."""
 
-    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
-            status=200,
-            payload=DATA_STATUS,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
+            status_code=200,
+            json=DATA_STATUS,
         )
         status = await paperless.status()
         assert status
@@ -575,48 +613,53 @@ class TestModelStatus:
 class TestModelTasks:
     """Tasks test cases."""
 
-    async def test_iter(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_iter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test iter."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r".*$"),
-            status=200,
-            payload=DATA_TASKS,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r".*$"),
+            status_code=200,
+            json=DATA_TASKS,
         )
         async for item in paperless.tasks:
             assert isinstance(item, Task)
 
-    async def test_call(self, resp: aioresponses, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
         # by pk
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
-            status=200,
-            payload=DATA_TASKS[0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_TASKS[0],
         )
         item = await paperless.tasks(1)
         assert item
         assert isinstance(item, Task)
         # by uuid
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
-            status=200,
-            payload=DATA_TASKS,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            status_code=200,
+            json=DATA_TASKS,
         )
         item = await paperless.tasks("dummy-found")
         assert item
         assert isinstance(item, Task)
         # must raise as pk doesn't exist
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
-            status=404,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
+            status_code=404,
         )
-        with pytest.raises(aiohttp.ClientResponseError):
+        with pytest.raises(httpx.HTTPStatusError):
             await paperless.tasks(1337)
         # must raise as task_id doesn't exist
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
-            status=200,
-            payload=[],
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            status_code=200,
+            json=[],
         )
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")

@@ -1,7 +1,6 @@
 """Provide `Workflow` related models and helpers."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -20,11 +19,10 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class WorkflowAction(PaperlessModel):
     """Represent a Paperless `WorkflowAction`."""
 
-    _api_path = API_PATH["workflow_actions_single"]
+    _api_path: ClassVar[str] = API_PATH["workflow_actions_single"]
 
     id: int | None = None
     type: WorkflowActionType | None = None
@@ -60,18 +58,17 @@ class WorkflowAction(PaperlessModel):
     email: WorkflowActionEmailType | None = None
     webhook: WorkflowActionWebhookType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     """Represent a Paperless `WorkflowTrigger`."""
 
-    _api_path = API_PATH["workflow_triggers_single"]
+    _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]
 
     id: int | None = None
     sources: list[WorkflowTriggerSourceType] | None = None
@@ -95,31 +92,30 @@ class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     schedule_date_field: WorkflowTriggerScheduleDateFieldType | None = None
     schedule_date_custom_field: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class Workflow(PaperlessModel):
     """Represent a Paperless `Workflow`."""
 
-    _api_path = API_PATH["workflows_single"]
+    _api_path: ClassVar[str] = API_PATH["workflows_single"]
 
     id: int | None = None
     name: str | None = None
     order: int | None = None
     enabled: bool | None = None
-    actions: list[WorkflowAction] | None = None
-    triggers: list[WorkflowTrigger] | None = None
+    actions: list[Any] | None = None
+    triggers: list[Any] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
 class WorkflowActionHelper(

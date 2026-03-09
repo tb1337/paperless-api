@@ -1,8 +1,7 @@
 """Provide `MailRule` related models and helpers."""
 
 import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,11 +12,10 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class MailAccount(PaperlessModel, models.SecurableMixin):
     """Represent a Paperless `MailAccount`."""
 
-    _api_path = API_PATH["mail_accounts_single"]
+    _api_path: ClassVar[str] = API_PATH["mail_accounts_single"]
 
     id: int | None = None
     name: str | None = None
@@ -32,18 +30,17 @@ class MailAccount(PaperlessModel, models.SecurableMixin):
     account_type: int | None = None
     expiration: datetime.datetime | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailAccount` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class MailRule(PaperlessModel, models.SecurableMixin):
     """Represent a Paperless `MailRule`."""
 
-    _api_path = API_PATH["mail_rules_single"]
+    _api_path: ClassVar[str] = API_PATH["mail_rules_single"]
 
     id: int | None = None
     name: str | None = None
@@ -70,18 +67,17 @@ class MailRule(PaperlessModel, models.SecurableMixin):
     consumption_scope: int | None = None
     pdf_layout: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailRule` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class ProcessedMail(PaperlessModel):
     """Represent a Paperless `ProcessedMail`."""
 
-    _api_path = API_PATH["processed_mail_single"]
+    _api_path: ClassVar[str] = API_PATH["processed_mail_single"]
 
     id: int | None = None
     owner: int | None = None
@@ -94,11 +90,11 @@ class ProcessedMail(PaperlessModel):
     status: str | None = None
     error: str | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `ProcessedMail` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
 class MailAccountHelper(

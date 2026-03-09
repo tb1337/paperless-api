@@ -1,11 +1,11 @@
 """Provide base classes."""
 
 from abc import ABC, abstractmethod
-from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Protocol, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
+
+from pydantic import BaseModel, ConfigDict
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.utils import dict_value_to_object
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -39,9 +39,8 @@ class HelperBase(PaperlessBase):
     _resource: PaperlessResource
 
 
-@dataclass(init=False)
 class PaperlessModelProtocol(Protocol):
-    """Protocol for any `PaperlessBase` instances and its ancestors."""
+    """Protocol for any `PaperlessModel` instances and its ancestors."""
 
     _api: "Paperless"
     _api_path: str
@@ -50,23 +49,33 @@ class PaperlessModelProtocol(Protocol):
     _params: dict[str, Any]
 
     # fmt: off
-    def _get_dataclass_fields(self) -> list[Field]: ...
-    def _set_dataclass_fields(self) -> None: ...
+    def model_fields_set(self) -> set[str]: ...
     # fmt: on
 
 
-@dataclass(init=False)
-class PaperlessModel(PaperlessBase):
+class PaperlessModel(BaseModel):
     """Base class for all models in PyPaperless."""
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `PaperlessModel` instance."""
-        super().__init__(api)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+        use_enum_values=False,
+    )
 
-        self._data = {}
-        self._data.update(data)
+    _api: "Paperless"
+    _api_path: ClassVar[str] = API_PATH["index"]
+    _data: dict[str, Any] = {}
+    _fetched: bool = False
+    _params: dict[str, Any] = {}
+
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
+        """Initialize a `PaperlessModel` instance."""
+        super().__init__(**kwargs)
+
+        self._api = api
+        self._data = dict(data)
         self._fetched = False
-        self._params: dict[str, Any] = {}
+        self._params = {}
 
     @final
     @classmethod
@@ -83,34 +92,10 @@ class PaperlessModel(PaperlessBase):
 
         Example: `document = Document.create_with_data(...)`
         """
-        item = cls(api, data=data)
+        item = cls(api=api, data=data, **data)
 
         item._fetched = fetched
-        if fetched:
-            item._set_dataclass_fields()
         return item
-
-    @final
-    def _get_dataclass_fields(self) -> list[Field]:
-        """Get the dataclass fields."""
-        return [
-            field
-            for field in fields(self)
-            if (not field.name.startswith("_") or field.name == "__search_hit__")
-        ]
-
-    @final
-    def _set_dataclass_fields(self) -> None:
-        """Set the dataclass fields from `self._data`."""
-        for field in self._get_dataclass_fields():
-            value = dict_value_to_object(
-                f"{self.__class__.__name__}.{field.name}",
-                self._data.get(field.name),
-                field.type,
-                field.default,
-                self._api,
-            )
-            setattr(self, field.name, value)
 
     @property
     def is_fetched(self) -> bool:
@@ -122,8 +107,21 @@ class PaperlessModel(PaperlessBase):
         data = await self._api.request_json("get", self._api_path, params=self._params)
 
         self._data.update(data)
-        self._set_dataclass_fields()
+        self._apply_data()
         self._fetched = True
+
+    def _apply_data(self) -> None:
+        """Apply data from `self._data` to model fields."""
+        from pydantic import PydanticSchemaGenerationError, TypeAdapter
+
+        for field_name, field_info in self.__class__.model_fields.items():
+            if field_name in self._data:
+                try:
+                    adapter = TypeAdapter(field_info.annotation)
+                    value = adapter.validate_python(self._data[field_name])
+                except PydanticSchemaGenerationError:
+                    value = self._data[field_name]
+                setattr(self, field_name, value)
 
 
 class PaperlessModelData(ABC):

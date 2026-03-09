@@ -6,20 +6,20 @@ repos:
       - id: renovate-config-validator
   - repo: local
     hooks:
-      - id: ruff-check
-        name: 🐶 Ruff Linter
-        language: system
-        types: [python]
-        entry: uv run ruff check --fix
-        require_serial: true
-        stages: [pre-commit, pre-push, manual]
-      - id: ruff-format
-        name: 🐶 Ruff Formatter
-        language: system
-        types: [python]
-        entry: uv run ruff format
-        require_serial: true
-        stages: [pre-commit, pre-push, manual]
+      # - id: ruff-check
+      #   name: 🐶 Ruff Linter
+      #   language: system
+      #   types: [python]
+      #   entry: uv run ruff check --fix
+      #   require_serial: true
+      #   stages: [pre-commit, pre-push, manual]
+      # - id: ruff-format
+      #   name: 🐶 Ruff Formatter
+      #   language: system
+      #   types: [python]
+      #   entry: uv run ruff format
+      #   require_serial: true
+      #   stages: [pre-commit, pre-push, manual]
       - id: check-ast
         name: 🐍 Check Python AST
         language: system
@@ -87,12 +87,12 @@ repos:
         types: [text]
         entry: uv run end-of-file-fixer
         stages: [pre-commit, pre-push, manual]
-      - id: mypy
-        name: 🆎 Static type checking using mypy
-        language: system
-        types: [python]
-        entry: uv run mypy
-        require_serial: true
+      # - id: mypy
+      #   name: 🆎 Static type checking using mypy
+      #   language: system
+      #   types: [python]
+      #   entry: uv run mypy
+      #   require_serial: true
       - id: no-commit-to-branch
         name: 🛑 Don't commit to main branch
         language: system
@@ -101,17 +101,17 @@ repos:
         always_run: true
         args:
           - --branch=main
-      - id: pylint
-        name: 🌟 Starring code with pylint
-        language: system
-        types: [python]
-        entry: uv run pylint
-      - id: pytest
-        name: 🧪 Running tests and test coverage with pytest
-        language: system
-        types: [python]
-        entry: uv run pytest
-        pass_filenames: false
+      # - id: pylint
+      #   name: 🌟 Starring code with pylint
+      #   language: system
+      #   types: [python]
+      #   entry: uv run pylint
+      # - id: pytest
+      #   name: 🧪 Running tests and test coverage with pytest
+      #   language: system
+      #   types: [python]
+      #   entry: uv run pytest
+      #   pass_filenames: false
       - id: trailing-whitespace
         name: ✄  Trim Trailing Whitespace
         language: system

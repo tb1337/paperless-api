@@ -1,12 +1,11 @@
 """PermissionFieldsMixin for PyPaperless models."""
 
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 from pypaperless.models.common import MatchingAlgorithmType
 
 
-@dataclass
-class MatchingFieldsMixin:
+class MatchingFieldsMixin(BaseModel):
     """Provide shared matching fields for PyPaperless models."""
 
     match: str | None = None

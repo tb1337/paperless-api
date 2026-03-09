@@ -1,6 +1,6 @@
 """Provide `Statistics` related models and helpers."""
 
-from dataclasses import dataclass
+from typing import ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -8,11 +8,10 @@ from .base import HelperBase, PaperlessModel
 from .common import StatisticDocumentFileTypeCount
 
 
-@dataclass(init=False)
 class Statistic(PaperlessModel):
     """Represent Paperless `Statistic`."""
 
-    _api_path = API_PATH["statistics"]
+    _api_path: ClassVar[str] = API_PATH["statistics"]
 
     documents_total: int | None = None
     documents_inbox: int | None = None

@@ -2,8 +2,7 @@
 
 import datetime
 from collections.abc import AsyncIterator
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
@@ -15,11 +14,10 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class Task(PaperlessModel):
     """Represent a Paperless `Task`."""
 
-    _api_path = API_PATH["tasks_single"]
+    _api_path: ClassVar[str] = API_PATH["tasks_single"]
 
     id: int | None = None
     task_id: str | None = None
@@ -34,11 +32,11 @@ class Task(PaperlessModel):
     related_document: int | None = None
     owner: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Task` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
 class TaskHelper(HelperBase):

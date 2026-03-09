@@ -1,13 +1,17 @@
 """CreatableMixin for PyPaperless models."""
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.exceptions import DraftFieldRequiredError
-from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
+if TYPE_CHECKING:
+    from pypaperless.models.base import PaperlessModelProtocol as _Base
+else:
+    _Base = object
 
-class CreatableMixin(PaperlessModelProtocol):
+
+class CreatableMixin(_Base):
     """Provide the `save` method for PyPaperless models."""
 
     _create_required_fields: set[str]
@@ -28,7 +32,7 @@ class CreatableMixin(PaperlessModelProtocol):
         ```
 
         """
-        self.validate()
+        self.validate_draft()
         kwdict = self._serialize()
         res = await self._api.request_json("post", self._api_path, **kwdict)
 
@@ -45,8 +49,8 @@ class CreatableMixin(PaperlessModelProtocol):
         """Serialize."""
         data = {
             "json": {
-                field.name: object_to_dict_value(getattr(self, field.name))
-                for field in self._get_dataclass_fields()
+                name: object_to_dict_value(getattr(self, name))
+                for name in self.__class__.model_fields
             },
         }
         # check for empty permissions as they will raise if None
@@ -55,7 +59,7 @@ class CreatableMixin(PaperlessModelProtocol):
 
         return data
 
-    def validate(self) -> None:
+    def validate_draft(self) -> None:
         """Check required fields before persisting the item to Paperless."""
         missing = [field for field in self._create_required_fields if getattr(self, field) is None]
 

@@ -1,8 +1,7 @@
 """Provide `User` and 'Group' related models and helpers."""
 
 import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,28 +12,26 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class Group(PaperlessModel):
     """Represent a Paperless `Group`."""
 
-    _api_path = API_PATH["groups_single"]
+    _api_path: ClassVar[str] = API_PATH["groups_single"]
 
     id: int
     name: str | None = None
     permissions: list[str] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Group` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class User(PaperlessModel):
     """Represent a Paperless `User`."""
 
-    _api_path = API_PATH["users_single"]
+    _api_path: ClassVar[str] = API_PATH["users_single"]
 
     id: int
     username: str | None = None
@@ -52,11 +49,11 @@ class User(PaperlessModel):
     inherited_permissions: list[str] | None = None
     is_mfa_enabled: bool | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `User` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
 class GroupHelper(

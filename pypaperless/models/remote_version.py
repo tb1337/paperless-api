@@ -1,17 +1,16 @@
 """Provide `Remote Version` related models and helpers."""
 
-from dataclasses import dataclass
+from typing import ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
 from .base import HelperBase, PaperlessModel
 
 
-@dataclass(init=False)
 class RemoteVersion(PaperlessModel):
     """Represent Paperless `Remote Version`."""
 
-    _api_path = API_PATH["remote_version"]
+    _api_path: ClassVar[str] = API_PATH["remote_version"]
 
     version: str | None = None
     update_available: bool | None = None

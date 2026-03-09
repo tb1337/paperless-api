@@ -1,9 +1,14 @@
 """DeletableMixin for PyPaperless models."""
 
-from pypaperless.models.base import PaperlessModelProtocol
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pypaperless.models.base import PaperlessModelProtocol as _Base
+else:
+    _Base = object
 
 
-class DeletableMixin(PaperlessModelProtocol):
+class DeletableMixin(_Base):
     """Provide the `delete` method for PyPaperless models."""
 
     async def delete(self) -> bool:
@@ -22,5 +27,5 @@ class DeletableMixin(PaperlessModelProtocol):
         ```
 
         """
-        async with self._api.request("delete", self._api_path) as res:
-            return res.status == 204
+        res = await self._api.request("delete", self._api_path)
+        return res.status_code == 204

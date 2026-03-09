@@ -1,7 +1,6 @@
 """Provide `Status` related models and helpers."""
 
-from dataclasses import dataclass
-from typing import cast
+from typing import ClassVar, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.common import (
@@ -14,11 +13,10 @@ from pypaperless.models.common import (
 from .base import HelperBase, PaperlessModel
 
 
-@dataclass(init=False)
 class Status(PaperlessModel):
     """Represent a Paperless `Status`."""
 
-    _api_path = API_PATH["status"]
+    _api_path: ClassVar[str] = API_PATH["status"]
 
     pngx_version: str | None = None
     server_os: str | None = None

@@ -1,8 +1,7 @@
 """Provide `Correspondent`, `DocumentType`, `StoragePath` and `Tag` related models and helpers."""
 
 import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -13,7 +12,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class Correspondent(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -23,7 +21,7 @@ class Correspondent(
 ):
     """Represent a Paperless `Correspondent`."""
 
-    _api_path = API_PATH["correspondents_single"]
+    _api_path: ClassVar[str] = API_PATH["correspondents_single"]
 
     id: int | None = None
     slug: str | None = None
@@ -31,14 +29,13 @@ class Correspondent(
     document_count: int | None = None
     last_correspondence: datetime.date | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Correspondent` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class CorrespondentDraft(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -47,9 +44,9 @@ class CorrespondentDraft(
 ):
     """Represent a new `Correspondent`, which is not yet stored in Paperless."""
 
-    _api_path = API_PATH["correspondents"]
+    _api_path: ClassVar[str] = API_PATH["correspondents"]
 
-    _create_required_fields = {
+    _create_required_fields: ClassVar[set[str]] = {
         "name",
         "match",
         "matching_algorithm",
@@ -59,7 +56,6 @@ class CorrespondentDraft(
     name: str | None = None
 
 
-@dataclass(init=False)
 class DocumentType(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -69,21 +65,20 @@ class DocumentType(
 ):
     """Represent a Paperless `DocumentType`."""
 
-    _api_path = API_PATH["document_types_single"]
+    _api_path: ClassVar[str] = API_PATH["document_types_single"]
 
     id: int | None = None
     slug: str | None = None
     name: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentType` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class DocumentTypeDraft(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -92,9 +87,9 @@ class DocumentTypeDraft(
 ):
     """Represent a new `DocumentType`, which is not yet stored in Paperless."""
 
-    _api_path = API_PATH["document_types"]
+    _api_path: ClassVar[str] = API_PATH["document_types"]
 
-    _create_required_fields = {
+    _create_required_fields: ClassVar[set[str]] = {
         "name",
         "match",
         "matching_algorithm",
@@ -105,7 +100,6 @@ class DocumentTypeDraft(
     owner: int | None = None
 
 
-@dataclass(init=False)
 class StoragePath(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -115,7 +109,7 @@ class StoragePath(
 ):
     """Represent a Paperless `StoragePath`."""
 
-    _api_path = API_PATH["storage_paths_single"]
+    _api_path: ClassVar[str] = API_PATH["storage_paths_single"]
 
     id: int | None = None
     slug: str | None = None
@@ -123,14 +117,13 @@ class StoragePath(
     path: str | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `StoragePath` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class StoragePathDraft(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -139,9 +132,9 @@ class StoragePathDraft(
 ):
     """Represent a new `StoragePath`, which is not yet stored in Paperless."""
 
-    _api_path = API_PATH["storage_paths"]
+    _api_path: ClassVar[str] = API_PATH["storage_paths"]
 
-    _create_required_fields = {
+    _create_required_fields: ClassVar[set[str]] = {
         "name",
         "path",
         "match",
@@ -154,7 +147,6 @@ class StoragePathDraft(
     owner: int | None = None
 
 
-@dataclass(init=False)
 class Tag(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -164,7 +156,7 @@ class Tag(
 ):
     """Represent a Paperless `Tag`."""
 
-    _api_path = API_PATH["tags_single"]
+    _api_path: ClassVar[str] = API_PATH["tags_single"]
 
     id: int | None = None
     slug: str | None = None
@@ -176,14 +168,13 @@ class Tag(
     parent: int | None = None
     children: list["Tag"] | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Tag` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class TagDraft(
     PaperlessModel,
     models.MatchingFieldsMixin,
@@ -192,9 +183,9 @@ class TagDraft(
 ):
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 
-    _api_path = API_PATH["tags"]
+    _api_path: ClassVar[str] = API_PATH["tags"]
 
-    _create_required_fields = {
+    _create_required_fields: ClassVar[set[str]] = {
         "name",
         "color",
         "is_inbox_tag",

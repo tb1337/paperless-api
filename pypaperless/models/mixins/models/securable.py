@@ -1,12 +1,11 @@
 """SecurableMixin for PyPaperless models."""
 
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 from pypaperless.models.common import PermissionTableType
 
 
-@dataclass(kw_only=True)
-class SecurableMixin:
+class SecurableMixin(BaseModel):
     """Provide permission fields for PyPaperless models."""
 
     owner: int | None = None
@@ -19,8 +18,7 @@ class SecurableMixin:
         return self.permissions is not None
 
 
-@dataclass(kw_only=True)
-class SecurableDraftMixin:
+class SecurableDraftMixin(BaseModel):
     """Provide permission fields for PyPaperless draft models."""
 
     owner: int | None = None

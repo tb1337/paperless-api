@@ -2,31 +2,29 @@
 
 import math
 from collections.abc import Iterator
-from dataclasses import dataclass, field
-from typing import Any, Generic
+from typing import Any, ClassVar, Generic
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel, ResourceT
 
 
-@dataclass(init=False)
 class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     """Represent a Paperless DRF `Paginated`."""
 
-    _api_path = API_PATH["index"]
+    _api_path: ClassVar[str] = API_PATH["index"]
     _resource_cls: type[ResourceT]
 
     # our fields
-    current_page: int
-    page_size: int
+    current_page: int = 0
+    page_size: int = 0
 
     # DRF fields
-    count: int
+    count: int = 0
     next: str | None = None
     previous: str | None = None
-    all: list[int] = field(default_factory=list)
-    results: list[dict[str, Any]] = field(default_factory=list)
+    all: list[int] = []
+    results: list[dict[str, Any]] = []
 
     def __iter__(self) -> Iterator[ResourceT]:
         """Return iter of `.items`."""

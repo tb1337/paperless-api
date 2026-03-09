@@ -10,8 +10,12 @@ from .classifiers import (
     Tag,
     TagDraft,
 )
+from .common import PaperlessCache
 from .config import Config
 from .custom_fields import CustomField, CustomFieldDraft
+
+# Resolve forward reference to CustomField in PaperlessCache
+PaperlessCache.model_rebuild()
 from .documents import (
     Document,
     DocumentDraft,

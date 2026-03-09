@@ -1,15 +1,19 @@
 """UpdatableMixin for PyPaperless models."""
 
 from copy import deepcopy
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pypaperless.models.base import PaperlessModelProtocol
 from pypaperless.models.utils import object_to_dict_value
 
 from .securable import SecurableMixin
 
+if TYPE_CHECKING:
+    from pypaperless.models.base import PaperlessModelProtocol as _Base
+else:
+    _Base = object
 
-class UpdatableMixin(PaperlessModelProtocol):
+
+class UpdatableMixin(_Base):
     """Provide the `update` method for PyPaperless models."""
 
     _data: dict[str, Any]
@@ -38,12 +42,12 @@ class UpdatableMixin(PaperlessModelProtocol):
         else:
             updated = await self._put_fields()
 
-        self._set_dataclass_fields()
+        self._apply_data()
         return updated
 
     def _check_permissions_field(self, data: dict) -> None:
         """Check."""
-        if SecurableMixin not in type(self).__bases__:
+        if SecurableMixin not in type(self).__mro__:
             return
         if not self.has_permissions:  # type: ignore[attr-defined]
             return
@@ -54,11 +58,11 @@ class UpdatableMixin(PaperlessModelProtocol):
     async def _patch_fields(self) -> bool:
         """Use the http `PATCH` method for updating only changed fields."""
         changed = {}
-        for field in self._get_dataclass_fields():
-            new_value = object_to_dict_value(getattr(self, field.name))
+        for name in self.__class__.model_fields:
+            new_value = object_to_dict_value(getattr(self, name))
 
-            if field.name in self._data and new_value != self._data[field.name]:
-                changed[field.name] = new_value
+            if name in self._data and new_value != self._data[name]:
+                changed[name] = new_value
 
         if len(changed) == 0:
             return False
@@ -76,8 +80,7 @@ class UpdatableMixin(PaperlessModelProtocol):
     async def _put_fields(self) -> bool:
         """Use the http `PUT` method to replace all fields."""
         data = {
-            field.name: object_to_dict_value(getattr(self, field.name))
-            for field in self._get_dataclass_fields()
+            name: object_to_dict_value(getattr(self, name)) for name in self.__class__.model_fields
         }
 
         self._check_permissions_field(data)

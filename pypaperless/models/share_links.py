@@ -1,8 +1,7 @@
 """Provide `ShareLink` related models and helpers."""
 
 import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -14,7 +13,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class ShareLink(
     PaperlessModel,
     models.DeletableMixin,
@@ -22,7 +20,7 @@ class ShareLink(
 ):
     """Represent a Paperless `ShareLink`."""
 
-    _api_path = API_PATH["share_links_single"]
+    _api_path: ClassVar[str] = API_PATH["share_links_single"]
 
     id: int
     created: datetime.datetime | None = None
@@ -31,20 +29,19 @@ class ShareLink(
     document: int | None = None
     file_version: ShareLinkFileVersionType | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `ShareLink` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
 
-@dataclass(init=False)
 class ShareLinkDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
-    _api_path = API_PATH["share_links"]
+    _api_path: ClassVar[str] = API_PATH["share_links"]
 
-    _create_required_fields = {"document", "file_version"}
+    _create_required_fields: ClassVar[set[str]] = {"document", "file_version"}
 
     expiration: datetime.datetime | None = None
     document: int | None = None

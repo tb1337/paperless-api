@@ -1,7 +1,6 @@
 """Provide `CustomField` related models and helpers."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, Any, ClassVar, overload
 
 from pypaperless.const import API_PATH, PaperlessResource
 
@@ -19,7 +18,6 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-@dataclass(init=False)
 class CustomField(
     PaperlessModel,
     models.UpdatableMixin,
@@ -27,7 +25,7 @@ class CustomField(
 ):
     """Represent a Paperless `CustomField`."""
 
-    _api_path = API_PATH["custom_fields_single"]
+    _api_path: ClassVar[str] = API_PATH["custom_fields_single"]
 
     id: int
     name: str | None = None
@@ -35,11 +33,11 @@ class CustomField(
     extra_data: CustomFieldExtraData | None = None
     document_count: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Document` instance."""
-        super().__init__(api, data)
+        super().__init__(api, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
+        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
 
     @overload
     def draft_value(self, value: Any) -> CustomFieldValue: ...
@@ -73,13 +71,12 @@ class CustomField(
         return CustomFieldValue(field=self.id, value=value)
 
 
-@dataclass(init=False)
 class CustomFieldDraft(PaperlessModel, models.CreatableMixin):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
-    _api_path = API_PATH["custom_fields"]
+    _api_path: ClassVar[str] = API_PATH["custom_fields"]
 
-    _create_required_fields = {"name", "data_type"}
+    _create_required_fields: ClassVar[set[str]] = {"name", "data_type"}
 
     name: str | None = None
     data_type: CustomFieldType | None = None
