@@ -49,7 +49,7 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
         """Rewrite permissions field to set_permissions for DRF."""
         if not hasattr(model, "has_permissions"):
             return
-        if not model.has_permissions:  # type: ignore[attr-defined]
+        if not model.has_permissions:
             return
         if "permissions" in data:
             data["set_permissions"] = deepcopy(data["permissions"])

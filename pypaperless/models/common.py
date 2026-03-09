@@ -80,7 +80,7 @@ class CustomFieldDateValue(CustomFieldValue):
 
     @field_validator("value", mode="before")
     @classmethod
-    def _parse_date(cls, v: Any) -> datetime.date | str | None:
+    def _parse_date(cls, v: datetime.date | str | None) -> datetime.date | str | None:
         """Convert the value to a date."""
         if isinstance(v, str):
             with contextlib.suppress(ValueError):

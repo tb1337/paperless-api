@@ -27,6 +27,7 @@ from .custom_fields import CustomField
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
+    from pypaperless.services.documents import DocumentNoteService
 
 
 class DocumentCustomFieldList(PaperlessModelData):

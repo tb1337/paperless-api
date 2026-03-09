@@ -1,6 +1,6 @@
 """CreatableMixin for PyPaperless models."""
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models.utils import object_to_dict_value
@@ -9,7 +9,8 @@ from pypaperless.models.utils import object_to_dict_value
 class CreatableMixin:
     """Provide draft validation and serialization for PyPaperless models."""
 
-    _create_required_fields: set[str]
+    _create_required_fields: ClassVar[set[str]]
+    model_fields: ClassVar[dict[str, Any]]  # provided by BaseModel
 
     def _serialize(self) -> dict[str, Any]:
         """Serialize draft fields for API submission."""

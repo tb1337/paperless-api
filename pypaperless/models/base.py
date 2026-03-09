@@ -85,7 +85,7 @@ class PaperlessModel(BaseModel):
         from pydantic import TypeAdapter
 
         cache_attr = "__type_adapters__"
-        cache: dict[str, TypeAdapter] = getattr(cls, cache_attr, None) or {}  # type: ignore[assignment]
+        cache: dict[str, TypeAdapter] = getattr(cls, cache_attr, None) or {}
         if field_name not in cache:
             cache[field_name] = TypeAdapter(annotation)
             setattr(cls, cache_attr, cache)

@@ -28,7 +28,7 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     all: list[int] = Field(default_factory=list)
     results: list[dict[str, Any]] = Field(default_factory=list)
 
-    def __iter__(self) -> Iterator[ResourceT]:
+    def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
         """Return iter of `.items`."""
         return iter(self.items)
 
