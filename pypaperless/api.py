@@ -3,12 +3,12 @@
 import json
 import logging
 from io import BytesIO
-from typing import Any, Protocol
+from typing import Any
 
 import httpx
 
 from . import services
-from .const import API_PATH, API_VERSION, PaperlessResource
+from .const import API_PATH, API_VERSION
 from .exceptions import (
     BadJsonResponseError,
     InitializationError,
@@ -19,57 +19,10 @@ from .exceptions import (
     PaperlessInvalidTokenError,
 )
 from .models.common import PaperlessCache
-from .services.base import ServiceBase
 
 
-class PaperlessProtocol(Protocol):
-    """Protocol for `Paperless` instances."""
-
-    config: services.ConfigService
-    correspondents: services.CorrespondentService
-    custom_fields: services.CustomFieldService
-    documents: services.DocumentService
-    document_types: services.DocumentTypeService
-    groups: services.GroupService
-    mail_accounts: services.MailAccountService
-    mail_rules: services.MailRuleService
-    processed_mail: services.ProcessedMailService
-    saved_views: services.SavedViewService
-    share_links: services.ShareLinkService
-    statistics: services.StatisticService
-    remote_version: services.RemoteVersionService
-    status: services.StatusService
-    storage_paths: services.StoragePathService
-    tags: services.TagService
-    tasks: services.TaskService
-    users: services.UserService
-    workflows: services.WorkflowService
-
-
-class Paperless(PaperlessProtocol):
+class Paperless:
     """Retrieves and manipulates data from and to Paperless via REST."""
-
-    _service_map: dict[str, type[ServiceBase]] = {
-        PaperlessResource.CONFIG: services.ConfigService,
-        PaperlessResource.CORRESPONDENTS: services.CorrespondentService,
-        PaperlessResource.CUSTOM_FIELDS: services.CustomFieldService,
-        PaperlessResource.DOCUMENTS: services.DocumentService,
-        PaperlessResource.DOCUMENT_TYPES: services.DocumentTypeService,
-        PaperlessResource.GROUPS: services.GroupService,
-        PaperlessResource.MAIL_ACCOUNTS: services.MailAccountService,
-        PaperlessResource.MAIL_RULES: services.MailRuleService,
-        PaperlessResource.PROCESSED_MAIL: services.ProcessedMailService,
-        PaperlessResource.SAVED_VIEWS: services.SavedViewService,
-        PaperlessResource.SHARE_LINKS: services.ShareLinkService,
-        PaperlessResource.STATISTICS: services.StatisticService,
-        PaperlessResource.REMOTE_VERSION: services.RemoteVersionService,
-        PaperlessResource.STATUS: services.StatusService,
-        PaperlessResource.STORAGE_PATHS: services.StoragePathService,
-        PaperlessResource.TAGS: services.TagService,
-        PaperlessResource.TASKS: services.TaskService,
-        PaperlessResource.USERS: services.UserService,
-        PaperlessResource.WORKFLOWS: services.WorkflowService,
-    }
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
@@ -110,6 +63,26 @@ class Paperless(PaperlessProtocol):
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}")
+
+        self.config = services.ConfigService(self)
+        self.correspondents = services.CorrespondentService(self)
+        self.custom_fields = services.CustomFieldService(self)
+        self.documents = services.DocumentService(self)
+        self.document_types = services.DocumentTypeService(self)
+        self.groups = services.GroupService(self)
+        self.mail_accounts = services.MailAccountService(self)
+        self.mail_rules = services.MailRuleService(self)
+        self.processed_mail = services.ProcessedMailService(self)
+        self.saved_views = services.SavedViewService(self)
+        self.share_links = services.ShareLinkService(self)
+        self.statistics = services.StatisticService(self)
+        self.remote_version = services.RemoteVersionService(self)
+        self.status = services.StatusService(self)
+        self.storage_paths = services.StoragePathService(self)
+        self.tags = services.TagService(self)
+        self.tasks = services.TaskService(self)
+        self.users = services.UserService(self)
+        self.workflows = services.WorkflowService(self)
 
     @property
     def base_url(self) -> str:
@@ -253,9 +226,6 @@ class Paperless(PaperlessProtocol):
             raise InitializationError from exc
 
         # initialize services
-        for attr, service_cls in self._service_map.items():
-            setattr(self, attr, service_cls(self))
-
         self._initialized = True
         self.logger.info("Initialized.")
 
