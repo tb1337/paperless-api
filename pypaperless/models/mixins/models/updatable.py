@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Any
 
 from pypaperless.models.utils import object_to_dict_value
 
-from .securable import SecurableMixin
-
 if TYPE_CHECKING:
     from pypaperless.models.base import PaperlessModelProtocol as _Base
 else:
@@ -47,7 +45,7 @@ class UpdatableMixin(_Base):
 
     def _check_permissions_field(self, data: dict) -> None:
         """Check."""
-        if SecurableMixin not in type(self).__mro__:
+        if not hasattr(self, "has_permissions"):
             return
         if not self.has_permissions:  # type: ignore[attr-defined]
             return

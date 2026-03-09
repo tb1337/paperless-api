@@ -32,8 +32,7 @@ class Correspondent(
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Correspondent` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class CorrespondentDraft(
@@ -75,8 +74,7 @@ class DocumentType(
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `DocumentType` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class DocumentTypeDraft(
@@ -120,8 +118,7 @@ class StoragePath(
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `StoragePath` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class StoragePathDraft(
@@ -171,8 +168,7 @@ class Tag(
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Tag` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class TagDraft(

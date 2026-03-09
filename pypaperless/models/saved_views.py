@@ -31,8 +31,7 @@ class SavedView(PaperlessModel, models.SecurableMixin):
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `SavedView` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class SavedViewHelper(

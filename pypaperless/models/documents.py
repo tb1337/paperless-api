@@ -4,7 +4,7 @@ import datetime
 from collections.abc import AsyncGenerator, Iterator
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
-from pydantic import Field
+from pydantic import Field, PrivateAttr
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
@@ -171,6 +171,8 @@ class Document(
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
 
+    _notes: "DocumentNoteHelper" = PrivateAttr()
+
     id: int | None = None
     correspondent: int | None = None
     document_type: int | None = None
@@ -197,19 +199,19 @@ class Document(
         if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
             kwargs["custom_fields"] = DocumentCustomFieldList(api, kwargs["custom_fields"])
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
-        object.__setattr__(self, "notes", DocumentNoteHelper(api, data.get("id")))
+        self._format_api_path(data)
+        self._notes = DocumentNoteHelper(api, data.get("id"))
 
     def _apply_data(self) -> None:
         """Apply data from `self._data` to model fields, converting custom_fields."""
         super()._apply_data()
         if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            object.__setattr__(
-                self,
-                "custom_fields",
-                DocumentCustomFieldList(self._api, self._data["custom_fields"]),
-            )
+            self.custom_fields = DocumentCustomFieldList(self._api, self._data["custom_fields"])
+
+    @property
+    def notes(self) -> "DocumentNoteHelper":
+        """Return the notes helper for this document."""
+        return self._notes
 
     @property
     def created_date(self) -> datetime.date | None:
@@ -299,7 +301,7 @@ class DocumentNote(PaperlessModel):
         """Initialize a `DocumentNote` instance."""
         super().__init__(api, data, **kwargs)
 
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("document")))
+        self._format_api_path(data, pk=data.get("document"))
 
     async def delete(self) -> bool:
         """Delete a `resource item` from DRF. There is no point of return.
@@ -336,10 +338,10 @@ class DocumentNoteDraft(PaperlessModel, models.CreatableMixin):
     document: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentNote` instance."""
+        """Initialize a `DocumentNoteDraft` instance."""
         super().__init__(api, data, **kwargs)
 
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("document")))
+        self._format_api_path(data, pk=data.get("document"))
 
 
 class DocumentMeta(PaperlessModel):
@@ -365,7 +367,7 @@ class DocumentMeta(PaperlessModel):
         """Initialize a `DocumentMeta` instance."""
         super().__init__(api, data, **kwargs)
 
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class DownloadedDocument(PaperlessModel):
@@ -383,7 +385,7 @@ class DownloadedDocument(PaperlessModel):
 
     async def load(self) -> None:
         """Get `raw data` from DRF."""
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=self._data.get("id")))
+        self._format_api_path(self._data)
 
         params = {
             "original": "true" if self._data.get("original", False) else "false",
@@ -434,7 +436,7 @@ class DocumentSuggestions(PaperlessModel):
         """Initialize a `DocumentSuggestions` instance."""
         super().__init__(api, data, **kwargs)
 
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class DocumentSuggestionsHelper(HelperBase):

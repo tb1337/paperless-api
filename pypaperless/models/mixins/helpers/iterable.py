@@ -104,7 +104,7 @@ class IterableMixin(HelperProtocol[ResourceT]):
         ```
 
         """
-        params: dict[str, Any] = getattr(self, "_aiter_filters", None) or {}
+        params: dict[str, Any] = dict(getattr(self, "_aiter_filters", None) or {})
 
         for param, value in params.items():
             if param.endswith("__in"):

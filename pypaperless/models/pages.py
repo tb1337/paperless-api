@@ -4,6 +4,8 @@ import math
 from collections.abc import Iterator
 from typing import Any, ClassVar, Generic
 
+from pydantic import Field
+
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel, ResourceT
@@ -23,8 +25,8 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     count: int = 0
     next: str | None = None
     previous: str | None = None
-    all: list[int] = []
-    results: list[dict[str, Any]] = []
+    all: list[int] = Field(default_factory=list)
+    results: list[dict[str, Any]] = Field(default_factory=list)
 
     def __iter__(self) -> Iterator[ResourceT]:
         """Return iter of `.items`."""

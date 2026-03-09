@@ -6,7 +6,7 @@ import re
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Any, TypedDict, TypeVar
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -225,11 +225,11 @@ class MasterDataInstance(BaseModel):
     api: "Paperless"
     is_initialized: bool = False
 
-    correspondents: list["Correspondent"] = []
-    custom_fields: list["CustomField"] = []
-    document_types: list["DocumentType"] = []
-    storage_paths: list["StoragePath"] = []
-    tags: list["Tag"] = []
+    correspondents: list["Correspondent"] = Field(default_factory=list)
+    custom_fields: list["CustomField"] = Field(default_factory=list)
+    document_types: list["DocumentType"] = Field(default_factory=list)
+    storage_paths: list["StoragePath"] = Field(default_factory=list)
+    tags: list["Tag"] = Field(default_factory=list)
 
 
 # mixins/models/data_fields, used for classifiers
@@ -262,16 +262,16 @@ class PaperlessCache(BaseModel):
 class PermissionSetType(BaseModel):
     """Represent a Paperless permission set."""
 
-    users: list[int] = []
-    groups: list[int] = []
+    users: list[int] = Field(default_factory=list)
+    groups: list[int] = Field(default_factory=list)
 
 
 # mixins/models/securable
 class PermissionTableType(BaseModel):
     """Represent a Paperless permissions type."""
 
-    view: PermissionSetType = PermissionSetType()
-    change: PermissionSetType = PermissionSetType()
+    view: PermissionSetType = Field(default_factory=PermissionSetType)
+    change: PermissionSetType = Field(default_factory=PermissionSetType)
 
 
 # documents
@@ -333,7 +333,7 @@ class StatusDatabaseMigrationStatusType(BaseModel):
     """Represent a subtype of `StatusDatabaseType`."""
 
     latest_migration: str | None = None
-    unapplied_migrations: list[str] = []
+    unapplied_migrations: list[str] = Field(default_factory=list)
 
 
 # status

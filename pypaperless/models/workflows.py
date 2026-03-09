@@ -59,10 +59,9 @@ class WorkflowAction(PaperlessModel):
     webhook: WorkflowActionWebhookType | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Workflow` instance."""
+        """Initialize a `WorkflowAction` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
@@ -93,10 +92,9 @@ class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     schedule_date_custom_field: int | None = None
 
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Workflow` instance."""
+        """Initialize a `WorkflowTrigger` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class Workflow(PaperlessModel):
@@ -114,8 +112,7 @@ class Workflow(PaperlessModel):
     def __init__(self, api: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
         super().__init__(api, data, **kwargs)
-
-        object.__setattr__(self, "_api_path", self._api_path.format(pk=data.get("id")))
+        self._format_api_path(data)
 
 
 class WorkflowActionHelper(
