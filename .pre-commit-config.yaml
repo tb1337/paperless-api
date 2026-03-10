@@ -49,12 +49,12 @@ repos:
         types: [text]
         exclude: ^(uv\.lock|requirements\.txt|requirements_dev.txt)$
         entry: uv run codespell
-      # - id: mypy
-      #   name: 🆎 Static type checking using mypy
-      #   language: system
-      #   types: [python]
-      #   entry: uv run mypy
-      #   require_serial: true
+      - id: mypy
+        name: 🆎 Static type checking using mypy
+        language: system
+        types: [python]
+        entry: uv run mypy
+        require_serial: true
       # - id: pylint
       #   name: 🌟 Starring code with pylint
       #   language: system
