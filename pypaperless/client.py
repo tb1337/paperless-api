@@ -18,7 +18,6 @@ from .exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
-from .models.common import PaperlessCache
 
 
 class Paperless:
@@ -50,7 +49,6 @@ class Paperless:
         `client`: A custom `httpx.AsyncClient` object, if existing.
         """
         self._base_url = self._create_base_url(url)
-        self._cache = PaperlessCache()
         self._client = client
         self._initialized = False
         self._request_api_version = request_api_version or API_VERSION
@@ -59,6 +57,7 @@ class Paperless:
         self._api_version = API_VERSION
         self._version: str | None = None
 
+        self.cache = services.CacheService(self)
         self.config = services.ConfigService(self)
         self.correspondents = services.CorrespondentService(self)
         self.custom_fields = services.CustomFieldService(self)
@@ -85,11 +84,6 @@ class Paperless:
     def base_url(self) -> str:
         """Return the base url of the Paperless api endpoint."""
         return self._base_url
-
-    @property
-    def cache(self) -> PaperlessCache:
-        """Return the cache object."""
-        return self._cache
 
     @property
     def is_initialized(self) -> bool:

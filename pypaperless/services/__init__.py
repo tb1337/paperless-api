@@ -1,6 +1,7 @@
 """PyPaperless services."""
 
 from .base import ServiceBase  # noqa: F401
+from .cache import CacheService  # noqa: F401
 from .config import ConfigService  # noqa: F401
 from .correspondents import CorrespondentService  # noqa: F401
 from .custom_fields import CustomFieldService  # noqa: F401

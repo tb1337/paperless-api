@@ -1,6 +1,5 @@
 """PyPaperless models."""
 
-from .common import PaperlessCache
 from .config import Config
 from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
@@ -28,9 +27,6 @@ from .tags import Tag, TagDraft
 from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
-# Resolve forward reference to CustomField in PaperlessCache
-PaperlessCache.model_rebuild()
-
 __all__ = (
     "Config",
     "Correspondent",
@@ -51,7 +47,6 @@ __all__ = (
     "MailAccount",
     "MailRule",
     "Page",
-    "PaperlessCache",
     "ProcessedMail",
     "RemoteVersion",
     "SavedView",
