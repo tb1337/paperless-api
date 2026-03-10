@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 
-from .const import PAPERLESS_TEST_REQ_ARGS, PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
+from .const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from .data import DATA_SCHEMA
 
 # mypy: ignore-errors
@@ -21,7 +21,6 @@ def api_obj_fixture() -> Paperless:
     return Paperless(
         PAPERLESS_TEST_URL,
         PAPERLESS_TEST_TOKEN,
-        request_args=PAPERLESS_TEST_REQ_ARGS,
     )
 
 

@@ -95,7 +95,7 @@ class TestModelConfig:
 class TestModelDocuments:
     """Documents test cases."""
 
-    async def test_lazy(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_lazy(self, paperless: Paperless) -> None:
         """Test laziness."""
         document = await paperless.documents(42, lazy=True)
         assert document.id == 42

@@ -5,6 +5,7 @@ from datetime import date
 
 import httpx
 import pytest
+from pydantic import BaseModel
 from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
@@ -458,9 +459,10 @@ class TestPaperless:
 
     async def test_object_to_dict_value(self) -> None:
         """Test object_to_dict_value utility."""
-        from pydantic import BaseModel
 
         class SomeModel(BaseModel):
+            """Some model."""
+
             name: str
             age: int
 

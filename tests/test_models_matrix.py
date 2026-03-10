@@ -1,5 +1,6 @@
 """Paperless basic tests."""
 
+import json as json_mod
 import re
 
 import httpx
@@ -449,7 +450,6 @@ class TestSecurableMixin:
 
         def _lookup_set_permissions(request: httpx.Request) -> httpx.Response:
             assert request.url
-            import json as json_mod
 
             json_data = json_mod.loads(request.content)
             assert "set_permissions" in json_data
