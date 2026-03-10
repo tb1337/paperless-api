@@ -6,16 +6,10 @@ import re
 from enum import Enum, StrEnum
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
-
-    from .correspondents import Correspondent
     from .custom_fields import CustomField
-    from .document_types import DocumentType
-    from .storage_paths import StoragePath
-    from .tags import Tag
 
 
 # custom_fields
@@ -217,22 +211,6 @@ class DocumentSearchHitType(BaseModel):
     highlights: str | None = None
     note_highlights: str | None = None
     rank: int | None = None
-
-
-# api
-class MasterDataInstance(BaseModel):
-    """Represent a `MasterDataInstance`."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    client: "Paperless"
-    is_initialized: bool = False
-
-    correspondents: list["Correspondent"] = Field(default_factory=list)
-    custom_fields: list["CustomField"] = Field(default_factory=list)
-    document_types: list["DocumentType"] = Field(default_factory=list)
-    storage_paths: list["StoragePath"] = Field(default_factory=list)
-    tags: list["Tag"] = Field(default_factory=list)
 
 
 # mixins/models/data_fields, used for classifiers

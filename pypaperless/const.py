@@ -7,13 +7,11 @@ from enum import StrEnum
 API_VERSION = 9
 
 CONFIG = "config"  # pylint: disable=invalid-name
-CONSUMPTION_TEMPLATES = "consumption_templates"  # pylint: disable=invalid-name
 CORRESPONDENTS = "correspondents"  # pylint: disable=invalid-name
 CUSTOM_FIELDS = "custom_fields"  # pylint: disable=invalid-name
 DOCUMENTS = "documents"  # pylint: disable=invalid-name
 DOCUMENT_TYPES = "document_types"  # pylint: disable=invalid-name
 GROUPS = "groups"  # pylint: disable=invalid-name
-LOGS = "logs"  # pylint: disable=invalid-name
 MAIL_ACCOUNTS = "mail_accounts"  # pylint: disable=invalid-name
 MAIL_RULES = "mail_rules"  # pylint: disable=invalid-name
 PROCESSED_MAIL = "processed_mail"  # pylint: disable=invalid-name
@@ -89,13 +87,11 @@ class PaperlessResource(StrEnum):
     """Represent paths of api endpoints."""
 
     CONFIG = CONFIG
-    CONSUMPTION_TEMPLATES = CONSUMPTION_TEMPLATES
     CORRESPONDENTS = CORRESPONDENTS
     CUSTOM_FIELDS = CUSTOM_FIELDS
     DOCUMENTS = DOCUMENTS
     DOCUMENT_TYPES = DOCUMENT_TYPES
     GROUPS = GROUPS
-    LOGS = LOGS
     MAIL_ACCOUNTS = MAIL_ACCOUNTS
     MAIL_RULES = MAIL_RULES
     PROCESSED_MAIL = PROCESSED_MAIL
