@@ -60,12 +60,12 @@ repos:
         language: system
         types: [python]
         entry: uv run pylint
-      # - id: pytest
-      #   name: 🧪 Running tests and test coverage with pytest
-      #   language: system
-      #   types: [python]
-      #   entry: uv run pytest
-      #   pass_filenames: false
+      - id: pytest
+        name: 🧪 Running tests and test coverage with pytest
+        language: system
+        types: [python]
+        entry: uv run pytest
+        pass_filenames: false
       - id: yamllint
         name: 🎗  Check YAML files with yamllint
         language: system
