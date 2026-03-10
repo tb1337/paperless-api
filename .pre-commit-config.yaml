@@ -29,13 +29,13 @@ repos:
       - id: check-docstring-first
   - repo: local
     hooks:
-      # - id: ruff-check
-      #   name: 🐶 Ruff Linter
-      #   language: system
-      #   types: [python]
-      #   entry: uv run ruff check --fix
-      #   require_serial: true
-      #   stages: [pre-commit, pre-push, manual]
+      - id: ruff-check
+        name: 🐶 Ruff Linter
+        language: system
+        types: [python]
+        entry: uv run ruff check --fix
+        require_serial: true
+        stages: [pre-commit, pre-push, manual]
       # - id: ruff-format
       #   name: 🐶 Ruff Formatter
       #   language: system
