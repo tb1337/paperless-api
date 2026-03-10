@@ -36,13 +36,13 @@ repos:
         entry: uv run ruff check --fix
         require_serial: true
         stages: [pre-commit, pre-push, manual]
-      # - id: ruff-format
-      #   name: 🐶 Ruff Formatter
-      #   language: system
-      #   types: [python]
-      #   entry: uv run ruff format
-      #   require_serial: true
-      #   stages: [pre-commit, pre-push, manual]
+      - id: ruff-format
+        name: 🐶 Ruff Formatter
+        language: system
+        types: [python]
+        entry: uv run ruff format
+        require_serial: true
+        stages: [pre-commit, pre-push, manual]
       - id: codespell
         name: ✅ Check code for common misspellings
         language: system
