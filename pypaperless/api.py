@@ -39,7 +39,6 @@ class Paperless:
         token: str | None = None,
         *,
         client: httpx.AsyncClient | None = None,
-        request_args: dict[str, Any] | None = None,
         request_api_version: int | None = None,
     ) -> None:
         """Initialize a `Paperless` instance.
@@ -49,20 +48,16 @@ class Paperless:
         `url`: A hostname or IP-address as string.
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `client`: A custom `httpx.AsyncClient` object, if existing.
-        `request_args` are passed to each request method call as additional kwargs.
         """
         self._base_url = self._create_base_url(url)
         self._cache = PaperlessCache()
+        self._client = client
         self._initialized = False
         self._request_api_version = request_api_version or API_VERSION
-        self._request_args = request_args or {}
-        self._client = client
         self._token = token
 
         self._api_version = API_VERSION
         self._version: str | None = None
-
-        self.logger = logging.getLogger(f"{__package__}")
 
         self.config = services.ConfigService(self)
         self.correspondents = services.CorrespondentService(self)
@@ -83,6 +78,8 @@ class Paperless:
         self.tasks = services.TaskService(self)
         self.users = services.UserService(self)
         self.workflows = services.WorkflowService(self)
+
+        self.logger = logging.getLogger(f"{__package__}")
 
     @property
     def base_url(self) -> str:
@@ -273,9 +270,6 @@ class Paperless:
             kwargs["headers"].update(headers)
         else:
             kwargs["headers"] = headers
-
-        # add request args
-        kwargs.update(self._request_args)
 
         # overwrite data with form data when there is a form payload
         files = None
