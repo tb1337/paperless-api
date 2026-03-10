@@ -61,7 +61,7 @@ class WorkflowAction(PaperlessModel):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `WorkflowAction` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
 
 
 class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
@@ -94,7 +94,7 @@ class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `WorkflowTrigger` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
 
 
 class Workflow(PaperlessModel):
@@ -112,4 +112,4 @@ class Workflow(PaperlessModel):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Workflow` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)

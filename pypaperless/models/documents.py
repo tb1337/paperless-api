@@ -195,7 +195,7 @@ class Document(
         if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
             kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
         from pypaperless.services.documents import (  # noqa: PLC0415 # pylint: disable=import-outside-toplevel
             DocumentNoteService,
         )
@@ -301,7 +301,7 @@ class DocumentNote(PaperlessModel):
         """Initialize a `DocumentNote` instance."""
         super().__init__(client, data, **kwargs)
 
-        self._format_api_path(data, pk=data.get("document"))
+        self._set_api_path(data, pk=data.get("document"))
 
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
@@ -318,7 +318,7 @@ class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
         """Initialize a `DocumentNoteDraft` instance."""
         super().__init__(client, data, **kwargs)
 
-        self._format_api_path(data, pk=data.get("document"))
+        self._set_api_path(data, pk=data.get("document"))
 
 
 class DocumentMeta(PaperlessModel):
@@ -344,7 +344,7 @@ class DocumentMeta(PaperlessModel):
         """Initialize a `DocumentMeta` instance."""
         super().__init__(client, data, **kwargs)
 
-        self._format_api_path(data)
+        self._set_api_path(data)
 
 
 class DownloadedDocument(PaperlessModel):
@@ -377,4 +377,4 @@ class DocumentSuggestions(PaperlessModel):
         """Initialize a `DocumentSuggestions` instance."""
         super().__init__(client, data, **kwargs)
 
-        self._format_api_path(data)
+        self._set_api_path(data)

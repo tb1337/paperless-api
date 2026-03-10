@@ -46,4 +46,4 @@ class Config(PaperlessModel):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Config` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)

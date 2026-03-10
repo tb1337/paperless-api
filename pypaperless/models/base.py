@@ -53,11 +53,11 @@ class PaperlessModel(BaseModel):
         self._client = client
         self._data = dict(data)
 
-    def _format_api_path(self, data: dict[str, Any], **format_kwargs: Any) -> None:
-        """Format the _api_path with instance data.
+    def _set_api_path(self, data: dict[str, Any], **format_kwargs: Any) -> None:
+        """Set the instance's `_api_path` by resolving its template placeholders.
 
-        This is a helper method to easily format paths like `/api/documents/{pk}/`.
-        Subclasses should call this in their __init__ if they need custom path formatting.
+        This is a helper method to bind paths like `/api/documents/{pk}/` to the
+        actual instance data. Subclasses should call this in their __init__.
         """
         format_kwargs.setdefault("pk", data.get("id") or data.get("document"))
         if format_kwargs["pk"] is not None:

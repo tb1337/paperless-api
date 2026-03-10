@@ -33,7 +33,7 @@ class MailAccount(PaperlessModel, mixins.SecurableMixin):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailAccount` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
 
 
 class MailRule(PaperlessModel, mixins.SecurableMixin):
@@ -69,7 +69,7 @@ class MailRule(PaperlessModel, mixins.SecurableMixin):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `MailRule` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
 
 
 class ProcessedMail(PaperlessModel):
@@ -91,4 +91,4 @@ class ProcessedMail(PaperlessModel):
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `ProcessedMail` instance."""
         super().__init__(client, data, **kwargs)
-        self._format_api_path(data)
+        self._set_api_path(data)
