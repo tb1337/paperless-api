@@ -229,7 +229,6 @@ class Paperless:
         except (httpx.HTTPStatusError, ValueError) as exc:
             raise InitializationError from exc
 
-        # initialize services
         self._initialized = True
         self.logger.info("Initialized.")
 

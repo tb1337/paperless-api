@@ -514,7 +514,7 @@ class TestPaperless:
             data["results"].append({"id": i})
 
         page = Page.create_with_data(api, data=data)
-        page._resource_cls = TestResource  # pylint: disable=protected-access
+        page.set_resource_cls(TestResource)
 
         assert isinstance(page, Page)
         assert page.current_count == 100

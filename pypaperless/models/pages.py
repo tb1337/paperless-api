@@ -32,6 +32,10 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
         """Return iter of `.items`."""
         return iter(self.items)
 
+    def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
+        """Set the resource class for items mapping."""
+        self._resource_cls = resource_cls
+
     @property
     def current_count(self) -> int:
         """Return the item count of the current page."""

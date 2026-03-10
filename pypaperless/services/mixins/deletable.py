@@ -22,5 +22,5 @@ class DeletableMixin(ServiceProtocol[ResourceT]):
         ```
 
         """
-        res = await self._client.request("delete", model._api_path)  # noqa: SLF001 # pylint: disable=protected-access
+        res = await self._client.request("delete", model.api_path)
         return res.status_code == 204

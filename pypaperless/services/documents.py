@@ -226,7 +226,7 @@ class DocumentNoteService(ServiceBase):
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.request_json("post", draft._api_path, **kwdict)  # noqa: SLF001 # pylint: disable=protected-access
+        res = await self._client.request_json("post", draft.api_path, **kwdict)
         return (
             cast("int", max(item.get("id") for item in res)),
             cast("int", kwdict["json"]["document"]),
@@ -240,7 +240,7 @@ class DocumentNoteService(ServiceBase):
         params = {
             "id": note.id,
         }
-        res = await self._client.request("delete", note._api_path, params=params)  # noqa: SLF001 # pylint: disable=protected-access
+        res = await self._client.request("delete", note.api_path, params=params)
         return res.status_code in {200, 204}
 
 

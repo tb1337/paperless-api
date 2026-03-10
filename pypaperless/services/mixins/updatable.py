@@ -61,7 +61,7 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
         for name in model.__class__.model_fields:
             new_value = object_to_dict_value(getattr(model, name))
 
-            if name in model._data and new_value != model._data[name]:  # noqa: SLF001 # pylint: disable=protected-access
+            if name in model.data and new_value != model.data[name]:
                 changed[name] = new_value
 
         if len(changed) == 0:
@@ -69,9 +69,9 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
 
         self._check_permissions_field(model, changed)
 
-        model._data = await self._client.request_json(  # noqa: SLF001 # pylint: disable=protected-access
+        model.data = await self._client.request_json(
             "patch",
-            model._api_path,  # noqa: SLF001 # pylint: disable=protected-access
+            model.api_path,
             json=changed,
             params=params or None,
         )
@@ -86,9 +86,9 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
 
         self._check_permissions_field(model, data)
 
-        model._data = await self._client.request_json(  # noqa: SLF001 # pylint: disable=protected-access
+        model.data = await self._client.request_json(
             "put",
-            model._api_path,  # noqa: SLF001 # pylint: disable=protected-access
+            model.api_path,
             json=data,
             params=params or None,
         )

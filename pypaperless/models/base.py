@@ -32,6 +32,21 @@ class PaperlessModel(BaseModel):
     _client: "Paperless" = PrivateAttr()
     _data: dict[str, Any] = PrivateAttr(default_factory=dict)
 
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this model instance."""
+        return self._api_path
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return the internal model data dictionary."""
+        return self._data
+
+    @data.setter
+    def data(self, value: dict[str, Any]) -> None:
+        """Set the internal model data dictionary."""
+        self._data = value
+
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `PaperlessModel` instance."""
         super().__init__(**kwargs)
@@ -67,13 +82,13 @@ class PaperlessModel(BaseModel):
         return cls(client=client, data=data, **data)
 
     def apply_data(self) -> None:
-        """Apply data from `self._data` to model fields.
+        """Apply data from `self.data` to model fields.
 
         Used by services after update operations to refresh model state.
         """
         for field_name, field_info in self.__class__.model_fields.items():
-            if field_name in self._data:
-                value = self._data[field_name]
+            if field_name in self.data:
+                value = self.data[field_name]
                 if field_info.annotation is not None:
                     try:
                         adapter = self._get_type_adapter(field_name, field_info.annotation)
