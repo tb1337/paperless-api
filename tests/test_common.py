@@ -22,7 +22,7 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import CustomField, Page
 from pypaperless.models.base import PaperlessModel
-from pypaperless.models.common import (
+from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
     CustomFieldExtraData,
@@ -30,14 +30,14 @@ from pypaperless.models.common import (
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
-    MatchingAlgorithmType,
-    ShareLinkFileVersionType,
+    MatchingAlgorithm,
+    ShareLinkFileVersion,
     StatusType,
-    TaskStatusType,
+    TaskStatus,
     TaskType,
     WorkflowActionType,
-    WorkflowTriggerScheduleDateFieldType,
-    WorkflowTriggerSourceType,
+    WorkflowTriggerScheduleDateField,
+    WorkflowTriggerSource,
     WorkflowTriggerType,
 )
 from pypaperless.models.utils import object_to_dict_value
@@ -360,18 +360,17 @@ class TestPaperless:
         never_int = 99952342
         assert PaperlessResource(never_str) == PaperlessResource.UNKNOWN
         assert CustomFieldType(never_str) == CustomFieldType.UNKNOWN
-        assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
-        assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
+        assert MatchingAlgorithm(never_int) == MatchingAlgorithm.UNKNOWN
+        assert ShareLinkFileVersion(never_str) == ShareLinkFileVersion.UNKNOWN
         assert StatusType(never_str) == StatusType.UNKNOWN
         assert TaskType(never_str) == TaskType.UNKNOWN
-        assert TaskStatusType(never_str) == TaskStatusType.UNKNOWN
+        assert TaskStatus(never_str) == TaskStatus.UNKNOWN
         assert WorkflowActionType(never_int) == WorkflowActionType.UNKNOWN
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert (
-            WorkflowTriggerScheduleDateFieldType(never_str)
-            == WorkflowTriggerScheduleDateFieldType.UNKNOWN
+            WorkflowTriggerScheduleDateField(never_str) == WorkflowTriggerScheduleDateField.UNKNOWN
         )
-        assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
+        assert WorkflowTriggerSource(never_int) == WorkflowTriggerSource.UNKNOWN
 
     async def test_custom_field_draft_value_wo_cache(self, paperless: Paperless) -> None:
         """Test draft custom field value without cache."""

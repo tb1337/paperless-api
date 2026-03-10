@@ -1,19 +1,96 @@
 """Provide `Workflow` related models."""
 
+from enum import Enum
 from typing import Any, ClassVar
+
+from pydantic import BaseModel
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-from .common import (
-    WorkflowActionEmailType,
-    WorkflowActionType,
-    WorkflowActionWebhookType,
-    WorkflowTriggerScheduleDateFieldType,
-    WorkflowTriggerSourceType,
-    WorkflowTriggerType,
-)
+
+
+class WorkflowActionType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    ASSIGNMENT = 1
+    REMOVAL = 2
+    EMAIL = 3
+    WEBHOOK = 4
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowActionType":
+        """Set default member on unknown value."""
+        return WorkflowActionType.UNKNOWN
+
+
+class WorkflowActionEmail(BaseModel):
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    to: str | None = None
+    subject: str | None = None
+    body: str | None = None
+    include_document: bool | None = None
+
+
+class WorkflowActionWebhook(BaseModel):
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    url: str | None = None
+    use_params: bool | None = None
+    as_json: bool | None = None
+    params: dict[str, Any] | None = None
+    body: str | None = None
+    headers: dict[str, str] | None = None
+    include_document: bool | None = None
+
+
+class WorkflowTriggerType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUMPTION = 1
+    DOCUMENT_ADDED = 2
+    DOCUMENT_UPDATED = 3
+    SCHEDULED = 4
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerType":
+        """Set default member on unknown value."""
+        return WorkflowTriggerType.UNKNOWN
+
+
+class WorkflowTriggerScheduleDateField(Enum):
+    """Represent a subtype of `WorkflowTrigger`."""
+
+    ADDED = "added"
+    CREATED = "created"
+    MODIFIED = "modified"
+    CUSTOM_FIELD = "custom_field"
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerScheduleDateField":
+        """Set default member on unknown value."""
+        return WorkflowTriggerScheduleDateField.UNKNOWN
+
+
+class WorkflowTriggerSource(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUME_FOLDER = 1
+    API_UPLOAD = 2
+    MAIL_FETCH = 3
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerSource":
+        """Set default member on unknown value."""
+        return WorkflowTriggerSource.UNKNOWN
 
 
 class WorkflowAction(PaperlessModel):
@@ -52,8 +129,8 @@ class WorkflowAction(PaperlessModel):
     remove_view_groups: list[int] | None = None
     remove_change_users: list[int] | None = None
     remove_change_groups: list[int] | None = None
-    email: WorkflowActionEmailType | None = None
-    webhook: WorkflowActionWebhookType | None = None
+    email: WorkflowActionEmail | None = None
+    webhook: WorkflowActionWebhook | None = None
 
 
 class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
@@ -62,7 +139,7 @@ class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]
 
     id: int | None = None
-    sources: list[WorkflowTriggerSourceType] | None = None
+    sources: list[WorkflowTriggerSource] | None = None
     type: WorkflowTriggerType | None = None
     filter_path: str | None = None
     filter_filename: str | None = None
@@ -80,7 +157,7 @@ class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     schedule_offset_days: int | None = None
     schedule_is_recurring: bool | None = None
     schedule_recurring_interval_days: int | None = None
-    schedule_date_field: WorkflowTriggerScheduleDateFieldType | None = None
+    schedule_date_field: WorkflowTriggerScheduleDateField | None = None
     schedule_date_custom_field: int | None = None
 
 

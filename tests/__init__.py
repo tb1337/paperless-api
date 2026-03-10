@@ -5,7 +5,7 @@ from typing import Any
 
 from pypaperless import models, services
 from pypaperless.const import PaperlessResource
-from pypaperless.models import common
+from pypaperless.models import types
 
 from .data import (
     DATA_CONFIG,
@@ -58,7 +58,7 @@ CORRESPONDENT_MAP = ResourceTestMapping(
     {
         "name": "New Correspondent",
         "match": "",
-        "matching_algorithm": common.MatchingAlgorithmType.ANY,
+        "matching_algorithm": types.MatchingAlgorithm.ANY,
         "is_insensitive": True,
     },
 )
@@ -71,7 +71,7 @@ CUSTOM_FIELD_MAP = ResourceTestMapping(
     models.CustomFieldDraft,
     {
         "name": "New Custom Field",
-        "data_type": common.CustomFieldType.BOOLEAN,
+        "data_type": types.CustomFieldType.BOOLEAN,
     },
 )
 
@@ -102,7 +102,7 @@ DOCUMENT_TYPE_MAP = ResourceTestMapping(
     {
         "name": "New Document Type",
         "match": "",
-        "matching_algorithm": common.MatchingAlgorithmType.ANY,
+        "matching_algorithm": types.MatchingAlgorithm.ANY,
         "is_insensitive": True,
     },
 )
@@ -151,7 +151,7 @@ SHARE_LINK_MAP = ResourceTestMapping(
     {
         "expiration": None,
         "document": 1,
-        "file_version": common.ShareLinkFileVersionType.ORIGINAL,
+        "file_version": types.ShareLinkFileVersion.ORIGINAL,
     },
 )
 
@@ -172,7 +172,7 @@ STORAGE_PATH_MAP = ResourceTestMapping(
         "name": "New Storage Path",
         "path": "path/to/test",
         "match": "",
-        "matching_algorithm": common.MatchingAlgorithmType.ANY,
+        "matching_algorithm": types.MatchingAlgorithm.ANY,
         "is_insensitive": True,
     },
 )
@@ -189,7 +189,7 @@ TAG_MAP = ResourceTestMapping(
         "text_color": "#987654",
         "is_inbox_tag": False,
         "match": "",
-        "matching_algorithm": common.MatchingAlgorithmType.ANY,
+        "matching_algorithm": types.MatchingAlgorithm.ANY,
         "is_insensitive": True,
     },
 )

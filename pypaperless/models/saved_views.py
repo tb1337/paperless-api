@@ -2,11 +2,19 @@
 
 from typing import ClassVar
 
+from pydantic import BaseModel
+
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-from .common import SavedViewFilterRuleType
+
+
+class SavedViewFilterRule(BaseModel):
+    """Represent a subtype of `SavedView`."""
+
+    rule_type: int | None = None
+    value: str | None = None
 
 
 class SavedView(PaperlessModel, mixins.SecurableMixin):
@@ -20,7 +28,7 @@ class SavedView(PaperlessModel, mixins.SecurableMixin):
     show_in_sidebar: bool | None = None
     sort_field: str | None = None
     sort_reverse: bool | None = None
-    filter_rules: list[SavedViewFilterRuleType] | None = None
+    filter_rules: list[SavedViewFilterRule] | None = None
     page_size: int | None = None
     display_mode: str | None = None
     display_fields: list[str] | None = None

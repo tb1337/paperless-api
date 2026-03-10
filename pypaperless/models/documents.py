@@ -2,9 +2,10 @@
 
 import datetime
 from collections.abc import Iterator
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
-from pydantic import Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
@@ -14,20 +15,43 @@ from pypaperless.models.utils import object_to_dict_value
 
 from . import mixins
 from .base import PaperlessModel, PaperlessModelData
-from .common import (
+from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomField,
     CustomFieldType,
     CustomFieldValue,
     CustomFieldValueT,
-    DocumentMetadataType,
-    DocumentSearchHitType,
-    RetrieveFileMode,
 )
-from .custom_fields import CustomField
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
     from pypaperless.services.documents import DocumentNoteService
+
+
+class DocumentMetaEntry(BaseModel):
+    """Represent a subtype of `DocumentMeta`."""
+
+    namespace: str | None = None
+    prefix: str | None = None
+    key: str | None = None
+    value: str | None = None
+
+
+class DocumentSearchHit(BaseModel):
+    """Represent a subtype of `Document`."""
+
+    score: float | None = None
+    highlights: str | None = None
+    note_highlights: str | None = None
+    rank: int | None = None
+
+
+class FileRetrieveMode(StrEnum):
+    """Represent a subtype of `DownloadedDocument`."""
+
+    DOWNLOAD = "download"
+    PREVIEW = "preview"
+    THUMBNAIL = "thumb"
 
 
 class DocumentCustomFieldList(PaperlessModelData):
@@ -187,7 +211,7 @@ class Document(
     custom_fields: DocumentCustomFieldList | list | None = None
     page_count: int | None = None
     mime_type: str | None = None
-    search_hit_: DocumentSearchHitType | None = Field(default=None, alias="__search_hit__")
+    search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
     def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Document` instance."""
@@ -224,7 +248,7 @@ class Document(
         return self.search_hit_ is not None
 
     @property
-    def search_hit(self) -> DocumentSearchHitType | None:
+    def search_hit(self) -> DocumentSearchHit | None:
         """Return the document search hit."""
         return self.search_hit_
 
@@ -322,13 +346,13 @@ class DocumentMeta(PaperlessModel):
     original_mime_type: str | None = None
     media_filename: str | None = None
     has_archive_version: bool | None = None
-    original_metadata: list[DocumentMetadataType] | None = None
+    original_metadata: list[DocumentMetaEntry] | None = None
     archive_checksum: str | None = None
     archive_media_filename: str | None = None
     original_filename: str | None = None
     lang: str | None = None
     archive_size: int | None = None
-    archive_metadata: list[DocumentMetadataType] | None = None
+    archive_metadata: list[DocumentMetaEntry] | None = None
 
 
 class DownloadedDocument(PaperlessModel):
@@ -337,7 +361,7 @@ class DownloadedDocument(PaperlessModel):
     _api_path: ClassVar[str] = API_PATH["documents"]
 
     id: int | None = None
-    mode: RetrieveFileMode | None = None
+    mode: FileRetrieveMode | None = None
     original: bool | None = None
     content: bytes | None = None
     content_type: str | None = None

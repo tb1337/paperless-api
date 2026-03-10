@@ -20,30 +20,28 @@ from pypaperless.models import (
     Config,
     CustomField,
     Document,
+    DocumentCustomFieldList,
     DocumentDraft,
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentSuggestions,
+    DownloadedDocument,
     Status,
     Task,
 )
-from pypaperless.models.common import (
+from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
     CustomFieldDocumentLinkValue,
     CustomFieldValue,
-    DocumentMetadataType,
-    DocumentSearchHitType,
-    RetrieveFileMode,
+    DocumentMetaEntry,
+    DocumentSearchHit,
+    FileRetrieveMode,
     StatisticDocumentFileTypeCount,
-    StatusDatabaseType,
-    StatusStorageType,
-    StatusTasksType,
-)
-from pypaperless.models.documents import (
-    DocumentCustomFieldList,
-    DocumentSuggestions,
-    DownloadedDocument,
+    StatusDatabase,
+    StatusStorage,
+    StatusTasks,
 )
 from pypaperless.services.workflows import WorkflowActionService, WorkflowTriggerService
 
@@ -191,10 +189,10 @@ class TestModelDocuments:
         assert isinstance(meta, DocumentMeta)
         assert isinstance(meta.original_metadata, list)
         for item in meta.original_metadata:
-            assert isinstance(item, DocumentMetadataType)
+            assert isinstance(item, DocumentMetaEntry)
         assert isinstance(meta.archive_metadata, list)
         for item in meta.archive_metadata:
-            assert isinstance(item, DocumentMetadataType)
+            assert isinstance(item, DocumentMetaEntry)
 
     async def test_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test files."""
@@ -221,7 +219,7 @@ class TestModelDocuments:
         )
         download = await document.get_download()
         assert isinstance(download, DownloadedDocument)
-        assert download.mode == RetrieveFileMode.DOWNLOAD
+        assert download.mode == FileRetrieveMode.DOWNLOAD
         httpx_mock.add_response(
             method="GET",
             url=re.compile(
@@ -237,7 +235,7 @@ class TestModelDocuments:
         )
         preview = await document.get_preview()
         assert isinstance(preview, DownloadedDocument)
-        assert preview.mode == RetrieveFileMode.PREVIEW
+        assert preview.mode == FileRetrieveMode.PREVIEW
         httpx_mock.add_response(
             method="GET",
             url=re.compile(
@@ -250,7 +248,7 @@ class TestModelDocuments:
         )
         thumbnail = await document.get_thumbnail()
         assert isinstance(thumbnail, DownloadedDocument)
-        assert thumbnail.mode == RetrieveFileMode.THUMBNAIL
+        assert thumbnail.mode == FileRetrieveMode.THUMBNAIL
 
     async def test_suggestions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test suggestions."""
@@ -300,7 +298,7 @@ class TestModelDocuments:
         async for item in paperless.documents.search("1337"):
             assert isinstance(item, Document)
             assert item.has_search_hit
-            assert isinstance(item.search_hit, DocumentSearchHitType)
+            assert isinstance(item.search_hit, DocumentSearchHit)
         # custom_field_query
         httpx_mock.add_response(
             method="GET",
@@ -313,7 +311,7 @@ class TestModelDocuments:
         async for item in paperless.documents.search(custom_field_query="1337"):
             assert isinstance(item, Document)
             assert item.has_search_hit
-            assert isinstance(item.search_hit, DocumentSearchHitType)
+            assert isinstance(item.search_hit, DocumentSearchHit)
         # more_like
         httpx_mock.add_response(
             method="GET",
@@ -326,7 +324,7 @@ class TestModelDocuments:
         async for item in paperless.documents.more_like(1337):
             assert isinstance(item, Document)
             assert item.has_search_hit
-            assert isinstance(item.search_hit, DocumentSearchHitType)
+            assert isinstance(item.search_hit, DocumentSearchHit)
 
     async def test_note_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
@@ -566,9 +564,9 @@ class TestModelStatus:
         status = await paperless.status()
         assert status
         assert isinstance(status, Status)
-        assert isinstance(status.storage, StatusStorageType)
-        assert isinstance(status.database, StatusDatabaseType)
-        assert isinstance(status.tasks, StatusTasksType)
+        assert isinstance(status.storage, StatusStorage)
+        assert isinstance(status.database, StatusDatabase)
+        assert isinstance(status.tasks, StatusTasks)
 
     async def test_has_errors(self, paperless: Paperless) -> None:
         """Test has errors."""

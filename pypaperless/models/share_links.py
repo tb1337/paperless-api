@@ -1,13 +1,26 @@
 """Provide `ShareLink` related models."""
 
 import datetime
+from enum import Enum
 from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-from .common import ShareLinkFileVersionType
+
+
+class ShareLinkFileVersion(Enum):
+    """Represent a subtype of `ShareLink`."""
+
+    ARCHIVE = "archive"
+    ORIGINAL = "original"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "ShareLinkFileVersion":
+        """Set default member on unknown value."""
+        return ShareLinkFileVersion.UNKNOWN
 
 
 class ShareLink(
@@ -22,7 +35,7 @@ class ShareLink(
     expiration: datetime.datetime | None = None
     slug: str | None = None
     document: int | None = None
-    file_version: ShareLinkFileVersionType | None = None
+    file_version: ShareLinkFileVersion | None = None
 
 
 class ShareLinkDraft(PaperlessModel, mixins.CreatableMixin):
@@ -34,4 +47,4 @@ class ShareLinkDraft(PaperlessModel, mixins.CreatableMixin):
 
     expiration: datetime.datetime | None = None
     document: int | None = None
-    file_version: ShareLinkFileVersionType | None = None
+    file_version: ShareLinkFileVersion | None = None

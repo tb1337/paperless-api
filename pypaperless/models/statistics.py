@@ -2,10 +2,18 @@
 
 from typing import ClassVar
 
+from pydantic import BaseModel
+
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
-from .common import StatisticDocumentFileTypeCount
+
+
+class StatisticDocumentFileTypeCount(BaseModel):
+    """Represent a Paperless statistics file type count."""
+
+    mime_type: str | None = None
+    mime_type_count: int | None = None
 
 
 class Statistic(PaperlessModel):

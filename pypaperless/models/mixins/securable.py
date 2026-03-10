@@ -1,8 +1,20 @@
 """SecurableMixin for PyPaperless models."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from pypaperless.models.common import PermissionTableType
+
+class PermissionSet(BaseModel):
+    """Represent a Paperless permission set."""
+
+    users: list[int] = Field(default_factory=list)
+    groups: list[int] = Field(default_factory=list)
+
+
+class PermissionTable(BaseModel):
+    """Represent a Paperless permissions type."""
+
+    view: PermissionSet = Field(default_factory=PermissionSet)
+    change: PermissionSet = Field(default_factory=PermissionSet)
 
 
 class SecurableMixin(BaseModel):
@@ -10,7 +22,7 @@ class SecurableMixin(BaseModel):
 
     owner: int | None = None
     user_can_change: bool | None = None
-    permissions: PermissionTableType | None = None
+    permissions: PermissionTable | None = None
 
     @property
     def has_permissions(self) -> bool:
@@ -22,4 +34,4 @@ class SecurableDraftMixin(BaseModel):
     """Provide permission fields for PyPaperless draft models."""
 
     owner: int | None = None
-    set_permissions: PermissionTableType | None = None
+    set_permissions: PermissionTable | None = None

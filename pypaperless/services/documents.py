@@ -9,7 +9,6 @@ from pypaperless.exceptions import (
     PrimaryKeyRequiredError,
     SendEmailError,
 )
-from pypaperless.models.common import RetrieveFileMode
 from pypaperless.models.documents import (
     Document,
     DocumentDraft,
@@ -18,6 +17,7 @@ from pypaperless.models.documents import (
     DocumentNoteDraft,
     DocumentSuggestions,
     DownloadedDocument,
+    FileRetrieveMode,
 )
 
 from . import mixins
@@ -55,7 +55,7 @@ class DocumentSubServiceBase(ServiceBase):
     async def __call__(
         self,
         pk: int,
-        mode: RetrieveFileMode,
+        mode: FileRetrieveMode,
         api_path: str,
         *,
         original: bool,
@@ -100,7 +100,7 @@ class DocumentFileDownloadService(DocumentSubServiceBase):
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
         return await super().__call__(
-            pk, RetrieveFileMode.DOWNLOAD, self._api_path, original=original
+            pk, FileRetrieveMode.DOWNLOAD, self._api_path, original=original
         )
 
 
@@ -117,7 +117,7 @@ class DocumentFilePreviewService(DocumentSubServiceBase):
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
         return await super().__call__(
-            pk, RetrieveFileMode.PREVIEW, self._api_path, original=original
+            pk, FileRetrieveMode.PREVIEW, self._api_path, original=original
         )
 
 
@@ -134,7 +134,7 @@ class DocumentFileThumbnailService(DocumentSubServiceBase):
     ) -> DownloadedDocument:
         """Request exactly one resource item."""
         return await super().__call__(
-            pk, RetrieveFileMode.THUMBNAIL, self._api_path, original=original
+            pk, FileRetrieveMode.THUMBNAIL, self._api_path, original=original
         )
 
 

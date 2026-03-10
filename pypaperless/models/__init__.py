@@ -7,10 +7,13 @@ from .custom_fields import CustomField, CustomFieldDraft
 from .document_types import DocumentType, DocumentTypeDraft
 from .documents import (
     Document,
+    DocumentCustomFieldList,
     DocumentDraft,
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentSuggestions,
+    DownloadedDocument,
 )
 from .mails import MailAccount, MailRule, ProcessedMail
 from .pages import Page
@@ -35,16 +38,20 @@ __all__ = (
     "CustomField",
     "CustomFieldDraft",
     "Document",
+    "DocumentCustomFieldList",
     "DocumentDraft",
     "DocumentMeta",
     "DocumentNote",
     "DocumentNoteDraft",
+    "DocumentSuggestions",
     "DocumentType",
     "DocumentTypeDraft",
+    "DownloadedDocument",
     "Group",
     "MailAccount",
     "MailRule",
     "Page",
+    "PaperlessCache",
     "ProcessedMail",
     "RemoteVersion",
     "SavedView",
