@@ -55,11 +55,11 @@ repos:
         types: [python]
         entry: uv run mypy
         require_serial: true
-      # - id: pylint
-      #   name: 🌟 Starring code with pylint
-      #   language: system
-      #   types: [python]
-      #   entry: uv run pylint
+      - id: pylint
+        name: 🌟 Starring code with pylint
+        language: system
+        types: [python]
+        entry: uv run pylint
       # - id: pytest
       #   name: 🧪 Running tests and test coverage with pytest
       #   language: system
