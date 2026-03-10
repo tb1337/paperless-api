@@ -167,7 +167,7 @@ class Document(
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
 
-    _notes: "DocumentNoteService" = PrivateAttr()
+    _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
 
     id: int | None = None
     correspondent: int | None = None
@@ -195,12 +195,6 @@ class Document(
         if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
             kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
         super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
-        from pypaperless.services.documents import (  # noqa: PLC0415 # pylint: disable=import-outside-toplevel
-            DocumentNoteService,
-        )
-
-        self._notes = DocumentNoteService(client, data.get("id"))
 
     def apply_data(self) -> None:
         """Apply data from `self._data` to model fields, converting custom_fields."""
@@ -211,6 +205,12 @@ class Document(
     @property
     def notes(self) -> "DocumentNoteService":
         """Return the notes helper for this document."""
+        if self._notes is None:
+            from pypaperless.services.documents import (  # noqa: PLC0415 # pylint: disable=import-outside-toplevel
+                DocumentNoteService,
+            )
+
+            self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
 
     @property
@@ -290,6 +290,7 @@ class DocumentNote(PaperlessModel):
     """Represent a Paperless `DocumentNote`."""
 
     _api_path: ClassVar[str] = API_PATH["documents_notes"]
+    _pk_field: ClassVar[str] = "document"
 
     id: int | None = None
     note: str | None = None
@@ -297,28 +298,17 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentNote` instance."""
-        super().__init__(client, data, **kwargs)
-
-        self._set_api_path(data, pk=data.get("document"))
-
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_notes"]
+    _pk_field: ClassVar[str] = "document"
 
     _create_required_fields: ClassVar[set[str]] = {"note", "document"}
 
     note: str | None = None
     document: int | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentNoteDraft` instance."""
-        super().__init__(client, data, **kwargs)
-
-        self._set_api_path(data, pk=data.get("document"))
 
 
 class DocumentMeta(PaperlessModel):
@@ -339,12 +329,6 @@ class DocumentMeta(PaperlessModel):
     lang: str | None = None
     archive_size: int | None = None
     archive_metadata: list[DocumentMetadataType] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentMeta` instance."""
-        super().__init__(client, data, **kwargs)
-
-        self._set_api_path(data)
 
 
 class DownloadedDocument(PaperlessModel):
@@ -372,9 +356,3 @@ class DocumentSuggestions(PaperlessModel):
     document_types: list[int] | None = None
     storage_paths: list[int] | None = None
     dates: list[datetime.date] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentSuggestions` instance."""
-        super().__init__(client, data, **kwargs)
-
-        self._set_api_path(data)

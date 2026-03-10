@@ -1,14 +1,11 @@
 """Provide `User` and 'Group' related models."""
 
 import datetime
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class Group(PaperlessModel):
@@ -19,11 +16,6 @@ class Group(PaperlessModel):
     id: int
     name: str | None = None
     permissions: list[str] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Group` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
 
 
 class User(PaperlessModel):
@@ -46,8 +38,3 @@ class User(PaperlessModel):
     user_permissions: list[str] | None = None
     inherited_permissions: list[str] | None = None
     is_mfa_enabled: bool | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `User` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)

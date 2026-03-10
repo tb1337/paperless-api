@@ -1,6 +1,6 @@
 """Provide `Workflow` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar
 
 from pypaperless.const import API_PATH
 
@@ -14,9 +14,6 @@ from .common import (
     WorkflowTriggerSourceType,
     WorkflowTriggerType,
 )
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class WorkflowAction(PaperlessModel):
@@ -58,11 +55,6 @@ class WorkflowAction(PaperlessModel):
     email: WorkflowActionEmailType | None = None
     webhook: WorkflowActionWebhookType | None = None
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `WorkflowAction` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
-
 
 class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     """Represent a Paperless `WorkflowTrigger`."""
@@ -91,11 +83,6 @@ class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     schedule_date_field: WorkflowTriggerScheduleDateFieldType | None = None
     schedule_date_custom_field: int | None = None
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `WorkflowTrigger` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
-
 
 class Workflow(PaperlessModel):
     """Represent a Paperless `Workflow`."""
@@ -108,8 +95,3 @@ class Workflow(PaperlessModel):
     enabled: bool | None = None
     actions: list[Any] | None = None
     triggers: list[Any] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Workflow` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)

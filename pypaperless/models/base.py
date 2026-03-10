@@ -28,6 +28,7 @@ class PaperlessModel(BaseModel):
     )
 
     _api_path: ClassVar[str] = API_PATH["index"]
+    _pk_field: ClassVar[str] = "id"
 
     _client: "Paperless" = PrivateAttr()
     _data: dict[str, Any] = PrivateAttr(default_factory=dict)
@@ -52,14 +53,15 @@ class PaperlessModel(BaseModel):
         super().__init__(**kwargs)
         self._client = client
         self._data = dict(data)
+        self._set_api_path(self._data)
 
     def _set_api_path(self, data: dict[str, Any], **format_kwargs: Any) -> None:
-        """Set the instance's `_api_path` by resolving its template placeholders.
+        """Set the instance's `_api_path` by resolving its `{pk}` placeholder.
 
-        This is a helper method to bind paths like `/api/documents/{pk}/` to the
-        actual instance data. Subclasses should call this in their __init__.
+        Uses `_pk_field` to determine which data key provides the primary key value.
+        Override `_pk_field` on a subclass to use a different source field.
         """
-        format_kwargs.setdefault("pk", data.get("id") or data.get("document"))
+        format_kwargs.setdefault("pk", data.get(self._pk_field))
         if format_kwargs["pk"] is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(**format_kwargs))
 

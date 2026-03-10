@@ -1,15 +1,12 @@
 """Provide `MailRule` related models."""
 
 import datetime
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class MailAccount(PaperlessModel, mixins.SecurableMixin):
@@ -29,11 +26,6 @@ class MailAccount(PaperlessModel, mixins.SecurableMixin):
     is_token: bool | None = None
     account_type: int | None = None
     expiration: datetime.datetime | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `MailAccount` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
 
 
 class MailRule(PaperlessModel, mixins.SecurableMixin):
@@ -66,11 +58,6 @@ class MailRule(PaperlessModel, mixins.SecurableMixin):
     consumption_scope: int | None = None
     pdf_layout: int | None = None
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `MailRule` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
-
 
 class ProcessedMail(PaperlessModel):
     """Represent a Paperless `ProcessedMail`."""
@@ -87,8 +74,3 @@ class ProcessedMail(PaperlessModel):
     processed: datetime.datetime | None = None
     status: str | None = None
     error: str | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `ProcessedMail` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)

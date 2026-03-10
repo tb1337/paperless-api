@@ -1,6 +1,6 @@
 """Provide `CustomField` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar, overload
+from typing import Any, ClassVar, overload
 
 from pypaperless.const import API_PATH
 
@@ -13,9 +13,6 @@ from .common import (
     CustomFieldValue,
     CustomFieldValueT,
 )
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class CustomField(
@@ -30,11 +27,6 @@ class CustomField(
     data_type: CustomFieldType | None = None
     extra_data: CustomFieldExtraData | None = None
     document_count: int | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `CustomField` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
 
     @overload
     def draft_value(self, value: Any) -> CustomFieldValue: ...

@@ -1,15 +1,12 @@
 """Provide `SavedView` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
 from .common import SavedViewFilterRuleType
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class SavedView(PaperlessModel, mixins.SecurableMixin):
@@ -27,8 +24,3 @@ class SavedView(PaperlessModel, mixins.SecurableMixin):
     page_size: int | None = None
     display_mode: str | None = None
     display_fields: list[str] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `SavedView` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)

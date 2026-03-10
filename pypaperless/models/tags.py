@@ -1,14 +1,11 @@
 """Provide `Tag` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class Tag(
@@ -29,11 +26,6 @@ class Tag(
     document_count: int | None = None
     parent: int | None = None
     children: list["Tag"] | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Tag` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
 
 
 class TagDraft(

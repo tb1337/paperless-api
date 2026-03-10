@@ -1,15 +1,12 @@
 """Provide `Task` related models."""
 
 import datetime
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
 from .common import TaskStatusType, TaskType
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class Task(PaperlessModel):
@@ -29,8 +26,3 @@ class Task(PaperlessModel):
     acknowledged: bool | None = None
     related_document: int | None = None
     owner: int | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Task` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)

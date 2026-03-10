@@ -1,14 +1,11 @@
 """Provide `DocumentType` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from . import mixins
 from .base import PaperlessModel
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class DocumentType(
@@ -24,11 +21,6 @@ class DocumentType(
     slug: str | None = None
     name: str | None = None
     document_count: int | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `DocumentType` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
 
 
 class DocumentTypeDraft(

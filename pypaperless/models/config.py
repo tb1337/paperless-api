@@ -1,13 +1,10 @@
 """Provide `Config` related models."""
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
 
 
 class Config(PaperlessModel):
@@ -42,8 +39,3 @@ class Config(PaperlessModel):
     barcode_dpi: int | None = None
     barcode_max_pages: int | None = None
     barcode_enable_tag: bool | None = None
-
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Config` instance."""
-        super().__init__(client, data, **kwargs)
-        self._set_api_path(data)
