@@ -40,6 +40,7 @@ class CustomFieldType(Enum):
     MONETARY = "monetary"
     DOCUMENT_LINK = "documentlink"
     SELECT = "select"
+    LONGTEXT = "longtext"
     UNKNOWN = "unknown"
 
     @classmethod
@@ -186,6 +187,7 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
     CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
     CustomFieldType.FLOAT: CustomFieldFloatValue,
     CustomFieldType.INTEGER: CustomFieldIntegerValue,
+    CustomFieldType.LONGTEXT: CustomFieldStringValue,
     CustomFieldType.MONETARY: CustomFieldMonetaryValue,
     CustomFieldType.SELECT: CustomFieldSelectValue,
     CustomFieldType.STRING: CustomFieldStringValue,

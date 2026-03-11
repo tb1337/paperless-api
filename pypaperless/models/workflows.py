@@ -85,6 +85,7 @@ class WorkflowTriggerSource(Enum):
     CONSUME_FOLDER = 1
     API_UPLOAD = 2
     MAIL_FETCH = 3
+    WEB_UI = 4
     UNKNOWN = -1
 
     @classmethod
