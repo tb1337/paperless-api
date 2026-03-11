@@ -34,6 +34,8 @@ from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
     CustomFieldDocumentLinkValue,
+    CustomFieldIntegerValue,
+    CustomFieldStringValue,
     CustomFieldValue,
     DocumentMetaEntry,
     DocumentSearchHit,
@@ -481,6 +483,69 @@ class TestModelDocuments:
         # test add field value
         item.custom_fields += test_cf.draft_value(1337)
         assert test_cf in item.custom_fields
+
+    async def test_draft_custom_fields_as_id_list(self, paperless: Paperless) -> None:
+        """Test DocumentDraft serialises list[int] custom_fields as repeated form values."""
+        draft = paperless.documents.draft(
+            document=b"pdf",
+            custom_fields=[1, 3, 5],
+        )
+        serialized = draft.serialize()
+        assert serialized["form"]["custom_fields"] == [1, 3, 5]
+
+    async def test_draft_custom_fields_as_object_mapping(self, paperless: Paperless) -> None:
+        """Test DocumentDraft serialises DocumentCustomFieldList as a JSON string."""
+        import json  # noqa: PLC0415
+
+        cf = DocumentCustomFieldList(paperless, [])
+        cf += CustomFieldStringValue(field=6, value="hello")
+        cf += CustomFieldIntegerValue(field=3, value=42)
+
+        draft = paperless.documents.draft(document=b"pdf")
+        draft.custom_fields = cf
+
+        serialized = draft.serialize()
+        raw = serialized["form"]["custom_fields"]
+        # Must be a JSON-encoded string, not a plain list
+        assert isinstance(raw, str)
+        decoded = json.loads(raw)
+        assert isinstance(decoded, dict)
+        assert decoded["6"] == "hello"
+        assert decoded["3"] == 42
+
+    async def test_draft_custom_fields_object_mapping_upload(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """Test that a draft with a DocumentCustomFieldList can actually be POSTed."""
+        import json  # noqa: PLC0415
+
+        cf = DocumentCustomFieldList(paperless, [])
+        cf += CustomFieldStringValue(field=6, value="smoke")
+
+        draft = paperless.documents.draft(document=b"%PDF-fake", title="CF Mapping Test")
+        draft.custom_fields = cf
+
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
+            status_code=200,
+            json="aaaabbbb-cccc-dddd-eeee-ffffffffffff",
+        )
+        task_id = await paperless.documents.save(draft)
+        assert task_id == "aaaabbbb-cccc-dddd-eeee-ffffffffffff"
+
+        # Verify the HTTP request that was sent contained valid JSON in custom_fields
+        request = httpx_mock.get_request(method="POST")
+        assert request is not None
+        body = request.content.decode(errors="replace")
+        assert '"field": 6' in body or '"field":6' in body or "field" in body
+        # custom_fields value in multipart body must be parseable JSON array
+        import re  # noqa: PLC0415
+
+        match = re.search(r'name="custom_fields"\r\n\r\n(\{.*?\})\r\n', body, re.DOTALL)
+        assert match is not None, f"custom_fields not found as JSON object in body: {body!r}"
+        decoded = json.loads(match.group(1))
+        assert decoded == {"6": "smoke"}
 
     async def test_email(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test sending emails."""

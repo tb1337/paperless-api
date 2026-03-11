@@ -1,6 +1,7 @@
 """Provide `Document` related models."""
 
 import datetime
+import json
 from collections.abc import Iterator
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
@@ -285,7 +286,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
     storage_path: int | None = None
     tags: int | list[int] | None = None
     archive_serial_number: int | None = None
-    custom_fields: list[int] | None = None
+    custom_fields: list[int] | DocumentCustomFieldList | None = None
 
     def serialize(self) -> dict[str, Any]:
         """Serialize."""
@@ -293,9 +294,19 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
             "form": {
                 name: object_to_dict_value(getattr(self, name))
                 for name in self.__class__.model_fields
-                if name not in {"document", "filename"}
+                if name not in {"document", "filename", "custom_fields"}
             }
         }
+
+        if self.custom_fields is not None:
+            if isinstance(self.custom_fields, DocumentCustomFieldList):
+                cf_map = {
+                    str(item["field"]): item["value"] for item in self.custom_fields.serialize()
+                }
+                data["form"]["custom_fields"] = json.dumps(cf_map)
+            else:
+                data["form"]["custom_fields"] = self.custom_fields
+
         data["form"].update(
             {
                 "document": (
