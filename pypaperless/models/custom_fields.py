@@ -217,7 +217,7 @@ class CustomField(
     def draft_value(
         self,
         value: Any,
-        expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002 # pylint: disable=unused-argument
+        expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
         cache = self._client.cache.custom_fields

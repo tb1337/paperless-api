@@ -228,7 +228,6 @@ class Document(
     def notes(self) -> "DocumentNoteService":
         """Return the notes helper for this document."""
         if self._notes is None:
-            # pylint: disable-next=import-outside-toplevel
             from pypaperless.services.documents import DocumentNoteService  # noqa: PLC0415
 
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
@@ -293,7 +292,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
         data = {
             "form": {
                 name: object_to_dict_value(getattr(self, name))
-                for name in self.__class__.model_fields  # pylint: disable=not-an-iterable
+                for name in self.__class__.model_fields
                 if name not in {"document", "filename"}
             }
         }

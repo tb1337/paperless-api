@@ -319,7 +319,7 @@ class TestReadWrite:
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
             json={
-                **to_update._data,  # pylint: disable=protected-access
+                **to_update._data,
                 update_field: update_value,
             },
         )
@@ -334,7 +334,7 @@ class TestReadWrite:
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
             json={
-                **to_update._data,  # pylint: disable=protected-access
+                **to_update._data,
                 update_field: update_value,
             },
         )
@@ -455,7 +455,7 @@ class TestSecurableMixin:
             assert "set_permissions" in json_data
             return httpx.Response(
                 status_code=200,
-                json=item._data,  # pylint: disable=protected-access
+                json=item._data,
             )
 
         httpx_mock.add_callback(

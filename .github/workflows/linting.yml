@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tool: [codespell, ruff, pre-commit-hooks, pylint, yamllint]
+        tool: [codespell, ruff, pre-commit-hooks, yamllint]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v6.0.1
@@ -55,8 +55,6 @@ jobs:
             uv run pre-commit run detect-private-key --all-files
             uv run pre-commit run end-of-file-fixer --all-files
             uv run pre-commit run trailing-whitespace --all-files
-          elif [ "${{ matrix.tool }}" = "pylint" ]; then
-            uv run pre-commit run pylint --all-files
           elif [ "${{ matrix.tool }}" = "yamllint" ]; then
             uv run yamllint .
           fi

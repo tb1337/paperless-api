@@ -140,7 +140,7 @@ class TestModelDocuments:
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=200,
             json={
-                **to_update._data,  # pylint: disable=protected-access
+                **to_update._data,
                 "title": new_title,
             },
         )

@@ -170,7 +170,7 @@ class Paperless:
         self._initialized = True
         self.logger.info("Initialized.")
 
-    async def request(  # noqa: PLR0913 # pylint: disable=too-many-positional-arguments
+    async def request(  # noqa: PLR0913
         self,
         method: str,
         path: str,
