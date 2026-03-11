@@ -8,9 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 from pydantic import BaseModel, Field, PrivateAttr
 
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import (
-    ItemNotFoundError,
-)
+from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.utils import object_to_dict_value
 
 from . import mixins
@@ -230,9 +228,8 @@ class Document(
     def notes(self) -> "DocumentNoteService":
         """Return the notes helper for this document."""
         if self._notes is None:
-            from pypaperless.services.documents import (  # noqa: PLC0415 # pylint: disable=import-outside-toplevel
-                DocumentNoteService,
-            )
+            # pylint: disable-next=import-outside-toplevel
+            from pypaperless.services.documents import DocumentNoteService  # noqa: PLC0415
 
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes

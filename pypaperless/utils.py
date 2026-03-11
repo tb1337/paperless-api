@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-import pypaperless.models.base as paperless_base
+from .models import base as paperless_base
 
 
 def normalize_base_url(url: str) -> str:

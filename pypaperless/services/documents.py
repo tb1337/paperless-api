@@ -4,11 +4,7 @@ from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import (
-    AsnRequestError,
-    PrimaryKeyRequiredError,
-    SendEmailError,
-)
+from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError, SendEmailError
 from pypaperless.models.documents import (
     Document,
     DocumentDraft,
