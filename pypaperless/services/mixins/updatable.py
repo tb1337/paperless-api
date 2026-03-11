@@ -4,8 +4,8 @@ from copy import deepcopy
 from typing import Any
 
 from pypaperless.models.base import ResourceT
-from pypaperless.models.utils import object_to_dict_value
 from pypaperless.services.base import ServiceProtocol
+from pypaperless.utils import object_to_dict_value
 
 
 class UpdatableMixin(ServiceProtocol[ResourceT]):

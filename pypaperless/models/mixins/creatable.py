@@ -3,7 +3,7 @@
 from typing import Any, ClassVar
 
 from pypaperless.exceptions import DraftFieldRequiredError
-from pypaperless.models.utils import object_to_dict_value
+from pypaperless.utils import object_to_dict_value
 
 
 class CreatableMixin:

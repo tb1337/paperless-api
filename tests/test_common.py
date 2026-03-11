@@ -40,9 +40,9 @@ from pypaperless.models.types import (
     WorkflowTriggerSource,
     WorkflowTriggerType,
 )
-from pypaperless.models.utils import object_to_dict_value
 from pypaperless.services import mixins as service_mixins
 from pypaperless.services.base import ServiceBase
+from pypaperless.utils import normalize_base_url, object_to_dict_value
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -251,30 +251,28 @@ class TestPaperless:
 
     async def test_create_url(self) -> None:
         """Test create url util."""
-        create_url = Paperless._create_base_url  # pylint: disable=protected-access
-
         # test default ssl
-        url = create_url("hostname")
+        url = normalize_base_url("hostname")
         assert url == "https://hostname"
 
         # test enforce http
-        url = create_url("http://hostname")
+        url = normalize_base_url("http://hostname")
         assert url == "http://hostname"
 
         # test non-http scheme
-        url = create_url("ftp://hostname")
+        url = normalize_base_url("ftp://hostname")
         assert url.startswith("https://")
 
         # should be https even on just setting a port number
-        url = create_url("hostname:80")
+        url = normalize_base_url("hostname:80")
         assert url.startswith("https://")
 
         # test api/api url
-        url = create_url("hostname/api/api/")
+        url = normalize_base_url("hostname/api/api/")
         assert url == "https://hostname/api/api"
 
         # test slashes
-        url = create_url("hostname/api/endpoint///")
+        url = normalize_base_url("hostname/api/endpoint///")
         assert url == "https://hostname/api/endpoint"
 
     async def test_generate_api_token(self, httpx_mock: HTTPXMock, api: Paperless) -> None:

@@ -11,7 +11,7 @@ from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     ItemNotFoundError,
 )
-from pypaperless.models.utils import object_to_dict_value
+from pypaperless.utils import object_to_dict_value
 
 from . import mixins
 from .base import PaperlessModel, PaperlessModelData

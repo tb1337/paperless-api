@@ -1,7 +1,6 @@
 """PyPaperless."""
 
 import logging
-from io import BytesIO
 from json import JSONDecodeError
 from typing import Any
 
@@ -18,6 +17,7 @@ from .exceptions import (
     PaperlessInactiveOrDeletedError,
     PaperlessInvalidTokenError,
 )
+from .utils import normalize_base_url, process_form_data
 
 
 class Paperless:
@@ -48,7 +48,7 @@ class Paperless:
         `token`: An api token created in Paperless Django settings, or via the helper function.
         `client`: A custom `httpx.AsyncClient` object, if existing.
         """
-        self._base_url = self._create_base_url(url)
+        self._base_url = normalize_base_url(url)
         self._client = client
         self._initialized = False
         self._request_api_version = request_api_version or API_VERSION
@@ -57,7 +57,10 @@ class Paperless:
         self._api_version = API_VERSION
         self._version: str | None = None
 
+        # PyPaperless services
         self.cache = services.CacheService(self)
+
+        # API services
         self.config = services.ConfigService(self)
         self.correspondents = services.CorrespondentService(self)
         self.custom_fields = services.CustomFieldService(self)
@@ -99,65 +102,6 @@ class Paperless:
     def host_version(self) -> str | None:
         """Return the version of the Paperless host."""
         return self._version
-
-    @staticmethod
-    def _create_base_url(url: str) -> str:
-        """Create URL from string and prepare for further use."""
-        url = url.rstrip("/")
-        if "://" not in url:
-            url = f"https://{url}"
-        if not url.startswith(("https://", "http://")):
-            url = f"https://{url}"
-        return url
-
-    @staticmethod
-    def _process_form(data: dict[str, Any]) -> tuple[dict[str, Any], list[tuple[str, Any]]]:
-        """Process form data and create httpx-compatible data/files tuples.
-
-        Returns a tuple of (data_fields, file_fields) for httpx.
-        """
-        data_fields: dict[str, Any] = {}
-        file_fields: list[tuple[str, Any]] = []
-
-        def _add_file_value(name: str, value: tuple | bytes) -> None:
-            if isinstance(value, tuple):
-                if len(value) == 2:
-                    file_fields.append((name, (f"{value[1]}", BytesIO(value[0]))))
-                else:
-                    file_fields.append((name, BytesIO(value[0])))
-            else:
-                file_fields.append((name, BytesIO(value)))
-
-        def _add_data_value(name: str, value: Any) -> None:
-            if name in data_fields:
-                existing = data_fields[name]
-                if isinstance(existing, list):
-                    existing.append(f"{value}")
-                else:
-                    data_fields[name] = [existing, f"{value}"]
-            else:
-                data_fields[name] = f"{value}"
-
-        def _add_form_value(name: str | None, value: Any) -> None:
-            if value is None:
-                return
-            if isinstance(value, dict):
-                for dict_key, dict_value in value.items():
-                    _add_form_value(dict_key, dict_value)
-                return
-            if isinstance(value, list | set):
-                for list_value in value:
-                    _add_form_value(name, list_value)
-                return
-            if name is None:
-                return
-            if isinstance(value, (tuple, bytes)):
-                _add_file_value(name, value)
-            else:
-                _add_data_value(name, value)
-
-        _add_form_value(None, data)
-        return data_fields, file_fields
 
     @staticmethod
     async def generate_api_token(
@@ -267,7 +211,7 @@ class Paperless:
         # overwrite data with form data when there is a form payload
         files = None
         if isinstance(form, dict):
-            data, files = self._process_form(form)
+            data, files = process_form_data(form)
 
         # add base path
         url = f"{self._base_url}{path}" if not path.startswith("http") else path
