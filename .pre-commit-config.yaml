@@ -29,6 +29,17 @@ repos:
       - id: check-docstring-first
   - repo: local
     hooks:
+      - id: yamllint
+        name: 🎗  Check YAML files with yamllint
+        language: system
+        types: [yaml]
+        entry: uv run yamllint
+      - id: codespell
+        name: ✅ Check code for common misspellings
+        language: system
+        types: [text]
+        exclude: ^uv\.lock$
+        entry: uv run codespell
       - id: ruff-check
         name: 🐶 Ruff Linter
         language: system
@@ -43,12 +54,6 @@ repos:
         entry: uv run ruff format
         require_serial: true
         stages: [pre-commit, pre-push, manual]
-      - id: codespell
-        name: ✅ Check code for common misspellings
-        language: system
-        types: [text]
-        exclude: ^uv\.lock$
-        entry: uv run codespell
       - id: mypy
         name: 🆎 Static type checking using mypy
         language: system
@@ -61,8 +66,3 @@ repos:
         types: [python]
         entry: uv run pytest
         pass_filenames: false
-      - id: yamllint
-        name: 🎗  Check YAML files with yamllint
-        language: system
-        types: [yaml]
-        entry: uv run yamllint
