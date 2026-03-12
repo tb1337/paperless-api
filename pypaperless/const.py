@@ -15,6 +15,7 @@ GROUPS = "groups"
 MAIL_ACCOUNTS = "mail_accounts"
 MAIL_RULES = "mail_rules"
 PROCESSED_MAIL = "processed_mail"
+PROFILE = "profile"
 SAVED_VIEWS = "saved_views"
 SHARE_LINKS = "share_links"
 STATISTICS = "statistics"
@@ -61,6 +62,7 @@ API_PATH = {
     f"{MAIL_RULES}_single": f"/api/{MAIL_RULES}/{{pk}}/",
     f"{PROCESSED_MAIL}": f"/api/{PROCESSED_MAIL}/",
     f"{PROCESSED_MAIL}_single": f"/api/{PROCESSED_MAIL}/{{pk}}/",
+    f"{PROFILE}": f"/api/{PROFILE}/",
     f"{SAVED_VIEWS}": f"/api/{SAVED_VIEWS}/",
     f"{SAVED_VIEWS}_single": f"/api/{SAVED_VIEWS}/{{pk}}/",
     f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
@@ -98,6 +100,7 @@ class PaperlessResource(StrEnum):
     MAIL_ACCOUNTS = MAIL_ACCOUNTS
     MAIL_RULES = MAIL_RULES
     PROCESSED_MAIL = PROCESSED_MAIL
+    PROFILE = PROFILE
     SAVED_VIEWS = SAVED_VIEWS
     SHARE_LINKS = SHARE_LINKS
     STATISTICS = STATISTICS

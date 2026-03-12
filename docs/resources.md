@@ -17,6 +17,7 @@ Every Paperless-ngx entity is exposed through a **service** on the `Paperless` i
 | `mail_accounts`  |   ✓    |     ✓     |                |          |          |       ✓       |
 | `mail_rules`     |   ✓    |     ✓     |                |          |          |       ✓       |
 | `processed_mail` |   ✓    |     ✓     |                |          |          |       ✓       |
+| `profile`        |   ✓    |           |                |    ✓     |          |               |
 | `saved_views`    |   ✓    |     ✓     |                |          |          |       ✓       |
 | `share_links`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
 | `statistics`     |   ✓    |           |                |          |          |               |
@@ -25,6 +26,7 @@ Every Paperless-ngx entity is exposed through a **service** on the `Paperless` i
 | `storage_paths`  |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
 | `tags`           |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
 | `tasks`          |   ✓    |     ✓     |                |          |          |               |
+| `trash`          |        |     ✓     |                |          |          |               |
 | `users`          |   ✓    |     ✓     |                |          |          |               |
 | `workflows`      |   ✓    |     ✓     |                |          |          |               |
 

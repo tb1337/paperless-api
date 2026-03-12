@@ -242,9 +242,9 @@ print(f"Upload queued as task: {task_id}")
 | `correspondent`         | Correspondent ID               |
 | `document_type`         | Document type ID               |
 | `storage_path`          | Storage path ID                |
-| `tags`                  | list[int] | Tag ID(s)                      |
+| `tags`                  | list[int]                      | Tag ID(s)                |
 | `archive_serial_number` | ASN                            |
-| `custom_fields`         | DocumentCustomFieldList | Custom field assignments       |
+| `custom_fields`         | DocumentCustomFieldList        | Custom field assignments |
 
 ### Uploading with custom fields
 
@@ -329,3 +329,40 @@ await paperless.documents.email(
 | `use_archive_version` | `True`  | Send archived version; `False` for original |
 
 Raises `SendEmailError` if the Paperless server rejects the request.
+
+---
+
+## Audit history
+
+Every change to a document is recorded as an audit-log entry. Use `document.history()` or the service directly to retrieve the full history of a document.
+
+```python
+# Via a fetched document (document pk is bound automatically)
+doc = await paperless.documents(42)
+entries = await doc.history()
+
+for entry in entries:
+    print(entry.timestamp, entry.action, entry.actor.username if entry.actor else "—")
+    print(entry.changes)   # dict of changed fields
+
+# Via the service, passing the document pk explicitly
+entries = await paperless.documents.history(42)
+```
+
+### `DocumentHistory` fields
+
+| Field       | Description                                           |
+| ----------- | ----------------------------------------------------- |
+| `id`        | Entry id                                              |
+| `document`  | Document pk (injected by the service layer)           |
+| `timestamp` | When the change occurred                              |
+| `action`    | `"create"` or `"update"` (`DocumentHistoryAction`)    |
+| `changes`   | Dict mapping field names to `[old, new]` pairs        |
+| `actor`     | The user who made the change (`DocumentHistoryActor`) |
+
+### `DocumentHistoryActor` fields
+
+| Field      | Description     |
+| ---------- | --------------- |
+| `id`       | User id         |
+| `username` | Username string |

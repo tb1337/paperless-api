@@ -17,6 +17,7 @@ from .groups import DATA_GROUPS
 from .mail import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES, DATA_PROCESSED_MAIL
 from .object_permissions import DATA_OBJECT_PERMISSIONS
 from .paths import DATA_PATHS
+from .profile import DATA_PROFILE
 from .remote_version import DATA_REMOTE_VERSION
 from .saved_views import DATA_SAVED_VIEWS
 from .share_links import DATA_SHARE_LINKS
@@ -59,6 +60,7 @@ __all__ = (
     "DATA_OBJECT_PERMISSIONS",
     "DATA_PATHS",
     "DATA_PROCESSED_MAIL",
+    "DATA_PROFILE",
     "DATA_REMOTE_VERSION",
     "DATA_SAVED_VIEWS",
     "DATA_SCHEMA",

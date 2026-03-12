@@ -70,6 +70,7 @@ class Paperless:
         self.mail_accounts = services.MailAccountService(self)
         self.mail_rules = services.MailRuleService(self)
         self.processed_mail = services.ProcessedMailService(self)
+        self.profile = services.ProfileService(self)
         self.saved_views = services.SavedViewService(self)
         self.share_links = services.ShareLinkService(self)
         self.statistics = services.StatisticService(self)

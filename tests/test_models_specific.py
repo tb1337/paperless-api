@@ -29,6 +29,7 @@ from pypaperless.models import (
     DocumentNoteDraft,
     DocumentSuggestions,
     DownloadedDocument,
+    Profile,
     Status,
     Task,
 )
@@ -60,6 +61,7 @@ from .data import (
     DATA_DOCUMENT_SUGGESTIONS,
     DATA_DOCUMENTS,
     DATA_DOCUMENTS_SEARCH,
+    DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_STATISTICS,
     DATA_STATUS,
@@ -640,6 +642,42 @@ class TestModelVersion:
         assert remote_version
         assert isinstance(remote_version.version, str)
         assert isinstance(remote_version.update_available, bool)
+
+
+# test services/profile.py
+class TestModelProfile:
+    """Profile test cases."""
+
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test call."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+            status_code=200,
+            json=DATA_PROFILE,
+        )
+        profile = await paperless.profile()
+        assert profile
+        assert isinstance(profile, Profile)
+        assert isinstance(profile.email, str)
+        assert isinstance(profile.auth_token, str)
+        assert isinstance(profile.has_usable_password, bool)
+        assert isinstance(profile.is_mfa_enabled, bool)
+        assert isinstance(profile.social_accounts, list)
+
+    async def test_update(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test update."""
+        updated = {**DATA_PROFILE, "first_name": "Patched", "last_name": "User"}
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+            status_code=200,
+            json=updated,
+        )
+        profile = await paperless.profile.update(first_name="Patched", last_name="User")
+        assert isinstance(profile, Profile)
+        assert profile.first_name == "Patched"
+        assert profile.last_name == "User"
 
 
 # test models/statistics.py

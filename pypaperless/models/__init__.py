@@ -19,6 +19,7 @@ from .documents import (
 from .mails import MailAccount, MailRule, ProcessedMail
 from .pages import Page
 from .permissions import Group, User
+from .profile import Profile, ProfileSocialAccount
 from .remote_version import RemoteVersion
 from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
@@ -52,6 +53,8 @@ __all__ = (
     "MailRule",
     "Page",
     "ProcessedMail",
+    "Profile",
+    "ProfileSocialAccount",
     "RemoteVersion",
     "SavedView",
     "ShareLink",
