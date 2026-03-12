@@ -1,0 +1,94 @@
+# Correspondents
+
+Correspondents represent the senders or recipients that Paperless-ngx associates with documents. They support the full CRUD lifecycle and permission management.
+
+## Models
+
+### `Correspondent`
+
+| Field                 | Description                               |
+| --------------------- | ----------------------------------------- |
+| `id`                  | Primary key                               |
+| `slug`                | URL-safe identifier                       |
+| `name`                | Display name                              |
+| `document_count`      | Number of assigned documents              |
+| `last_correspondence` | Date of the most recent matching document |
+
+### `CorrespondentDraft`
+
+| Field  | Description                       |
+| ------ | --------------------------------- |
+| `name` | Display name *(required on save)* |
+
+## Fetch one
+
+```python
+correspondent = await paperless.correspondents(7)
+print(correspondent.name)             # "ACME Corp"
+print(correspondent.document_count)  # 42
+```
+
+## Iterate
+
+```python
+async for c in paperless.correspondents:
+    print(c.id, c.name)
+
+# Collect everything into a list
+all_correspondents = await paperless.correspondents.as_list()
+
+# Fetch only a subset matching a filter
+filtered = [
+    c async for c in paperless.correspondents.reduce()
+    if c.document_count and c.document_count > 0
+]
+```
+
+## Create
+
+```python
+draft = paperless.correspondents.draft()
+draft.name = "ACME Corp"
+
+pk = await paperless.correspondents.save(draft)
+print(pk)  # primary key of the new correspondent
+```
+
+## Update
+
+```python
+c = await paperless.correspondents(7)
+c.name = "ACME Corp (renamed)"
+
+changed = await paperless.correspondents.update(c)
+# True  → server accepted the change
+# False → nothing was sent (no fields actually changed)
+```
+
+Pass `only_changed=False` to force a full `PUT` instead of a `PATCH`:
+
+```python
+await paperless.correspondents.update(c, only_changed=False)
+```
+
+## Delete
+
+```python
+c = await paperless.correspondents(7)
+deleted = await paperless.correspondents.delete(c)  # True on success
+```
+
+## Permissions
+
+```python
+paperless.correspondents.request_permissions = True
+c = await paperless.correspondents(7)
+
+print(c.owner)        # owner user id
+print(c.permissions)  # PermissionTable (view/change sets)
+
+# Switch back to the default (no permissions payload)
+paperless.correspondents.request_permissions = False
+```
+
+See [Permissions](../permissions.md) for details on reading and modifying permission sets.

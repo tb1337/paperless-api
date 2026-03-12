@@ -123,3 +123,6 @@ node_modules/
 
 # run
 run/
+
+# zensical docs build output
+site/

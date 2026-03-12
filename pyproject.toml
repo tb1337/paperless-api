@@ -42,6 +42,9 @@ dev = [
     "ruff>=0.14.10",
     "yamllint>=1.37.1",
 ]
+docs = [
+    "zensical>=0.0.26",
+]
 
 [project.urls]
 "Homepage" = "https://github.com/tb1337/paperless-api"
