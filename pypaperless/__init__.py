@@ -1,5 +1,5 @@
 """PyPaperless."""
 
-from .api import Paperless
+from .client import Paperless
 
 __all__ = ("Paperless",)

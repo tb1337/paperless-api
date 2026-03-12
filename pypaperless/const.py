@@ -6,30 +6,28 @@ from enum import StrEnum
 
 API_VERSION = 9
 
-CONFIG = "config"  # pylint: disable=invalid-name
-CONSUMPTION_TEMPLATES = "consumption_templates"  # pylint: disable=invalid-name
-CORRESPONDENTS = "correspondents"  # pylint: disable=invalid-name
-CUSTOM_FIELDS = "custom_fields"  # pylint: disable=invalid-name
-DOCUMENTS = "documents"  # pylint: disable=invalid-name
-DOCUMENT_TYPES = "document_types"  # pylint: disable=invalid-name
-GROUPS = "groups"  # pylint: disable=invalid-name
-LOGS = "logs"  # pylint: disable=invalid-name
-MAIL_ACCOUNTS = "mail_accounts"  # pylint: disable=invalid-name
-MAIL_RULES = "mail_rules"  # pylint: disable=invalid-name
-PROCESSED_MAIL = "processed_mail"  # pylint: disable=invalid-name
-SAVED_VIEWS = "saved_views"  # pylint: disable=invalid-name
-SHARE_LINKS = "share_links"  # pylint: disable=invalid-name
-STATISTICS = "statistics"  # pylint: disable=invalid-name
-REMOTE_VERSION = "remote_version"  # pylint: disable=invalid-name
-STATUS = "status"  # pylint: disable=invalid-name
-STORAGE_PATHS = "storage_paths"  # pylint: disable=invalid-name
-TAGS = "tags"  # pylint: disable=invalid-name
-TASKS = "tasks"  # pylint: disable=invalid-name
-USERS = "users"  # pylint: disable=invalid-name
-WORKFLOW_ACTIONS = "workflow_actions"  # pylint: disable=invalid-name
-WORKFLOWS = "workflows"  # pylint: disable=invalid-name
-WORKFLOW_TRIGGERS = "workflow_triggers"  # pylint: disable=invalid-name
-UNKNOWN = "unknown"  # pylint: disable=invalid-name
+CONFIG = "config"
+CORRESPONDENTS = "correspondents"
+CUSTOM_FIELDS = "custom_fields"
+DOCUMENTS = "documents"
+DOCUMENT_TYPES = "document_types"
+GROUPS = "groups"
+MAIL_ACCOUNTS = "mail_accounts"
+MAIL_RULES = "mail_rules"
+PROCESSED_MAIL = "processed_mail"
+SAVED_VIEWS = "saved_views"
+SHARE_LINKS = "share_links"
+STATISTICS = "statistics"
+REMOTE_VERSION = "remote_version"
+STATUS = "status"
+STORAGE_PATHS = "storage_paths"
+TAGS = "tags"
+TASKS = "tasks"
+USERS = "users"
+WORKFLOW_ACTIONS = "workflow_actions"
+WORKFLOWS = "workflows"
+WORKFLOW_TRIGGERS = "workflow_triggers"
+UNKNOWN = "unknown"
 
 API_PATH = {
     "index": "/api/schema/",
@@ -89,13 +87,11 @@ class PaperlessResource(StrEnum):
     """Represent paths of api endpoints."""
 
     CONFIG = CONFIG
-    CONSUMPTION_TEMPLATES = CONSUMPTION_TEMPLATES
     CORRESPONDENTS = CORRESPONDENTS
     CUSTOM_FIELDS = CUSTOM_FIELDS
     DOCUMENTS = DOCUMENTS
     DOCUMENT_TYPES = DOCUMENT_TYPES
     GROUPS = GROUPS
-    LOGS = LOGS
     MAIL_ACCOUNTS = MAIL_ACCOUNTS
     MAIL_RULES = MAIL_RULES
     PROCESSED_MAIL = PROCESSED_MAIL

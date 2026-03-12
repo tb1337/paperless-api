@@ -18,7 +18,6 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
-        "ms-python.pylint",
         "ms-python.vscode-pylance",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
@@ -51,7 +50,6 @@
           "--cov-report=term",
           "--cov-report=xml"
         ],
-        "pylint.importStrategy": "fromEnvironment",
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
         },

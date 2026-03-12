@@ -1,14 +1,12 @@
 """Paperless common tests."""
 
 import re
-from dataclasses import dataclass, fields
-from datetime import date, datetime
-from enum import Enum
-from typing import TypedDict
+from datetime import date
 
-import aiohttp
+import httpx
 import pytest
-from aioresponses import aioresponses
+from pydantic import BaseModel
+from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH, PaperlessResource
@@ -23,26 +21,28 @@ from pypaperless.exceptions import (
     PaperlessInvalidTokenError,
 )
 from pypaperless.models import CustomField, Page
-from pypaperless.models.base import HelperBase, PaperlessModel
-from pypaperless.models.common import (
+from pypaperless.models.base import PaperlessModel
+from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
+    CustomFieldExtraData,
     CustomFieldIntegerValue,
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
-    MatchingAlgorithmType,
-    ShareLinkFileVersionType,
+    MatchingAlgorithm,
+    ShareLinkFileVersion,
     StatusType,
-    TaskStatusType,
+    TaskStatus,
     TaskType,
     WorkflowActionType,
-    WorkflowTriggerScheduleDateFieldType,
-    WorkflowTriggerSourceType,
+    WorkflowTriggerScheduleDateField,
+    WorkflowTriggerSource,
     WorkflowTriggerType,
 )
-from pypaperless.models.mixins import helpers
-from pypaperless.models.utils import dict_value_to_object, object_to_dict_value
+from pypaperless.services import mixins as service_mixins
+from pypaperless.services.base import ServiceBase
+from pypaperless.utils import normalize_base_url, object_to_dict_value
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -58,23 +58,25 @@ from .data import DATA_CUSTOM_FIELDS, DATA_PATHS, DATA_TOKEN
 class TestPaperless:
     """Paperless common test cases."""
 
-    async def test_init(self, resp: aioresponses, api: Paperless) -> None:
+    async def test_init(self, httpx_mock: HTTPXMock, api: Paperless) -> None:
         """Test init."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=200,
-            payload=DATA_PATHS,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=200,
+            json=DATA_PATHS,
         )
         await api.initialize()
         assert api.is_initialized
         await api.close()
 
-    async def test_context(self, resp: aioresponses, api: Paperless) -> None:
+    async def test_context(self, httpx_mock: HTTPXMock, api: Paperless) -> None:
         """Test context."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=200,
-            payload=DATA_PATHS,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=200,
+            json=DATA_PATHS,
         )
         async with api:
             assert api.is_initialized
@@ -86,44 +88,49 @@ class TestPaperless:
         assert api.host_version is None
         assert api.base_url == PAPERLESS_TEST_URL
 
-    async def test_init_error(self, resp: aioresponses, api: Paperless) -> None:
+    async def test_init_error(self, httpx_mock: HTTPXMock, api: Paperless) -> None:
         """Test initialization error."""
-        # simulate connection due no configuration error
+        # simulate connection error
+        httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
         with pytest.raises(PaperlessConnectionError):
             await api.initialize()
 
         # http status error
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=401,
-            body="any html",
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=401,
+            text="any html",
         )
         with pytest.raises(PaperlessInvalidTokenError):
             await api.initialize()
 
         # http 401 - inactive or deleted user
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=401,
-            payload={"detail": "User is inactive"},
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=401,
+            json={"detail": "User is inactive"},
         )
         with pytest.raises(PaperlessInactiveOrDeletedError):
             await api.initialize()
 
         # http status forbidden
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=403,
-            body="any html",
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=403,
+            text="any html",
         )
         with pytest.raises(PaperlessForbiddenError):
             await api.initialize()
 
         # http ok, wrong payload
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
-            status=200,
-            body="any html",
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+            method="GET",
+            status_code=200,
+            text="any html",
         )
         with pytest.raises(InitializationError):
             await api.initialize()
@@ -167,7 +174,7 @@ class TestPaperless:
         except JsonResponseWithError as exc:
             assert exc.args[0] == "Paperless [some -> weird -> error]: occurred"  # noqa: PT017
 
-    async def test_request(self, resp: aioresponses) -> None:
+    async def test_request(self, httpx_mock: HTTPXMock) -> None:
         """Test generate request."""
         # we need to use an unmocked PaperlessSession.request() method
         # simply don't initialize Paperless and everything will be fine
@@ -177,12 +184,13 @@ class TestPaperless:
         )
 
         # test ordinary 200
-        resp.get(
-            PAPERLESS_TEST_URL,
-            status=200,
+        httpx_mock.add_response(
+            url=PAPERLESS_TEST_URL,
+            method="GET",
+            status_code=200,
         )
-        async with api.request("get", PAPERLESS_TEST_URL) as res:
-            assert res.status
+        res = await api.request("get", PAPERLESS_TEST_URL)
+        assert res.status_code
 
         # last but not least, we test sending a form to test the converter
         form_data = {
@@ -195,84 +203,86 @@ class TestPaperless:
             "int_list": [1, 1, 2, 3, 5, 8, 13],
             "dict_field": {"dict_str_field": "str", "dict_int_field": 2},
         }
-        resp.post(
-            PAPERLESS_TEST_URL,
-            status=200,
+        httpx_mock.add_response(
+            url=PAPERLESS_TEST_URL,
+            method="POST",
+            status_code=200,
         )
-        async with api.request("post", PAPERLESS_TEST_URL, form=form_data) as res:
-            assert res.status
+        res = await api.request("post", PAPERLESS_TEST_URL, form=form_data)
+        assert res.status_code
 
         # session is still open
         await api.close()
 
-    async def test_request_json(self, resp: aioresponses, api: Paperless) -> None:
+    async def test_request_json(self, httpx_mock: HTTPXMock, api: Paperless) -> None:
         """Test requests."""
         # test 400 bad request with error payload
-        resp.get(
-            f"{PAPERLESS_TEST_URL}/400-json-error-payload",
-            status=400,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}/400-json-error-payload",
+            method="GET",
+            status_code=400,
             headers={"Content-Type": "application/json"},
-            payload={"error": "sample message"},
+            json={"error": "sample message"},
         )
         with pytest.raises(JsonResponseWithError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/400-json-error-payload")
 
         # test 200 ok with wrong content type
-        resp.get(
-            f"{PAPERLESS_TEST_URL}/200-text-error-payload",
-            status=200,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}/200-text-error-payload",
+            method="GET",
+            status_code=200,
             headers={"Content-Type": "text/plain"},
-            body='{"error": "sample message"}',
+            text='{"error": "sample message"}',
         )
         with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-text-error-payload")
 
         # test 200 ok with correct content type, but no json payload
-        resp.get(
-            f"{PAPERLESS_TEST_URL}/200-json-text-body",
-            status=200,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}/200-json-text-body",
+            method="GET",
+            status_code=200,
             headers={"Content-Type": "application/json"},
-            body="test 5 23 42 1337",
+            text="test 5 23 42 1337",
         )
         with pytest.raises(BadJsonResponseError):
             await api.request_json("get", f"{PAPERLESS_TEST_URL}/200-json-text-body")
 
     async def test_create_url(self) -> None:
         """Test create url util."""
-        create_url = Paperless._create_base_url  # pylint: disable=protected-access
-
         # test default ssl
-        url = create_url("hostname")
-        assert f"{url.host}" == "hostname"
-        assert int(url.port) == 443
+        url = normalize_base_url("hostname")
+        assert url == "https://hostname"
 
         # test enforce http
-        url = create_url("http://hostname")
-        assert int(url.port) == 80
+        url = normalize_base_url("http://hostname")
+        assert url == "http://hostname"
 
         # test non-http scheme
-        url = create_url("ftp://hostname")
-        assert f"{url.scheme}" == "https"
+        url = normalize_base_url("ftp://hostname")
+        assert url.startswith("https://")
 
         # should be https even on just setting a port number
-        url = create_url("hostname:80")
-        assert f"{url.scheme}" == "https"
+        url = normalize_base_url("hostname:80")
+        assert url.startswith("https://")
 
         # test api/api url
-        url = create_url("hostname/api/api/")
-        assert f"{url}" == "https://hostname/api/api"
+        url = normalize_base_url("hostname/api/api/")
+        assert url == "https://hostname/api/api"
 
         # test slashes
-        url = create_url("hostname/api/endpoint///")
-        assert f"{url}" == "https://hostname/api/endpoint"
+        url = normalize_base_url("hostname/api/endpoint///")
+        assert url == "https://hostname/api/endpoint"
 
-    async def test_generate_api_token(self, resp: aioresponses, api: Paperless) -> None:
+    async def test_generate_api_token(self, httpx_mock: HTTPXMock, api: Paperless) -> None:
         """Test generate api token."""
         # test successful token creation
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=200,
-            payload=DATA_TOKEN,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            method="POST",
+            status_code=200,
+            json=DATA_TOKEN,
         )
         token = await api.generate_api_token(
             PAPERLESS_TEST_URL,
@@ -282,10 +292,11 @@ class TestPaperless:
         assert token == PAPERLESS_TEST_TOKEN
 
         # test token creation with wrong json answer
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=200,
-            payload={"blah": "any string"},
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            method="POST",
+            status_code=200,
+            json={"blah": "any string"},
         )
         with pytest.raises(BadJsonResponseError):
             token = await api.generate_api_token(
@@ -295,10 +306,11 @@ class TestPaperless:
             )
 
         # test error 400
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=400,
-            payload={"non_field_errors": ["Unable to log in."]},
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            method="POST",
+            status_code=400,
+            json={"non_field_errors": ["Unable to log in."]},
         )
         with pytest.raises(JsonResponseWithError):
             token = await api.generate_api_token(
@@ -308,9 +320,10 @@ class TestPaperless:
             )
 
         # general exception
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            exception=ValueError,
+        httpx_mock.add_exception(
+            ValueError(),
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            method="POST",
         )
         with pytest.raises(ValueError):  # noqa: PT011
             token = await api.generate_api_token(
@@ -319,22 +332,23 @@ class TestPaperless:
                 PAPERLESS_TEST_PASSWORD,
             )
 
-    async def test_generate_api_token_with_session(
-        self, resp: aioresponses, api: Paperless
+    async def test_generate_api_token_with_client(
+        self, httpx_mock: HTTPXMock, api: Paperless
     ) -> None:
-        """Test generate api token with custom session."""
-        session = aiohttp.ClientSession()
+        """Test generate api token with custom client."""
+        client = httpx.AsyncClient()
 
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
-            status=200,
-            payload=DATA_TOKEN,
+        httpx_mock.add_response(
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+            method="POST",
+            status_code=200,
+            json=DATA_TOKEN,
         )
         token = await api.generate_api_token(
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_USER,
             PAPERLESS_TEST_PASSWORD,
-            session=session,
+            client=client,
         )
         assert token == PAPERLESS_TEST_TOKEN
 
@@ -344,46 +358,46 @@ class TestPaperless:
         never_int = 99952342
         assert PaperlessResource(never_str) == PaperlessResource.UNKNOWN
         assert CustomFieldType(never_str) == CustomFieldType.UNKNOWN
-        assert MatchingAlgorithmType(never_int) == MatchingAlgorithmType.UNKNOWN
-        assert ShareLinkFileVersionType(never_str) == ShareLinkFileVersionType.UNKNOWN
+        assert MatchingAlgorithm(never_int) == MatchingAlgorithm.UNKNOWN
+        assert ShareLinkFileVersion(never_str) == ShareLinkFileVersion.UNKNOWN
         assert StatusType(never_str) == StatusType.UNKNOWN
         assert TaskType(never_str) == TaskType.UNKNOWN
-        assert TaskStatusType(never_str) == TaskStatusType.UNKNOWN
+        assert TaskStatus(never_str) == TaskStatus.UNKNOWN
         assert WorkflowActionType(never_int) == WorkflowActionType.UNKNOWN
         assert WorkflowTriggerType(never_int) == WorkflowTriggerType.UNKNOWN
         assert (
-            WorkflowTriggerScheduleDateFieldType(never_str)
-            == WorkflowTriggerScheduleDateFieldType.UNKNOWN
+            WorkflowTriggerScheduleDateField(never_str) == WorkflowTriggerScheduleDateField.UNKNOWN
         )
-        assert WorkflowTriggerSourceType(never_int) == WorkflowTriggerSourceType.UNKNOWN
+        assert WorkflowTriggerSource(never_int) == WorkflowTriggerSource.UNKNOWN
 
     async def test_custom_field_draft_value_wo_cache(self, paperless: Paperless) -> None:
         """Test draft custom field value without cache."""
         custom_field = CustomField.create_with_data(
             paperless,
             data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
-            fetched=True,
         )
         field_value = custom_field.draft_value(1337)
         for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
             assert not isinstance(field_value, value_type)
 
     async def test_custom_field_draft_value_wslash_cache(
-        self, resp: aioresponses, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: Paperless
     ) -> None:
         """Test draft custom field value with cache."""
         # set custom fields cache
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
-            status=200,
-            payload=DATA_CUSTOM_FIELDS,
+        httpx_mock.add_response(
+            url=re.compile(
+                r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}") + r"\?.*$"
+            ),
+            method="GET",
+            status_code=200,
+            json=DATA_CUSTOM_FIELDS,
         )
         paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         custom_field = CustomField.create_with_data(
-            api=paperless,
+            client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][5],
-            fetched=True,
         )
         field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)
         assert isinstance(field_value, CustomFieldIntegerValue)
@@ -404,13 +418,13 @@ class TestPaperless:
         field.amount = 123.45678
         assert field.amount == 123.46  # round
 
-        field.extra_data = {"default_currency": "USD"}
+        field.extra_data = CustomFieldExtraData(default_currency="USD")
         assert field.value == "EUR123.46"
 
         field.value = "123.45"  # no currency
         assert field.currency == "USD"
 
-        field.extra_data = {}
+        field.extra_data = CustomFieldExtraData()
         assert field.currency == ""
 
         field.currency = "EUR"
@@ -440,137 +454,42 @@ class TestPaperless:
         test.extra_data = None
         assert test.label is None
 
-    async def test_dataclass_conversion(self) -> None:  # pylint: disable=too-many-statements
-        """Test dataclass utils."""
+    async def test_object_to_dict_value(self) -> None:
+        """Test object_to_dict_value utility."""
 
-        class SomeStatus(Enum):
-            """Test enum."""
-
-            ACTIVE = 1
-            INACTIVE = 2
-            UNKNOWN = -1
-
-            @classmethod
-            def _missing_(cls: "SomeStatus", *_: object) -> "SomeStatus":
-                """Set default."""
-                return cls.UNKNOWN
-
-        class SomeNestedExtraData(TypedDict):
-            """Test nested TypedDict."""
-
-            ustr: str | None
-            uany: int | str | bool | None
-
-        class SomeExtraData(TypedDict):
-            """Test TypedDict."""
-
-            a_str: str
-            a_dict: dict[str, str]
-            a_list: list[str]
-            a_typeddict: SomeNestedExtraData
-
-        @dataclass
-        class SomeFriend:
-            """Test class."""
+        class SomeModel(BaseModel):
+            """Some model."""
 
             name: str
             age: int
 
-            @classmethod
-            def from_dict(cls, data: dict) -> "SomeFriend":
-                """Test from_dict stuff."""
-                return cls(name=str(data.get("name")), age=int(data.get("age")))
+        # test pydantic model conversion
+        model = SomeModel(name="Test", age=42)
+        result = object_to_dict_value(model)
+        assert isinstance(result, dict)
+        assert result["name"] == "Test"
+        assert result["age"] == 42
 
-        @dataclass
-        class SomePerson:
-            """Test class."""
+        # test list of models
+        models = [SomeModel(name="A", age=1), SomeModel(name="B", age=2)]
+        result = object_to_dict_value(models)
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert isinstance(result[0], dict)
 
-            name: str
-            age: int
-            height: float
-            height2: float
-            birth: date
-            last_login: datetime
-            friends: list[SomeFriend] | None
-            deleted: datetime | None
-            is_deleted: bool
-            status: SomeStatus
-            file: bytes
-            meta: dict[str, str]
-            extra_data: SomeExtraData
+        # test primitive values pass through
+        assert object_to_dict_value("hello") == "hello"
+        assert object_to_dict_value(42) == 42
+        assert object_to_dict_value(None) is None
 
-        raw_data = {
-            "name": "Lee Tobi, Sajangnim",
-            "age": 38,
-            "height": 1.76,
-            "height2": 2,
-            "birth": "1986-05-23",
-            "last_login": "2023-08-08T06:06:35.495972Z",
-            "is_deleted": False,
-            "friends": [
-                {
-                    "name": "Erika",
-                    "age": "50",  # this should be int, check "back conversion" at bottom
-                },
-                {
-                    "name": "Reinhard",
-                    "age": 40,
-                },
-            ],
-            "status": 1,
-            "file": b"5-23-42-666-0815-1337",
-            "meta": {"hairs": "blonde", "eyes": "blue", "loves": "Python"},
-            "extra_data": {
-                "a_str": "test",
-                "a_dict": {
-                    "key1": "val1",
-                    "key2": "val2",
-                },
-                "a_list": ["a", "b", "c"],
-                "a_typeddict": {"ustr": "hello", "uany": 1},
-            },
-        }
-
-        data = {
-            field.name: dict_value_to_object(
-                f"_Person.{__name__}.{field.name}",
-                raw_data.get(field.name),
-                field.type,
-                field.default,
-            )
-            for field in fields(SomePerson)
-        }
-        res = SomePerson(**data)
-
-        assert isinstance(res.name, str)
-        assert isinstance(res.age, int)
-        assert isinstance(res.height, float)
-        assert isinstance(res.height2, float)
-        assert isinstance(res.birth, date)
-        assert isinstance(res.last_login, datetime)
-        assert isinstance(res.friends, list)
-        assert isinstance(res.friends[0], SomeFriend)
-        assert isinstance(res.friends[0].age, int)
-        assert isinstance(res.friends[1].age, int)
-        assert res.deleted is None
-        assert res.is_deleted is False
-        assert isinstance(res.status, SomeStatus)
-        assert isinstance(res.file, bytes)
-        assert isinstance(res.extra_data, dict)
-        assert isinstance(res.extra_data["a_typeddict"], dict)
-
-        # back conversion
-        back = {field.name: object_to_dict_value(getattr(res, field.name)) for field in fields(res)}
-
-        assert isinstance(back["friends"][0]["age"], int)  # was str in the source dict
-        assert isinstance(back["meta"], dict)
-        assert isinstance(back["extra_data"], dict)
-        assert isinstance(back["extra_data"]["a_list"], list)
+        # test dict values
+        d = {"key": "value"}
+        result = object_to_dict_value(d)
+        assert result == d
 
     async def test_pages_object(self, api: Paperless) -> None:
         """Test pages."""
 
-        @dataclass(init=False)
         class TestResource(PaperlessModel):
             """Test Resource."""
 
@@ -591,8 +510,8 @@ class TestPaperless:
             data["all"].append(i)
             data["results"].append({"id": i})
 
-        page = Page.create_with_data(api, data=data, fetched=True)
-        page._resource_cls = TestResource  # pylint: disable=protected-access
+        page = Page.create_with_data(api, data=data)
+        page.set_resource_cls(TestResource)
 
         assert isinstance(page, Page)
         assert page.current_count == 100
@@ -625,19 +544,18 @@ class TestPaperless:
     async def test_draft_exc(self, api: Paperless) -> None:
         """Test draft not supported."""
 
-        @dataclass(init=False)
         class TestResource(PaperlessModel):
             """Test Resource."""
 
-        class TestHelper(HelperBase, helpers.DraftableMixin):
-            """Test Helper."""
+        class TestService(ServiceBase, service_mixins.DraftableMixin):
+            """Test Service."""
 
             _api_path = "any.url"
             _resource = "test"
             # draft_cls - we "forgot" to set a draft class, which will raise
             _resource_cls = TestResource
 
-        helper = TestHelper(api)
+        service = TestService(api)
         with pytest.raises(DraftNotSupportedError):
             # ... there it is
-            helper.draft()
+            service.draft()

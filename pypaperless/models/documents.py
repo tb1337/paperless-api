@@ -1,46 +1,68 @@
-"""Provide `Document` related models and helpers."""
+"""Provide `Document` related models."""
 
 import datetime
-from collections.abc import AsyncGenerator, Iterator
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Self, cast, overload
+import json
+from collections.abc import Iterator
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
-from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import (
-    AsnRequestError,
-    ItemNotFoundError,
-    PrimaryKeyRequiredError,
-    SendEmailError,
-)
-from pypaperless.models.utils import object_to_dict_value
+from pydantic import BaseModel, Field, PrivateAttr
 
-from .base import HelperBase, PaperlessModel, PaperlessModelData
-from .common import (
+from pypaperless.const import API_PATH
+from pypaperless.exceptions import ItemNotFoundError
+from pypaperless.utils import object_to_dict_value
+
+from . import mixins
+from .base import PaperlessModel, PaperlessModelData
+from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomField,
     CustomFieldType,
     CustomFieldValue,
     CustomFieldValueT,
-    DocumentMetadataType,
-    DocumentSearchHitType,
-    RetrieveFileMode,
 )
-from .custom_fields import CustomField
-from .mixins import helpers, models
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
+    from pypaperless.services.documents import DocumentNoteService
+
+
+class DocumentMetaEntry(BaseModel):
+    """Represent a subtype of `DocumentMeta`."""
+
+    namespace: str | None = None
+    prefix: str | None = None
+    key: str | None = None
+    value: str | None = None
+
+
+class DocumentSearchHit(BaseModel):
+    """Represent a subtype of `Document`."""
+
+    score: float | None = None
+    highlights: str | None = None
+    note_highlights: str | None = None
+    rank: int | None = None
+
+
+class FileRetrieveMode(StrEnum):
+    """Represent a subtype of `DownloadedDocument`."""
+
+    DOWNLOAD = "download"
+    PREVIEW = "preview"
+    THUMBNAIL = "thumb"
 
 
 class DocumentCustomFieldList(PaperlessModelData):
     """Represent a list of Paperless custom field instances typically on documents."""
 
-    def __init__(self, api: "Paperless", data: list[dict[str, Any]]) -> None:
+    def __init__(self, client: "Paperless", data: list[dict[str, Any]]) -> None:
         """Initialize a `DocumentCustomFieldList` instance."""
-        self._api = api
+        self._client = client
         self._data = data
         self._fields: list[CustomFieldValue] = []
 
-        cache = api.cache.custom_fields
+        cache = client.cache.custom_fields
 
         for item in data:
             if cache and (field := cache.get(item["field"], None)):
@@ -148,28 +170,27 @@ class DocumentCustomFieldList(PaperlessModelData):
         raise ItemNotFoundError
 
     @classmethod
-    def unserialize(cls, api: "Paperless", data: list[dict[str, Any]]) -> Self:
+    def unserialize(cls, client: "Paperless", data: list[dict[str, Any]]) -> Self:
         """Return a new instance of `cls` from `data`.
 
         Primarily used by `dict_value_to_object` when instantiating model classes.
         """
-        return cls(api, data=data)
+        return cls(client, data=data)
 
     def serialize(self) -> list[dict[str, Any]]:
         """Serialize the class data."""
         return [{"field": field.field, "value": field.value} for field in self._fields]
 
 
-@dataclass(init=False)
 class Document(
     PaperlessModel,
-    models.SecurableMixin,
-    models.UpdatableMixin,
-    models.DeletableMixin,
+    mixins.SecurableMixin,
 ):
     """Represent a Paperless `Document`."""
 
-    _api_path = API_PATH["documents_single"]
+    _api_path: ClassVar[str] = API_PATH["documents_single"]
+
+    _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
 
     id: int | None = None
     correspondent: int | None = None
@@ -186,17 +207,32 @@ class Document(
     original_file_name: str | None = None
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
-    custom_fields: DocumentCustomFieldList | None = None
+    custom_fields: DocumentCustomFieldList | list | None = None
     page_count: int | None = None
     mime_type: str | None = None
-    __search_hit__: DocumentSearchHitType | None = None
+    search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `Document` instance."""
-        super().__init__(api, data)
+        # Convert custom_fields list to DocumentCustomFieldList before pydantic validation
+        if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
+            kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
+        super().__init__(client, data, **kwargs)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
-        self.notes = DocumentNoteHelper(api, data.get("id"))
+    def apply_data(self) -> None:
+        """Apply data from `self._data` to model fields, converting custom_fields."""
+        super().apply_data()
+        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
+            self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
+
+    @property
+    def notes(self) -> "DocumentNoteService":
+        """Return the notes helper for this document."""
+        if self._notes is None:
+            from pypaperless.services.documents import DocumentNoteService  # noqa: PLC0415
+
+            self._notes = DocumentNoteService(self._client, cast("int", self.id))
+        return self._notes
 
     @property
     def created_date(self) -> datetime.date | None:
@@ -206,41 +242,40 @@ class Document(
     @property
     def has_search_hit(self) -> bool:
         """Return if the document has a search hit attached."""
-        return self.__search_hit__ is not None
+        return self.search_hit_ is not None
 
     @property
-    def search_hit(self) -> DocumentSearchHitType | None:
+    def search_hit(self) -> DocumentSearchHit | None:
         """Return the document search hit."""
-        return self.__search_hit__
+        return self.search_hit_
 
     async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.download(cast("int", self.id), original=original)
+        return await self._client.documents.download(cast("int", self.id), original=original)
 
     async def get_metadata(self) -> "DocumentMeta":
         """Request and return the documents `DocumentMeta` class."""
-        return await self._api.documents.metadata(cast("int", self.id))
+        return await self._client.documents.metadata(cast("int", self.id))
 
     async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.preview(cast("int", self.id), original=original)
+        return await self._client.documents.preview(cast("int", self.id), original=original)
 
     async def get_suggestions(self) -> "DocumentSuggestions":
         """Request and return the `DocumentSuggestions` class."""
-        return await self._api.documents.suggestions(cast("int", self.id))
+        return await self._client.documents.suggestions(cast("int", self.id))
 
     async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""
-        return await self._api.documents.thumbnail(cast("int", self.id), original=original)
+        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
 
 
-@dataclass(init=False)
-class DocumentDraft(PaperlessModel, models.CreatableMixin):
+class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
-    _api_path = API_PATH["documents_post"]
+    _api_path: ClassVar[str] = API_PATH["documents_post"]
 
-    _create_required_fields = {"document"}
+    _create_required_fields: ClassVar[set[str]] = {"document"}
 
     document: bytes | None = None
     filename: str | None = None
@@ -251,17 +286,27 @@ class DocumentDraft(PaperlessModel, models.CreatableMixin):
     storage_path: int | None = None
     tags: int | list[int] | None = None
     archive_serial_number: int | None = None
-    custom_fields: list[int] | None = None
+    custom_fields: list[int] | DocumentCustomFieldList | None = None
 
-    def _serialize(self) -> dict[str, Any]:
+    def serialize(self) -> dict[str, Any]:
         """Serialize."""
         data = {
             "form": {
-                field.name: object_to_dict_value(getattr(self, field.name))
-                for field in self._get_dataclass_fields()
-                if field.name not in {"document", "filename"}
+                name: object_to_dict_value(getattr(self, name))
+                for name in self.__class__.model_fields
+                if name not in {"document", "filename", "custom_fields"}
             }
         }
+
+        if self.custom_fields is not None:
+            if isinstance(self.custom_fields, DocumentCustomFieldList):
+                cf_map = {
+                    str(item["field"]): item["value"] for item in self.custom_fields.serialize()
+                }
+                data["form"]["custom_fields"] = json.dumps(cf_map)
+            else:
+                data["form"]["custom_fields"] = self.custom_fields
+
         data["form"].update(
             {
                 "document": (
@@ -272,11 +317,11 @@ class DocumentDraft(PaperlessModel, models.CreatableMixin):
         return data
 
 
-@dataclass(init=False)
 class DocumentNote(PaperlessModel):
     """Represent a Paperless `DocumentNote`."""
 
-    _api_path = API_PATH["documents_notes"]
+    _api_path: ClassVar[str] = API_PATH["documents_notes"]
+    _pk_field: ClassVar[str] = "document"
 
     id: int | None = None
     note: str | None = None
@@ -284,59 +329,23 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `DocumentNote` instance."""
-        super().__init__(api, data)
 
-        self._api_path = self._api_path.format(pk=data.get("document"))
-
-    async def delete(self) -> bool:
-        """Delete a `resource item` from DRF. There is no point of return.
-
-        Return `True` when deletion was successful, `False` otherwise.
-
-        Example:
-        -------
-        ```python
-        # request document notes
-        notes = await paperless.documents.notes(42)
-
-        for note in notes:
-            if await note.delete():
-                print("Successfully deleted the note!")
-        ```
-
-        """
-        params = {
-            "id": self.id,
-        }
-        async with self._api.request("delete", self._api_path, params=params) as res:
-            return res.status in {200, 204}  # backward compatibility
-
-
-@dataclass(kw_only=True)
-class DocumentNoteDraft(PaperlessModel, models.CreatableMixin):
+class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
 
-    _api_path = API_PATH["documents_notes"]
+    _api_path: ClassVar[str] = API_PATH["documents_notes"]
+    _pk_field: ClassVar[str] = "document"
 
-    _create_required_fields = {"note", "document"}
+    _create_required_fields: ClassVar[set[str]] = {"note", "document"}
 
     note: str | None = None
     document: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `DocumentNote` instance."""
-        super().__init__(api, data)
 
-        self._api_path = self._api_path.format(pk=data.get("document"))
-
-
-@dataclass(init=False)
 class DocumentMeta(PaperlessModel):
     """Represent a Paperless `Document`s metadata."""
 
-    _api_path = API_PATH["documents_meta"]
+    _api_path: ClassVar[str] = API_PATH["documents_meta"]
 
     id: int | None = None
     original_checksum: str | None = None
@@ -344,68 +353,33 @@ class DocumentMeta(PaperlessModel):
     original_mime_type: str | None = None
     media_filename: str | None = None
     has_archive_version: bool | None = None
-    original_metadata: list[DocumentMetadataType] | None = None
+    original_metadata: list[DocumentMetaEntry] | None = None
     archive_checksum: str | None = None
     archive_media_filename: str | None = None
     original_filename: str | None = None
     lang: str | None = None
     archive_size: int | None = None
-    archive_metadata: list[DocumentMetadataType] | None = None
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `DocumentMeta` instance."""
-        super().__init__(api, data)
-
-        self._api_path = self._api_path.format(pk=data.get("id"))
+    archive_metadata: list[DocumentMetaEntry] | None = None
 
 
-@dataclass(init=False)
 class DownloadedDocument(PaperlessModel):
     """Represent a Paperless `Document`s downloaded file."""
 
-    _api_path = API_PATH["documents"]
+    _api_path: ClassVar[str] = API_PATH["documents"]
 
     id: int | None = None
-    mode: RetrieveFileMode | None = None
+    mode: FileRetrieveMode | None = None
     original: bool | None = None
     content: bytes | None = None
     content_type: str | None = None
     disposition_filename: str | None = None
     disposition_type: str | None = None
 
-    async def load(self) -> None:
-        """Get `raw data` from DRF."""
-        self._api_path = self._api_path.format(pk=self._data.get("id"))
 
-        params = {
-            "original": "true" if self._data.get("original", False) else "false",
-        }
-
-        async with self._api.request("get", self._api_path, params=params) as res:
-            self._data.update(
-                {
-                    "content": await res.read(),
-                    "content_type": res.content_type,
-                }
-            )
-
-            if res.content_disposition is not None:
-                self._data.update(
-                    {
-                        "disposition_filename": res.content_disposition.filename,
-                        "disposition_type": res.content_disposition.type,
-                    }
-                )
-
-        self._set_dataclass_fields()
-        self._fetched = True
-
-
-@dataclass(init=False)
 class DocumentSuggestions(PaperlessModel):
     """Represent a Paperless `Document` suggestions."""
 
-    _api_path = API_PATH["documents_suggestions"]
+    _api_path: ClassVar[str] = API_PATH["documents_suggestions"]
 
     id: int | None = None
     correspondents: list[int] | None = None
@@ -413,407 +387,3 @@ class DocumentSuggestions(PaperlessModel):
     document_types: list[int] | None = None
     storage_paths: list[int] | None = None
     dates: list[datetime.date] | None = None
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `DocumentSuggestions` instance."""
-        super().__init__(api, data)
-
-        self._api_path = self._api_path.format(pk=data.get("id"))
-
-
-class DocumentSuggestionsHelper(HelperBase):
-    """Represent a factory for Paperless `DocumentSuggestions` models."""
-
-    _api_path = API_PATH["documents_suggestions"]
-    _resource = PaperlessResource.DOCUMENTS
-
-    _resource_cls = DocumentSuggestions
-
-    async def __call__(self, pk: int) -> DocumentSuggestions:
-        """Request exactly one resource item."""
-        data = {
-            "id": pk,
-        }
-        item = self._resource_cls.create_with_data(self._api, data)
-        await item.load()
-
-        return item
-
-
-class DocumentSubHelperBase(HelperBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
-
-    _api_path = API_PATH["documents_suggestions"]
-    _resource = PaperlessResource.DOCUMENTS
-
-    _resource_cls = DownloadedDocument
-
-    async def __call__(
-        self,
-        pk: int,
-        mode: RetrieveFileMode,
-        api_path: str,
-        *,
-        original: bool,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        data = {
-            "id": pk,
-            "mode": mode,
-            "original": original,
-        }
-        item = self._resource_cls.create_with_data(self._api, data)
-        item._api_path = api_path  # noqa: SLF001
-        await item.load()
-
-        return item
-
-
-class DocumentFileDownloadHelper(DocumentSubHelperBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
-
-    _api_path = API_PATH["documents_download"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, RetrieveFileMode.DOWNLOAD, self._api_path, original=original
-        )
-
-
-class DocumentFilePreviewHelper(DocumentSubHelperBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
-
-    _api_path = API_PATH["documents_preview"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, RetrieveFileMode.PREVIEW, self._api_path, original=original
-        )
-
-
-class DocumentFileThumbnailHelper(DocumentSubHelperBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
-
-    _api_path = API_PATH["documents_thumbnail"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, RetrieveFileMode.THUMBNAIL, self._api_path, original=original
-        )
-
-
-class DocumentMetaHelper(HelperBase, helpers.CallableMixin[DocumentMeta]):
-    """Represent a factory for Paperless `DocumentMeta` models."""
-
-    _api_path = API_PATH["documents_meta"]
-    _resource = PaperlessResource.DOCUMENTS
-
-    _resource_cls = DocumentMeta
-
-
-class DocumentNoteHelper(HelperBase):
-    """Represent a factory for Paperless `DocumentNote` models."""
-
-    _api_path = API_PATH["documents_notes"]
-    _resource = PaperlessResource.DOCUMENTS
-
-    _resource_cls = DocumentNote
-
-    def __init__(self, api: "Paperless", attached_to: int | None = None) -> None:
-        """Initialize a `DocumentHelper` instance."""
-        super().__init__(api)
-
-        self._attached_to = attached_to
-
-    async def __call__(
-        self,
-        pk: int | None = None,
-    ) -> list[DocumentNote]:
-        """Request and return the documents `DocumentNote` list."""
-        doc_pk = self._get_document_pk(pk)
-        res = await self._api.request_json("get", self._get_api_path(doc_pk))
-
-        # We have to transform data here slightly.
-        # There are two major differences in the data depending on which endpoint is requested.
-        # url: documents/{:pk}/ ->
-        #       .document -> int
-        #       .user -> int
-        # url: documents/{:pk}/notes/ ->
-        #       .document -> does not exist (so we add it here)
-        #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
-        return [
-            self._resource_cls.create_with_data(
-                self._api,
-                {
-                    **item,
-                    "document": doc_pk,
-                    "user": item["user"]["id"] if self._api.host_api_version >= 8 else item["user"],
-                },
-                fetched=True,
-            )
-            for item in res
-        ]
-
-    def _get_document_pk(self, pk: int | None = None) -> int:
-        """Return the attached document pk, or the parameter."""
-        if not any((self._attached_to, pk)):
-            message = f"Accessing {type(self).__name__} data without a primary key."
-            raise PrimaryKeyRequiredError(message)
-        return cast("int", self._attached_to or pk)
-
-    def _get_api_path(self, pk: int) -> str:
-        """Return the formatted api path."""
-        return self._api_path.format(pk=pk)
-
-    def draft(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
-        """Return a fresh and empty `DocumentNoteDraft` instance.
-
-        Example:
-        -------
-        ```python
-        draft = paperless.documents.notes.draft(...)
-        # do something
-        ```
-
-        """
-        kwargs.update({"document": self._get_document_pk(pk)})
-        return DocumentNoteDraft.create_with_data(
-            self._api,
-            data=kwargs,
-            fetched=True,
-        )
-
-
-class DocumentHelper(
-    HelperBase,
-    helpers.SecurableMixin,
-    helpers.CallableMixin[Document],
-    helpers.DraftableMixin[DocumentDraft],
-    helpers.IterableMixin[Document],
-):
-    """Represent a factory for Paperless `Document` models."""
-
-    _api_path = API_PATH["documents"]
-    _resource = PaperlessResource.DOCUMENTS
-
-    _draft_cls = DocumentDraft
-    _resource_cls = Document
-
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `DocumentHelper` instance."""
-        super().__init__(api)
-
-        self._download = DocumentFileDownloadHelper(api)
-        self._meta = DocumentMetaHelper(api)
-        self._notes = DocumentNoteHelper(api)
-        self._preview = DocumentFilePreviewHelper(api)
-        self._suggestions = DocumentSuggestionsHelper(api)
-        self._thumbnail = DocumentFileThumbnailHelper(api)
-
-    @property
-    def download(self) -> DocumentFileDownloadHelper:
-        """Download the contents of an archived file.
-
-        Example:
-        -------
-        ```python
-        # request document contents directly...
-        download = await paperless.documents.download(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_download()
-        ```
-
-        """
-        return self._download
-
-    @property
-    def metadata(self) -> DocumentMetaHelper:
-        """Return the attached `DocumentMetaHelper` instance.
-
-        Example:
-        -------
-        ```python
-        # request metadata of a document directly...
-        metadata = await paperless.documents.metadata(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        metadata = await doc.get_metadata()
-        ```
-
-        """
-        return self._meta
-
-    @property
-    def notes(self) -> DocumentNoteHelper:
-        """Return the attached `DocumentNoteHelper` instance.
-
-        Example:
-        -------
-        ```python
-        # request document notes directly...
-        notes = await paperless.documents.notes(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        notes = await doc.notes()
-        ```
-
-        """
-        return self._notes
-
-    @property
-    def preview(self) -> DocumentFilePreviewHelper:
-        """Preview the contents of an archived file.
-
-        Example:
-        -------
-        ```python
-        # request document contents directly...
-        download = await paperless.documents.preview(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_preview()
-        ```
-
-        """
-        return self._preview
-
-    @property
-    def suggestions(self) -> DocumentSuggestionsHelper:
-        """Return the attached `DocumentSuggestionsHelper` instance.
-
-        Example:
-        -------
-        ```python
-        # request document suggestions directly...
-        suggestions = await paperless.documents.suggestions(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.suggestions(42)
-
-        suggestions = await doc.get_suggestions()
-        ```
-
-        """
-        return self._suggestions
-
-    @property
-    def thumbnail(self) -> DocumentFileThumbnailHelper:
-        """Download the contents of a thumbnail file.
-
-        Example:
-        -------
-        ```python
-        # request document contents directly...
-        download = await paperless.documents.thumbnail(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_thumbnail()
-        ```
-
-        """
-        return self._thumbnail
-
-    async def get_next_asn(self) -> int:
-        """Request the next archive serial number from DRF."""
-        async with self._api.request("get", API_PATH["documents_next_asn"]) as res:
-            try:
-                res.raise_for_status()
-                return int(await res.text())
-            except Exception as exc:
-                raise AsnRequestError from exc
-
-    async def more_like(self, pk: int) -> AsyncGenerator[Document]:
-        """Lookup documents similar to the given document pk.
-
-        Shortcut function. Same behaviour is possible using `reduce()`.
-
-        Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
-        """
-        async with self.reduce(more_like_id=pk):
-            async for item in self:
-                yield item
-
-    async def search(
-        self, query: str | None = None, custom_field_query: str | None = None
-    ) -> AsyncGenerator[Document]:
-        """Lookup documents by a search query and/or custom_field_query.
-
-        If none of both are provided, all documents are returned.
-
-        Shortcut function. Same behaviour is possible using `reduce()`.
-
-        Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
-        """
-        querykwargs = {}
-        if query is not None:
-            querykwargs["query"] = query
-        if custom_field_query is not None:
-            querykwargs["custom_field_query"] = custom_field_query
-
-        async with self.reduce(**querykwargs):
-            async for item in self:
-                yield item
-
-    async def email(
-        self,
-        documents: int | list[int],
-        *,
-        addresses: str,
-        subject: str,
-        message: str,
-        use_archive_version: bool = True,
-    ) -> None:
-        """Email documents to one or more recipients as an attachment.
-
-        Example:
-        -------
-        ```python
-        # email document directly...
-        await paperless.documents.email(
-            [23, 42],
-            addresses="example@example.com, another@example.com",
-            subject="Subject",
-            message="Message"
-        )
-        ```
-
-        """
-        data = {
-            "documents": [documents] if isinstance(documents, int) else documents,
-            "addresses": addresses,
-            "subject": subject,
-            "message": message,
-            "use_archive_version": use_archive_version,
-        }
-        async with self._api.request("post", API_PATH["documents_email"], json=data) as res:
-            try:
-                res.raise_for_status()
-            except Exception as exc:
-                raise SendEmailError from exc

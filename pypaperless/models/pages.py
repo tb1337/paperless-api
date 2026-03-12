@@ -2,35 +2,39 @@
 
 import math
 from collections.abc import Iterator
-from dataclasses import dataclass, field
-from typing import Any, Generic
+from typing import Any, ClassVar, Generic
+
+from pydantic import Field
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel, ResourceT
 
 
-@dataclass(init=False)
 class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     """Represent a Paperless DRF `Paginated`."""
 
-    _api_path = API_PATH["index"]
+    _api_path: ClassVar[str] = API_PATH["index"]
     _resource_cls: type[ResourceT]
 
     # our fields
-    current_page: int
-    page_size: int
+    current_page: int = 0
+    page_size: int = 0
 
     # DRF fields
-    count: int
+    count: int = 0
     next: str | None = None
     previous: str | None = None
-    all: list[int] = field(default_factory=list)
-    results: list[dict[str, Any]] = field(default_factory=list)
+    all: list[int] = Field(default_factory=list)
+    results: list[dict[str, Any]] = Field(default_factory=list)
 
-    def __iter__(self) -> Iterator[ResourceT]:
+    def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
         """Return iter of `.items`."""
         return iter(self.items)
+
+    def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
+        """Set the resource class for items mapping."""
+        self._resource_cls = resource_cls
 
     @property
     def current_count(self) -> int:
@@ -62,9 +66,9 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
         """
 
         def mapper(data: dict[str, Any]) -> ResourceT:
-            return self._resource_cls.create_with_data(self._api, data, fetched=True)
+            return self._resource_cls.create_with_data(self._client, data)
 
-        return list(map(mapper, self._data["results"]))
+        return list(map(mapper, self.results))
 
     @property
     def is_last_page(self) -> bool:

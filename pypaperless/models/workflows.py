@@ -1,30 +1,103 @@
-"""Provide `Workflow` related models and helpers."""
+"""Provide `Workflow` related models."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from enum import Enum
+from typing import Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pydantic import BaseModel
 
-from .base import HelperBase, PaperlessModel
-from .common import (
-    WorkflowActionEmailType,
-    WorkflowActionType,
-    WorkflowActionWebhookType,
-    WorkflowTriggerScheduleDateFieldType,
-    WorkflowTriggerSourceType,
-    WorkflowTriggerType,
-)
-from .mixins import helpers, models
+from pypaperless.const import API_PATH
 
-if TYPE_CHECKING:
-    from pypaperless import Paperless
+from . import mixins
+from .base import PaperlessModel
 
 
-@dataclass(init=False)
+class WorkflowActionType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    ASSIGNMENT = 1
+    REMOVAL = 2
+    EMAIL = 3
+    WEBHOOK = 4
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowActionType":
+        """Set default member on unknown value."""
+        return WorkflowActionType.UNKNOWN
+
+
+class WorkflowActionEmail(BaseModel):
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    to: str | None = None
+    subject: str | None = None
+    body: str | None = None
+    include_document: bool | None = None
+
+
+class WorkflowActionWebhook(BaseModel):
+    """Represent a subtype of `WorkflowAction`."""
+
+    id: int | None = None
+    url: str | None = None
+    use_params: bool | None = None
+    as_json: bool | None = None
+    params: dict[str, Any] | None = None
+    body: str | None = None
+    headers: dict[str, str] | None = None
+    include_document: bool | None = None
+
+
+class WorkflowTriggerType(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUMPTION = 1
+    DOCUMENT_ADDED = 2
+    DOCUMENT_UPDATED = 3
+    SCHEDULED = 4
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerType":
+        """Set default member on unknown value."""
+        return WorkflowTriggerType.UNKNOWN
+
+
+class WorkflowTriggerScheduleDateField(Enum):
+    """Represent a subtype of `WorkflowTrigger`."""
+
+    ADDED = "added"
+    CREATED = "created"
+    MODIFIED = "modified"
+    CUSTOM_FIELD = "custom_field"
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerScheduleDateField":
+        """Set default member on unknown value."""
+        return WorkflowTriggerScheduleDateField.UNKNOWN
+
+
+class WorkflowTriggerSource(Enum):
+    """Represent a subtype of `Workflow`."""
+
+    CONSUME_FOLDER = 1
+    API_UPLOAD = 2
+    MAIL_FETCH = 3
+    WEB_UI = 4
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls: type, *_: object) -> "WorkflowTriggerSource":
+        """Set default member on unknown value."""
+        return WorkflowTriggerSource.UNKNOWN
+
+
 class WorkflowAction(PaperlessModel):
     """Represent a Paperless `WorkflowAction`."""
 
-    _api_path = API_PATH["workflow_actions_single"]
+    _api_path: ClassVar[str] = API_PATH["workflow_actions_single"]
 
     id: int | None = None
     type: WorkflowActionType | None = None
@@ -57,24 +130,17 @@ class WorkflowAction(PaperlessModel):
     remove_view_groups: list[int] | None = None
     remove_change_users: list[int] | None = None
     remove_change_groups: list[int] | None = None
-    email: WorkflowActionEmailType | None = None
-    webhook: WorkflowActionWebhookType | None = None
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
-
-        self._api_path = self._api_path.format(pk=data.get("id"))
+    email: WorkflowActionEmail | None = None
+    webhook: WorkflowActionWebhook | None = None
 
 
-@dataclass(init=False)
-class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
+class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
     """Represent a Paperless `WorkflowTrigger`."""
 
-    _api_path = API_PATH["workflow_triggers_single"]
+    _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]
 
     id: int | None = None
-    sources: list[WorkflowTriggerSourceType] | None = None
+    sources: list[WorkflowTriggerSource] | None = None
     type: WorkflowTriggerType | None = None
     filter_path: str | None = None
     filter_filename: str | None = None
@@ -92,103 +158,18 @@ class WorkflowTrigger(PaperlessModel, models.MatchingFieldsMixin):
     schedule_offset_days: int | None = None
     schedule_is_recurring: bool | None = None
     schedule_recurring_interval_days: int | None = None
-    schedule_date_field: WorkflowTriggerScheduleDateFieldType | None = None
+    schedule_date_field: WorkflowTriggerScheduleDateField | None = None
     schedule_date_custom_field: int | None = None
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
 
-        self._api_path = self._api_path.format(pk=data.get("id"))
-
-
-@dataclass(init=False)
 class Workflow(PaperlessModel):
     """Represent a Paperless `Workflow`."""
 
-    _api_path = API_PATH["workflows_single"]
+    _api_path: ClassVar[str] = API_PATH["workflows_single"]
 
     id: int | None = None
     name: str | None = None
     order: int | None = None
     enabled: bool | None = None
-    actions: list[WorkflowAction] | None = None
-    triggers: list[WorkflowTrigger] | None = None
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `Workflow` instance."""
-        super().__init__(api, data)
-
-        self._api_path = self._api_path.format(pk=data.get("id"))
-
-
-class WorkflowActionHelper(
-    HelperBase,
-    helpers.CallableMixin[WorkflowAction],
-    helpers.IterableMixin[WorkflowAction],
-):
-    """Represent a factory for Paperless `WorkflowAction` models."""
-
-    _api_path = API_PATH["workflow_actions"]
-    _resource = PaperlessResource.WORKFLOW_ACTIONS
-
-    _resource_cls = WorkflowAction
-
-
-class WorkflowTriggerHelper(
-    HelperBase,
-    helpers.CallableMixin[WorkflowTrigger],
-    helpers.IterableMixin[WorkflowTrigger],
-):
-    """Represent a factory for Paperless `WorkflowTrigger` models."""
-
-    _api_path = API_PATH["workflow_triggers"]
-    _resource = PaperlessResource.WORKFLOW_TRIGGERS
-
-    _resource_cls = WorkflowTrigger
-
-
-class WorkflowHelper(
-    HelperBase,
-    helpers.CallableMixin[Workflow],
-    helpers.IterableMixin[Workflow],
-):
-    """Represent a factory for Paperless `Workflow` models."""
-
-    _api_path = API_PATH["workflows"]
-    _resource = PaperlessResource.WORKFLOWS
-
-    _resource_cls = Workflow
-
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `WorkflowHelper` instance."""
-        super().__init__(api)
-
-        self._actions = WorkflowActionHelper(api)
-        self._triggers = WorkflowTriggerHelper(api)
-
-    @property
-    def actions(self) -> WorkflowActionHelper:
-        """Return the attached `WorkflowActionHelper` instance.
-
-        Example:
-        -------
-        ```python
-        wf_action = await paperless.workflows.actions(5)
-        ```
-
-        """
-        return self._actions
-
-    @property
-    def triggers(self) -> WorkflowTriggerHelper:
-        """Return the attached `WorkflowTriggerHelper` instance.
-
-        Example:
-        -------
-        ```python
-        wf_trigger = await paperless.workflows.triggers(23)
-        ```
-
-        """
-        return self._triggers
+    actions: list[Any] | None = None
+    triggers: list[Any] | None = None

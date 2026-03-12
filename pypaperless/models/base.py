@@ -1,11 +1,11 @@
 """Provide base classes."""
 
 from abc import ABC, abstractmethod
-from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Protocol, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
 
-from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.utils import dict_value_to_object
+from pydantic import BaseModel, ConfigDict, PrivateAttr, TypeAdapter
+
+from pypaperless.const import API_PATH
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -14,116 +14,100 @@ if TYPE_CHECKING:
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
-class PaperlessBase:
-    """Superclass for all classes in PyPaperless."""
+class PaperlessModel(BaseModel):
+    """Base class for all models in PyPaperless.
 
-    _api_path = API_PATH["index"]
+    Models are pure data containers. All API operations (load, save, update,
+    delete) are handled by services.
+    """
 
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `PaperlessBase` instance."""
-        self._api = api
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+        use_enum_values=False,
+    )
 
+    _api_path: ClassVar[str] = API_PATH["index"]
+    _pk_field: ClassVar[str] = "id"
 
-class HelperProtocol[ResourceT](Protocol):
-    """Protocol for any `HelperBase` instances and its ancestors."""
+    _client: "Paperless" = PrivateAttr()
+    _data: dict[str, Any] = PrivateAttr(default_factory=dict)
 
-    _api: "Paperless"
-    _api_path: str
-    _resource: PaperlessResource
-    _resource_cls: type[ResourceT]
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this model instance."""
+        return self._api_path
 
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return the internal model data dictionary."""
+        return self._data
 
-class HelperBase(PaperlessBase):
-    """Base class for all helpers in PyPaperless."""
+    @data.setter
+    def data(self, value: dict[str, Any]) -> None:
+        """Set the internal model data dictionary."""
+        self._data = value
 
-    _resource: PaperlessResource
-
-
-@dataclass(init=False)
-class PaperlessModelProtocol(Protocol):
-    """Protocol for any `PaperlessBase` instances and its ancestors."""
-
-    _api: "Paperless"
-    _api_path: str
-    _data: dict[str, Any]
-    _fetched: bool
-    _params: dict[str, Any]
-
-    # fmt: off
-    def _get_dataclass_fields(self) -> list[Field]: ...
-    def _set_dataclass_fields(self) -> None: ...
-    # fmt: on
-
-
-@dataclass(init=False)
-class PaperlessModel(PaperlessBase):
-    """Base class for all models in PyPaperless."""
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
+    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
         """Initialize a `PaperlessModel` instance."""
-        super().__init__(api)
+        super().__init__(**kwargs)
+        self._client = client
+        self._data = dict(data)
+        self._set_api_path(self._data)
 
-        self._data = {}
-        self._data.update(data)
-        self._fetched = False
-        self._params: dict[str, Any] = {}
+    def _set_api_path(self, data: dict[str, Any], **format_kwargs: Any) -> None:
+        """Set the instance's `_api_path` by resolving its `{pk}` placeholder.
+
+        Uses `_pk_field` to determine which data key provides the primary key value.
+        Override `_pk_field` on a subclass to use a different source field.
+        """
+        format_kwargs.setdefault("pk", data.get(self._pk_field))
+        if format_kwargs["pk"] is not None:
+            object.__setattr__(self, "_api_path", self._api_path.format(**format_kwargs))
+
+    @classmethod
+    def format_api_path(cls, **kwargs: Any) -> str:
+        """Return the formatted API path for this model class."""
+        return cls._api_path.format(**kwargs)
 
     @final
     @classmethod
     def create_with_data(
         cls,
-        api: "Paperless",
+        client: "Paperless",
         data: dict[str, Any],
-        *,
-        fetched: bool = False,
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
         Primarily used by class factories to create new model instances.
-
-        Example: `document = Document.create_with_data(...)`
         """
-        item = cls(api, data=data)
+        return cls(client=client, data=data, **data)
 
-        item._fetched = fetched
-        if fetched:
-            item._set_dataclass_fields()
-        return item
+    def apply_data(self) -> None:
+        """Apply data from `self.data` to model fields.
 
-    @final
-    def _get_dataclass_fields(self) -> list[Field]:
-        """Get the dataclass fields."""
-        return [
-            field
-            for field in fields(self)
-            if (not field.name.startswith("_") or field.name == "__search_hit__")
-        ]
+        Used by services after update operations to refresh model state.
+        """
+        for field_name, field_info in self.__class__.model_fields.items():
+            if field_name in self.data:
+                value = self.data[field_name]
+                if field_info.annotation is not None:
+                    try:
+                        adapter = self._get_type_adapter(field_name, field_info.annotation)
+                        value = adapter.validate_python(value)
+                    except (ValueError, TypeError):
+                        pass
+                setattr(self, field_name, value)
 
-    @final
-    def _set_dataclass_fields(self) -> None:
-        """Set the dataclass fields from `self._data`."""
-        for field in self._get_dataclass_fields():
-            value = dict_value_to_object(
-                f"{self.__class__.__name__}.{field.name}",
-                self._data.get(field.name),
-                field.type,
-                field.default,
-                self._api,
-            )
-            setattr(self, field.name, value)
-
-    @property
-    def is_fetched(self) -> bool:
-        """Return whether the `model data` is fetched or not."""
-        return self._fetched
-
-    async def load(self) -> None:
-        """Get `model data` from DRF."""
-        data = await self._api.request_json("get", self._api_path, params=self._params)
-
-        self._data.update(data)
-        self._set_dataclass_fields()
-        self._fetched = True
+    @classmethod
+    def _get_type_adapter(cls, field_name: str, annotation: type) -> TypeAdapter:
+        """Return a cached TypeAdapter for the given field."""
+        cache_attr = "__type_adapters__"
+        cache: dict[str, TypeAdapter] = getattr(cls, cache_attr, None) or {}
+        if field_name not in cache:
+            cache[field_name] = TypeAdapter(annotation)
+            setattr(cls, cache_attr, cache)
+        return cache[field_name]
 
 
 class PaperlessModelData(ABC):
@@ -131,7 +115,7 @@ class PaperlessModelData(ABC):
 
     @classmethod
     @abstractmethod
-    def unserialize(cls, api: "Paperless", data: Any) -> Self:
+    def unserialize(cls, client: "Paperless", data: Any) -> Self:
         """Return a new instance of `cls` from `data`."""
 
     @abstractmethod

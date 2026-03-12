@@ -1,18 +1,25 @@
-"""Provide `Statistics` related models and helpers."""
+"""Provide `Statistics` related models."""
 
-from dataclasses import dataclass
+from typing import ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pydantic import BaseModel
 
-from .base import HelperBase, PaperlessModel
-from .common import StatisticDocumentFileTypeCount
+from pypaperless.const import API_PATH
+
+from .base import PaperlessModel
 
 
-@dataclass(init=False)
+class StatisticDocumentFileTypeCount(BaseModel):
+    """Represent a Paperless statistics file type count."""
+
+    mime_type: str | None = None
+    mime_type_count: int | None = None
+
+
 class Statistic(PaperlessModel):
     """Represent Paperless `Statistic`."""
 
-    _api_path = API_PATH["statistics"]
+    _api_path: ClassVar[str] = API_PATH["statistics"]
 
     documents_total: int | None = None
     documents_inbox: int | None = None
@@ -25,17 +32,3 @@ class Statistic(PaperlessModel):
     document_type_count: int | None = None
     storage_path_count: int | None = None
     current_asn: int | None = None
-
-
-class StatisticHelper(HelperBase):
-    """Represent a factory for Paperless `Statistic` models."""
-
-    _api_path = API_PATH["statistics"]
-    _resource = PaperlessResource.STATISTICS
-
-    _resource_cls = Statistic
-
-    async def __call__(self) -> Statistic:
-        """Request the `Statistic` model data."""
-        res = await self._api.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._api, res, fetched=True)

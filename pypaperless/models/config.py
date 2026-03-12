@@ -1,22 +1,16 @@
-"""Provide `Config` related models and helpers."""
+"""Provide `Config` related models."""
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import API_PATH
 
-from .base import HelperBase, PaperlessModel
-from .mixins import helpers
-
-if TYPE_CHECKING:
-    from pypaperless import Paperless
+from .base import PaperlessModel
 
 
-@dataclass(init=False)
 class Config(PaperlessModel):
     """Represent a Paperless `Config`."""
 
-    _api_path = API_PATH["config_single"]
+    _api_path: ClassVar[str] = API_PATH["config_single"]
 
     id: int | None = None
     user_args: str | None = None
@@ -45,18 +39,3 @@ class Config(PaperlessModel):
     barcode_dpi: int | None = None
     barcode_max_pages: int | None = None
     barcode_enable_tag: bool | None = None
-
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `Config` instance."""
-        super().__init__(api, data)
-
-        self._api_path = self._api_path.format(pk=data.get("id"))
-
-
-class ConfigHelper(HelperBase, helpers.CallableMixin[Config]):
-    """Represent a factory for Paperless `Config` models."""
-
-    _api_path = API_PATH["config"]
-    _resource = PaperlessResource.CONFIG
-
-    _resource_cls = Config

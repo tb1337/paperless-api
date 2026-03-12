@@ -1,23 +1,18 @@
 """PyPaperless models."""
 
-from .classifiers import (
-    Correspondent,
-    CorrespondentDraft,
-    DocumentType,
-    DocumentTypeDraft,
-    StoragePath,
-    StoragePathDraft,
-    Tag,
-    TagDraft,
-)
 from .config import Config
+from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
+from .document_types import DocumentType, DocumentTypeDraft
 from .documents import (
     Document,
+    DocumentCustomFieldList,
     DocumentDraft,
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentSuggestions,
+    DownloadedDocument,
 )
 from .mails import MailAccount, MailRule, ProcessedMail
 from .pages import Page
@@ -27,6 +22,8 @@ from .saved_views import SavedView
 from .share_links import ShareLink, ShareLinkDraft
 from .statistics import Statistic
 from .status import Status
+from .storage_paths import StoragePath, StoragePathDraft
+from .tags import Tag, TagDraft
 from .tasks import Task
 from .workflows import Workflow, WorkflowAction, WorkflowTrigger
 
@@ -37,12 +34,15 @@ __all__ = (
     "CustomField",
     "CustomFieldDraft",
     "Document",
+    "DocumentCustomFieldList",
     "DocumentDraft",
     "DocumentMeta",
     "DocumentNote",
     "DocumentNoteDraft",
+    "DocumentSuggestions",
     "DocumentType",
     "DocumentTypeDraft",
+    "DownloadedDocument",
     "Group",
     "MailAccount",
     "MailRule",

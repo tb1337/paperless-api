@@ -1,17 +1,17 @@
 """Paperless basic tests."""
 
+import json as json_mod
 import re
-from typing import Any
 
-import aiohttp
+import httpx
 import pytest
-from aioresponses import CallbackResult, aioresponses
+from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models import Page
-from pypaperless.models.common import PermissionTableType
+from pypaperless.models.types import PermissionTable
 
 from . import (
     CORRESPONDENT_MAP,
@@ -66,13 +66,14 @@ class TestReadOnly:
     """Read only resources test cases."""
 
     async def test_pages(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         page = await anext(aiter(getattr(paperless, mapping.resource).pages(1)))
         assert isinstance(page, Page)
@@ -81,13 +82,14 @@ class TestReadOnly:
             assert isinstance(item, mapping.model_cls)
 
     async def test_as_dict(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         items = await getattr(paperless, mapping.resource).as_dict()
         for pk, obj in items.items():
@@ -95,38 +97,41 @@ class TestReadOnly:
             assert isinstance(obj, mapping.model_cls)
 
     async def test_as_list(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         items = await getattr(paperless, mapping.resource).as_list()
         for obj in items:
             assert isinstance(obj, mapping.model_cls)
 
     async def test_iter(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         items = await getattr(paperless, mapping.resource).all()
         assert isinstance(items, list)
@@ -134,23 +139,25 @@ class TestReadOnly:
             assert isinstance(item, int)
 
     async def test_call(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload=mapping.data["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
+            status_code=200,
+            json=mapping.data["results"][0],
         )
         item = await getattr(paperless, mapping.resource)(1)
         assert item
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
-            status=404,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
+            status_code=404,
         )
-        with pytest.raises(aiohttp.ClientResponseError):
+        with pytest.raises(httpx.HTTPStatusError):
             await getattr(paperless, mapping.resource)(1337)
 
 
@@ -173,13 +180,14 @@ class TestReadWrite:
     """R/W models test cases."""
 
     async def test_pages(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         page = await anext(aiter(getattr(paperless, mapping.resource).pages(1)))
         assert isinstance(page, Page)
@@ -188,25 +196,27 @@ class TestReadWrite:
             assert isinstance(item, mapping.model_cls)
 
     async def test_iter(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         items = await getattr(paperless, mapping.resource).all()
         assert isinstance(items, list)
@@ -214,13 +224,14 @@ class TestReadWrite:
             assert isinstance(item, int)
 
     async def test_reduce(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test iter with reduce."""
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload=mapping.data,
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json=mapping.data,
         )
         async with getattr(paperless, mapping.resource).reduce(
             any_filter_param="1",
@@ -231,30 +242,33 @@ class TestReadWrite:
                 assert isinstance(item, mapping.model_cls)
 
     async def test_call(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload=mapping.data["results"][0],
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
+            status_code=200,
+            json=mapping.data["results"][0],
         )
         item = await getattr(paperless, mapping.resource)(1)
         assert item
         assert isinstance(item, mapping.model_cls)
         # must raise as 1337 doesn't exist
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
-            status=404,
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
+            status_code=404,
         )
-        with pytest.raises(aiohttp.ClientResponseError):
+        with pytest.raises(httpx.HTTPStatusError):
             await getattr(paperless, mapping.resource)(1337)
 
     async def test_create(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test create."""
-        draft = getattr(paperless, mapping.resource).draft(**mapping.draft_defaults)
+        service = getattr(paperless, mapping.resource)
+        draft = service.draft(**mapping.draft_defaults)
         assert isinstance(draft, mapping.draft_cls)
         # test empty draft fields
         if mapping.model_cls not in (
@@ -264,22 +278,23 @@ class TestReadWrite:
             backup = draft.name
             draft.name = None
             with pytest.raises(DraftFieldRequiredError):
-                await draft.save()
+                await service.save(draft)
             draft.name = backup
         # actually call the create endpoint
-        resp.post(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}",
-            status=200,
-            payload={
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}",
+            status_code=200,
+            json={
                 "id": len(mapping.data["results"]),
-                **draft._serialize(),  # pylint: disable=protected-access
+                **draft.serialize(),
             },
         )
-        new_pk = await draft.save()
+        new_pk = await service.save(draft)
         assert new_pk >= 1
 
     async def test_udpate(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test update."""
         update_field = "name"
@@ -288,60 +303,70 @@ class TestReadWrite:
             update_field = "document"
             update_value = 2
         # go on
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload=mapping.data["results"][0],
+        pk = mapping.data["results"][0]["id"]
+        service = getattr(paperless, mapping.resource)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json=mapping.data["results"][0],
         )
-        to_update = await getattr(paperless, mapping.resource)(1)
+        to_update = await service(pk)
         setattr(to_update, update_field, update_value)
         # actually call the update endpoint
-        resp.patch(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload={
-                **to_update._data,  # pylint: disable=protected-access
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json={
+                **to_update._data,
                 update_field: update_value,
             },
         )
-        await to_update.update()
+        await service.update(to_update)
         assert getattr(to_update, update_field) == update_value
         # no updates
-        assert not await to_update.update()
+        assert not await service.update(to_update)
         # force update
         setattr(to_update, update_field, update_value)
-        resp.put(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload={
-                **to_update._data,  # pylint: disable=protected-access
+        httpx_mock.add_response(
+            method="PUT",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json={
+                **to_update._data,
                 update_field: update_value,
             },
         )
-        await to_update.update(only_changed=False)
+        await service.update(to_update, only_changed=False)
         assert getattr(to_update, update_field) == update_value
 
     async def test_delete(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test delete."""
-        resp.get(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=200,
-            payload=mapping.data["results"][0],
+        pk = mapping.data["results"][0]["id"]
+        service = getattr(paperless, mapping.resource)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json=mapping.data["results"][0],
         )
-        to_delete = await getattr(paperless, mapping.resource)(1)
-        resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=204,  # Paperless-ngx responds with 204 on deletion
+        to_delete = await service(pk)
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=204,  # Paperless-ngx responds with 204 on deletion
         )
-        assert await to_delete.delete()
+        assert await service.delete(to_delete)
         # test deletion failed
-        resp.delete(
-            f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
-            status=404,  # we send another status code
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=404,  # we send another status code
         )
-        assert not await to_delete.delete()
+        assert not await service.delete(to_delete)
 
 
 @pytest.mark.parametrize(
@@ -360,32 +385,34 @@ class TestSecurableMixin:
     """SecurableMixin test cases."""
 
     async def test_permissions(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test permissions."""
         getattr(paperless, mapping.resource).request_permissions = True
         assert getattr(paperless, mapping.resource).request_permissions
         # request single object
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^"
                 + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
                 + r"\?.*$"
             ),
-            status=200,
-            payload={
+            status_code=200,
+            json={
                 **mapping.data["results"][0],
                 "permissions": DATA_OBJECT_PERMISSIONS,
             },
         )
         item = await getattr(paperless, mapping.resource)(1)
         assert item.has_permissions
-        assert isinstance(item.permissions, PermissionTableType)
+        assert isinstance(item.permissions, PermissionTable)
         # request by iterator
-        resp.get(
-            re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
-            status=200,
-            payload={
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            status_code=200,
+            json={
                 **mapping.data,
                 "results": [
                     {**item, "permissions": DATA_OBJECT_PERMISSIONS}
@@ -396,47 +423,50 @@ class TestSecurableMixin:
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
             assert item.has_permissions
-            assert isinstance(item.permissions, PermissionTableType)
+            assert isinstance(item.permissions, PermissionTable)
 
     async def test_permission_change(
-        self, resp: aioresponses, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
         """Test permission changes."""
+        pk = mapping.data["results"][0]["id"]
         getattr(paperless, mapping.resource).request_permissions = True
         assert getattr(paperless, mapping.resource).request_permissions
-        resp.get(
-            re.compile(
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk)
                 + r"\?.*$"
             ),
-            status=200,
-            payload={
+            status_code=200,
+            json={
                 **mapping.data["results"][0],
                 "permissions": DATA_OBJECT_PERMISSIONS,
             },
         )
-        item = await getattr(paperless, mapping.resource)(1)
+        item = await getattr(paperless, mapping.resource)(pk)
         item.permissions.view.users.append(23)
 
-        def _lookup_set_permissions(  # pylint: disable=unused-argument
-            url: str,
-            json: dict[str, Any],
-            **kwargs: Any,  # noqa: ARG001
-        ) -> CallbackResult:
-            assert url
-            assert "set_permissions" in json
-            return CallbackResult(
-                status=200,
-                payload=item._data,  # pylint: disable=protected-access
+        def _lookup_set_permissions(request: httpx.Request) -> httpx.Response:
+            assert request.url
+
+            json_data = json_mod.loads(request.content)
+            assert "set_permissions" in json_data
+            return httpx.Response(
+                status_code=200,
+                json=item._data,
             )
 
-        resp.patch(
-            re.compile(
+        httpx_mock.add_callback(
+            _lookup_set_permissions,
+            url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
+                + re.escape(
+                    f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk)
+                )
                 + r"\?.*$"
             ),
-            callback=_lookup_set_permissions,
+            method="PATCH",
         )
-        await item.update()
+        await getattr(paperless, mapping.resource).update(item)
