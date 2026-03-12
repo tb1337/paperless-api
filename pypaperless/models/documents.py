@@ -277,6 +277,11 @@ class Document(
         return self.created
 
     @property
+    def is_deleted(self) -> bool:
+        """Return True if the document is in the trash."""
+        return self.deleted_at is not None
+
+    @property
     def has_search_hit(self) -> bool:
         """Return if the document has a search hit attached."""
         return self.search_hit_ is not None

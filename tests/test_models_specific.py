@@ -64,6 +64,7 @@ from .data import (
     DATA_STATISTICS,
     DATA_STATUS,
     DATA_TASKS,
+    DATA_TRASH,
 )
 
 # mypy: ignore-errors
@@ -772,3 +773,51 @@ class TestModelWorkflows:
         """Test services."""
         assert isinstance(paperless.workflows.actions, WorkflowActionService)
         assert isinstance(paperless.workflows.triggers, WorkflowTriggerService)
+
+
+# test services/trash.py
+class TestModelTrash:
+    """Trash test cases."""
+
+    async def test_iter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test iterating over trashed documents."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['trash']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_TRASH,
+        )
+        items = [item async for item in paperless.trash]
+        assert len(items) == len(DATA_TRASH["results"])
+        for item in items:
+            assert isinstance(item, Document)
+            assert item.deleted_at is not None
+
+    async def test_restore(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test restore action."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            status_code=200,
+            json={"result": "restored"},
+        )
+        await paperless.trash.restore([100, 101])
+
+    async def test_empty(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test empty action — all trash and specific documents."""
+        # empty all
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            status_code=200,
+            json={"result": "emptied"},
+        )
+        await paperless.trash.empty()
+        # empty specific documents
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            status_code=200,
+            json={"result": "emptied"},
+        )
+        await paperless.trash.empty([100])

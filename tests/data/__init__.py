@@ -26,6 +26,7 @@ from .storage_paths import DATA_STORAGE_PATHS
 from .tags import DATA_TAGS
 from .tasks import DATA_TASKS
 from .token import DATA_TOKEN
+from .trash import DATA_TRASH
 from .users import DATA_USERS
 from .workflow import DATA_WORKFLOW_ACTIONS, DATA_WORKFLOW_TRIGGERS, DATA_WORKFLOWS
 
@@ -68,6 +69,7 @@ __all__ = (
     "DATA_TAGS",
     "DATA_TASKS",
     "DATA_TOKEN",
+    "DATA_TRASH",
     "DATA_USERS",
     "DATA_WORKFLOWS",
     "DATA_WORKFLOW_ACTIONS",

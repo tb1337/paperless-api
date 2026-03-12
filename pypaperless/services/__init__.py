@@ -17,4 +17,5 @@ from .status import StatusService  # noqa: F401
 from .storage_paths import StoragePathService  # noqa: F401
 from .tags import TagService  # noqa: F401
 from .tasks import TaskService  # noqa: F401
+from .trash import TrashService  # noqa: F401
 from .workflows import WorkflowService  # noqa: F401
