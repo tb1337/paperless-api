@@ -41,6 +41,7 @@ API_PATH = {
     f"{DOCUMENTS}": f"/api/{DOCUMENTS}/",
     f"{DOCUMENTS}_download": f"/api/{DOCUMENTS}/{{pk}}/download/",
     f"{DOCUMENTS}_email": f"/api/{DOCUMENTS}/email/",
+    f"{DOCUMENTS}_history": f"/api/{DOCUMENTS}/{{pk}}/history/",
     f"{DOCUMENTS}_meta": f"/api/{DOCUMENTS}/{{pk}}/metadata/",
     f"{DOCUMENTS}_next_asn": f"/api/{DOCUMENTS}/next_asn/",
     f"{DOCUMENTS}_notes": f"/api/{DOCUMENTS}/{{pk}}/notes/",

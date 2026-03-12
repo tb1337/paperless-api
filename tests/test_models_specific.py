@@ -22,6 +22,8 @@ from pypaperless.models import (
     Document,
     DocumentCustomFieldList,
     DocumentDraft,
+    DocumentHistory,
+    DocumentHistoryAction,
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
@@ -52,6 +54,7 @@ from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
     DATA_CUSTOM_FIELDS,
+    DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
     DATA_DOCUMENT_NOTES,
     DATA_DOCUMENT_SUGGESTIONS,
@@ -404,6 +407,50 @@ class TestModelDocuments:
         )
         deletion = await item.notes.delete(results.pop())
         assert deletion
+
+    async def test_history_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test history endpoint via document property and service directly."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        item = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_history']}".format(pk=1) + r".*$"
+            ),
+            status_code=200,
+            json=DATA_DOCUMENT_HISTORY,
+        )
+        results = await item.history()
+        assert isinstance(results, list)
+        assert len(results) == len(DATA_DOCUMENT_HISTORY)
+        for entry in results:
+            assert isinstance(entry, DocumentHistory)
+            assert entry.document == item.id
+            assert isinstance(entry.timestamp, datetime.datetime)
+            assert isinstance(entry.action, DocumentHistoryAction)
+            assert isinstance(entry.changes, dict)
+
+        # direct service call
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_history']}".format(pk=1) + r".*$"
+            ),
+            status_code=200,
+            json=DATA_DOCUMENT_HISTORY,
+        )
+        results_direct = await paperless.documents.history(1)
+        assert isinstance(results_direct, list)
+        assert len(results_direct) == len(DATA_DOCUMENT_HISTORY)
+
+        # missing pk raises error
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.history()
 
     async def test_custom_field_list_wo_cache(
         self, httpx_mock: HTTPXMock, paperless: Paperless
