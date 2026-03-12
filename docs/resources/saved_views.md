@@ -58,4 +58,4 @@ print(view.permissions)  # PermissionTable
 paperless.saved_views.request_permissions = False
 ```
 
-See [Permissions](../permissions.md) for details.
+See [Permissions](../concepts/permissions.md) for details.

@@ -49,4 +49,4 @@ print(entry.owner)
 paperless.processed_mail.request_permissions = False
 ```
 
-See [Permissions](../permissions.md) for details.
+See [Permissions](../concepts/permissions.md) for details.

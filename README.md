@@ -11,6 +11,12 @@
 
 Little asynchronous client for *Paperless-ngx*, written in Python. You should at least use Python `>=3.12`.
 
+- [Features](#features)
+- [Getting started](#getting-started)
+- [Documentation](#documentation)
+- [Compatibility matrix](#compatibility-matrix)
+- [Authors \& contributors](#authors--contributors)
+
 ## Features
 
 - Depends on aiohttp, works in async environments.
@@ -28,7 +34,7 @@ Find out more about *Paperless-ngx* here:
 - API Docs: https://docs.paperless-ngx.com/api/
 - Source Code: https://github.com/paperless-ngx/paperless-ngx
 
-## Installation
+## Getting started
 
 ```bash
 pip install pypaperless
@@ -68,7 +74,7 @@ Check out all [contributors here][contributors-url].
 [codecov-url]: https://app.codecov.io/gh/tb1337/paperless-api/tree/main
 [contributors-tbsch]: https://tbsch.de
 [contributors-url]: https://github.com/tb1337/paperless-api/graphs/contributors
-[docs-url]: https://github.com/tb1337/paperless-api/blob/main/docs/
+[docs-url]: https://pypaperless.docs.tbsch.de
 [license-badge]: https://img.shields.io/github/license/tb1337/paperless-api
 [license-url]: /LICENSE.md
 [python-badge]: https://img.shields.io/pypi/pyversions/pypaperless

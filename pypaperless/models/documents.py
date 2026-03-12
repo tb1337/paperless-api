@@ -24,7 +24,7 @@ from .custom_fields import (
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
-    from pypaperless.services.documents import DocumentNoteService
+    from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
 
 
 class DocumentMetaEntry(BaseModel):
@@ -51,6 +51,33 @@ class FileRetrieveMode(StrEnum):
     DOWNLOAD = "download"
     PREVIEW = "preview"
     THUMBNAIL = "thumb"
+
+
+class DocumentHistoryAction(StrEnum):
+    """Represent the action type of a `DocumentHistory` entry."""
+
+    CREATE = "create"
+    UPDATE = "update"
+
+
+class DocumentHistoryActor(BaseModel):
+    """Represent the actor field of a `DocumentHistory` entry."""
+
+    id: int | None = None
+    username: str | None = None
+
+
+class DocumentHistory(PaperlessModel):
+    """Represent a single Paperless document history (audit-log) entry."""
+
+    _api_path: ClassVar[str] = API_PATH["documents_history"]
+
+    id: int | None = None
+    document: int | None = None
+    timestamp: datetime.datetime | None = None
+    action: DocumentHistoryAction | None = None
+    changes: dict[str, Any] = Field(default_factory=dict)
+    actor: DocumentHistoryActor | None = None
 
 
 class DocumentCustomFieldList(PaperlessModelData):
@@ -190,6 +217,7 @@ class Document(
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
 
+    _history: "DocumentHistoryService | None" = PrivateAttr(default=None)
     _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
 
     id: int | None = None
@@ -224,6 +252,15 @@ class Document(
         super().apply_data()
         if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
             self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
+
+    @property
+    def history(self) -> "DocumentHistoryService":
+        """Return the history service for this document."""
+        if self._history is None:
+            from pypaperless.services.documents import DocumentHistoryService  # noqa: PLC0415
+
+            self._history = DocumentHistoryService(self._client, cast("int", self.id))
+        return self._history
 
     @property
     def notes(self) -> "DocumentNoteService":

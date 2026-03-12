@@ -8,6 +8,7 @@ from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError, Sen
 from pypaperless.models.documents import (
     Document,
     DocumentDraft,
+    DocumentHistory,
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
@@ -132,6 +133,37 @@ class DocumentFileThumbnailService(DocumentSubServiceBase):
         return await super().__call__(
             pk, FileRetrieveMode.THUMBNAIL, self._api_path, original=original
         )
+
+
+class DocumentHistoryService(ServiceBase):
+    """Represent a factory for Paperless `DocumentHistory` models."""
+
+    _api_path = API_PATH["documents_history"]
+    _resource = PaperlessResource.DOCUMENTS
+
+    _resource_cls = DocumentHistory
+
+    def __init__(self, client: "Paperless", attached_to: int | None = None) -> None:
+        """Initialize a `DocumentHistoryService` instance."""
+        super().__init__(client)
+
+        self._attached_to = attached_to
+
+    async def __call__(self, pk: int | None = None) -> list[DocumentHistory]:
+        """Request and return the document history entries."""
+        doc_pk = self._get_document_pk(pk)
+        res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
+        return [
+            self._resource_cls.create_with_data(self._client, {**item, "document": doc_pk})
+            for item in res
+        ]
+
+    def _get_document_pk(self, pk: int | None = None) -> int:
+        """Return the attached document pk, or the parameter."""
+        if not any((self._attached_to, pk)):
+            message = f"Accessing {type(self).__name__} data without a primary key."
+            raise PrimaryKeyRequiredError(message)
+        return cast("int", self._attached_to or pk)
 
 
 class DocumentMetaService(ServiceBase, mixins.CallableMixin[DocumentMeta]):
@@ -262,6 +294,7 @@ class DocumentService(
         super().__init__(client)
 
         self._download = DocumentFileDownloadService(client)
+        self._history = DocumentHistoryService(client)
         self._meta = DocumentMetaService(client)
         self._notes = DocumentNoteService(client)
         self._preview = DocumentFilePreviewService(client)
@@ -286,6 +319,24 @@ class DocumentService(
 
         """
         return self._download
+
+    @property
+    def history(self) -> DocumentHistoryService:
+        """Return the attached `DocumentHistoryService` instance.
+
+        Example:
+        -------
+        ```python
+        # request history of a document directly...
+        entries = await paperless.documents.history(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+        entries = await doc.history()
+        ```
+
+        """
+        return self._history
 
     @property
     def metadata(self) -> DocumentMetaService:

@@ -53,9 +53,9 @@ asyncio.run(main())
 - [Getting started](quickstart.md) — installation, first session, token generation
 - [Session management](session.md) — lifecycle, context manager, custom client
 - [Resources](resources.md) — all available resources and their capabilities
-- [Documents](documents.md) — uploads, search, download, notes, metadata
-- [Custom fields](custom_fields.md) — typed field values, cache, read & write
-- [Permissions](permissions.md) — object-level permission management
+- [Documents](concepts/documents.md) — uploads, search, download, notes, metadata
+- [Custom fields](concepts/custom_fields.md) — typed field values, cache, read & write
+- [Permissions](concepts/permissions.md) — object-level permission management
 - [Exceptions](exceptions.md) — full exception reference
 
 ---

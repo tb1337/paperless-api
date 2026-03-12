@@ -1,11 +1,13 @@
 [project]
 
+dev_addr = "localhost:8001"
+
 site_name = "pypaperless"
 site_description = "Little async API client for paperless(-ngx)."
 site_author = "Tobias Schulz"
-site_url = "https://tb1337.github.io/paperless-api/"
+site_url = "https://pypaperless.docs.tbsch.de"
 
-copyright = "Copyright &copy; 2024 - 2026 Tobias Schulz"
+copyright = "Copyright &copy; 2024 - 2026 <a href=\"https://tbsch.de\" target=\"_blank\" rel=\"noopener\">Tobias Schulz</a>"
 
 repo_url = "https://github.com/tb1337/paperless-api"
 repo_name = "tb1337/paperless-api"
@@ -17,9 +19,9 @@ nav = [
   { "Getting started" = "quickstart.md" },
   { "Session management" = "session.md" },
   { "Concepts" = [
-    { "Documents" = "documents.md" },
-    { "Custom Fields" = "custom_fields.md" },
-    { "Permissions" = "permissions.md" },
+    { "Documents" = "concepts/documents.md" },
+    { "Custom Fields" = "concepts/custom_fields.md" },
+    { "Permissions" = "concepts/permissions.md" },
   ]},
   { "Resources" = [
     { "Overview" = "resources.md" },
@@ -69,7 +71,7 @@ features = [
 ]
 
 [project.theme.icon]
-logo = "lucide/file-text"
+logo = "lucide/code"
 
 [project.theme.font]
 text = "Roboto"
@@ -98,6 +100,10 @@ toggle.name = "Switch to system preference"
 [[project.extra.social]]
 icon = "fontawesome/brands/github"
 link = "https://github.com/tb1337/paperless-api"
+
+[[project.extra.social]]
+icon = "lucide/globe"
+link = "https://tbsch.de"
 
 # ----------------------------------------------------------------------------
 # Markdown extensions

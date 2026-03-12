@@ -9,7 +9,7 @@ license = {text = "MIT"}
 description = "Little api client for paperless(-ngx)."
 readme = "README.md"
 authors = [
-  {name = "Tobias Schulz", email =  "public.dev@tbsch.de"}
+  {name = "Tobias Schulz", email = "public.dev@tbsch.de"}
 ]
 keywords = ["library", "async", "api-client", "python3", "paperless-ngx"]
 classifiers = [
@@ -47,7 +47,7 @@ docs = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/tb1337/paperless-api"
+"Homepage" = "https://pypaperless.docs.tbsch.de"
 "Source Code" = "https://github.com/tb1337/paperless-api"
 "Bug Reports" = "https://github.com/tb1337/paperless-api/issues"
 "Coverage" = "https://codecov.io/gh/tb1337/paperless-api"
@@ -62,7 +62,7 @@ show_missing = true
 
 [tool.mypy]
 platform = "linux"
-python_version = "3.13"
+python_version = "3.12"
 
 follow_imports = "normal"
 ignore_missing_imports = true

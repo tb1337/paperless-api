@@ -61,4 +61,4 @@ print(rule.permissions)  # PermissionTable
 paperless.mail_rules.request_permissions = False
 ```
 
-See [Permissions](../permissions.md) for details.
+See [Permissions](../concepts/permissions.md) for details.
