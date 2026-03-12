@@ -200,6 +200,15 @@ Then update **`docs/resources.md`**:
 - Add the new resource to the **capability matrix** table (alphabetical order).
   Columns: `call`, `iterate`, `draft`/`save`, `update`, `delete`, `permissions`.
 
+Then register the new page in **`zensical.toml`** (the MkDocs nav):
+
+- Add a `{ "Name" = "resources/<name>.md" }` entry inside the `"Resources"` nav list, in alphabetical order.
+
+```toml
+{ "Profile" = "resources/profile.md" },
+{ "Trash"   = "resources/trash.md" },
+```
+
 ### 10. `run/smoketest_api.py`
 
 Add a test function before the relevant section and wire it into `main()`:
@@ -245,6 +254,7 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 - [ ] `audit_api_coverage.py` — `EndpointSpec` + any `KNOWN_EXTRAS`
 - [ ] `docs/resources/<name>.md` — model table + usage examples
 - [ ] `docs/resources.md` — capability matrix row
+- [ ] `zensical.toml` — nav entry in alphabetical order
 - [ ] `smoketest_api.py` — test function + wired in `main()`
 - [ ] All tests green, lint clean
 
