@@ -9,6 +9,7 @@ from .document_types import DocumentTypeService  # noqa: F401
 from .documents import DocumentMetaService, DocumentNoteService, DocumentService  # noqa: F401
 from .mails import MailAccountService, MailRuleService, ProcessedMailService  # noqa: F401
 from .permissions import GroupService, UserService  # noqa: F401
+from .profile import ProfileService  # noqa: F401
 from .remote_version import RemoteVersionService  # noqa: F401
 from .saved_views import SavedViewService  # noqa: F401
 from .share_links import ShareLinkService  # noqa: F401
