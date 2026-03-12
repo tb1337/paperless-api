@@ -1,6 +1,6 @@
 # Custom Fields
 
-Custom fields let you attach arbitrary typed metadata to documents. This page covers managing the field definitions themselves. For reading and writing field *values* on documents, see [Custom Fields concepts](../custom_fields.md).
+Custom fields let you attach arbitrary typed metadata to documents. This page covers managing the field definitions themselves. For reading and writing field *values* on documents, see [Custom Fields concepts](../concepts/custom_fields.md).
 
 ## Models
 

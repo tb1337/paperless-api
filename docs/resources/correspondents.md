@@ -91,4 +91,4 @@ print(c.permissions)  # PermissionTable (view/change sets)
 paperless.correspondents.request_permissions = False
 ```
 
-See [Permissions](../permissions.md) for details on reading and modifying permission sets.
+See [Permissions](../concepts/permissions.md) for details on reading and modifying permission sets.

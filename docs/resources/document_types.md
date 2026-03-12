@@ -75,4 +75,4 @@ print(dt.permissions)  # PermissionTable
 paperless.document_types.request_permissions = False
 ```
 
-See [Permissions](../permissions.md) for details on reading and modifying permission sets.
+See [Permissions](../concepts/permissions.md) for details on reading and modifying permission sets.
