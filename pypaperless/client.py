@@ -78,6 +78,7 @@ class Paperless:
         self.storage_paths = services.StoragePathService(self)
         self.tags = services.TagService(self)
         self.tasks = services.TaskService(self)
+        self.trash = services.TrashService(self)
         self.users = services.UserService(self)
         self.workflows = services.WorkflowService(self)
 

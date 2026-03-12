@@ -23,6 +23,7 @@ STATUS = "status"
 STORAGE_PATHS = "storage_paths"
 TAGS = "tags"
 TASKS = "tasks"
+TRASH = "trash"
 USERS = "users"
 WORKFLOW_ACTIONS = "workflow_actions"
 WORKFLOWS = "workflows"
@@ -73,6 +74,7 @@ API_PATH = {
     f"{TAGS}_single": f"/api/{TAGS}/{{pk}}/",
     f"{TASKS}": f"/api/{TASKS}/",
     f"{TASKS}_single": f"/api/{TASKS}/{{pk}}/",
+    f"{TRASH}": f"/api/{TRASH}/",
     f"{USERS}": f"/api/{USERS}/",
     f"{USERS}_single": f"/api/{USERS}/{{pk}}/",
     f"{WORKFLOWS}": f"/api/{WORKFLOWS}/",
@@ -104,6 +106,7 @@ class PaperlessResource(StrEnum):
     STORAGE_PATHS = STORAGE_PATHS
     TAGS = TAGS
     TASKS = TASKS
+    TRASH = TRASH
     USERS = USERS
     WORKFLOWS = WORKFLOWS
     WORKFLOW_ACTIONS = WORKFLOW_ACTIONS
