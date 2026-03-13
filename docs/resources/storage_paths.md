@@ -37,7 +37,7 @@ async for sp in paperless.storage_paths:
     print(sp.id, sp.name, sp.path)
 
 # Build a name → path mapping
-path_map = {sp.name: sp.path async for sp in paperless.storage_paths.reduce()}
+path_map = {sp.name: sp.path async for sp in paperless.storage_paths.filter()}
 ```
 
 ## Create

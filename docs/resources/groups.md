@@ -25,5 +25,5 @@ async for group in paperless.groups:
     print(group.id, group.name)
 
 # Build a name → id lookup
-group_map = {g.name: g.id async for g in paperless.groups.reduce()}
+group_map = {g.name: g.id async for g in paperless.groups.filter()}
 ```

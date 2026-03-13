@@ -1,6 +1,6 @@
 ---
 name: update-filters
-description: "Update the query filter TypedDicts in pypaperless/models/filters.py by reading the paperless-ngx source FilterSets, then sync the service reduce() overrides and the docs. Use whenever paperless-ngx adds, renames, or removes filter fields."
+description: "Update the query filter TypedDicts in pypaperless/models/filters.py by reading the paperless-ngx source FilterSets, then sync the service filter() overrides and the docs. Use whenever paperless-ngx adds, renames, or removes filter fields."
 argument-hint: "Optional: name of a specific resource to update (e.g. Document, Tag). Omit to update all."
 ---
 
@@ -9,7 +9,7 @@ argument-hint: "Optional: name of a specific resource to update (e.g. Document, 
 ## When to Use
 
 - paperless-ngx added or changed filter fields in `src/documents/filters.py`
-- A new resource is added that needs a typed `reduce()` override
+- A new resource is added that needs a typed `filter()` override
 - `ruff` or `mypy` reports issues in `pypaperless/models/filters.py`
 
 ## Files Involved
@@ -18,9 +18,9 @@ argument-hint: "Optional: name of a specific resource to update (e.g. Document, 
 | -------------------------------- | --------------------------------------------- |
 | `pypaperless/models/filters.py`  | TypedDicts — one per filterable resource      |
 | `pypaperless/models/types.py`    | Re-exports all filter TypedDicts              |
-| `pypaperless/services/<name>.py` | `reduce()` override with `Unpack[XxxFilters]` |
+| `pypaperless/services/<name>.py` | `filter()` override with `Unpack[XxxFilters]` |
 | `pypaperless/services/trash.py`  | Also uses `DocumentFilters`                   |
-| `docs/resources.md`              | General `reduce()` documentation              |
+| `docs/resources.md`              | General `filter()` documentation              |
 | `docs/resources/<name>.md`       | Per-resource filter examples                  |
 
 ---
@@ -175,9 +175,9 @@ Add new TypedDict names to `__all__` in alphabetical order.
 
 ---
 
-## Step 4 — Update service `reduce()` overrides
+## Step 4 — Update service `filter()` overrides
 
-Every service that uses `IterableMixin` needs a `reduce()` override. The pattern is identical for all:
+Every service that uses `IterableMixin` needs a `filter()` override. The pattern is identical for all:
 
 ```python
 # imports at top of file
@@ -189,7 +189,7 @@ from pypaperless.models.filters import XxxFilters
 
 # inside the service class, directly after _resource_cls assignment
 @asynccontextmanager
-async def reduce(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, None]:
+async def filter(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, None]:
     """Iterate with server-side filters.
 
     See :class:`~pypaperless.models.filters.XxxFilters` for available keys.
@@ -213,23 +213,23 @@ async def reduce(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, Non
 | `GroupService`         | `GroupFilters`         |
 | `UserService`          | `UserFilters`          |
 
-Services **without** a `reduce()` override (no FilterSet upstream):
+Services **without** a `filter()` override (no FilterSet upstream):
 `SavedViewService`, `WorkflowService`, `MailAccountService`, `MailRuleService`, `ProcessedMailService`
 
 `TaskService` has an upstream `PaperlessTaskFilterSet` (`TaskFilters` exists), but its `__aiter__` fetches a flat
 non-paginated list and does not use `IterableMixin`. Until the service is reworked to support pagination,
-do **not** add a `reduce()` override there.
+do **not** add a `filter()` override there.
 
 ---
 
 ## Step 5 — Update `docs/resources.md`
 
-The section **"Filtering with `reduce()`"** should mention that filter keys are type-checked:
+The section **"Filtering with `filter()`"** should mention that filter keys are type-checked:
 
 ````markdown
-## Filtering with `reduce()`
+## Filtering with `filter()`
 
-`reduce()` is an async context manager that applies server-side filters to
+`filter()` is an async context manager that applies server-side filters to
 iteration. Filter keys are fully type-checked — your IDE will autocomplete
 available parameters and flag unknown keys.
 
@@ -246,7 +246,7 @@ filters: DocumentFilters = {
     "page_size": 50,
 }
 
-async with paperless.documents.reduce(**filters):
+async with paperless.documents.filter(**filters):
     async for document in paperless.documents:
         ...
 ```
@@ -266,11 +266,11 @@ show a concrete typed example. Use the resource's most common filter keys.
 ```markdown
 ## Filtering
 
-Use `reduce()` to apply server-side filters.  Available keys are defined in
+Use `filter()` to apply server-side filters.  Available keys are defined in
 `DocumentFilters` (importable from `pypaperless.models.types`):
 
 ```python
-async with paperless.documents.reduce(
+async with paperless.documents.filter(
     title__icontains="invoice",
     correspondent__id=3,
     tags__id__all="5,12",
@@ -281,7 +281,7 @@ async with paperless.documents.reduce(
 
 ````
 
-Only update docs files that already have a `reduce()` usage example — do not
+Only update docs files that already have a `filter()` usage example — do not
 create new doc files as part of this skill.
 
 ---
@@ -309,13 +309,13 @@ Also add the new TypedDict to the import block at the top of `test_common.py`.
 
 ### Unit tests — `tests/test_models_specific.py`
 
-The `TestTypedReduce` class tests each service's typed `reduce()` at the HTTP level. For every new service with a typed override, add a test method:
+The `TestTypedReduce` class tests each service's typed `filter()` at the HTTP level. For every new service with a typed override, add a test method:
 
 ```python
-async def test_xxx_reduce_typed(
+async def test_xxx_filter_typed(
     self, httpx_mock: HTTPXMock, paperless: Paperless
 ) -> None:
-    """xxx.reduce() accepts XxxFilters kwargs."""
+    """xxx.filter() accepts XxxFilters kwargs."""
     from .data import DATA_XXX
 
     httpx_mock.add_response(
@@ -324,7 +324,7 @@ async def test_xxx_reduce_typed(
         status_code=200,
         json=DATA_XXX,
     )
-    async with paperless.xxx.reduce(name__icontains="test") as q:
+    async with paperless.xxx.filter(name__icontains="test") as q:
         async for item in q:
             assert item is not None
 ```
@@ -333,19 +333,19 @@ Use a filter key specific to that TypedDict so the test exercises the correct ov
 
 ### Smoketest — `script/pngx_smoketest.py`
 
-The `test_reduce_context` function covers live reduce calls. For new services, add a block inside that function:
+The `test_filter_context` function covers live filter calls. For new services, add a block inside that function:
 
 ```python
 try:
-    async with p.xxx.reduce(name__icontains="a"):
+    async with p.xxx.filter(name__icontains="a"):
         count = 0
         async for _ in p.xxx:
             count += 1
             if count >= PAGE_SIZE:
                 break
-    ok("xxx.reduce(name__icontains='a')", f"iterated={count}")
+    ok("xxx.filter(name__icontains='a')", f"iterated={count}")
 except Exception as exc:
-    fail("xxx.reduce()", exc)
+    fail("xxx.filter()", exc)
 ```
 
 Choose a filter key that is both safe (read-only, unlikely to cause errors) and specific to the TypedDict.
@@ -380,6 +380,6 @@ All three must pass before the task is complete.
 - **Do not** define a new filter class as a flat `TypedDict` when a private base already covers its fields. Always inherit. A class body with only a docstring is correct when the base provides everything.
 - **Do not** sort fields in a way that breaks the alphabetical rule. Fields within each TypedDict must be alphabetically ordered (except for large upstream-mirrored classes like `DocumentFilters` where semantic grouping is kept).
 - **Do not** use `TypeVar` with `Unpack` — this is not supported by PEP 692. Every service needs its own concrete override.
-- **Do not** update services that don't have a corresponding FilterSet (e.g. `SavedViewService`). Their `reduce()` falls back to the base `IterableMixin` which accepts `**kwargs: Unpack[_BaseFilters]`.
-- **Do not** call `super().reduce(**kwargs)` in service overrides — the base `reduce()` signature only accepts `**kwargs: Unpack[_BaseFilters]` (empty TypedDict) and cannot receive the extra keys. Call `self._store_filters(**kwargs)` instead.
+- **Do not** update services that don't have a corresponding FilterSet (e.g. `SavedViewService`). Their `filter()` falls back to the base `IterableMixin` which accepts `**kwargs: Unpack[_BaseFilters]`.
+- **Do not** call `super().filter(**kwargs)` in service overrides — the base `filter()` signature only accepts `**kwargs: Unpack[_BaseFilters]` (empty TypedDict) and cannot receive the extra keys. Call `self._store_filters(**kwargs)` instead.
 - **Do not** forget to add the new TypedDict to `_ALL_FILTER_CLASSES` in `tests/test_common.py`.

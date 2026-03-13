@@ -254,7 +254,7 @@ KNOWN_SCHEMA_EXTRAS["WidgetMeta"] = {
 | Mixin               | What it adds                                                          |
 | ------------------- | --------------------------------------------------------------------- |
 | `CallableMixin[T]`  | `await service(pk)` — fetch single item                               |
-| `IterableMixin[T]`  | `async for item in service` + `.pages()` + `.as_list()` + `.reduce()` |
+| `IterableMixin[T]`  | `async for item in service` + `.pages()` + `.as_list()` + `.filter()` |
 | `DraftableMixin[D]` | `service.draft(...)` + `await service.save(draft)`                    |
 | `UpdatableMixin[T]` | `await service.update(item)`                                          |
 | `DeletableMixin[T]` | `await service.delete(item)`                                          |

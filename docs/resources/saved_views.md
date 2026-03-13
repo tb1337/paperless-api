@@ -41,7 +41,7 @@ async for view in paperless.saved_views:
 
 # Only views shown in the sidebar
 sidebar_views = [
-    v async for v in paperless.saved_views.reduce()
+    v async for v in paperless.saved_views.filter()
     if v.show_in_sidebar
 ]
 ```

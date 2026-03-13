@@ -40,7 +40,7 @@ asyncio.run(main())
 | **Type-safe models**      | All resources are Pydantic models                                                                                                                        |
 | **All resources**         | Documents, Correspondents, Tags, Document Types, Storage Paths, Custom Fields, Saved Views, Share Links, Workflows, Mail Accounts/Rules, Tasks, and more |
 | **CRUD operations**       | Create, read, update and delete on all supported resources                                                                                               |
-| **Iteration & filtering** | Async iteration, pagination and server-side filtering via `reduce()`                                                                                     |
+| **Iteration & filtering** | Async iteration, pagination and server-side filtering via `filter()`                                                                                     |
 | **Custom field system**   | Rich, typed access to custom field values on documents                                                                                                   |
 | **Object permissions**    | Full support for Paperless-ngx object-level permissions                                                                                                  |
 | **Token generation**      | Helper to generate API tokens from username + password                                                                                                   |

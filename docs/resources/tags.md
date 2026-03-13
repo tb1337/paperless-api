@@ -45,11 +45,11 @@ async for tag in paperless.tags:
     print(tag.id, tag.name, tag.color)
 
 # Name → id lookup
-tag_map = {t.name: t.id async for t in paperless.tags.reduce()}
+tag_map = {t.name: t.id async for t in paperless.tags.filter()}
 
 # Find the inbox tag
 inbox = next(
-    (t async for t in paperless.tags.reduce() if t.is_inbox_tag),
+    (t async for t in paperless.tags.filter() if t.is_inbox_tag),
     None,
 )
 ```

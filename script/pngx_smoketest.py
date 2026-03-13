@@ -247,16 +247,16 @@ async def test_documents(p: Paperless) -> None:
     except Exception as exc:
         fail("documents.pages()", exc)
 
-    # as_list / as_dict shortcuts (limit via reduce)
+    # as_list / as_dict shortcuts (limit via filter)
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             docs_list = await p.documents.as_list()
         ok(f"documents.as_list() [page_size={PAGE_SIZE}]", f"len={len(docs_list)}")
     except Exception as exc:
         fail("documents.as_list()", exc)
 
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             docs_dict = await p.documents.as_dict()
         ok(f"documents.as_dict() [page_size={PAGE_SIZE}]", f"len={len(docs_dict)}")
     except Exception as exc:
@@ -264,7 +264,7 @@ async def test_documents(p: Paperless) -> None:
 
     # all() – returns list of PKs from first page
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             pks = await p.documents.all()
         ok(f"documents.all() [page_size={PAGE_SIZE}]", f"pks={pks[:3]}…")
     except Exception as exc:
@@ -1195,41 +1195,41 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_reduce_context(p: Paperless) -> None:
-    _hdr("reduce() context manager – filter & iterate")
+async def test_filter_context(p: Paperless) -> None:
+    _hdr("filter() context manager – filter & iterate")
 
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE, title__icontains="a"):
+        async with p.documents.filter(page_size=PAGE_SIZE, title__icontains="a"):
             count = 0
             async for _ in p.documents:
                 count += 1
                 if count >= PAGE_SIZE:
                     break
-        ok(f"documents.reduce(page_size={PAGE_SIZE}, title__icontains='a')", f"iterated={count}")
+        ok(f"documents.filter(page_size={PAGE_SIZE}, title__icontains='a')", f"iterated={count}")
     except Exception as exc:
-        fail("documents.reduce()", exc)
+        fail("documents.filter()", exc)
 
     try:
-        async with p.correspondents.reduce(name__icontains="a"):
+        async with p.correspondents.filter(name__icontains="a"):
             count = 0
             async for _ in p.correspondents:
                 count += 1
                 if count >= PAGE_SIZE:
                     break
-        ok("correspondents.reduce(name__icontains='a')", f"iterated={count}")
+        ok("correspondents.filter(name__icontains='a')", f"iterated={count}")
     except Exception as exc:
-        fail("correspondents.reduce()", exc)
+        fail("correspondents.filter()", exc)
 
     try:
-        async with p.tags.reduce(is_root=True):
+        async with p.tags.filter(is_root=True):
             count = 0
             async for _ in p.tags:
                 count += 1
                 if count >= PAGE_SIZE:
                     break
-        ok("tags.reduce(is_root=True)", f"iterated={count}")
+        ok("tags.filter(is_root=True)", f"iterated={count}")
     except Exception as exc:
-        fail("tags.reduce()", exc)
+        fail("tags.filter()", exc)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1299,7 +1299,7 @@ async def main() -> int:
         await test_workflows(paperless)
         await test_document_post(paperless)
         await test_document_post_with_cf_mapping(paperless)
-        await test_reduce_context(paperless)
+        await test_filter_context(paperless)
 
     await test_generate_api_token()
 

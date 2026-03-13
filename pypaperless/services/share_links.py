@@ -29,7 +29,7 @@ class ShareLinkService(
     _resource_cls = ShareLink
 
     @asynccontextmanager
-    async def reduce(self, **kwargs: Unpack[ShareLinkFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[ShareLinkFilters]) -> AsyncGenerator[Self, None]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.ShareLinkFilters` for available keys.

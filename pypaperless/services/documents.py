@@ -292,7 +292,7 @@ class DocumentService(
     _resource_cls = Document
 
     @asynccontextmanager
-    async def reduce(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self, None]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
@@ -454,11 +454,11 @@ class DocumentService(
     async def more_like(self, pk: int) -> AsyncGenerator[Document]:
         """Lookup documents similar to the given document pk.
 
-        Shortcut function. Same behaviour is possible using `reduce()`.
+        Shortcut function. Same behaviour is possible using `filter()`.
 
         Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
         """
-        async with self.reduce(more_like_id=pk):
+        async with self.filter(more_like_id=pk):
             async for item in self:
                 yield item
 
@@ -469,7 +469,7 @@ class DocumentService(
 
         If none of both are provided, all documents are returned.
 
-        Shortcut function. Same behaviour is possible using `reduce()`.
+        Shortcut function. Same behaviour is possible using `filter()`.
 
         Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
         """
@@ -479,7 +479,7 @@ class DocumentService(
         if custom_field_query is not None:
             filters["custom_field_query"] = custom_field_query
 
-        async with self.reduce(**filters):
+        async with self.filter(**filters):
             async for item in self:
                 yield item
 

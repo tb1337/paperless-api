@@ -93,24 +93,24 @@ async for page in paperless.documents.pages(page=3):
 
 ---
 
-## Filtering with `reduce()`
+## Filtering with `filter()`
 
-`reduce()` is an async context manager that applies server-side filters to iteration.
+`filter()` is an async context manager that applies server-side filters to iteration.
 Filter keys are fully type-checked — your IDE will autocomplete available parameters
 and flag unknown keys.
 
 Each service exposes its own typed filter set (e.g. `DocumentFilters`, `TagFilters`).
-Import them from `pypaperless.models.types` to construct the dict separately:
+Import them from `pypaperless.models.filters` to construct the dict separately:
 
 ```python
-from pypaperless.models.types import DocumentFilters
+from pypaperless.models.filters import DocumentFilters
 
 filters: DocumentFilters = {
     "correspondent__id": 3,
     "title__icontains": "invoice",
 }
 
-async with paperless.documents.reduce(**filters):
+async with paperless.documents.filter(**filters):
     async for document in paperless.documents:
         ...
 ```
@@ -118,7 +118,7 @@ async with paperless.documents.reduce(**filters):
 You can also pass filters directly as keyword arguments:
 
 ```python
-async with paperless.documents.reduce(title__icontains="invoice"):
+async with paperless.documents.filter(title__icontains="invoice"):
     async for document in paperless.documents:
         print(document.title)
 ```

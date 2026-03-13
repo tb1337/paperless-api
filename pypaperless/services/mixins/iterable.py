@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class _BaseFilters(TypedDict, total=False):
-    """Empty base TypedDict used by IterableMixin.reduce().
+    """Empty base TypedDict used by IterableMixin.filter().
 
     Being empty, every concrete filter TypedDict is a structural supertype
     of this class (PEP 692), so subclass overrides that narrow **kwargs to
@@ -47,7 +47,7 @@ class IterableMixin(ServiceProtocol[ResourceT]):
         """Store query filters for the duration of the context.
 
         This is the private implementation backing :meth:`reduce`.  Subclasses
-        call ``self._store_filters(**kwargs)`` rather than ``super().reduce()``
+        call ``self._store_filters(**kwargs)`` rather than ``super().filter()``
         so that the typed public override does not need to widen its signature
         back to ``**kwargs: Any``.
         """
@@ -58,7 +58,7 @@ class IterableMixin(ServiceProtocol[ResourceT]):
             self._aiter_filters = None
 
     @asynccontextmanager
-    async def reduce(
+    async def filter(
         self: Self,
         **kwargs: Unpack[_BaseFilters],
     ) -> AsyncGenerator[Self]:
@@ -75,7 +75,7 @@ class IterableMixin(ServiceProtocol[ResourceT]):
             "title__icontains": "2023",
         }
 
-        async with paperless.documents.reduce(**filters):
+        async with paperless.documents.filter(**filters):
             # iterate over resource items ...
             async for item in paperless.documents:
                 ...

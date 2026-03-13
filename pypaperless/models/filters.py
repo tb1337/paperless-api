@@ -2,11 +2,11 @@
 
 Each TypedDict reflects the server-side ``FilterSet`` class for the corresponding
 Paperless-ngx resource, so IDEs can offer autocomplete and type-checking when
-using :meth:`~pypaperless.services.mixins.IterableMixin.reduce`.
+using :meth:`~pypaperless.services.mixins.IterableMixin.filter`.
 
 Usage::
 
-    async with paperless.documents.reduce(
+    async with paperless.documents.filter(
         title__icontains="invoice",
         correspondent__id=3,
         is_tagged=True,

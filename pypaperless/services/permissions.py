@@ -25,7 +25,7 @@ class GroupService(
     _resource_cls = Group
 
     @asynccontextmanager
-    async def reduce(self, **kwargs: Unpack[GroupFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[GroupFilters]) -> AsyncGenerator[Self, None]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.GroupFilters` for available keys.
@@ -47,7 +47,7 @@ class UserService(
     _resource_cls = User
 
     @asynccontextmanager
-    async def reduce(self, **kwargs: Unpack[UserFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[UserFilters]) -> AsyncGenerator[Self, None]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.UserFilters` for available keys.
