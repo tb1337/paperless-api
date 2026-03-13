@@ -767,6 +767,17 @@ class TestModelTasks:
         async for item in paperless.tasks:
             assert isinstance(item, Task)
 
+    async def test_filter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test filter() with TaskFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?.*status.*$"),
+            status_code=200,
+            json=DATA_TASKS,
+        )
+        async for item in paperless.tasks.filter(status="SUCCESS"):
+            assert isinstance(item, Task)
+
     async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
         # by pk

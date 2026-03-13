@@ -41,6 +41,7 @@ from pypaperless.models.types import (
     StatusType,
     StoragePathFilters,
     TagFilters,
+    TaskFilters,
     TaskStatus,
     TaskType,
     UserFilters,
@@ -579,6 +580,7 @@ _ALL_FILTER_CLASSES = (
     ShareLinkFilters,
     StoragePathFilters,
     TagFilters,
+    TaskFilters,
     UserFilters,
 )
 
@@ -629,6 +631,14 @@ class TestFilters:
         all_keys = ShareLinkFilters.__optional_keys__ | ShareLinkFilters.__required_keys__
         assert "expiration__year" in all_keys
         assert "expiration__date__gte" in all_keys
+
+    def test_task_filters_fields(self) -> None:
+        """TaskFilters must contain the fields from PaperlessTaskFilterSet."""
+        all_keys = TaskFilters.__optional_keys__ | TaskFilters.__required_keys__
+        assert "acknowledged" in all_keys
+        assert "status" in all_keys
+        assert "task_name" in all_keys
+        assert "type" in all_keys
 
     def test_user_filters_has_username_fields(self) -> None:
         """UserFilters must include username-based filter fields."""

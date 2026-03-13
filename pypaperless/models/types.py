@@ -37,6 +37,7 @@ from .filters import (
     ShareLinkFilters,
     StoragePathFilters,
     TagFilters,
+    TaskFilters,
     UserFilters,
 )
 from .mixins.data_fields import MatchingAlgorithm
@@ -98,6 +99,7 @@ __all__ = (
     "StatusType",
     "StoragePathFilters",
     "TagFilters",
+    "TaskFilters",
     "TaskStatus",
     "TaskType",
     "UserFilters",

@@ -82,6 +82,7 @@ For explicitly declared attributes (outside `Meta`), add them directly with thei
 | `StoragePathFilterSet`   | `StoragePathFilters`   |
 | `CustomFieldFilterSet`   | `CustomFieldFilters`   |
 | `DocumentFilterSet`      | `DocumentFilters`      |
+| `PaperlessTaskFilterSet` | `TaskFilters`          |
 | `ShareLinkFilterSet`     | `ShareLinkFilters`     |
 
 ### Style rules
@@ -214,6 +215,10 @@ async def reduce(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, Non
 
 Services **without** a `reduce()` override (no FilterSet upstream):
 `SavedViewService`, `WorkflowService`, `MailAccountService`, `MailRuleService`, `ProcessedMailService`
+
+`TaskService` has an upstream `PaperlessTaskFilterSet` (`TaskFilters` exists), but its `__aiter__` fetches a flat
+non-paginated list and does not use `IterableMixin`. Until the service is reworked to support pagination,
+do **not** add a `reduce()` override there.
 
 ---
 

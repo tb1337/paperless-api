@@ -203,6 +203,15 @@ class TagFilters(_NameFilters, total=False):
     is_root: bool
 
 
+class TaskFilters(TypedDict, total=False):
+    """Filters for :attr:`Paperless.tasks`."""
+
+    acknowledged: bool
+    status: str
+    task_name: str
+    type: str
+
+
 class UserFilters(TypedDict, total=False):
     """Filters for :attr:`Paperless.users`."""
 
