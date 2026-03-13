@@ -97,8 +97,9 @@ For explicitly declared attributes (outside `Meta`), add them directly with thei
   - `# backwards-compat alias` on deprecated lookup aliases
   - Boolean semantics: `# True → document has at least one tag`
   - Special behaviour: `# searches title AND content simultaneously`, `# JSON expression, see paperless-ngx docs`
-- Field order within a TypedDict: follow the same order as the upstream `FilterSet` (Meta fields first, then explicit attributes)
+- **Field order**: fields within each TypedDict are sorted **alphabetically** by key name.
 - **Class order**: public filter classes must be sorted **alphabetically** by class name. Private bases (`_CreatedFilters`, `_IdFilters`, `_NameFilters`) always stay at the top of the file, before the public classes.
+- **Mandatory inheritance**: every new filter class **must** inherit from the most specific private base that fits rather than duplicating fields. Use `_NameFilters` whenever the resource has `name__*` + `id` fields. Use `_IdFilters` when only id fields are needed. Use `_CreatedFilters` for date-range resources. Combine with multiple inheritance where appropriate (`_IdFilters, _CreatedFilters`). A class body that consists solely of the docstring (no extra fields) is correct and expected when the base already provides everything.
 - No blank lines between fields within the same TypedDict
 
 ### Template — classifier resource (inherits `_NameFilters`)
@@ -109,15 +110,22 @@ Provides `id`, `id__in`, `name__icontains/istartswith/iendswith/iexact` automati
 class XxxFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.xxx`."""
 
-    # only fields NOT already in _NameFilters
+    # only fields NOT already in _NameFilters, sorted alphabetically
     some_extra_flag: bool
 ```
 
-If the resource has no extra fields, the class body is just the docstring:
+If the resource has no extra fields, the class body is just the docstring (no field duplication!):
 
 ```python
 class XxxFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.xxx`."""
+```
+
+**Real-world example** — `GroupFilters` has exactly the same fields as `_NameFilters` (`id`, `id__in`, `name__icontains/istartswith/iendswith/iexact`), so it inherits with an empty body:
+
+```python
+class GroupFilters(_NameFilters, total=False):
+    """Filters for :attr:`Paperless.groups`."""
 ```
 
 ### Template — resource with created-date filters (inherits `_CreatedFilters`)
@@ -185,7 +193,7 @@ async def reduce(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, Non
 
     See :class:`~pypaperless.models.filters.XxxFilters` for available keys.
     """
-    async with super().reduce(**kwargs) as ctx:
+    async with self._store_filters(**kwargs) as ctx:
         yield ctx
 ```
 
@@ -201,9 +209,11 @@ async def reduce(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, Non
 | `ShareLinkService`     | `ShareLinkFilters`     |
 | `DocumentsService`     | `DocumentFilters`      |
 | `TrashService`         | `DocumentFilters`      |
+| `GroupService`         | `GroupFilters`         |
+| `UserService`          | `UserFilters`          |
 
 Services **without** a `reduce()` override (no FilterSet upstream):
-`SavedViewService`, `WorkflowService`, `MailAccountService`, `MailRuleService`, `ProcessedMailService`, `UsersService`, `GroupsService`
+`SavedViewService`, `WorkflowService`, `MailAccountService`, `MailRuleService`, `ProcessedMailService`
 
 ---
 
@@ -362,7 +372,9 @@ All three must pass before the task is complete.
 - **Do not** add `page` or `page_size` to a filter TypedDict — those are plain kwargs passed outside the typed scope.
 - **Do not** repeat `id`/`id__in` or `name__*` fields in a class that inherits `_NameFilters` — they are already provided.
 - **Do not** repeat `created__*` fields in a class that inherits `_CreatedFilters` — they are already provided.
+- **Do not** define a new filter class as a flat `TypedDict` when a private base already covers its fields. Always inherit. A class body with only a docstring is correct when the base provides everything.
+- **Do not** sort fields in a way that breaks the alphabetical rule. Fields within each TypedDict must be alphabetically ordered (except for large upstream-mirrored classes like `DocumentFilters` where semantic grouping is kept).
 - **Do not** use `TypeVar` with `Unpack` — this is not supported by PEP 692. Every service needs its own concrete override.
-- **Do not** update services that don't have a corresponding FilterSet (e.g. `SavedViewService`). Their `reduce()` falls back to the base `IterableMixin` which accepts `**kwargs: Any`.
-- **Do not** change the `IterableMixin.reduce()` signature — it must stay `**kwargs: Any` to remain the generic base.
+- **Do not** update services that don't have a corresponding FilterSet (e.g. `SavedViewService`). Their `reduce()` falls back to the base `IterableMixin` which accepts `**kwargs: Unpack[_BaseFilters]`.
+- **Do not** call `super().reduce(**kwargs)` in service overrides — the base `reduce()` signature only accepts `**kwargs: Unpack[_BaseFilters]` (empty TypedDict) and cannot receive the extra keys. Call `self._store_filters(**kwargs)` instead.
 - **Do not** forget to add the new TypedDict to `_ALL_FILTER_CLASSES` in `tests/test_common.py`.

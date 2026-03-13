@@ -26,17 +26,17 @@ from typing import TypedDict
 class _CreatedFilters(TypedDict, total=False):
     """Common created-date filter fields."""
 
-    created__year: int
-    created__month: int
+    created__date__gt: str  # backwards-compat alias
+    created__date__gte: str
+    created__date__lt: str
+    created__date__lte: str
     created__day: int
     created__gt: str
     created__gte: str
     created__lt: str
     created__lte: str
-    created__date__gt: str  # backwards-compat alias
-    created__date__gte: str
-    created__date__lt: str
-    created__date__lte: str
+    created__month: int
+    created__year: int
 
 
 class _IdFilters(TypedDict, total=False):
@@ -50,9 +50,9 @@ class _NameFilters(_IdFilters, total=False):
     """Common name filter fields for classifier resources."""
 
     name__icontains: str
-    name__istartswith: str
     name__iendswith: str
     name__iexact: str
+    name__istartswith: str
 
 
 class CorrespondentFilters(_NameFilters, total=False):
@@ -69,137 +69,132 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     These map 1-to-1 to the ``DocumentFilterSet`` in paperless-ngx.
     """
 
-    title__icontains: str
-    title__istartswith: str
-    title__iendswith: str
-    title__iexact: str
-    archive_serial_number: int
-    archive_serial_number__gt: int
-    archive_serial_number__gte: int
-    archive_serial_number__lt: int
-    archive_serial_number__lte: int
-    archive_serial_number__isnull: bool
-    added__year: int
-    added__month: int
+    added__date__gt: str
+    added__date__gte: str
+    added__date__lt: str
+    added__date__lte: str
     added__day: int
     added__gt: str
     added__gte: str
     added__lt: str
     added__lte: str
-    added__date__gt: str
-    added__date__gte: str
-    added__date__lt: str
-    added__date__lte: str
-    modified__year: int
-    modified__month: int
+    added__month: int
+    added__year: int
+    archive_serial_number: int
+    archive_serial_number__gt: int
+    archive_serial_number__gte: int
+    archive_serial_number__isnull: bool
+    archive_serial_number__lt: int
+    archive_serial_number__lte: int
+    checksum__icontains: str
+    checksum__iendswith: str
+    checksum__iexact: str
+    checksum__istartswith: str
+    content__icontains: str
+    content__iendswith: str
+    content__iexact: str
+    content__istartswith: str
+    correspondent__id: int
+    correspondent__id__in: str
+    correspondent__id__none: str  # comma-separated PKs to exclude
+    correspondent__isnull: bool
+    correspondent__name__icontains: str
+    correspondent__name__iendswith: str
+    correspondent__name__iexact: str
+    correspondent__name__istartswith: str
+    custom_field_query: str  # JSON expression, see paperless-ngx docs
+    custom_fields__icontains: str
+    custom_fields__id__all: str
+    custom_fields__id__in: str
+    custom_fields__id__none: str
+    document_type__id: int
+    document_type__id__in: str
+    document_type__id__none: str
+    document_type__isnull: bool
+    document_type__name__icontains: str
+    document_type__name__iendswith: str
+    document_type__name__iexact: str
+    document_type__name__istartswith: str
+    has_custom_fields: bool
+    is_in_inbox: bool  # True → document has an inbox tag
+    is_tagged: bool  # True → document has at least one tag
+    mime_type: str
+    modified__date__gt: str
+    modified__date__gte: str
+    modified__date__lt: str
+    modified__date__lte: str
     modified__day: int
     modified__gt: str
     modified__gte: str
     modified__lt: str
     modified__lte: str
-    modified__date__gt: str
-    modified__date__gte: str
-    modified__date__lt: str
-    modified__date__lte: str
+    modified__month: int
+    modified__year: int
+    more_like_id: int  # semantic more-like-this search by document pk
     original_filename__icontains: str
-    original_filename__istartswith: str
     original_filename__iendswith: str
     original_filename__iexact: str
-    checksum__icontains: str
-    checksum__istartswith: str
-    checksum__iendswith: str
-    checksum__iexact: str
-    correspondent__isnull: bool
-    correspondent__id: int
-    correspondent__id__in: str
-    correspondent__id__none: str  # comma-separated PKs to exclude
-    correspondent__name__icontains: str
-    correspondent__name__istartswith: str
-    correspondent__name__iendswith: str
-    correspondent__name__iexact: str
-    tags__id: int
-    tags__id__in: str
-    tags__id__all: str  # document must have ALL listed tag ids
-    tags__id__none: str  # document must have NONE of the listed tag ids
-    tags__name__icontains: str
-    tags__name__istartswith: str
-    tags__name__iendswith: str
-    tags__name__iexact: str
-    is_tagged: bool  # True → document has at least one tag
-    is_in_inbox: bool  # True → document has an inbox tag
-    document_type__isnull: bool
-    document_type__id: int
-    document_type__id__in: str
-    document_type__id__none: str
-    document_type__name__icontains: str
-    document_type__name__istartswith: str
-    document_type__name__iendswith: str
-    document_type__name__iexact: str
-    storage_path__isnull: bool
-    storage_path__id: int
-    storage_path__id__in: str
-    storage_path__id__none: str
-    storage_path__name__icontains: str
-    storage_path__name__istartswith: str
-    storage_path__name__iendswith: str
-    storage_path__name__iexact: str
-    owner__isnull: bool
+    original_filename__istartswith: str
     owner__id: int
     owner__id__in: str
     owner__id__none: str
-    shared_by__id: int
-    title_content: str  # searches title AND content simultaneously
-    content__icontains: str
-    content__istartswith: str
-    content__iendswith: str
-    content__iexact: str
-    custom_fields__icontains: str
-    custom_fields__id__all: str
-    custom_fields__id__none: str
-    custom_fields__id__in: str
-    has_custom_fields: bool
-    custom_field_query: str  # JSON expression, see paperless-ngx docs
-    mime_type: str
+    owner__isnull: bool
     query: str  # full-text search query
-    more_like_id: int  # semantic more-like-this search by document pk
+    shared_by__id: int
+    storage_path__id: int
+    storage_path__id__in: str
+    storage_path__id__none: str
+    storage_path__isnull: bool
+    storage_path__name__icontains: str
+    storage_path__name__iendswith: str
+    storage_path__name__iexact: str
+    storage_path__name__istartswith: str
+    tags__id: int
+    tags__id__all: str  # document must have ALL listed tag ids
+    tags__id__in: str
+    tags__id__none: str  # document must have NONE of the listed tag ids
+    tags__name__icontains: str
+    tags__name__iendswith: str
+    tags__name__iexact: str
+    tags__name__istartswith: str
+    title__icontains: str
+    title__iendswith: str
+    title__iexact: str
+    title__istartswith: str
+    title_content: str  # searches title AND content simultaneously
 
 
 class DocumentTypeFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.document_types`."""
 
 
-class GroupFilters(TypedDict, total=False):
+class GroupFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.groups`."""
-
-    name__icontains: str
-    name__istartswith: str
-    name__iendswith: str
-    name__iexact: str
 
 
 class ShareLinkFilters(_CreatedFilters, total=False):
     """Filters for :attr:`Paperless.share_links`."""
 
-    expiration__year: int
-    expiration__month: int
+    expiration__date__gt: str
+    expiration__date__gte: str
+    expiration__date__lt: str
+    expiration__date__lte: str
     expiration__day: int
     expiration__gt: str
     expiration__gte: str
     expiration__lt: str
     expiration__lte: str
-    expiration__date__gt: str
-    expiration__date__gte: str
-    expiration__date__lt: str
-    expiration__date__lte: str
+    expiration__month: int
+    expiration__year: int
 
 
 class StoragePathFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.storage_paths`."""
 
     path__icontains: str
-    path__istartswith: str
     path__iendswith: str
     path__iexact: str
+    path__istartswith: str
 
 
 class TagFilters(_NameFilters, total=False):
@@ -212,6 +207,6 @@ class UserFilters(TypedDict, total=False):
     """Filters for :attr:`Paperless.users`."""
 
     username__icontains: str
-    username__istartswith: str
     username__iendswith: str
     username__iexact: str
+    username__istartswith: str
