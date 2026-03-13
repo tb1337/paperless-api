@@ -35,7 +35,7 @@ async for dt in paperless.document_types:
     print(dt.id, dt.name)
 
 # Map id → name
-type_map = {dt.id: dt.name async for dt in paperless.document_types.reduce()}
+type_map = {dt.id: dt.name async for dt in paperless.document_types.filter()}
 ```
 
 ## Create

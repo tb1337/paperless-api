@@ -223,17 +223,17 @@ class TestReadWrite:
         for item in items:
             assert isinstance(item, int)
 
-    async def test_reduce(
+    async def test_filter(
         self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
     ) -> None:
-        """Test iter with reduce."""
+        """Test iter with filter."""
         httpx_mock.add_response(
             method="GET",
             url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
             status_code=200,
             json=mapping.data,
         )
-        async with getattr(paperless, mapping.resource).reduce(
+        async with getattr(paperless, mapping.resource).filter(
             any_filter_param="1",
             any_filter_list__in=["1", "2"],
             any_filter_no_list__in="1",

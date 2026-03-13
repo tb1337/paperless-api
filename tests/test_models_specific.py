@@ -1,6 +1,7 @@
 """Paperless basic tests."""
 
 import datetime
+import json
 import re
 
 import httpx
@@ -33,6 +34,12 @@ from pypaperless.models import (
     Status,
     Task,
 )
+from pypaperless.models.custom_field_query import (
+    CustomFieldQuery,
+    CustomFieldQueryAnd,
+    CustomFieldQueryNot,
+    CustomFieldQueryOr,
+)
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
@@ -48,12 +55,25 @@ from pypaperless.models.types import (
     StatusStorage,
     StatusTasks,
 )
+from pypaperless.models.types import (
+    CustomFieldQuery as TypesCustomFieldQuery,
+)
+from pypaperless.models.types import (
+    CustomFieldQueryAnd as TypesCustomFieldQueryAnd,
+)
+from pypaperless.models.types import (
+    CustomFieldQueryNot as TypesCustomFieldQueryNot,
+)
+from pypaperless.models.types import (
+    CustomFieldQueryOr as TypesCustomFieldQueryOr,
+)
 from pypaperless.services.workflows import WorkflowActionService, WorkflowTriggerService
 
 from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
+    DATA_CORRESPONDENTS,
     DATA_CUSTOM_FIELDS,
     DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
@@ -61,12 +81,16 @@ from .data import (
     DATA_DOCUMENT_SUGGESTIONS,
     DATA_DOCUMENTS,
     DATA_DOCUMENTS_SEARCH,
+    DATA_GROUPS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_STATISTICS,
     DATA_STATUS,
+    DATA_STORAGE_PATHS,
+    DATA_TAGS,
     DATA_TASKS,
     DATA_TRASH,
+    DATA_USERS,
 )
 
 # mypy: ignore-errors
@@ -762,6 +786,17 @@ class TestModelTasks:
         async for item in paperless.tasks:
             assert isinstance(item, Task)
 
+    async def test_filter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Test filter() with TaskFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?.*status.*$"),
+            status_code=200,
+            json=DATA_TASKS,
+        )
+        async for item in paperless.tasks.filter(status="SUCCESS"):
+            assert isinstance(item, Task)
+
     async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Test call."""
         # by pk
@@ -859,3 +894,189 @@ class TestModelTrash:
             json={"result": "emptied"},
         )
         await paperless.trash.empty([100])
+
+
+# test typed filter() overrides (filters.py)
+class TestTypedFilter:
+    """Typed filter() tests for each service with a filter TypedDict override."""
+
+    async def test_documents_filter_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """documents.filter() accepts DocumentFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_DOCUMENTS,
+        )
+        async with paperless.documents.filter(title__icontains="invoice", is_tagged=True) as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_correspondents_filter_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """correspondents.filter() accepts CorrespondentFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['correspondents']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_CORRESPONDENTS,
+        )
+        async with paperless.correspondents.filter(name__icontains="acme") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_tags_filter_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tags.filter() accepts TagFilters kwargs including is_root."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tags']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_TAGS,
+        )
+        async with paperless.tags.filter(is_root=True) as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_storage_paths_filter_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """storage_paths.filter() accepts StoragePathFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['storage_paths']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_STORAGE_PATHS,
+        )
+        async with paperless.storage_paths.filter(path__icontains="/invoices") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_trash_filter_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """trash.filter() accepts DocumentFilters kwargs (reuses DocumentFilters)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['trash']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_TRASH,
+        )
+        async with paperless.trash.filter(title__icontains="old") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_groups_filter_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """groups.filter() accepts GroupFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['groups']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_GROUPS,
+        )
+        async with paperless.groups.filter(name__icontains="admin") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_users_filter_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """users.filter() accepts UserFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['users']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_USERS,
+        )
+        async with paperless.users.filter(username__icontains="admin") as q:
+            async for item in q:
+                assert item is not None
+
+
+# test CustomFieldQuery builder
+class TestCustomFieldQuery:
+    """Unit tests for the custom_field_query builder."""
+
+    def test_atom_build(self) -> None:
+        """Atom produces the expected 3-element list."""
+        q = CustomFieldQuery("Status", "exact", "open")
+        assert q.build() == ["Status", "exact", "open"]
+
+    def test_atom_str(self) -> None:
+        """str() serialises the atom to JSON."""
+        q = CustomFieldQuery("Amount", "gte", 100)
+        assert json.loads(str(q)) == ["Amount", "gte", 100]
+
+    def test_atom_with_int_field(self) -> None:
+        """Field can be an integer ID."""
+        q = CustomFieldQuery(42, "exists", value=True)
+        assert q.build() == [42, "exists", True]
+
+    def test_and_operator(self) -> None:
+        """& produces a CustomFieldQueryAnd with both operands."""
+        q1 = CustomFieldQuery("A", "exact", 1)
+        q2 = CustomFieldQuery("B", "exact", 2)
+        combined = q1 & q2
+        assert isinstance(combined, CustomFieldQueryAnd)
+        assert combined.build() == ["AND", [["A", "exact", 1], ["B", "exact", 2]]]
+
+    def test_and_flattening(self) -> None:
+        """Chained & flattens into a single AND with all operands."""
+        q1 = CustomFieldQuery("A", "exact", 1)
+        q2 = CustomFieldQuery("B", "exact", 2)
+        q3 = CustomFieldQuery("C", "exact", 3)
+        combined = q1 & q2 & q3
+        assert isinstance(combined, CustomFieldQueryAnd)
+        assert combined.build() == [
+            "AND",
+            [["A", "exact", 1], ["B", "exact", 2], ["C", "exact", 3]],
+        ]
+
+    def test_or_operator(self) -> None:
+        """| produces a CustomFieldQueryOr with both operands."""
+        q1 = CustomFieldQuery("Cat", "exact", "A")
+        q2 = CustomFieldQuery("Cat", "exact", "B")
+        combined = q1 | q2
+        assert isinstance(combined, CustomFieldQueryOr)
+        assert combined.build() == [
+            "OR",
+            [["Cat", "exact", "A"], ["Cat", "exact", "B"]],
+        ]
+
+    def test_or_flattening(self) -> None:
+        """Chained | flattens into a single OR with all operands."""
+        q1 = CustomFieldQuery("X", "exact", 1)
+        q2 = CustomFieldQuery("X", "exact", 2)
+        q3 = CustomFieldQuery("X", "exact", 3)
+        combined = q1 | q2 | q3
+        assert isinstance(combined, CustomFieldQueryOr)
+        result = combined.build()
+        assert result[0] == "OR"
+        assert len(result[1]) == 3
+
+    def test_not_operator(self) -> None:
+        """~ produces a CustomFieldQueryNot wrapping the operand."""
+        q = CustomFieldQuery("Archived", "exact", value=True)
+        negated = ~q
+        assert isinstance(negated, CustomFieldQueryNot)
+        assert negated.build() == ["NOT", ["Archived", "exact", True]]
+
+    def test_combined_expression(self) -> None:
+        """Complex expression (AND + NOT) builds the correct nested structure."""
+        q = CustomFieldQuery("Status", "exact", "open") & ~CustomFieldQuery(
+            "Archived", "exact", value=True
+        )
+        result = q.build()
+        assert result[0] == "AND"
+        assert result[1][1] == ["NOT", ["Archived", "exact", True]]
+
+    def test_str_is_valid_json(self) -> None:
+        """str() on any expression always produces valid JSON."""
+        q = CustomFieldQuery("A", "gte", 0) | CustomFieldQuery("B", "icontains", "foo")
+        parsed = json.loads(str(q))
+        assert parsed[0] == "OR"
+
+    def test_exported_from_types(self) -> None:
+        """Builder classes are re-exported via pypaperless.models.types."""
+        assert TypesCustomFieldQuery is CustomFieldQuery
+        assert TypesCustomFieldQueryAnd is CustomFieldQueryAnd
+        assert TypesCustomFieldQueryNot is CustomFieldQueryNot
+        assert TypesCustomFieldQueryOr is CustomFieldQueryOr

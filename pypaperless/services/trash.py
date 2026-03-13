@@ -1,7 +1,12 @@
 """Provide `Trash` related services."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self, Unpack
+
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.documents import Document
+from pypaperless.models.filters import DocumentFilters
 
 from . import mixins
 from .base import ServiceBase
@@ -17,6 +22,15 @@ class TrashService(
     _resource = PaperlessResource.TRASH
 
     _resource_cls = Document
+
+    @asynccontextmanager
+    async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx
 
     async def restore(self, documents: list[int]) -> None:
         """Restore the given documents from the trash.

@@ -46,7 +46,7 @@ async for rule in paperless.mail_rules:
     print(rule.id, rule.name, "enabled:", rule.enabled)
 
 # Only active rules
-active = [r async for r in paperless.mail_rules.reduce() if r.enabled]
+active = [r async for r in paperless.mail_rules.filter() if r.enabled]
 ```
 
 ## Permissions

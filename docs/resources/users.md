@@ -36,8 +36,8 @@ async for user in paperless.users:
     print(user.id, user.username, user.email)
 
 # Username → id lookup
-user_map = {u.username: u.id async for u in paperless.users.reduce()}
+user_map = {u.username: u.id async for u in paperless.users.filter()}
 
 # Find all superusers
-admins = [u async for u in paperless.users.reduce() if u.is_superuser]
+admins = [u async for u in paperless.users.filter() if u.is_superuser]
 ```

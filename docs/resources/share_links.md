@@ -42,7 +42,7 @@ async for link in paperless.share_links:
 
 # Find links for a specific document
 doc_links = [
-    lnk async for lnk in paperless.share_links.reduce()
+    lnk async for lnk in paperless.share_links.filter()
     if lnk.document == 42
 ]
 ```

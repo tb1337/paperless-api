@@ -35,7 +35,7 @@ async for entry in paperless.processed_mail:
 
 # Collect all failures
 failures = [
-    e async for e in paperless.processed_mail.reduce()
+    e async for e in paperless.processed_mail.filter()
     if e.status == "failed"
 ]
 ```

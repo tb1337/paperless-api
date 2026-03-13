@@ -56,3 +56,4 @@ Report all three results explicitly before closing the task.
 - Public types are re-exported via `pypaperless/models/types.py`.
 - Internal helpers are prefixed with `_` (e.g. `_PermissionScope`).
 - When adding a new resource, follow the **add-resource** skill at `.github/skills/add-resource/SKILL.md`.
+- When updating query filters (new/changed FilterSet fields in paperless-ngx), follow the **update-filters** skill at `.github/skills/update-filters/SKILL.md`.

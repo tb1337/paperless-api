@@ -1,9 +1,11 @@
 """Provide `Task` service."""
 
 from collections.abc import AsyncIterator
+from typing import Unpack
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
+from pypaperless.models.filters import TaskFilters
 from pypaperless.models.tasks import Task
 
 from .base import ServiceBase
@@ -18,7 +20,7 @@ class TaskService(ServiceBase):
     _resource_cls = Task
 
     async def __aiter__(self) -> AsyncIterator[Task]:
-        """Iterate over task items.
+        """Iterate over all task items.
 
         Example:
         -------
@@ -28,7 +30,24 @@ class TaskService(ServiceBase):
         ```
 
         """
-        res = await self._client.request_json("get", self._api_path)
+        async for item in self.filter():
+            yield item
+
+    async def filter(self, **kwargs: Unpack[TaskFilters]) -> AsyncIterator[Task]:
+        """Iterate over task items with optional server-side filters.
+
+        See :class:`~pypaperless.models.filters.TaskFilters` for available keys.
+        When called with no arguments, returns all tasks (same as iterating directly).
+
+        Example:
+        -------
+        ```python
+        async for task in paperless.tasks.filter(status="SUCCESS", acknowledged=False):
+            # do something
+        ```
+
+        """
+        res = await self._client.request_json("get", self._api_path, params=dict(kwargs))
         for data in res:
             yield self._resource_cls.create_with_data(self._client, data)
 

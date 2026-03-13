@@ -64,7 +64,7 @@ async for wf in paperless.workflows:
     print(wf.id, wf.name, "enabled:", wf.enabled)
 
 # Only active workflows
-active = [wf async for wf in paperless.workflows.reduce() if wf.enabled]
+active = [wf async for wf in paperless.workflows.filter() if wf.enabled]
 ```
 
 ## Triggers

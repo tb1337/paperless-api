@@ -1,7 +1,8 @@
 """Provide `Document` related services."""
 
 from collections.abc import AsyncGenerator
-from typing import TYPE_CHECKING, Any, cast
+from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING, Any, Self, Unpack, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError, SendEmailError
@@ -16,6 +17,7 @@ from pypaperless.models.documents import (
     DownloadedDocument,
     FileRetrieveMode,
 )
+from pypaperless.models.filters import DocumentFilters
 
 from . import mixins
 from .base import ServiceBase
@@ -289,6 +291,15 @@ class DocumentService(
     _draft_cls = DocumentDraft
     _resource_cls = Document
 
+    @asynccontextmanager
+    async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx
+
     def __init__(self, client: "Paperless") -> None:
         """Initialize a `DocumentService` instance."""
         super().__init__(client)
@@ -443,11 +454,11 @@ class DocumentService(
     async def more_like(self, pk: int) -> AsyncGenerator[Document]:
         """Lookup documents similar to the given document pk.
 
-        Shortcut function. Same behaviour is possible using `reduce()`.
+        Shortcut function. Same behaviour is possible using `filter()`.
 
         Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
         """
-        async with self.reduce(more_like_id=pk):
+        async with self.filter(more_like_id=pk):
             async for item in self:
                 yield item
 
@@ -458,17 +469,17 @@ class DocumentService(
 
         If none of both are provided, all documents are returned.
 
-        Shortcut function. Same behaviour is possible using `reduce()`.
+        Shortcut function. Same behaviour is possible using `filter()`.
 
         Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
         """
-        querykwargs = {}
+        filters: DocumentFilters = {}
         if query is not None:
-            querykwargs["query"] = query
+            filters["query"] = query
         if custom_field_query is not None:
-            querykwargs["custom_field_query"] = custom_field_query
+            filters["custom_field_query"] = custom_field_query
 
-        async with self.reduce(**querykwargs):
+        async with self.filter(**filters):
             async for item in self:
                 yield item
 

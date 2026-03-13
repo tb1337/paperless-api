@@ -247,16 +247,16 @@ async def test_documents(p: Paperless) -> None:
     except Exception as exc:
         fail("documents.pages()", exc)
 
-    # as_list / as_dict shortcuts (limit via reduce)
+    # as_list / as_dict shortcuts (limit via filter)
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             docs_list = await p.documents.as_list()
         ok(f"documents.as_list() [page_size={PAGE_SIZE}]", f"len={len(docs_list)}")
     except Exception as exc:
         fail("documents.as_list()", exc)
 
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             docs_dict = await p.documents.as_dict()
         ok(f"documents.as_dict() [page_size={PAGE_SIZE}]", f"len={len(docs_dict)}")
     except Exception as exc:
@@ -264,7 +264,7 @@ async def test_documents(p: Paperless) -> None:
 
     # all() – returns list of PKs from first page
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE):
+        async with p.documents.filter(page_size=PAGE_SIZE):
             pks = await p.documents.all()
         ok(f"documents.all() [page_size={PAGE_SIZE}]", f"pks={pks[:3]}…")
     except Exception as exc:
@@ -647,6 +647,74 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
             ok(f"added field id={nf_id} absent after restore", "not present")
         else:
             fail(f"added field id={nf_id} absent after restore", AssertionError("still present"))
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+async def test_custom_field_query(p: Paperless) -> None:
+    _hdr("CustomFieldQuery – builder serialisation and live filter")
+
+    from pypaperless.models.custom_field_query import (
+        CustomFieldQuery,
+        CustomFieldQueryAnd,
+        CustomFieldQueryNot,
+        CustomFieldQueryOr,
+    )
+
+    # --- build() / str() correctness (no network) ---
+    try:
+        atom = CustomFieldQuery("Status", "exact", "open")
+        assert atom.build() == ["Status", "exact", "open"]
+        ok("CustomFieldQuery.build() atom", str(atom))
+    except Exception as exc:
+        fail("CustomFieldQuery.build() atom", exc)
+
+    try:
+        combined = CustomFieldQuery("A", "gte", 1) & CustomFieldQuery("B", "lte", 99)
+        assert combined.build()[0] == "AND"
+        assert len(combined.build()[1]) == 2
+        ok("CustomFieldQueryAnd (&) build()", str(combined))
+    except Exception as exc:
+        fail("CustomFieldQueryAnd (&) build()", exc)
+
+    try:
+        alt = CustomFieldQuery("Cat", "exact", "X") | CustomFieldQuery("Cat", "exact", "Y")
+        assert alt.build()[0] == "OR"
+        ok("CustomFieldQueryOr (|) build()", str(alt))
+    except Exception as exc:
+        fail("CustomFieldQueryOr (|) build()", exc)
+
+    try:
+        neg = ~CustomFieldQuery("Archived", "exact", True)
+        assert neg.build() == ["NOT", ["Archived", "exact", True]]
+        ok("CustomFieldQueryNot (~) build()", str(neg))
+    except Exception as exc:
+        fail("CustomFieldQueryNot (~) build()", exc)
+
+    try:
+        # AND flattening: (a & b) & c  must produce ["AND", [a, b, c]]
+        q = (
+            CustomFieldQuery("X", "exact", 1)
+            & CustomFieldQuery("Y", "exact", 2)
+            & CustomFieldQuery("Z", "exact", 3)
+        )
+        assert isinstance(q, CustomFieldQueryAnd)
+        assert len(q.build()[1]) == 3
+        ok("CustomFieldQueryAnd flattening", f"atoms={len(q.build()[1])}")
+    except Exception as exc:
+        fail("CustomFieldQueryAnd flattening", exc)
+
+    # --- live filter with custom_field_query (exists) ---
+    try:
+        q_exists = CustomFieldQuery(1, "exists", True)
+        async with p.documents.filter(page_size=PAGE_SIZE, custom_field_query=str(q_exists)):
+            count = 0
+            async for _ in p.documents:
+                count += 1
+                if count >= PAGE_SIZE:
+                    break
+        ok("documents.filter(custom_field_query=exists)", f"iterated={count}")
+    except Exception as exc:
+        fail("documents.filter(custom_field_query=exists)", exc)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1195,19 +1263,41 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_reduce_context(p: Paperless) -> None:
-    _hdr("reduce() context manager – filter & iterate")
+async def test_filter_context(p: Paperless) -> None:
+    _hdr("filter() context manager – filter & iterate")
 
     try:
-        async with p.documents.reduce(page_size=PAGE_SIZE, title__icontains="a"):
+        async with p.documents.filter(page_size=PAGE_SIZE, title__icontains="a"):
             count = 0
             async for _ in p.documents:
                 count += 1
                 if count >= PAGE_SIZE:
                     break
-        ok(f"documents.reduce(page_size={PAGE_SIZE}, title__icontains='a')", f"iterated={count}")
+        ok(f"documents.filter(page_size={PAGE_SIZE}, title__icontains='a')", f"iterated={count}")
     except Exception as exc:
-        fail("documents.reduce()", exc)
+        fail("documents.filter()", exc)
+
+    try:
+        async with p.correspondents.filter(name__icontains="a"):
+            count = 0
+            async for _ in p.correspondents:
+                count += 1
+                if count >= PAGE_SIZE:
+                    break
+        ok("correspondents.filter(name__icontains='a')", f"iterated={count}")
+    except Exception as exc:
+        fail("correspondents.filter()", exc)
+
+    try:
+        async with p.tags.filter(is_root=True):
+            count = 0
+            async for _ in p.tags:
+                count += 1
+                if count >= PAGE_SIZE:
+                    break
+        ok("tags.filter(is_root=True)", f"iterated={count}")
+    except Exception as exc:
+        fail("tags.filter()", exc)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1265,6 +1355,7 @@ async def main() -> int:
         await test_document_notes(paperless)
         await test_custom_fields(paperless)
         await test_custom_field_values_on_document(paperless)
+        await test_custom_field_query(paperless)
         await test_correspondents(paperless)
         await test_tags(paperless)
         await test_document_types(paperless)
@@ -1277,7 +1368,7 @@ async def main() -> int:
         await test_workflows(paperless)
         await test_document_post(paperless)
         await test_document_post_with_cf_mapping(paperless)
-        await test_reduce_context(paperless)
+        await test_filter_context(paperless)
 
     await test_generate_api_token()
 

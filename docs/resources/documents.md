@@ -99,3 +99,4 @@ async with paperless.documents.with_permissions():
 
 !!! note
     For downloading, searching, note management, and more, see [Documents](../concepts/documents.md).
+    To filter documents by custom field values, see [Custom Field Query](../concepts/custom_field_query.md).

@@ -1,7 +1,12 @@
 """Provide `CustomField` service."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self, Unpack
+
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.custom_fields import CustomField, CustomFieldDraft
+from pypaperless.models.filters import CustomFieldFilters
 
 from . import mixins
 from .base import ServiceBase
@@ -22,3 +27,12 @@ class CustomFieldService(
 
     _draft_cls = CustomFieldDraft
     _resource_cls = CustomField
+
+    @asynccontextmanager
+    async def filter(self, **kwargs: Unpack[CustomFieldFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.CustomFieldFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx

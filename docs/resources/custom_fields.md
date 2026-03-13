@@ -38,7 +38,7 @@ async for field in paperless.custom_fields:
     print(field.id, field.name, field.data_type)
 
 # Build a name → id lookup
-field_map = {f.name: f.id async for f in paperless.custom_fields.reduce()}
+field_map = {f.name: f.id async for f in paperless.custom_fields.filter()}
 ```
 
 ## Create

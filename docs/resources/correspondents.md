@@ -39,7 +39,7 @@ all_correspondents = await paperless.correspondents.as_list()
 
 # Fetch only a subset matching a filter
 filtered = [
-    c async for c in paperless.correspondents.reduce()
+    c async for c in paperless.correspondents.filter()
     if c.document_count and c.document_count > 0
 ]
 ```

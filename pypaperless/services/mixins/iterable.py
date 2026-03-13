@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import ResourceT
 from pypaperless.services.base import ServiceProtocol
@@ -12,10 +12,20 @@ if TYPE_CHECKING:
     from pypaperless.models import Page
 
 
+class _BaseFilters(TypedDict, total=False):
+    """Empty base TypedDict used by IterableMixin.filter().
+
+    Being empty, every concrete filter TypedDict is a structural supertype
+    of this class (PEP 692), so subclass overrides that narrow **kwargs to
+    a specific filter TypedDict satisfy the Liskov substitution principle
+    without requiring ``# type: ignore[override]``.
+    """
+
+
 class IterableMixin(ServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
-    _aiter_filters: dict[str, str | int] | None
+    _aiter_filters: dict[str, Any] | None
 
     async def __aiter__(self) -> AsyncIterator[ResourceT]:
         """Iterate over resource items.
@@ -33,9 +43,24 @@ class IterableMixin(ServiceProtocol[ResourceT]):
                 yield item
 
     @asynccontextmanager
-    async def reduce(
+    async def _store_filters(self: Self, **kwargs: Any) -> AsyncGenerator[Self]:
+        """Store query filters for the duration of the context.
+
+        This is the private implementation backing :meth:`reduce`.  Subclasses
+        call ``self._store_filters(**kwargs)`` rather than ``super().filter()``
+        so that the typed public override does not need to widen its signature
+        back to ``**kwargs: Any``.
+        """
+        self._aiter_filters = kwargs
+        try:
+            yield self
+        finally:
+            self._aiter_filters = None
+
+    @asynccontextmanager
+    async def filter(
         self: Self,
-        **kwargs: str | int,
+        **kwargs: Unpack[_BaseFilters],
     ) -> AsyncGenerator[Self]:
         """Provide context for iterating over resource items with query parameters.
 
@@ -50,7 +75,7 @@ class IterableMixin(ServiceProtocol[ResourceT]):
             "title__icontains": "2023",
         }
 
-        async with paperless.documents.reduce(**filters):
+        async with paperless.documents.filter(**filters):
             # iterate over resource items ...
             async for item in paperless.documents:
                 ...
@@ -61,11 +86,8 @@ class IterableMixin(ServiceProtocol[ResourceT]):
         ```
 
         """
-        self._aiter_filters = kwargs
-        try:
-            yield self
-        finally:
-            self._aiter_filters = None
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx
 
     async def all(self) -> list[int]:
         """Return a list of all resource item primary keys.

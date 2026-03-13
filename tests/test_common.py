@@ -24,17 +24,27 @@ from pypaperless.models import CustomField, Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CorrespondentFilters,
     CustomFieldDateValue,
     CustomFieldExtraData,
+    CustomFieldFilters,
     CustomFieldIntegerValue,
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
+    DocumentFilters,
+    DocumentTypeFilters,
+    GroupFilters,
     MatchingAlgorithm,
     ShareLinkFileVersion,
+    ShareLinkFilters,
     StatusType,
+    StoragePathFilters,
+    TagFilters,
+    TaskFilters,
     TaskStatus,
     TaskType,
+    UserFilters,
     WorkflowActionType,
     WorkflowTriggerScheduleDateField,
     WorkflowTriggerSource,
@@ -559,3 +569,79 @@ class TestPaperless:
         with pytest.raises(DraftNotSupportedError):
             # ... there it is
             service.draft()
+
+
+_ALL_FILTER_CLASSES = (
+    CorrespondentFilters,
+    CustomFieldFilters,
+    DocumentFilters,
+    DocumentTypeFilters,
+    GroupFilters,
+    ShareLinkFilters,
+    StoragePathFilters,
+    TagFilters,
+    TaskFilters,
+    UserFilters,
+)
+
+
+class TestFilters:
+    """Filter TypedDict test cases."""
+
+    def test_all_filter_classes_have_annotations(self) -> None:
+        """All filter TypedDicts must expose filter fields (including inherited)."""
+        for cls in _ALL_FILTER_CLASSES:
+            all_keys = cls.__optional_keys__ | cls.__required_keys__
+            assert all_keys, f"{cls.__name__} has no filter fields"
+
+    def test_all_filters_exclude_page_fields(self) -> None:
+        """Filter TypedDicts must NOT include page or page_size."""
+        for cls in _ALL_FILTER_CLASSES:
+            all_keys = cls.__optional_keys__ | cls.__required_keys__
+            assert "page" not in all_keys, f"{cls.__name__} must not have 'page'"
+            assert "page_size" not in all_keys, f"{cls.__name__} must not have 'page_size'"
+
+    def test_document_filters_fields(self) -> None:
+        """DocumentFilters must contain document-specific filter fields."""
+        all_keys = DocumentFilters.__optional_keys__ | DocumentFilters.__required_keys__
+        for key in (
+            "title__icontains",
+            "is_tagged",
+            "is_in_inbox",
+            "correspondent__id",
+            "tags__id__all",
+            "custom_field_query",
+            "mime_type",
+        ):
+            assert key in all_keys, f"DocumentFilters missing {key!r}"
+
+    def test_tag_filters_has_is_root(self) -> None:
+        """TagFilters must expose the is_root flag from the server-side TagFilterSet."""
+        all_keys = TagFilters.__optional_keys__ | TagFilters.__required_keys__
+        assert "is_root" in all_keys
+
+    def test_storage_path_filters_has_path_fields(self) -> None:
+        """StoragePathFilters must include path-based filter fields."""
+        all_keys = StoragePathFilters.__optional_keys__ | StoragePathFilters.__required_keys__
+        assert "path__icontains" in all_keys
+        assert "path__istartswith" in all_keys
+
+    def test_share_link_filters_has_expiration_fields(self) -> None:
+        """ShareLinkFilters must include expiration date filters."""
+        all_keys = ShareLinkFilters.__optional_keys__ | ShareLinkFilters.__required_keys__
+        assert "expiration__year" in all_keys
+        assert "expiration__date__gte" in all_keys
+
+    def test_task_filters_fields(self) -> None:
+        """TaskFilters must contain the fields from PaperlessTaskFilterSet."""
+        all_keys = TaskFilters.__optional_keys__ | TaskFilters.__required_keys__
+        assert "acknowledged" in all_keys
+        assert "status" in all_keys
+        assert "task_name" in all_keys
+        assert "type" in all_keys
+
+    def test_user_filters_has_username_fields(self) -> None:
+        """UserFilters must include username-based filter fields."""
+        all_keys = UserFilters.__optional_keys__ | UserFilters.__required_keys__
+        assert "username__icontains" in all_keys
+        assert "username__iexact" in all_keys
