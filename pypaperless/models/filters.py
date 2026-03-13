@@ -160,7 +160,7 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     has_custom_fields: bool
     custom_field_query: str  # JSON expression, see paperless-ngx docs
     mime_type: str
-    query: str  # full-text search query (Whoosh)
+    query: str  # full-text search query
     more_like_id: int  # semantic more-like-this search by document pk
 
 
