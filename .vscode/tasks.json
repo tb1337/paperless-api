@@ -1,0 +1,56 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "test: pytest",
+      "type": "shell",
+      "command": "/usr/local/py-utils/bin/pytest -x -q",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "test: smoketest",
+      "type": "shell",
+      "command": "source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "test: api-coverage",
+      "type": "shell",
+      "command": "python script/pngx_audit_coverage.py",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "validate: full suite",
+      "dependsOn": ["test: pytest", "test: smoketest", "test: api-coverage"],
+      "dependsOrder": "sequence",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

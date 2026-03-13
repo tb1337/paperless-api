@@ -84,13 +84,10 @@ deleted = await paperless.tags.delete(tag)
 ## Permissions
 
 ```python
-paperless.tags.request_permissions = True
-tag = await paperless.tags(5)
-
-print(tag.owner)        # owner user id
-print(tag.permissions)  # PermissionTable
-
-paperless.tags.request_permissions = False
+async with paperless.tags.with_permissions():
+    tag = await paperless.tags(5)
+    print(tag.owner)        # owner user id
+    print(tag.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details.

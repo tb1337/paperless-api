@@ -62,8 +62,10 @@ class IterableMixin(ServiceProtocol[ResourceT]):
 
         """
         self._aiter_filters = kwargs
-        yield self
-        self._aiter_filters = None
+        try:
+            yield self
+        finally:
+            self._aiter_filters = None
 
     async def all(self) -> list[int]:
         """Return a list of all resource item primary keys.

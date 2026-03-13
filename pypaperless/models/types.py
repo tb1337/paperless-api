@@ -29,7 +29,7 @@ from .documents import (
     FileRetrieveMode,
 )
 from .mixins.data_fields import MatchingAlgorithm
-from .mixins.securable import PermissionSet, PermissionTable
+from .mixins.securable import Permissions
 from .saved_views import SavedViewFilterRule
 from .share_links import ShareLinkFileVersion
 from .statistics import StatisticDocumentFileTypeCount
@@ -70,8 +70,7 @@ __all__ = (
     "DocumentSearchHit",
     "FileRetrieveMode",
     "MatchingAlgorithm",
-    "PermissionSet",
-    "PermissionTable",
+    "Permissions",
     "SavedViewFilterRule",
     "ShareLinkFileVersion",
     "StatisticDocumentFileTypeCount",

@@ -1,5 +1,9 @@
 """SecurableMixin for PyPaperless services."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self
+
 
 class SecurableMixin:
     """Provide the `request_full_permissions` property for PyPaperless services."""
@@ -21,3 +25,27 @@ class SecurableMixin:
         Documentation: https://docs.paperless-ngx.com/api/#permissions
         """
         self._request_full_perms = value
+
+    @asynccontextmanager
+    async def with_permissions(self: Self) -> AsyncGenerator[Self]:
+        """Context manager that enables the full permissions payload for a block.
+
+        The flag is reset automatically on exit, even if an exception is raised.
+
+        Example:
+        -------
+        ```python
+        async with paperless.documents.with_permissions():
+            doc = await paperless.documents(42)
+            print(doc.permissions.view.users)
+
+            async for doc in paperless.documents:
+                print(doc.owner, doc.permissions)
+        ```
+
+        """
+        self._request_full_perms = True
+        try:
+            yield self
+        finally:
+            self._request_full_perms = False

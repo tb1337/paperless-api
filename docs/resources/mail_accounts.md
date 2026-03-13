@@ -39,13 +39,10 @@ accounts = await paperless.mail_accounts.as_dict()
 ## Permissions
 
 ```python
-paperless.mail_accounts.request_permissions = True
-account = await paperless.mail_accounts(1)
-
-print(account.owner)        # owner user id
-print(account.permissions)  # PermissionTable
-
-paperless.mail_accounts.request_permissions = False
+async with paperless.mail_accounts.with_permissions():
+    account = await paperless.mail_accounts(1)
+    print(account.owner)        # owner user id
+    print(account.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details.

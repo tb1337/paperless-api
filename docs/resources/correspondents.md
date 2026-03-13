@@ -81,14 +81,10 @@ deleted = await paperless.correspondents.delete(c)  # True on success
 ## Permissions
 
 ```python
-paperless.correspondents.request_permissions = True
-c = await paperless.correspondents(7)
-
-print(c.owner)        # owner user id
-print(c.permissions)  # PermissionTable (view/change sets)
-
-# Switch back to the default (no permissions payload)
-paperless.correspondents.request_permissions = False
+async with paperless.correspondents.with_permissions():
+    c = await paperless.correspondents(7)
+    print(c.owner)        # owner user id
+    print(c.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details on reading and modifying permission sets.

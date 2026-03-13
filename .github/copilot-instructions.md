@@ -1,0 +1,58 @@
+# pypaperless – Copilot Instructions
+
+## Project Context
+
+pypaperless is a Python client library for the Paperless-ngx REST API.
+The library is structured around:
+
+- `pypaperless/models/` — Pydantic models for API resources
+- `pypaperless/services/` — Service classes with mixins (callable, iterable, securable, …)
+- `tests/` — pytest unit tests with httpx mocking
+- `script/pngx_smoketest.py` — live integration smoketest
+- `script/pngx_audit_coverage.py` — field-level coverage audit against the live API schema
+
+Live Paperless-ngx instance: `http://172.17.0.1:8000`
+Auth token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
+Test document ID: `1980`
+Dev venv: `/home/vscode/.local/dev-venv/bin/activate`
+
+---
+
+## Validation Policy
+
+**After any code change, always run the full validation sequence before considering the task complete:**
+
+1. **Unit tests + coverage**
+
+   ```
+   /usr/local/py-utils/bin/pytest -x -q
+   ```
+
+   Required: all tests green, coverage ≥ 95 %.
+
+2. **Live smoketest**
+
+   ```
+   source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py
+   ```
+
+   Required: 0 failures.
+
+3. **API field coverage audit**
+   ```
+   python script/pngx_audit_coverage.py
+   ```
+   Required: no new gaps compared to before the change.
+
+Report all three results explicitly before closing the task.
+
+---
+
+## Code Conventions
+
+- Models use **Pydantic v2** (`BaseModel`, `model_validator`, `Field`).
+- Services use **httpx** for async HTTP.
+- Context managers (`@asynccontextmanager`) always use `try/finally` to guarantee cleanup.
+- Public types are re-exported via `pypaperless/models/types.py`.
+- Internal helpers are prefixed with `_` (e.g. `_PermissionScope`).
+- When adding a new resource, follow the **add-resource** skill at `.github/skills/add-resource/SKILL.md`.

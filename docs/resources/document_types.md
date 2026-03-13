@@ -66,13 +66,10 @@ deleted = await paperless.document_types.delete(dt)
 ## Permissions
 
 ```python
-paperless.document_types.request_permissions = True
-dt = await paperless.document_types(4)
-
-print(dt.owner)        # owner user id
-print(dt.permissions)  # PermissionTable
-
-paperless.document_types.request_permissions = False
+async with paperless.document_types.with_permissions():
+    dt = await paperless.document_types(4)
+    print(dt.owner)        # owner user id
+    print(dt.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details on reading and modifying permission sets.

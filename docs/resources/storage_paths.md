@@ -69,13 +69,10 @@ deleted = await paperless.storage_paths.delete(sp)
 ## Permissions
 
 ```python
-paperless.storage_paths.request_permissions = True
-sp = await paperless.storage_paths(2)
-
-print(sp.owner)        # owner user id
-print(sp.permissions)  # PermissionTable
-
-paperless.storage_paths.request_permissions = False
+async with paperless.storage_paths.with_permissions():
+    sp = await paperless.storage_paths(2)
+    print(sp.owner)        # owner user id
+    print(sp.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details.

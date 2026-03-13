@@ -1,6 +1,6 @@
 ---
 name: add-resource
-description: "Add a new Paperless-ngx API resource to pypaperless. Use when implementing a new endpoint, service, model, or sub-service (e.g. /api/trash/, /api/documents/{id}/history/). Covers model definition, service class, const.py wiring, client registration, test fixtures, unit tests, audit_api_coverage.py, and smoketest_api.py."
+description: "Add a new Paperless-ngx API resource to pypaperless. Use when implementing a new endpoint, service, model, or sub-service (e.g. /api/trash/, /api/documents/{id}/history/). Covers model definition, service class, const.py wiring, client registration, test fixtures, unit tests, script/pngx_audit_coverage.py, and script/pngx_smoketest.py."
 argument-hint: "Name or path of the endpoint to implement (e.g. /api/trash/)"
 ---
 
@@ -10,7 +10,7 @@ argument-hint: "Name or path of the endpoint to implement (e.g. /api/trash/)"
 
 - Implementing a new top-level endpoint (e.g. `/api/trash/`)
 - Implementing a document sub-service (e.g. `/api/documents/{id}/history/`)
-- Any time a `/api/...` path is listed as "unimplemented" in `audit_api_coverage.py`
+- Any time a `/api/...` path is listed as "unimplemented" in `script/pngx_audit_coverage.py`
 
 ## Decision Tree
 
@@ -162,7 +162,7 @@ httpx_mock.add_response(method="GET",
     status_code=200, json=DATA_TRASH)
 ```
 
-### 8. `run/audit_api_coverage.py`
+### 8. `script/pngx_audit_coverage.py`
 
 Add an `EndpointSpec` to the `ENDPOINTS` list:
 
@@ -209,7 +209,7 @@ Then register the new page in **`zensical.toml`** (the MkDocs nav):
 { "Trash"   = "resources/trash.md" },
 ```
 
-### 10. `run/smoketest_api.py`
+### 10. `script/pngx_smoketest.py`
 
 Add a test function before the relevant section and wire it into `main()`:
 
@@ -232,10 +232,10 @@ python -m pytest tests/ -x -q
 ruff check pypaperless/
 
 # Live audit (requires running Paperless instance)
-python run/audit_api_coverage.py
+python script/pngx_audit_coverage.py
 
 # Live smoketest
-python run/smoketest_api.py
+python script/pngx_smoketest.py
 ```
 
 Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 failed.
@@ -251,11 +251,11 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 - [ ] Test fixture in `tests/data/`
 - [ ] `tests/data/__init__.py` — export
 - [ ] Unit tests in `test_models_specific.py`
-- [ ] `audit_api_coverage.py` — `EndpointSpec` + any `KNOWN_EXTRAS`
+- [ ] `script/pngx_audit_coverage.py` — `EndpointSpec` + any `KNOWN_EXTRAS`
 - [ ] `docs/resources/<name>.md` — model table + usage examples
 - [ ] `docs/resources.md` — capability matrix row
 - [ ] `zensical.toml` — nav entry in alphabetical order
-- [ ] `smoketest_api.py` — test function + wired in `main()`
+- [ ] `script/pngx_smoketest.py` — test function + wired in `main()`
 - [ ] All tests green, lint clean
 
 ## Reference
