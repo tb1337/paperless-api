@@ -43,10 +43,9 @@ failures = [
 ## Permissions
 
 ```python
-paperless.processed_mail.request_permissions = True
-entry = await paperless.processed_mail(5)
-print(entry.owner)
-paperless.processed_mail.request_permissions = False
+async with paperless.processed_mail.with_permissions():
+    entry = await paperless.processed_mail(5)
+    print(entry.owner)
 ```
 
 See [Permissions](../concepts/permissions.md) for details.

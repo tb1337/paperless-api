@@ -470,3 +470,33 @@ class TestSecurableMixin:
             method="PATCH",
         )
         await getattr(paperless, mapping.resource).update(item)
+
+    async def test_with_permissions_context_manager(
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """Test that with_permissions() enables and resets the flag automatically."""
+        service = getattr(paperless, mapping.resource)
+        assert not service.request_permissions
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^"
+                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
+                + r"\?.*$"
+            ),
+            status_code=200,
+            json={
+                **mapping.data["results"][0],
+                "permissions": DATA_OBJECT_PERMISSIONS,
+            },
+        )
+
+        async with service.with_permissions():
+            assert service.request_permissions
+            item = await service(1)
+            assert item.has_permissions
+            assert isinstance(item.permissions, Permissions)
+
+        # flag must be reset after the block
+        assert not service.request_permissions

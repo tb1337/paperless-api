@@ -46,10 +46,26 @@ if doc.has_permissions:
 
 ## Requesting permissions alongside data
 
-By default, Paperless-ngx does not include the full permission table in responses. Enable it by setting `request_permissions = True` on the service:
+By default, Paperless-ngx does not include the full permission table in responses.
+
+### Recommended: `with_permissions()` context manager
+
+Use the `with_permissions()` context manager — the flag is set automatically on entry and reset on exit, even if an exception occurs:
 
 ```python
-# Enable full permissions for all subsequent requests on this service
+async with paperless.documents.with_permissions():
+    doc = await paperless.documents(42)
+    print(doc.permissions.view.users)
+
+    async for doc in paperless.documents:
+        print(doc.owner, doc.permissions)
+```
+
+### Alternative: `request_permissions` property
+
+For cases where you need persistent control across multiple calls, the underlying property is available directly:
+
+```python
 paperless.documents.request_permissions = True
 
 doc = await paperless.documents(42)
@@ -58,19 +74,10 @@ print(doc.permissions)
 async for doc in paperless.documents:
     print(doc.owner, doc.permissions)
 
-# Disable again when no longer needed
 paperless.documents.request_permissions = False
 ```
 
-The `request_permissions` flag can be toggled at any time and applies to all methods on the service (`__call__`, iteration, `update()`) until it is reset.
-
-Alternatively, use a `reduce()` context with the `full_perms` parameter:
-
-```python
-async with paperless.documents.reduce(full_perms="true"):
-    async for doc in paperless.documents:
-        print(doc.permissions)
-```
+The flag applies to all methods on the service (`__call__`, iteration, `update()`) until reset.
 
 ---
 
@@ -121,8 +128,8 @@ await paperless.documents.update(doc)
 **Or mutate in place** (useful when adding/removing a single user):
 
 ```python
-paperless.documents.request_permissions = True
-doc = await paperless.documents(42)
+async with paperless.documents.with_permissions():
+    doc = await paperless.documents(42)
 
 doc.permissions.view.users.append(9)
 doc.permissions.change.users.remove(3)

@@ -89,11 +89,10 @@ deleted = await paperless.documents.delete(doc)
 ## Permissions
 
 ```python
-paperless.documents.request_permissions = True
-doc = await paperless.documents(42)
-print(doc.owner)        # owner user id
-print(doc.permissions)  # Permissions
-paperless.documents.request_permissions = False
+async with paperless.documents.with_permissions():
+    doc = await paperless.documents(42)
+    print(doc.owner)        # owner user id
+    print(doc.permissions)  # Permissions
 ```
 
 ---

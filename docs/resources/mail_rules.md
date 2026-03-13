@@ -52,13 +52,10 @@ active = [r async for r in paperless.mail_rules.reduce() if r.enabled]
 ## Permissions
 
 ```python
-paperless.mail_rules.request_permissions = True
-rule = await paperless.mail_rules(3)
-
-print(rule.owner)        # owner user id
-print(rule.permissions)  # Permissions
-
-paperless.mail_rules.request_permissions = False
+async with paperless.mail_rules.with_permissions():
+    rule = await paperless.mail_rules(3)
+    print(rule.owner)        # owner user id
+    print(rule.permissions)  # Permissions
 ```
 
 See [Permissions](../concepts/permissions.md) for details.

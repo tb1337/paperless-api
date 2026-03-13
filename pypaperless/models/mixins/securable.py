@@ -20,7 +20,10 @@ class Permissions(BaseModel):
     Or directly from the nested API structure (used internally during
     JSON deserialization)::
 
-        Permissions(view={"users": [2, 3], "groups": []}, change={"users": [2], "groups": []})
+        Permissions(
+            view={"users": [2, 3], "groups": []},
+            change={"users": [2], "groups": []}
+        )
 
     Access is always via the nested attributes::
 
