@@ -21,6 +21,7 @@ nav = [
   { "Concepts" = [
     { "Documents" = "concepts/documents.md" },
     { "Custom Fields" = "concepts/custom_fields.md" },
+    { "Custom Field Query" = "concepts/custom_field_query.md" },
     { "Permissions" = "concepts/permissions.md" },
   ]},
   { "Resources" = [

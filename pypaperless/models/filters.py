@@ -102,7 +102,7 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     correspondent__name__iendswith: str
     correspondent__name__iexact: str
     correspondent__name__istartswith: str
-    custom_field_query: str  # JSON expression, see paperless-ngx docs
+    custom_field_query: str  # JSON expression — build with CustomFieldQuery
     custom_fields__icontains: str
     custom_fields__id__all: str
     custom_fields__id__in: str
