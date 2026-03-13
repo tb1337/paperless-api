@@ -95,26 +95,32 @@ async for page in paperless.documents.pages(page=3):
 
 ## Filtering with `reduce()`
 
-`reduce()` is an async context manager that applies server-side filters to iteration. Any Paperless-ngx API filter parameter is accepted.
+`reduce()` is an async context manager that applies server-side filters to iteration.
+Filter keys are fully type-checked — your IDE will autocomplete available parameters
+and flag unknown keys.
+
+Each service exposes its own typed filter set (e.g. `DocumentFilters`, `TagFilters`).
+Import them from `pypaperless.models.types` to construct the dict separately:
 
 ```python
-async with paperless.documents.reduce(title__icontains="invoice"):
-    async for document in paperless.documents:
-        print(document.title)
-```
+from pypaperless.models.types import DocumentFilters
 
-You can combine multiple filters and control pagination:
-
-```python
-filters = {
-    "page_size": 50,
+filters: DocumentFilters = {
     "correspondent__id": 3,
-    "title__icontains": "2024",
+    "title__icontains": "invoice",
 }
 
 async with paperless.documents.reduce(**filters):
     async for document in paperless.documents:
         ...
+```
+
+You can also pass filters directly as keyword arguments:
+
+```python
+async with paperless.documents.reduce(title__icontains="invoice"):
+    async for document in paperless.documents:
+        print(document.title)
 ```
 
 The filter context is automatically cleared when the `async with` block exits.

@@ -1,7 +1,12 @@
 """Provide `DocumentType` related services."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self, Unpack
+
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.document_types import DocumentType, DocumentTypeDraft
+from pypaperless.models.filters import DocumentTypeFilters
 
 from . import mixins
 from .base import ServiceBase
@@ -23,3 +28,12 @@ class DocumentTypeService(
 
     _draft_cls = DocumentTypeDraft
     _resource_cls = DocumentType
+
+    @asynccontextmanager
+    async def reduce(self, **kwargs: Unpack[DocumentTypeFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.DocumentTypeFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx

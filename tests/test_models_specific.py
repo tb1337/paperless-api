@@ -54,6 +54,7 @@ from . import DOCUMENT_MAP
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
+    DATA_CORRESPONDENTS,
     DATA_CUSTOM_FIELDS,
     DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
@@ -61,12 +62,16 @@ from .data import (
     DATA_DOCUMENT_SUGGESTIONS,
     DATA_DOCUMENTS,
     DATA_DOCUMENTS_SEARCH,
+    DATA_GROUPS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_STATISTICS,
     DATA_STATUS,
+    DATA_STORAGE_PATHS,
+    DATA_TAGS,
     DATA_TASKS,
     DATA_TRASH,
+    DATA_USERS,
 )
 
 # mypy: ignore-errors
@@ -859,3 +864,98 @@ class TestModelTrash:
             json={"result": "emptied"},
         )
         await paperless.trash.empty([100])
+
+
+# test typed reduce() overrides (filters.py)
+class TestTypedReduce:
+    """Typed reduce() tests for each service with a filter TypedDict override."""
+
+    async def test_documents_reduce_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """documents.reduce() accepts DocumentFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_DOCUMENTS,
+        )
+        async with paperless.documents.reduce(title__icontains="invoice", is_tagged=True) as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_correspondents_reduce_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """correspondents.reduce() accepts CorrespondentFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['correspondents']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_CORRESPONDENTS,
+        )
+        async with paperless.correspondents.reduce(name__icontains="acme") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_tags_reduce_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tags.reduce() accepts TagFilters kwargs including is_root."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tags']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_TAGS,
+        )
+        async with paperless.tags.reduce(is_root=True) as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_storage_paths_reduce_typed(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """storage_paths.reduce() accepts StoragePathFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['storage_paths']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_STORAGE_PATHS,
+        )
+        async with paperless.storage_paths.reduce(path__icontains="/invoices") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_trash_reduce_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """trash.reduce() accepts DocumentFilters kwargs (reuses DocumentFilters)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['trash']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_TRASH,
+        )
+        async with paperless.trash.reduce(title__icontains="old") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_groups_reduce_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """groups.reduce() accepts GroupFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['groups']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_GROUPS,
+        )
+        async with paperless.groups.reduce(name__icontains="admin") as q:
+            async for item in q:
+                assert item is not None
+
+    async def test_users_reduce_typed(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """users.reduce() accepts UserFilters kwargs."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['users']}" + r"\?.*$"),
+            status_code=200,
+            json=DATA_USERS,
+        )
+        async with paperless.users.reduce(username__icontains="admin") as q:
+            async for item in q:
+                assert item is not None

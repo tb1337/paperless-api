@@ -1209,6 +1209,28 @@ async def test_reduce_context(p: Paperless) -> None:
     except Exception as exc:
         fail("documents.reduce()", exc)
 
+    try:
+        async with p.correspondents.reduce(name__icontains="a"):
+            count = 0
+            async for _ in p.correspondents:
+                count += 1
+                if count >= PAGE_SIZE:
+                    break
+        ok("correspondents.reduce(name__icontains='a')", f"iterated={count}")
+    except Exception as exc:
+        fail("correspondents.reduce()", exc)
+
+    try:
+        async with p.tags.reduce(is_root=True):
+            count = 0
+            async for _ in p.tags:
+                count += 1
+                if count >= PAGE_SIZE:
+                    break
+        ok("tags.reduce(is_root=True)", f"iterated={count}")
+    except Exception as exc:
+        fail("tags.reduce()", exc)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_profile(p: Paperless) -> None:

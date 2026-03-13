@@ -1,6 +1,11 @@
 """Provide `Tag` related services."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self, Unpack
+
 from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.models.filters import TagFilters
 from pypaperless.models.tags import Tag, TagDraft
 
 from . import mixins
@@ -23,3 +28,12 @@ class TagService(
 
     _draft_cls = TagDraft
     _resource_cls = Tag
+
+    @asynccontextmanager
+    async def reduce(self, **kwargs: Unpack[TagFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.TagFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx

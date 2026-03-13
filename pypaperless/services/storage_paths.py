@@ -1,6 +1,11 @@
 """Provide `StoragePath` related services."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Self, Unpack
+
 from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.models.filters import StoragePathFilters
 from pypaperless.models.storage_paths import StoragePath, StoragePathDraft
 
 from . import mixins
@@ -23,3 +28,12 @@ class StoragePathService(
 
     _draft_cls = StoragePathDraft
     _resource_cls = StoragePath
+
+    @asynccontextmanager
+    async def reduce(self, **kwargs: Unpack[StoragePathFilters]) -> AsyncGenerator[Self, None]:
+        """Iterate with server-side filters.
+
+        See :class:`~pypaperless.models.filters.StoragePathFilters` for available keys.
+        """
+        async with self._store_filters(**kwargs) as ctx:
+            yield ctx
