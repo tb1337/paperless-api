@@ -70,7 +70,7 @@ paperless.document_types.request_permissions = True
 dt = await paperless.document_types(4)
 
 print(dt.owner)        # owner user id
-print(dt.permissions)  # PermissionTable
+print(dt.permissions)  # Permissions
 
 paperless.document_types.request_permissions = False
 ```

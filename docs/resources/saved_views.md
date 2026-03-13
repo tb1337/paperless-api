@@ -53,7 +53,7 @@ paperless.saved_views.request_permissions = True
 view = await paperless.saved_views(2)
 
 print(view.owner)        # owner user id
-print(view.permissions)  # PermissionTable
+print(view.permissions)  # Permissions
 
 paperless.saved_views.request_permissions = False
 ```

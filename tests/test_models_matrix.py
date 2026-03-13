@@ -11,7 +11,7 @@ from pypaperless import Paperless
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models import Page
-from pypaperless.models.types import PermissionTable
+from pypaperless.models.types import Permissions
 
 from . import (
     CORRESPONDENT_MAP,
@@ -406,7 +406,7 @@ class TestSecurableMixin:
         )
         item = await getattr(paperless, mapping.resource)(1)
         assert item.has_permissions
-        assert isinstance(item.permissions, PermissionTable)
+        assert isinstance(item.permissions, Permissions)
         # request by iterator
         httpx_mock.add_response(
             method="GET",
@@ -423,7 +423,7 @@ class TestSecurableMixin:
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
             assert item.has_permissions
-            assert isinstance(item.permissions, PermissionTable)
+            assert isinstance(item.permissions, Permissions)
 
     async def test_permission_change(
         self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping

@@ -43,7 +43,7 @@ paperless.mail_accounts.request_permissions = True
 account = await paperless.mail_accounts(1)
 
 print(account.owner)        # owner user id
-print(account.permissions)  # PermissionTable
+print(account.permissions)  # Permissions
 
 paperless.mail_accounts.request_permissions = False
 ```

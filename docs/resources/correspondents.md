@@ -85,7 +85,7 @@ paperless.correspondents.request_permissions = True
 c = await paperless.correspondents(7)
 
 print(c.owner)        # owner user id
-print(c.permissions)  # PermissionTable (view/change sets)
+print(c.permissions)  # Permissions
 
 # Switch back to the default (no permissions payload)
 paperless.correspondents.request_permissions = False

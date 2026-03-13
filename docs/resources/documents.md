@@ -92,7 +92,7 @@ deleted = await paperless.documents.delete(doc)
 paperless.documents.request_permissions = True
 doc = await paperless.documents(42)
 print(doc.owner)        # owner user id
-print(doc.permissions)  # PermissionTable
+print(doc.permissions)  # Permissions
 paperless.documents.request_permissions = False
 ```
 

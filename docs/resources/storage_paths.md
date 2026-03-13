@@ -73,7 +73,7 @@ paperless.storage_paths.request_permissions = True
 sp = await paperless.storage_paths(2)
 
 print(sp.owner)        # owner user id
-print(sp.permissions)  # PermissionTable
+print(sp.permissions)  # Permissions
 
 paperless.storage_paths.request_permissions = False
 ```

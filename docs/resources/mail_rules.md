@@ -56,7 +56,7 @@ paperless.mail_rules.request_permissions = True
 rule = await paperless.mail_rules(3)
 
 print(rule.owner)        # owner user id
-print(rule.permissions)  # PermissionTable
+print(rule.permissions)  # Permissions
 
 paperless.mail_rules.request_permissions = False
 ```

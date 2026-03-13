@@ -79,11 +79,12 @@ async with paperless.documents.reduce(full_perms="true"):
 When drafting a new item, use `set_permissions` to assign ownership and ACLs at creation time (`SecurableDraftMixin`):
 
 ```python
-from pypaperless.models.mixins.securable import PermissionTable, PermissionSet
+from pypaperless.models.types import Permissions
 
-perms = PermissionTable(
-    view=PermissionSet(users=[2, 3], groups=[]),
-    change=PermissionSet(users=[2], groups=[1]),
+perms = Permissions(
+    view_users=[2, 3],
+    change_users=[2],
+    change_groups=[1],
 )
 
 draft = paperless.tags.draft(
@@ -99,34 +100,67 @@ new_id = await paperless.tags.save(draft)
 
 ## Updating permissions on an existing item
 
-Fetch the item, modify the `permissions` field, then call `update()`:
+Fetch the item, modify the `permissions` field, then call `update()`.
+
+**Replace the whole permission set:**
 
 ```python
-from pypaperless.models.mixins.securable import PermissionTable, PermissionSet
+from pypaperless.models.types import Permissions
 
 doc = await paperless.documents(42)
 
-doc.permissions = PermissionTable(
-    view=PermissionSet(users=[2, 3], groups=[]),
-    change=PermissionSet(users=[2], groups=[]),
+doc.permissions = Permissions(
+    view_users=[2, 3],
+    change_users=[2],
 )
 doc.owner = 1
 
 await paperless.documents.update(doc)
 ```
 
----
-
-## `PermissionTable` and `PermissionSet`
+**Or mutate in place** (useful when adding/removing a single user):
 
 ```python
-class PermissionSet:
-    users: list[int]   # user IDs
-    groups: list[int]  # group IDs
+paperless.documents.request_permissions = True
+doc = await paperless.documents(42)
 
-class PermissionTable:
-    view: PermissionSet
-    change: PermissionSet
+doc.permissions.view.users.append(9)
+doc.permissions.change.users.remove(3)
+
+await paperless.documents.update(doc)
+```
+
+---
+
+## `Permissions`
+
+```python
+class Permissions:
+    view: _PermissionScope    # .users: list[int], .groups: list[int]
+    change: _PermissionScope  # .users: list[int], .groups: list[int]
+```
+
+Constructed with flat keyword arguments — only specify what you need, omitted keys default to `[]`:
+
+| Keyword argument | Type        | Meaning                          |
+| ---------------- | ----------- | -------------------------------- |
+| `view_users`     | `list[int]` | User IDs with view permission    |
+| `view_groups`    | `list[int]` | Group IDs with view permission   |
+| `change_users`   | `list[int]` | User IDs with change permission  |
+| `change_groups`  | `list[int]` | Group IDs with change permission |
+
+```python
+from pypaperless.models.types import Permissions
+
+# Only specify what you need
+Permissions(view_users=[2, 3], change_users=[2], change_groups=[1])
+
+# Read individual scopes
+perms = doc.permissions
+perms.view.users    # list[int]
+perms.view.groups   # list[int]
+perms.change.users  # list[int]
+perms.change.groups # list[int]
 ```
 
 ---

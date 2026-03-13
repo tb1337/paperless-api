@@ -88,7 +88,7 @@ paperless.tags.request_permissions = True
 tag = await paperless.tags(5)
 
 print(tag.owner)        # owner user id
-print(tag.permissions)  # PermissionTable
+print(tag.permissions)  # Permissions
 
 paperless.tags.request_permissions = False
 ```
