@@ -16,7 +16,7 @@
     {
       "label": "test: smoketest",
       "type": "shell",
-      "command": "source /home/vscode/.local/dev-venv/bin/activate && python run/smoketest_api.py",
+      "command": "source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -28,7 +28,7 @@
     {
       "label": "test: api-coverage",
       "type": "shell",
-      "command": "python run/audit_api_coverage.py",
+      "command": "python script/pngx_audit_coverage.py",
       "group": "test",
       "presentation": {
         "reveal": "always",

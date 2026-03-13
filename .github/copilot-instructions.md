@@ -8,8 +8,8 @@ The library is structured around:
 - `pypaperless/models/` — Pydantic models for API resources
 - `pypaperless/services/` — Service classes with mixins (callable, iterable, securable, …)
 - `tests/` — pytest unit tests with httpx mocking
-- `run/smoketest_api.py` — live integration smoketest
-- `run/audit_api_coverage.py` — field-level coverage audit against the live API schema
+- `script/pngx_smoketest.py` — live integration smoketest
+- `script/pngx_audit_coverage.py` — field-level coverage audit against the live API schema
 
 Live Paperless-ngx instance: `http://172.17.0.1:8000`
 Auth token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
@@ -33,14 +33,14 @@ Dev venv: `/home/vscode/.local/dev-venv/bin/activate`
 2. **Live smoketest**
 
    ```
-   source /home/vscode/.local/dev-venv/bin/activate && python run/smoketest_api.py
+   source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py
    ```
 
    Required: 0 failures.
 
 3. **API field coverage audit**
    ```
-   python run/audit_api_coverage.py
+   python script/pngx_audit_coverage.py
    ```
    Required: no new gaps compared to before the change.
 
