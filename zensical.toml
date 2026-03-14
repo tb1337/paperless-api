@@ -14,6 +14,8 @@ repo_name = "tb1337/paperless-api"
 
 edit_uri = "blob/main/docs/"
 
+extra_css = ["stylesheets/extra.css"]
+
 nav = [
   "index.md",
   { "Getting started" = "quickstart.md" },
@@ -49,6 +51,7 @@ nav = [
     { "Workflows" = "resources/workflows.md" },
   ]},
   { "Reference" = "exceptions.md" },
+  { "Migrating v5 → v6" = "migrating-v5-to-v6.md" },
 ]
 
 # ----------------------------------------------------------------------------
@@ -127,6 +130,9 @@ anchor_linenums = true
 custom_fences = [
   { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" }
 ]
+
+[project.markdown_extensions.pymdownx.tabbed]
+alternate_style = true
 
 [project.markdown_extensions.pymdownx.emoji]
 emoji_index = "zensical.extensions.emoji.twemoji"
