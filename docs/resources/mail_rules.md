@@ -23,11 +23,13 @@ Mail rules define how Paperless-ngx processes incoming emails from a mail accoun
 | `assign_title_from`                  | How to derive the document title      |
 | `assign_tags`                        | Tags to assign to imported documents  |
 | `assign_correspondent`               | Correspondent id to assign            |
+| `assign_correspondent_from`          | How to derive the correspondent       |
 | `assign_document_type`               | Document type id to assign            |
 | `assign_owner_from_rule`             | Assign rule owner to the document     |
 | `order`                              | Processing order                      |
 | `attachment_type`                    | Which attachments to import           |
 | `consumption_scope`                  | What to consume from the email        |
+| `pdf_layout`                         | PDF layout mode for imported email    |
 
 ## Fetch one
 

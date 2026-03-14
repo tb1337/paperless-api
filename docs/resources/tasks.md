@@ -13,7 +13,7 @@ Tasks represent Celery background jobs — primarily document consumption jobs. 
 | `date_created`     | When the task was queued                              |
 | `date_done`        | When the task finished                                |
 | `type`             | Task type                                             |
-| `status`           | `"PENDING"` / `"STARTED"` / `"SUCCESS"` / `"FAILURE"` |
+| `status`           | `"PENDING"` / `"STARTED"` / `"SUCCESS"` / `"FAILURE"` / `"REVOKED"` |
 | `result`           | Result or error message                               |
 | `acknowledged`     | Whether the task has been dismissed                   |
 | `related_document` | Document id created by this task                      |
@@ -67,3 +67,22 @@ async for task in paperless.tasks:
 # Collect all pending tasks
 pending = [t async for t in paperless.tasks if t.status == "PENDING"]
 ```
+
+## Filter
+
+```python
+# Only tasks with a specific status
+async for task in paperless.tasks.filter(status="SUCCESS"):
+    print(task.task_id, task.result)
+
+# Only unacknowledged consumption tasks
+async for task in paperless.tasks.filter(acknowledged=False, type="ConsumptionTask"):
+    print(task.task_id)
+```
+
+| Parameter      | Type   | Description                              |
+| -------------- | ------ | ---------------------------------------- |
+| `acknowledged` | `bool` | Filter by whether the task is dismissed  |
+| `status`       | `str`  | Filter by status string                  |
+| `task_name`    | `str`  | Filter by internal task name             |
+| `type`         | `str`  | Filter by task type                      |
