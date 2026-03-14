@@ -242,9 +242,9 @@ print(f"Upload queued as task: {task_id}")
 | `correspondent`         | Correspondent ID               |
 | `document_type`         | Document type ID               |
 | `storage_path`          | Storage path ID                |
-| `tags`                  | list[int]                      | Tag ID(s)                |
-| `archive_serial_number` | ASN                            |
-| `custom_fields`         | DocumentCustomFieldList        | Custom field assignments |
+| `tags`                  | Tag IDs                        |
+| `archive_serial_number` | Archive serial number          |
+| `custom_fields`         | Custom field assignments       |
 
 ### Uploading with custom fields
 

@@ -149,12 +149,12 @@ class Permissions:
 
 Constructed with flat keyword arguments — only specify what you need, omitted keys default to `[]`:
 
-| Keyword argument | Type        | Meaning                          |
-| ---------------- | ----------- | -------------------------------- |
-| `view_users`     | `list[int]` | User IDs with view permission    |
-| `view_groups`    | `list[int]` | Group IDs with view permission   |
-| `change_users`   | `list[int]` | User IDs with change permission  |
-| `change_groups`  | `list[int]` | Group IDs with change permission |
+| Keyword argument | Meaning                          |
+| ---------------- | -------------------------------- |
+| `view_users`     | User IDs with view permission    |
+| `view_groups`    | Group IDs with view permission   |
+| `change_users`   | User IDs with change permission  |
+| `change_groups`  | Group IDs with change permission |
 
 ```python
 from pypaperless.models.types import Permissions
