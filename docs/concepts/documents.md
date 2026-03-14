@@ -99,6 +99,7 @@ if document.has_search_hit:
     hit = document.search_hit
     print(hit.score)
     print(hit.highlights)
+    print(hit.note_highlights)
     print(hit.rank)
 ```
 
@@ -149,6 +150,7 @@ print(suggestions.correspondents)   # list[int]
 print(suggestions.document_types)   # list[int]
 print(suggestions.tags)             # list[int]
 print(suggestions.storage_paths)    # list[int]
+print(suggestions.dates)            # list[datetime.date]
 ```
 
 ---
@@ -242,9 +244,9 @@ print(f"Upload queued as task: {task_id}")
 | `correspondent`         | Correspondent ID               |
 | `document_type`         | Document type ID               |
 | `storage_path`          | Storage path ID                |
-| `tags`                  | list[int]                      | Tag ID(s)                |
-| `archive_serial_number` | ASN                            |
-| `custom_fields`         | DocumentCustomFieldList        | Custom field assignments |
+| `tags`                  | Tag IDs                        |
+| `archive_serial_number` | Archive serial number          |
+| `custom_fields`         | Custom field assignments       |
 
 ### Uploading with custom fields
 
@@ -291,6 +293,21 @@ for _ in range(30):
         break
 
 print(task.status, task.result)
+```
+
+---
+
+## Checking if a document is deleted
+
+The `is_deleted` property returns `True` when the document is currently in the trash:
+
+```python
+doc = await paperless.documents(42)
+print(doc.is_deleted)  # False for active documents
+
+# Documents returned from paperless.trash also have this set
+async for doc in paperless.trash:
+    print(doc.id, doc.is_deleted, doc.deleted_at)
 ```
 
 ---

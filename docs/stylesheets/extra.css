@@ -1,0 +1,8 @@
+/* Nav separators: visual border-top on selected top-level items */
+.md-nav--primary > .md-nav__list > .md-nav__item:nth-child(2),
+.md-nav--primary > .md-nav__list > .md-nav__item:nth-child(6),
+.md-nav--primary > .md-nav__list > .md-nav__item:nth-child(7) {
+  border-top: 1px solid var(--md-default-fg-color--lighter);
+  margin-top: 0.6em;
+  padding-top: 0.6em;
+}

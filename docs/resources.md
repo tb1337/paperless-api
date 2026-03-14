@@ -62,7 +62,7 @@ async for correspondent in paperless.correspondents:
     print(correspondent.id, correspondent.name)
 
 async for tag in paperless.tags:
-    print(tag.name, tag.colour)
+    print(tag.name, tag.color)
 ```
 
 ### Getting all primary keys
@@ -133,7 +133,7 @@ Use `draft()` to create a new draft model and `save()` to persist it:
 
 ```python
 # Create a new tag
-draft = paperless.tags.draft(name="important", colour="#ff0000")
+draft = paperless.tags.draft(name="important", color="#ff0000")
 new_id = await paperless.tags.save(draft)
 print(f"Created tag with id {new_id}")
 ```
@@ -158,7 +158,7 @@ Modify fields on a fetched model and call `update()`:
 ```python
 tag = await paperless.tags(3)
 tag.name = "urgent"
-tag.colour = "#ff0000"
+tag.color = "#ff0000"
 
 updated = await paperless.tags.update(tag)
 print(f"Updated: {updated}")  # True if any field changed

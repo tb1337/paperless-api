@@ -23,6 +23,16 @@ trashed = await paperless.trash.as_list()
 print(f"{len(trashed)} document(s) in trash")
 ```
 
+## Filter
+
+```python
+# Trashed documents matching a title substring
+async for doc in paperless.trash.filter(title__icontains="invoice"):
+    print(doc.id, doc.title)
+```
+
+`filter()` accepts the same parameters as `paperless.documents.filter()`. See [Documents](documents.md#filter) for available parameters.
+
 ## Restore
 
 Restore one or more documents back to the document archive:
