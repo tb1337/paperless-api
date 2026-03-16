@@ -4,20 +4,7 @@ Tasks represent Celery background jobs — primarily document consumption jobs. 
 
 ## Model
 
-| Field              | Description                                           |
-| ------------------ | ----------------------------------------------------- |
-| `id`               | Integer primary key                                   |
-| `task_id`          | Celery UUID string                                    |
-| `task_name`        | Internal task name                                    |
-| `task_file_name`   | File that triggered this task                         |
-| `date_created`     | When the task was queued                              |
-| `date_done`        | When the task finished                                |
-| `type`             | Task type                                             |
-| `status`           | `"PENDING"` / `"STARTED"` / `"SUCCESS"` / `"FAILURE"` / `"REVOKED"` |
-| `result`           | Result or error message                               |
-| `acknowledged`     | Whether the task has been dismissed                   |
-| `related_document` | Document id created by this task                      |
-| `owner`            | Owner user id                                         |
+See [`pypaperless/models/tasks.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tasks.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch by UUID
 
@@ -79,10 +66,3 @@ async for task in paperless.tasks.filter(status="SUCCESS"):
 async for task in paperless.tasks.filter(acknowledged=False, type="ConsumptionTask"):
     print(task.task_id)
 ```
-
-| Parameter      | Type   | Description                              |
-| -------------- | ------ | ---------------------------------------- |
-| `acknowledged` | `bool` | Filter by whether the task is dismissed  |
-| `status`       | `str`  | Filter by status string                  |
-| `task_name`    | `str`  | Filter by internal task name             |
-| `type`         | `str`  | Filter by task type                      |

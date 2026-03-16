@@ -4,18 +4,7 @@ Mail accounts are the IMAP mailbox configurations that Paperless-ngx polls for i
 
 ## Model
 
-| Field           | Description                           |
-| --------------- | ------------------------------------- |
-| `id`            | Primary key                           |
-| `name`          | Display name                          |
-| `imap_server`   | IMAP hostname                         |
-| `imap_port`     | IMAP port                             |
-| `imap_security` | Security mode (None / SSL / STARTTLS) |
-| `username`      | IMAP username                         |
-| `character_set` | Mailbox character set                 |
-| `is_token`      | Whether OAuth token auth is used      |
-| `account_type`  | Account type identifier               |
-| `expiration`    | Token expiry date                     |
+See [`pypaperless/models/mails.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/mails.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 

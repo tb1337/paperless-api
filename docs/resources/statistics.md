@@ -4,26 +4,7 @@ The `statistics` resource returns aggregate counts and metadata about the Paperl
 
 ## Model
 
-| Field                       | Description                            |
-| --------------------------- | -------------------------------------- |
-| `documents_total`           | Total number of documents              |
-| `documents_inbox`           | Documents in the inbox                 |
-| `inbox_tag`                 | Primary inbox tag id                   |
-| `inbox_tags`                | All inbox tag ids                      |
-| `document_file_type_counts` | MIME type breakdown                    |
-| `character_count`           | Total characters across all documents  |
-| `tag_count`                 | Number of tags                         |
-| `correspondent_count`       | Number of correspondents               |
-| `document_type_count`       | Number of document types               |
-| `storage_path_count`        | Number of storage paths                |
-| `current_asn`               | Highest assigned archive serial number |
-
-### `StatisticDocumentFileTypeCount`
-
-| Field             | Description                        |
-| ----------------- | ---------------------------------- |
-| `mime_type`       | MIME type string                   |
-| `mime_type_count` | Number of documents with this type |
+See [`pypaperless/models/statistics.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/statistics.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch
 

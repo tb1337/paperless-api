@@ -4,25 +4,7 @@ Saved views are named document filter presets that can be pinned to the dashboar
 
 ## Model
 
-| Field               | Description                                     |
-| ------------------- | ----------------------------------------------- |
-| `id`                | Primary key                                     |
-| `name`              | Display name                                    |
-| `show_on_dashboard` | Pin to web UI dashboard                         |
-| `show_in_sidebar`   | Show in web UI sidebar                          |
-| `sort_field`        | Field to sort results by                        |
-| `sort_reverse`      | Sort in descending order                        |
-| `filter_rules`      | Active filter rules                             |
-| `page_size`         | Number of documents per page                    |
-| `display_mode`      | Layout mode (`"table"` / `"smallCards"` / etc.) |
-| `display_fields`    | Visible column field names                      |
-
-### `SavedViewFilterRule`
-
-| Field       | Description            |
-| ----------- | ---------------------- |
-| `rule_type` | Filter type identifier |
-| `value`     | Filter value           |
+See [`pypaperless/models/saved_views.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/saved_views.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -41,7 +23,7 @@ async for view in paperless.saved_views:
 
 # Only views shown in the sidebar
 sidebar_views = [
-    v async for v in paperless.saved_views.filter()
+    v async for v in paperless.saved_views
     if v.show_in_sidebar
 ]
 ```

@@ -4,23 +4,7 @@ Storage paths define directory templates that control where Paperless-ngx stores
 
 ## Models
 
-### `StoragePath`
-
-| Field            | Description                         |
-| ---------------- | ----------------------------------- |
-| `id`             | Primary key                         |
-| `slug`           | URL-safe identifier                 |
-| `name`           | Display name                        |
-| `path`           | Directory path template             |
-| `document_count` | Number of documents using this path |
-
-### `StoragePathDraft`
-
-| Field   | Description                                                                 |
-| ------- | --------------------------------------------------------------------------- |
-| `name`  | Display name *(required on save)*                                           |
-| `path`  | Path template, e.g. `"{created_year}/{correspondent}"` *(required on save)* |
-| `owner` | Owner user id                                                               |
+See [`pypaperless/models/storage_paths.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/storage_paths.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -36,8 +20,8 @@ print(sp.path)  # "{created_year}/{correspondent}/{title}"
 async for sp in paperless.storage_paths:
     print(sp.id, sp.name, sp.path)
 
-# Build a name → path mapping
-path_map = {sp.name: sp.path async for sp in paperless.storage_paths.filter()}
+# Keyed by id
+paths = await paperless.storage_paths.as_dict()
 ```
 
 ## Create

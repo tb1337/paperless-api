@@ -4,26 +4,7 @@ Share links create publicly accessible URLs for individual documents without req
 
 ## Models
 
-### `ShareLink`
-
-| Field          | Description                               |
-| -------------- | ----------------------------------------- |
-| `id`           | Primary key                               |
-| `created`      | Creation timestamp                        |
-| `expiration`   | Expiry timestamp (`None` = never expires) |
-| `slug`         | URL slug included in the public link      |
-| `document`     | Associated document id                    |
-| `file_version` | Which file version to share               |
-
-### `ShareLinkDraft`
-
-| Field          | Description                       |
-| -------------- | --------------------------------- |
-| `document`     | Document id *(required on save)*  |
-| `file_version` | File version *(required on save)* |
-| `expiration`   | Optional expiry timestamp         |
-
-**`ShareLinkFileVersion` values:** `"archive"`, `"original"`
+See [`pypaperless/models/share_links.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/share_links.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -42,7 +23,7 @@ async for link in paperless.share_links:
 
 # Find links for a specific document
 doc_links = [
-    lnk async for lnk in paperless.share_links.filter()
+    lnk async for lnk in paperless.share_links
     if lnk.document == 42
 ]
 ```

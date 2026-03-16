@@ -4,18 +4,7 @@ The `processed_mail` resource is a read-only log of emails that have already bee
 
 ## Model
 
-| Field       | Description                                      |
-| ----------- | ------------------------------------------------ |
-| `id`        | Primary key                                      |
-| `owner`     | User id of the rule owner                        |
-| `rule`      | Mail rule id that processed this email           |
-| `folder`    | IMAP folder the email was found in               |
-| `uid`       | IMAP UID of the email                            |
-| `subject`   | Email subject line                               |
-| `received`  | When the email was received                      |
-| `processed` | When Paperless processed the email               |
-| `status`    | Processing status (e.g. `"success"`, `"failed"`) |
-| `error`     | Error message if processing failed               |
+See [`pypaperless/models/mails.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/mails.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -35,7 +24,7 @@ async for entry in paperless.processed_mail:
 
 # Collect all failures
 failures = [
-    e async for e in paperless.processed_mail.filter()
+    e async for e in paperless.processed_mail
     if e.status == "failed"
 ]
 ```

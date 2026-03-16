@@ -4,26 +4,7 @@ The `profile` resource exposes the Paperless-ngx user profile for the currently 
 
 ## Model
 
-### `Profile`
-
-| Field                 | Description                                                |
-| --------------------- | ---------------------------------------------------------- |
-| `email`               | User e-mail address                                        |
-| `password`            | Password placeholder (masked by the API)                   |
-| `first_name`          | First name                                                 |
-| `last_name`           | Last name                                                  |
-| `auth_token`          | The API token for the current user (read-only)             |
-| `social_accounts`     | Linked social / OAuth accounts                             |
-| `has_usable_password` | Whether a usable password is set (read-only)               |
-| `is_mfa_enabled`      | Whether multi-factor authentication is enabled (read-only) |
-
-### `ProfileSocialAccount`
-
-| Field      | Description                        |
-| ---------- | ---------------------------------- |
-| `id`       | Social account id                  |
-| `provider` | OAuth provider identifier string   |
-| `name`     | Display name of the linked account |
+See [`pypaperless/models/profile.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/profile.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch
 
@@ -55,14 +36,5 @@ updated = await paperless.profile.update(
 
 print(updated.first_name)  # "Jane"
 ```
-
-Supported keyword arguments:
-
-| Argument     | Description             |
-| ------------ | ----------------------- |
-| `email`      | New e-mail address      |
-| `password`   | New plain-text password |
-| `first_name` | New first name          |
-| `last_name`  | New last name           |
 
 `update()` returns a refreshed `Profile` instance reflecting the server response.

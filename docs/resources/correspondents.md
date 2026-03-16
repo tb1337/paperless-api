@@ -4,27 +4,13 @@ Correspondents represent the senders or recipients that Paperless-ngx associates
 
 ## Models
 
-### `Correspondent`
-
-| Field                 | Description                               |
-| --------------------- | ----------------------------------------- |
-| `id`                  | Primary key                               |
-| `slug`                | URL-safe identifier                       |
-| `name`                | Display name                              |
-| `document_count`      | Number of assigned documents              |
-| `last_correspondence` | Date of the most recent matching document |
-
-### `CorrespondentDraft`
-
-| Field  | Description                       |
-| ------ | --------------------------------- |
-| `name` | Display name *(required on save)* |
+See [`pypaperless/models/correspondents.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/correspondents.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
 ```python
 correspondent = await paperless.correspondents(7)
-print(correspondent.name)             # "ACME Corp"
+print(correspondent.name)            # "ACME Corp"
 print(correspondent.document_count)  # 42
 ```
 
@@ -39,7 +25,7 @@ all_correspondents = await paperless.correspondents.as_list()
 
 # Fetch only a subset matching a filter
 filtered = [
-    c async for c in paperless.correspondents.filter()
+    c async for c in paperless.correspondents
     if c.document_count and c.document_count > 0
 ]
 ```

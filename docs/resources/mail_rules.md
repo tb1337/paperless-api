@@ -4,32 +4,7 @@ Mail rules define how Paperless-ngx processes incoming emails from a mail accoun
 
 ## Model
 
-| Field                                | Description                           |
-| ------------------------------------ | ------------------------------------- |
-| `id`                                 | Primary key                           |
-| `name`                               | Display name                          |
-| `account`                            | Associated mail account id            |
-| `enabled`                            | Whether the rule is active            |
-| `folder`                             | IMAP folder to watch                  |
-| `filter_from`                        | Filter by sender address              |
-| `filter_to`                          | Filter by recipient address           |
-| `filter_subject`                     | Filter by subject line                |
-| `filter_body`                        | Filter by body content                |
-| `filter_attachment_filename_include` | Attachment name include filter        |
-| `filter_attachment_filename_exclude` | Attachment name exclude filter        |
-| `maximum_age`                        | Max age of emails to process (days)   |
-| `action`                             | Action to take on matched emails      |
-| `action_parameter`                   | Action parameter (e.g. target folder) |
-| `assign_title_from`                  | How to derive the document title      |
-| `assign_tags`                        | Tags to assign to imported documents  |
-| `assign_correspondent`               | Correspondent id to assign            |
-| `assign_correspondent_from`          | How to derive the correspondent       |
-| `assign_document_type`               | Document type id to assign            |
-| `assign_owner_from_rule`             | Assign rule owner to the document     |
-| `order`                              | Processing order                      |
-| `attachment_type`                    | Which attachments to import           |
-| `consumption_scope`                  | What to consume from the email        |
-| `pdf_layout`                         | PDF layout mode for imported email    |
+See [`pypaperless/models/mails.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/mails.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -48,7 +23,7 @@ async for rule in paperless.mail_rules:
     print(rule.id, rule.name, "enabled:", rule.enabled)
 
 # Only active rules
-active = [r async for r in paperless.mail_rules.filter() if r.enabled]
+active = [r async for r in paperless.mail_rules if r.enabled]
 ```
 
 ## Permissions
