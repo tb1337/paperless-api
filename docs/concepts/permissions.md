@@ -33,8 +33,8 @@ print(doc.owner)
 print(doc.user_can_change)
 
 if doc.has_permissions:
-    print(doc.permissions.view.users)   # list[int]
-    print(doc.permissions.view.groups)  # list[int]
+    print(doc.permissions.view.users)
+    print(doc.permissions.view.groups)
     print(doc.permissions.change.users)
     print(doc.permissions.change.groups)
 ```
@@ -164,10 +164,10 @@ Permissions(view_users=[2, 3], change_users=[2], change_groups=[1])
 
 # Read individual scopes
 perms = doc.permissions
-perms.view.users    # list[int]
-perms.view.groups   # list[int]
-perms.change.users  # list[int]
-perms.change.groups # list[int]
+perms.view.users
+perms.view.groups
+perms.change.users
+perms.change.groups
 ```
 
 ---

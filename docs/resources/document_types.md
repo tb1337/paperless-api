@@ -4,21 +4,7 @@ Document types classify documents into categories (e.g. *Invoice*, *Contract*, *
 
 ## Models
 
-### `DocumentType`
-
-| Field            | Description                  |
-| ---------------- | ---------------------------- |
-| `id`             | Primary key                  |
-| `slug`           | URL-safe identifier          |
-| `name`           | Display name                 |
-| `document_count` | Number of assigned documents |
-
-### `DocumentTypeDraft`
-
-| Field   | Description                       |
-| ------- | --------------------------------- |
-| `name`  | Display name *(required on save)* |
-| `owner` | Owner user id                     |
+See [`pypaperless/models/document_types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/document_types.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -34,8 +20,8 @@ print(document_type.document_count)  # 17
 async for dt in paperless.document_types:
     print(dt.id, dt.name)
 
-# Map id → name
-type_map = {dt.id: dt.name async for dt in paperless.document_types.filter()}
+# Keyed by id
+types = await paperless.document_types.as_dict()
 ```
 
 ## Create

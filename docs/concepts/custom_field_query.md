@@ -10,7 +10,7 @@ The `custom_field_query` filter lets you search documents by custom field values
 | ------------------------------------ | ----------------- | ---------------------- |
 | `CustomFieldQuery(field, op, value)` | —                 | `[field, op, value]`   |
 | `CustomFieldQueryAnd(q1, q2, …)`     | `q1 & q2`         | `["AND", [q1, q2, …]]` |
-| `CustomFieldQueryOr(q1, q2, …)`      | `q1 &#124; q2`    | `["OR", [q1, q2, …]]`  |
+| `CustomFieldQueryOr(q1, q2, …)`      | `q1 \| q2`        | `["OR", [q1, q2, …]]`  |
 | `CustomFieldQueryNot(q)`             | `~q`              | `["NOT", q]`           |
 
 Import from `pypaperless.models.custom_field_query` (or via `pypaperless.models.types`):
@@ -136,3 +136,5 @@ Paperless-ngx enforces:
 - Maximum number of atoms: **20**
 
 Exceeding these limits returns a HTTP 400 validation error.
+
+The full filter specification is in the [Paperless-ngx API reference](https://docs.paperless-ngx.com/api/#filtering-by-custom-fields).

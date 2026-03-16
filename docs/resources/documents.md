@@ -4,42 +4,7 @@ Documents are the core resource in Paperless-ngx. This page shows the essential 
 
 ## Models
 
-### `Document`
-
-| Field                    | Description                           |
-| ------------------------ | ------------------------------------- |
-| `id`                     | Primary key                           |
-| `title`                  | Document title                        |
-| `content`                | Full-text content (OCR result)        |
-| `document_type`          | Assigned document type id             |
-| `correspondent`          | Assigned correspondent id             |
-| `storage_path`           | Assigned storage path id              |
-| `tags`                   | Assigned tag ids                      |
-| `created`                | Creation date (`datetime.date`)       |
-| `created_date`           | Creation date — date-only property    |
-| `modified`               | Last modified timestamp               |
-| `added`                  | Date added to Paperless               |
-| `archive_serial_number`  | Archive serial number                 |
-| `original_file_name`     | Original uploaded filename            |
-| `archived_file_name`     | Filename of the archived version      |
-| `page_count`             | Number of pages                       |
-| `mime_type`              | MIME type of the document             |
-| `is_shared_by_requester` | Whether the document is shared by you |
-| `is_deleted`             | `True` when the document is in trash  |
-| `custom_fields`          | Custom field values                   |
-
-### `DocumentDraft`
-
-| Field                   | Description           |
-| ----------------------- | --------------------- |
-| `title`                 | Document title        |
-| `document_type`         | Document type id      |
-| `correspondent`         | Correspondent id      |
-| `storage_path`          | Storage path id       |
-| `tags`                  | Tag ids               |
-| `created`               | Created date          |
-| `archive_serial_number` | Archive serial number |
-| `custom_fields`         | Custom field values   |
+See [`pypaperless/models/documents.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/documents.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 

@@ -4,11 +4,7 @@ Groups are Paperless-ngx user groups used for permission management. They are re
 
 ## Model
 
-| Field         | Description                                      |
-| ------------- | ------------------------------------------------ |
-| `id`          | Primary key                                      |
-| `name`        | Group name                                       |
-| `permissions` | Django permission codenames granted to the group |
+See [`pypaperless/models/permissions.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/permissions.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -24,6 +20,6 @@ print(group.permissions)  # ["view_document", "change_document", ...]
 async for group in paperless.groups:
     print(group.id, group.name)
 
-# Build a name → id lookup
-group_map = {g.name: g.id async for g in paperless.groups.filter()}
+# Keyed by id
+groups = await paperless.groups.as_dict()
 ```

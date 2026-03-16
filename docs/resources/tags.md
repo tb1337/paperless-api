@@ -4,30 +4,7 @@ Tags are labels that can be applied to documents for classification and filterin
 
 ## Models
 
-### `Tag`
-
-| Field            | Description                           |
-| ---------------- | ------------------------------------- |
-| `id`             | Primary key                           |
-| `slug`           | URL-safe identifier                   |
-| `name`           | Display name                          |
-| `color`          | Hex color string (e.g. `"#a6cee3"`)   |
-| `text_color`     | Text color for contrast               |
-| `is_inbox_tag`   | Whether this is the inbox tag         |
-| `document_count` | Number of documents with this tag     |
-| `parent`         | Parent tag id (for hierarchical tags) |
-| `children`       | Child tags                            |
-
-### `TagDraft`
-
-| Field          | Description                            |
-| -------------- | -------------------------------------- |
-| `name`         | Display name *(required on save)*      |
-| `color`        | Hex color string *(required on save)*  |
-| `text_color`   | Text color                             |
-| `is_inbox_tag` | Mark as inbox tag *(required on save)* |
-| `parent`       | Parent tag id                          |
-| `owner`        | Owner user id                          |
+See [`pypaperless/models/tags.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tags.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -44,12 +21,9 @@ print(tag.document_count)  # 38
 async for tag in paperless.tags:
     print(tag.id, tag.name, tag.color)
 
-# Name → id lookup
-tag_map = {t.name: t.id async for t in paperless.tags.filter()}
-
 # Find the inbox tag
 inbox = next(
-    (t async for t in paperless.tags.filter() if t.is_inbox_tag),
+    (t async for t in paperless.tags if t.is_inbox_tag),
     None,
 )
 ```

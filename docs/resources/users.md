@@ -4,21 +4,7 @@ Users are the Paperless-ngx user accounts. They are read-only from the API persp
 
 ## Model
 
-| Field                   | Description                            |
-| ----------------------- | -------------------------------------- |
-| `id`                    | Primary key                            |
-| `username`              | Login username                         |
-| `email`                 | Email address                          |
-| `first_name`            | First name                             |
-| `last_name`             | Last name                              |
-| `date_joined`           | Account creation date                  |
-| `is_staff`              | Staff user flag                        |
-| `is_active`             | Account active flag                    |
-| `is_superuser`          | Superuser flag                         |
-| `groups`                | Group ids the user belongs to          |
-| `user_permissions`      | Directly assigned permission codenames |
-| `inherited_permissions` | Permissions inherited from groups      |
-| `is_mfa_enabled`        | Whether MFA is enabled                 |
+See [`pypaperless/models/permissions.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/permissions.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -35,9 +21,6 @@ print(user.groups)      # [2, 5]
 async for user in paperless.users:
     print(user.id, user.username, user.email)
 
-# Username → id lookup
-user_map = {u.username: u.id async for u in paperless.users.filter()}
-
 # Find all superusers
-admins = [u async for u in paperless.users.filter() if u.is_superuser]
+admins = [u async for u in paperless.users if u.is_superuser]
 ```

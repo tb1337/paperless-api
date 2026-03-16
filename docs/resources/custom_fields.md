@@ -4,24 +4,7 @@ Custom fields let you attach arbitrary typed metadata to documents. This page co
 
 ## Models
 
-### `CustomField`
-
-| Field        | Description                 |
-| ------------ | --------------------------- |
-| `id`         | Primary key                 |
-| `name`       | Display name                |
-| `data_type`  | Field type (see below)      |
-| `extra_data` | Type-specific configuration |
-
-**`CustomFieldType` values:** `string`, `longtext`, `url`, `date`, `boolean`, `integer`, `float`, `monetary`, `documentlink`, `select`
-
-### `CustomFieldDraft`
-
-| Field        | Description                       |
-| ------------ | --------------------------------- |
-| `name`       | Display name *(required on save)* |
-| `data_type`  | Field type *(required on save)*   |
-| `extra_data` | Type-specific extras              |
+See [`pypaperless/models/custom_fields.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/custom_fields.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -37,8 +20,8 @@ print(field.data_type)  # CustomFieldType.MONETARY
 async for field in paperless.custom_fields:
     print(field.id, field.name, field.data_type)
 
-# Build a name → id lookup
-field_map = {f.name: f.id async for f in paperless.custom_fields.filter()}
+# Keyed by id
+fields = await paperless.custom_fields.as_dict()
 ```
 
 ## Create

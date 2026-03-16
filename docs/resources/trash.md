@@ -4,13 +4,7 @@ The `trash` resource exposes documents that have been soft-deleted in Paperless-
 
 ## Model
 
-Trashed documents use the same `Document` model. The only additional field populated in the trash context is:
-
-| Field        | Description                                        |
-| ------------ | -------------------------------------------------- |
-| `deleted_at` | Timestamp when the document was moved to the trash |
-
-All other `Document` fields are present as usual.
+Trashed documents use the same `Document` model — see [`pypaperless/models/documents.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/documents.py). In the trash context, `deleted_at` is additionally populated with the timestamp when the document was moved to the trash.
 
 ## Iterate
 

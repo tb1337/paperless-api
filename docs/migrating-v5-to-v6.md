@@ -1,12 +1,10 @@
 # Migrating from v5 to v6
 
-v6 is a full rewrite of pypaperless, motivated by three concrete problems with v5:
+v6 is almost a full rewrite of pypaperless. Three things drove it:
 
-- **Tight coupling between models and the HTTP layer.** In v5, every model instance held a reference to the `Paperless` client and called it directly for `update()`, `delete()`, and `save()`. This made models hard to construct in tests and impossible to pass between different client contexts. v6 makes models pure data containers — all I/O goes through service objects.
-- **Runtime type safety.** v5 used plain dataclasses with manual dict-to-object conversion. v6 uses Pydantic v2, which validates all incoming API data against the declared field types at parse time. The Pydantic team's own benchmarks show v2 parses 5–17× faster than v1 and catches malformed payloads that would previously have silently produced wrong values.
-- **HTTP client ergonomics.** `aiohttp` requires an explicit session lifecycle and has no built-in sync support. `httpx` has a unified sync/async API, ships with a `MockTransport` for testing without a live server, and handles connection pooling transparently.
-
-The changes are mechanical at call sites but the reasoning is architectural.
+- **Models were too tightly coupled to the HTTP layer.** In v5, every model instance carried a reference to the client and called it directly. That made testing awkward and sharing models between contexts impossible. v6 models are plain data — all I/O goes through services.
+- **No runtime type safety.** v5 used dataclasses with manual dict conversion, so bad API responses would silently produce wrong values. v6 uses Pydantic v2, which validates every response at parse time.
+- **`aiohttp` got removed.** `httpx` is modern, has a cleaner sync/async API and a built-in mock transport that makes testing easier.
 
 ---
 
