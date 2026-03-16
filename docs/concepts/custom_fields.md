@@ -18,7 +18,7 @@ Each custom field has a `data_type` which determines the type of its value:
 | `INTEGER`         | `int`             | Integer number                     |
 | `FLOAT`           | `float`           | Floating point number              |
 | `MONETARY`        | `str`             | Currency amount, e.g. `"EUR12.50"` |
-| `SELECT`          | `int &#124; str`  | Selection from predefined options  |
+| `SELECT`          | `int` or `str`    | Selection from predefined options  |
 | `DOCUMENT_LINK`   | `list[int]`       | Links to other documents by ID     |
 
 ---
@@ -91,8 +91,7 @@ print(value.value)
 Use `default()` to return `None` instead of raising when the field is absent:
 
 ```python
-value = document.custom_fields.default(8)
-if value is not None:
+if value := document.custom_fields.default(8):
     print(value.value)
 ```
 
@@ -115,17 +114,17 @@ A `TypeError` is raised if the actual type does not match `expected_type`.
 
 When the cache is active, pypaperless instantiates the right subclass automatically:
 
-| Class                          | `data_type`          | `value` type     |
-| ------------------------------ | -------------------- | ---------------- |
-| `CustomFieldStringValue`       | `STRING`, `LONGTEXT` | `str`            |
-| `CustomFieldURLValue`          | `URL`                | `str`            |
-| `CustomFieldDateValue`         | `DATE`               | `datetime.date`  |
-| `CustomFieldBooleanValue`      | `BOOLEAN`            | `bool`           |
-| `CustomFieldIntegerValue`      | `INTEGER`            | `int`            |
-| `CustomFieldFloatValue`        | `FLOAT`              | `float`          |
-| `CustomFieldMonetaryValue`     | `MONETARY`           | `str`            |
-| `CustomFieldSelectValue`       | `SELECT`             | `int &#124; str` |
-| `CustomFieldDocumentLinkValue` | `DOCUMENT_LINK`      | `list[int]`      |
+| Class                          | `data_type`          | `value` type    |
+| ------------------------------ | -------------------- | --------------- |
+| `CustomFieldStringValue`       | `STRING`, `LONGTEXT` | `str`           |
+| `CustomFieldURLValue`          | `URL`                | `str`           |
+| `CustomFieldDateValue`         | `DATE`               | `datetime.date` |
+| `CustomFieldBooleanValue`      | `BOOLEAN`            | `bool`          |
+| `CustomFieldIntegerValue`      | `INTEGER`            | `int`           |
+| `CustomFieldFloatValue`        | `FLOAT`              | `float`         |
+| `CustomFieldMonetaryValue`     | `MONETARY`           | `str`           |
+| `CustomFieldSelectValue`       | `SELECT`             | `int` or `str`  |
+| `CustomFieldDocumentLinkValue` | `DOCUMENT_LINK`      | `list[int]`     |
 
 ### `CustomFieldMonetaryValue` extras
 

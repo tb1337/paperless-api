@@ -11,11 +11,11 @@ document = await paperless.documents(42)
 
 print(document.id)
 print(document.title)
-print(document.correspondent)   # int (id) or None
-print(document.document_type)   # int (id) or None
-print(document.tags)            # list[int]
-print(document.created)         # datetime.date | None
-print(document.content)         # extracted text content
+print(document.correspondent)
+print(document.document_type)
+print(document.tags)
+print(document.created)
+print(document.content)
 print(document.page_count)
 print(document.mime_type)
 print(document.archive_serial_number)
@@ -43,15 +43,16 @@ preview   = await doc.get_preview()
 thumbnail = await doc.get_thumbnail()
 ```
 
-The `DownloadedDocument` holds:
+`DownloadedDocument` gives you the raw bytes plus everything from the response headers you'd need to save or serve the file:
 
-| Attribute              | Description                                   |
-| ---------------------- | --------------------------------------------- |
-| `content`              | Raw binary file data                          |
-| `content_type`         | MIME type, e.g. `"application/pdf"`           |
-| `disposition_type`     | `"attachment"` or `"inline"`                  |
-| `disposition_filename` | Suggested filename from `Content-Disposition` |
-| `original`             | Whether the original file was requested       |
+```python
+# save to disk using the filename suggested by the API
+with open(download.disposition_filename, "wb") as f:
+    f.write(download.content)
+
+print(download.content_type)       # e.g. "application/pdf"
+print(download.disposition_type)   # "attachment" or "inline"
+```
 
 ### Requesting the original file
 
@@ -79,29 +80,26 @@ async for document in paperless.documents.search(query="annual report"):
     ...
 ```
 
-### Custom field query
-
-```python
-async for document in paperless.documents.search(
-    custom_field_query='["amount", "gte", 10000]'
-):
-    ...
-```
-
-Custom field query syntax is documented in the [Paperless-ngx API reference](https://docs.paperless-ngx.com/api/#filtering-by-custom-fields).
-
 ### Search hits
 
-When a document was returned from a search, it carries a `DocumentSearchHit`:
+When a document was returned from a search, it carries a `DocumentSearchHit`. Use `has_search_hit` to branch on it, or the walrus operator to check and bind in one step:
 
 ```python
 if document.has_search_hit:
-    hit = document.search_hit
+    print(f"{document.title} matched the query")
+
+if hit := document.search_hit:
     print(hit.score)
     print(hit.highlights)
     print(hit.note_highlights)
     print(hit.rank)
 ```
+
+`search_hit` is `None` for documents fetched directly (e.g. `paperless.documents(42)`).
+
+### Custom field query
+
+For building expressions in a type-safe way, see [Custom field query](custom_field_query.md).
 
 ---
 
@@ -146,11 +144,11 @@ suggestions = await paperless.documents.suggestions(42)
 doc = await paperless.documents(42)
 suggestions = await doc.get_suggestions()
 
-print(suggestions.correspondents)   # list[int]
-print(suggestions.document_types)   # list[int]
-print(suggestions.tags)             # list[int]
-print(suggestions.storage_paths)    # list[int]
-print(suggestions.dates)            # list[datetime.date]
+print(suggestions.correspondents)
+print(suggestions.document_types)
+print(suggestions.tags)
+print(suggestions.storage_paths)
+print(suggestions.dates)
 ```
 
 ---
@@ -209,21 +207,23 @@ print(f"Next ASN: {next_asn}")
 
 ## Uploading a document
 
-Use `draft()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`.
+Use `draft()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`. All fields except `document` are optional.
 
 ```python
 with open("invoice.pdf", "rb") as f:
     content = f.read()
 
 draft = paperless.documents.draft(
-    document=content,
-    filename="invoice.pdf",
+    document=content,           # required — raw file bytes
+    filename="invoice.pdf",     # original filename
     title="Invoice 2024-01",
     created=datetime.datetime(2024, 1, 15),
-    correspondent=3,
-    document_type=2,
-    tags=[1, 5],
+    correspondent=3,            # correspondent ID
+    document_type=2,            # document type ID
+    storage_path=1,             # storage path ID
+    tags=[1, 5],                # tag IDs
     archive_serial_number=1042,
+    custom_fields=[3, 8],       # custom field IDs (Paperless assigns null values)
 )
 
 task_id = await paperless.documents.save(draft)
@@ -233,35 +233,9 @@ print(f"Upload queued as task: {task_id}")
 !!! note
     Unlike other resources, `save()` for documents returns a **task ID string**, not an integer ID. The document is processed asynchronously by Paperless-ngx. Use `paperless.tasks` to monitor the task.
 
-### Document draft fields
+### Uploading with custom field values
 
-| Field                   | Description                    |
-| ----------------------- | ------------------------------ |
-| `document`              | **Required.** Raw file content |
-| `filename`              | Optional original filename     |
-| `title`                 | Document title                 |
-| `created`               | Document creation date         |
-| `correspondent`         | Correspondent ID               |
-| `document_type`         | Document type ID               |
-| `storage_path`          | Storage path ID                |
-| `tags`                  | Tag IDs                        |
-| `archive_serial_number` | Archive serial number          |
-| `custom_fields`         | Custom field assignments       |
-
-### Uploading with custom fields
-
-You can attach custom fields in two ways:
-
-**As a list of field IDs** (Paperless assigns `null` as value):
-
-```python
-draft = paperless.documents.draft(
-    document=content,
-    custom_fields=[3, 8],
-)
-```
-
-**As a `DocumentCustomFieldList`** (with explicit values):
+To set explicit values on custom fields at upload time, use `DocumentCustomFieldList`:
 
 ```python
 from pypaperless.models.documents import DocumentCustomFieldList
@@ -365,21 +339,3 @@ for entry in entries:
 # Via the service, passing the document pk explicitly
 entries = await paperless.documents.history(42)
 ```
-
-### `DocumentHistory` fields
-
-| Field       | Description                                           |
-| ----------- | ----------------------------------------------------- |
-| `id`        | Entry id                                              |
-| `document`  | Document pk (injected by the service layer)           |
-| `timestamp` | When the change occurred                              |
-| `action`    | `"create"` or `"update"` (`DocumentHistoryAction`)    |
-| `changes`   | Dict mapping field names to `[old, new]` pairs        |
-| `actor`     | The user who made the change (`DocumentHistoryActor`) |
-
-### `DocumentHistoryActor` fields
-
-| Field      | Description     |
-| ---------- | --------------- |
-| `id`       | User id         |
-| `username` | Username string |
