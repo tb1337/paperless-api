@@ -13,12 +13,12 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import (
     BadJsonResponseError,
     DraftNotSupportedError,
+    ForbiddenError,
+    InactiveOrDeletedError,
     InitializationError,
+    InvalidTokenError,
     JsonResponseWithError,
     PaperlessConnectionError,
-    PaperlessForbiddenError,
-    PaperlessInactiveOrDeletedError,
-    PaperlessInvalidTokenError,
 )
 from pypaperless.models import CustomField, Page
 from pypaperless.models.base import PaperlessModel
@@ -112,7 +112,7 @@ class TestPaperless:
             status_code=401,
             text="any html",
         )
-        with pytest.raises(PaperlessInvalidTokenError):
+        with pytest.raises(InvalidTokenError):
             await api.initialize()
 
         # http 401 - inactive or deleted user
@@ -122,7 +122,7 @@ class TestPaperless:
             status_code=401,
             json={"detail": "User is inactive"},
         )
-        with pytest.raises(PaperlessInactiveOrDeletedError):
+        with pytest.raises(InactiveOrDeletedError):
             await api.initialize()
 
         # http status forbidden
@@ -132,7 +132,7 @@ class TestPaperless:
             status_code=403,
             text="any html",
         )
-        with pytest.raises(PaperlessForbiddenError):
+        with pytest.raises(ForbiddenError):
             await api.initialize()
 
         # http ok, wrong payload
@@ -149,9 +149,9 @@ class TestPaperless:
         "exception_cls",
         [
             PaperlessConnectionError,
-            PaperlessInvalidTokenError,
-            PaperlessInactiveOrDeletedError,
-            PaperlessForbiddenError,
+            InvalidTokenError,
+            InactiveOrDeletedError,
+            ForbiddenError,
         ],
     )
     async def test_errors_are_backwards_compatible(self, exception_cls: type) -> None:

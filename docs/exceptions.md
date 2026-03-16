@@ -12,19 +12,23 @@ All exceptions inherit from `PaperlessError`, which in turn inherits from Python
 PaperlessError
 ├── InitializationError
 │   ├── PaperlessConnectionError
-│   ├── PaperlessAuthError
-│   │   ├── PaperlessInvalidTokenError
-│   │   └── PaperlessInactiveOrDeletedError
-│   └── PaperlessForbiddenError
-├── BadJsonResponseError
-├── JsonResponseWithError
-├── AsnRequestError
-├── DraftFieldRequiredError
-├── DraftNotSupportedError
-├── ItemNotFoundError
-├── PrimaryKeyRequiredError
-├── SendEmailError
-└── TaskNotFoundError
+│   ├── AuthError
+│   │   ├── InvalidTokenError
+│   │   └── InactiveOrDeletedError
+│   └── ForbiddenError
+├── ResponseError
+│   ├── BadJsonResponseError
+│   └── JsonResponseWithError
+├── DraftError
+│   ├── DraftFieldRequiredError
+│   └── DraftNotSupportedError
+├── ResourceError
+│   ├── ItemNotFoundError
+│   ├── PrimaryKeyRequiredError
+│   └── TaskNotFoundError
+└── DocumentError
+    ├── AsnRequestError
+    └── SendEmailError
 ```
 
 ---
@@ -57,28 +61,30 @@ except InitializationError as exc:
 
 The host could not be reached (network error, wrong URL, DNS failure, etc.).
 
-#### `PaperlessAuthError`
+#### `AuthError`
 
 The server responded with HTTP **401**.
 
 **Subclasses:**
 
-- **`PaperlessInvalidTokenError`** — 401 because the token is invalid or expired.
-- **`PaperlessInactiveOrDeletedError`** — 401 because the user account is inactive or deleted.
+- **`InvalidTokenError`** — 401 because the token is invalid or expired.
+- **`InactiveOrDeletedError`** — 401 because the user account is inactive or deleted.
 
-#### `PaperlessForbiddenError`
+#### `ForbiddenError`
 
 The server responded with HTTP **403** — the user is authenticated but lacks permission to access the resource.
 
 ---
 
-### `BadJsonResponseError`
+### `ResponseError`
+
+Base class for exceptions caused by an unexpected or error API response. Catch this to handle all response-level failures in one place.
+
+#### `BadJsonResponseError`
 
 The API returned a response that could not be decoded as JSON.
 
----
-
-### `JsonResponseWithError`
+#### `JsonResponseWithError`
 
 The API accepted the request but returned an error payload in its JSON body. The exception message includes the key path and error message extracted from the payload.
 
@@ -93,13 +99,11 @@ except JsonResponseWithError as exc:
 
 ---
 
-### `AsnRequestError`
+### `DraftError`
 
-Raised when the request for the next available archive serial number fails unexpectedly.
+Base class for exceptions raised during draft lifecycle operations. Catch this to handle all draft-related failures in one place.
 
----
-
-### `DraftFieldRequiredError`
+#### `DraftFieldRequiredError`
 
 Raised by `draft.validate_draft()` (called automatically inside `save()`) when one or more required fields are missing.
 
@@ -112,15 +116,17 @@ except DraftFieldRequiredError as exc:
     print(exc)  # "Missing fields for saving a `DocumentDraft`: document."
 ```
 
----
-
-### `DraftNotSupportedError`
+#### `DraftNotSupportedError`
 
 Raised when calling `draft()` on a service that does not have a `_draft_cls` defined (i.e. creation is not supported for that resource).
 
 ---
 
-### `ItemNotFoundError`
+### `ResourceError`
+
+Base class for exceptions raised during resource access or lookup operations. Catch this to handle all resource-level failures in one place.
+
+#### `ItemNotFoundError`
 
 Raised by `DocumentCustomFieldList.get()` when the requested field is not present on the document.
 
@@ -135,21 +141,11 @@ except ItemNotFoundError:
 
 Use `default()` instead of `get()` to avoid this exception and receive `None` on absence.
 
----
-
-### `PrimaryKeyRequiredError`
+#### `PrimaryKeyRequiredError`
 
 Raised when trying to access note data through `DocumentNoteService` without providing a document primary key.
 
----
-
-### `SendEmailError`
-
-Raised when the API rejects an e-mail send request.
-
----
-
-### `TaskNotFoundError`
+#### `TaskNotFoundError`
 
 Raised when looking up a task by UUID that does not exist in Paperless-ngx.
 
@@ -164,13 +160,27 @@ except TaskNotFoundError as exc:
 
 ---
 
+### `DocumentError`
+
+Base class for exceptions raised by document-specific service operations. Catch this to handle all document-level failures in one place.
+
+#### `AsnRequestError`
+
+Raised when the request for the next available archive serial number fails unexpectedly.
+
+#### `SendEmailError`
+
+Raised when the API rejects an e-mail send request.
+
+---
+
 ## Recommended error handling pattern
 
 ```python
 from pypaperless.exceptions import (
     PaperlessConnectionError,
-    PaperlessAuthError,
-    PaperlessForbiddenError,
+    AuthError,
+    ForbiddenError,
     PaperlessError,
 )
 
@@ -179,9 +189,9 @@ try:
         doc = await paperless.documents(42)
 except PaperlessConnectionError:
     print("Cannot reach the Paperless server.")
-except PaperlessAuthError:
+except AuthError:
     print("Authentication failed — check your token.")
-except PaperlessForbiddenError:
+except ForbiddenError:
     print("Access denied.")
 except PaperlessError as exc:
     print(f"Unexpected error: {exc}")
