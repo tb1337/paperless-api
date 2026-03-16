@@ -62,15 +62,11 @@ class CustomFieldQuery:
         return f"{type(self).__name__}({self.build()!r})"
 
     def __and__(self, other: CustomFieldQuery) -> CustomFieldQueryAnd:
-        """Combine with *other* using logical AND, flattening nested ANDs."""
-        if isinstance(self, CustomFieldQueryAnd):
-            return CustomFieldQueryAnd(*self._queries, other)
+        """Combine with *other* using logical AND."""
         return CustomFieldQueryAnd(self, other)
 
     def __or__(self, other: CustomFieldQuery) -> CustomFieldQueryOr:
-        """Combine with *other* using logical OR, flattening nested ORs."""
-        if isinstance(self, CustomFieldQueryOr):
-            return CustomFieldQueryOr(*self._queries, other)
+        """Combine with *other* using logical OR."""
         return CustomFieldQueryOr(self, other)
 
     def __invert__(self) -> CustomFieldQueryNot:

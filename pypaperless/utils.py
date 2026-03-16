@@ -47,7 +47,7 @@ def process_form_data(data: dict[str, Any]) -> tuple[dict[str, Any], list[tuple[
         else:
             data_fields[name] = f"{value}"
 
-    def _add_form_value(name: str | None, value: Any) -> None:
+    def _add_form_value(name: str, value: Any) -> None:
         if value is None:
             return
         if isinstance(value, dict):
@@ -58,14 +58,13 @@ def process_form_data(data: dict[str, Any]) -> tuple[dict[str, Any], list[tuple[
             for list_value in value:
                 _add_form_value(name, list_value)
             return
-        if name is None:
-            return
         if isinstance(value, (tuple, bytes)):
             _add_file_value(name, value)
         else:
             _add_data_value(name, value)
 
-    _add_form_value(None, data)
+    for key, value in data.items():
+        _add_form_value(key, value)
     return data_fields, file_fields
 
 

@@ -14,7 +14,7 @@ from .document_types import DATA_DOCUMENT_TYPES
 from .documents import DATA_DOCUMENTS
 from .documents_search import DATA_DOCUMENTS_SEARCH
 from .groups import DATA_GROUPS
-from .mail import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES, DATA_PROCESSED_MAIL
+from .mails import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES, DATA_PROCESSED_MAIL
 from .object_permissions import DATA_OBJECT_PERMISSIONS
 from .paths import DATA_PATHS
 from .profile import DATA_PROFILE
@@ -29,7 +29,7 @@ from .tasks import DATA_TASKS
 from .token import DATA_TOKEN
 from .trash import DATA_TRASH
 from .users import DATA_USERS
-from .workflow import DATA_WORKFLOW_ACTIONS, DATA_WORKFLOW_TRIGGERS, DATA_WORKFLOWS
+from .workflows import DATA_WORKFLOW_ACTIONS, DATA_WORKFLOW_TRIGGERS, DATA_WORKFLOWS
 
 # mypy: ignore-errors
 
