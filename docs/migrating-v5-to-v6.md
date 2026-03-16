@@ -21,6 +21,7 @@ v6 is almost a full rewrite of pypaperless. Three things drove it:
 | 7   | Note deletion: `note.delete()` → service call                              | [Document notes](#document-notes)                                             |
 | 8   | `generate_api_token()` custom-client argument renamed                      | [Token generation](#token-generation)                                         |
 | 9   | New: `paperless.profile`, `paperless.trash`, `paperless.documents.history` | [New resources](#new-resources)                                               |
+| 10  | Rename four `Paperless`-prefixed exception classes                         | [Error handling](#error-handling)                                             |
 
 ---
 
@@ -321,4 +322,46 @@ for entry in entries:
     except PaperlessConnectionError:
         ...
     ```
-```
+
+### Exception renames
+
+Four exception classes lost their `Paperless` prefix to follow standard Python naming conventions. `PaperlessConnectionError` is the only exception kept as-is, because it would otherwise shadow Python's built-in `ConnectionError`.
+
+| v5                                | v6                       |
+| --------------------------------- | ------------------------ |
+| `PaperlessAuthError`              | `AuthError`              |
+| `PaperlessInvalidTokenError`      | `InvalidTokenError`      |
+| `PaperlessInactiveOrDeletedError` | `InactiveOrDeletedError` |
+| `PaperlessForbiddenError`         | `ForbiddenError`         |
+
+=== "v5"
+    ```python
+    from pypaperless.exceptions import PaperlessAuthError, PaperlessForbiddenError
+
+    except PaperlessAuthError:
+        ...
+    except PaperlessForbiddenError:
+        ...
+    ```
+
+=== "v6"
+    ```python
+    from pypaperless.exceptions import AuthError, ForbiddenError
+
+    except AuthError:
+        ...
+    except ForbiddenError:
+        ...
+    ```
+
+### New exception base classes
+
+v6 introduces intermediate base classes that you can use to catch whole groups of related errors:
+
+| Class                 | Catches                                                             |
+| --------------------- | ------------------------------------------------------------------- |
+| `InitializationError` | All session/transport errors (unchanged from v5)                    |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`                     |
+| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                 |
+| `ResourceError`       | `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
+| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                 |
