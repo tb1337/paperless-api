@@ -18,8 +18,6 @@ All fields are optional (``total=False``).  Pagination parameters (``page``,
 ``page_size``) are intentionally excluded — pass them directly as kwargs.
 """
 
-from __future__ import annotations
-
 from typing import TypedDict
 
 

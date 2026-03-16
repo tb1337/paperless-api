@@ -29,7 +29,7 @@ class CustomFieldService(
     _resource_cls = CustomField
 
     @asynccontextmanager
-    async def filter(self, **kwargs: Unpack[CustomFieldFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[CustomFieldFilters]) -> AsyncGenerator[Self]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.CustomFieldFilters` for available keys.

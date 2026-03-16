@@ -1,7 +1,5 @@
 """PyPaperless constants."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 API_VERSION = 9
@@ -117,6 +115,6 @@ class PaperlessResource(StrEnum):
     UNKNOWN = UNKNOWN
 
     @classmethod
-    def _missing_(cls: type[PaperlessResource], *_: object) -> PaperlessResource:
+    def _missing_(cls: "type[PaperlessResource]", *_: object) -> "PaperlessResource":
         """Set default member on unknown value."""
         return cls.UNKNOWN

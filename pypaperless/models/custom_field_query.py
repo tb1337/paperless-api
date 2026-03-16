@@ -13,8 +13,6 @@ Field can be referenced by integer id or name string.
 See :class:`CustomFieldQuery` for the full list of supported operators.
 """
 
-from __future__ import annotations
-
 import json
 from typing import Any
 
@@ -61,15 +59,15 @@ class CustomFieldQuery:
         """Return a developer-friendly representation."""
         return f"{type(self).__name__}({self.build()!r})"
 
-    def __and__(self, other: CustomFieldQuery) -> CustomFieldQueryAnd:
+    def __and__(self, other: "CustomFieldQuery") -> "CustomFieldQueryAnd":
         """Combine with *other* using logical AND."""
         return CustomFieldQueryAnd(self, other)
 
-    def __or__(self, other: CustomFieldQuery) -> CustomFieldQueryOr:
+    def __or__(self, other: "CustomFieldQuery") -> "CustomFieldQueryOr":
         """Combine with *other* using logical OR."""
         return CustomFieldQueryOr(self, other)
 
-    def __invert__(self) -> CustomFieldQueryNot:
+    def __invert__(self) -> "CustomFieldQueryNot":
         """Negate this expression."""
         return CustomFieldQueryNot(self)
 
@@ -100,7 +98,7 @@ class CustomFieldQueryAnd(CustomFieldQuery):
         """Return the JSON-serialisable list for this expression."""
         return ["AND", [q.build() for q in self._queries]]
 
-    def __and__(self, other: CustomFieldQuery) -> CustomFieldQueryAnd:
+    def __and__(self, other: CustomFieldQuery) -> "CustomFieldQueryAnd":
         """Flatten: extend the existing AND instead of nesting."""
         return CustomFieldQueryAnd(*self._queries, other)
 
@@ -124,7 +122,7 @@ class CustomFieldQueryOr(CustomFieldQuery):
         """Return the JSON-serialisable list for this expression."""
         return ["OR", [q.build() for q in self._queries]]
 
-    def __or__(self, other: CustomFieldQuery) -> CustomFieldQueryOr:
+    def __or__(self, other: CustomFieldQuery) -> "CustomFieldQueryOr":
         """Flatten: extend the existing OR instead of nesting."""
         return CustomFieldQueryOr(*self._queries, other)
 
