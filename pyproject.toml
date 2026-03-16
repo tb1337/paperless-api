@@ -64,7 +64,6 @@ show_missing = true
 platform = "linux"
 python_version = "3.12"
 files = ["pypaperless"]
-exclude = ["tests/"]
 
 follow_imports = "normal"
 ignore_missing_imports = true
