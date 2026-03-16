@@ -4,11 +4,11 @@ from io import BytesIO
 
 import httpx
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
-from pypaperless.const import API_PATH
+from pypaperless import Paperless, PaperlessConfig
+from pypaperless.const import API_PATH, API_VERSION
 from pypaperless.exceptions import (
     BadJsonResponseError,
     DraftNotSupportedError,
@@ -403,3 +403,61 @@ def test_process_form_data_duplicate_key_scalar_to_list() -> None:
     data2, _ = process_form_data({"ids": [10, 20]})
     # Both values land in data2["ids"] as a list
     assert data2["ids"] == ["10", "20"]
+
+
+# ---------------------------------------------------------------------------
+# PaperlessConfig / multi-mode init tests
+# ---------------------------------------------------------------------------
+
+
+def test_config_explicit_params() -> None:
+    """Paperless(url, token) — classic mode still works."""
+    api = Paperless(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
+    assert api.base_url == PAPERLESS_TEST_URL
+    assert api._token == PAPERLESS_TEST_TOKEN
+
+
+def test_config_object() -> None:
+    """Paperless(config=PaperlessConfig(...)) wires url and token correctly."""
+    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
+    api = Paperless(config=cfg)
+    assert api.base_url == PAPERLESS_TEST_URL
+    assert api._token == PAPERLESS_TEST_TOKEN
+
+
+def test_config_object_custom_api_version() -> None:
+    """PaperlessConfig.request_api_version is forwarded to the client."""
+    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN, request_api_version=7)
+    api = Paperless(config=cfg)
+    assert api._request_api_version == 7
+
+
+def test_config_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Paperless() with no args reads PYPAPERLESS_URL / PYPAPERLESS_TOKEN from the environment."""
+    monkeypatch.setenv("PYPAPERLESS_URL", PAPERLESS_TEST_URL)
+    monkeypatch.setenv("PYPAPERLESS_TOKEN", PAPERLESS_TEST_TOKEN)
+    api = Paperless()
+    assert api.base_url == PAPERLESS_TEST_URL
+    assert api._token == PAPERLESS_TEST_TOKEN
+
+
+def test_config_from_env_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Paperless() raises ValidationError when PYPAPERLESS_URL is not set."""
+    monkeypatch.delenv("PYPAPERLESS_URL", raising=False)
+    monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
+    with pytest.raises(ValidationError):
+        Paperless()
+
+
+def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Paperless() sets token to None when PYPAPERLESS_TOKEN is not set."""
+    monkeypatch.setenv("PYPAPERLESS_URL", PAPERLESS_TEST_URL)
+    monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
+    api = Paperless()
+    assert api._token is None
+
+
+def test_config_default_api_version_from_const() -> None:
+    """PaperlessConfig uses API_VERSION as default for request_api_version."""
+    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL)
+    assert cfg.request_api_version == API_VERSION
