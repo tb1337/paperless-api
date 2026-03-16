@@ -80,7 +80,7 @@ Full documentation is available **[here][docs-url]**.
 
 | **pypaperless** | *Paperless-ngx* | Python  | Notes                                   |
 | --------------- | --------------- | ------- | --------------------------------------- |
-| **v6**          | **>= 2.19**     | >= 3.13 | Current release                         |
+| **v6.0**        | **>= 2.19**     | >= 3.13 | Current release                         |
 | v5.2            | >= 2.19         | >= 3.12 |                                         |
 | v5.1            | >= 2.17         | >= 3.12 |                                         |
 | v5.0            | >= 2.17         | >= 3.12 |                                         |
