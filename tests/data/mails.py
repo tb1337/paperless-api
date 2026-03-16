@@ -1,7 +1,5 @@
 """Mail snapshots."""
 
-# mypy: ignore-errors
-
 DATA_MAIL_ACCOUNTS = {
     "count": 1,
     "next": None,

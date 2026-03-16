@@ -12,8 +12,6 @@ from pypaperless.const import API_PATH
 from .const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from .data import DATA_SCHEMA
 
-# mypy: ignore-errors
-
 
 @pytest.fixture(name="api")
 def api_obj_fixture() -> Paperless:

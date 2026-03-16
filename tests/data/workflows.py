@@ -1,7 +1,5 @@
 """Workflow snapshot."""
 
-# mypy: ignore-errors
-
 DATA_WORKFLOWS = {
     "count": 3,
     "next": None,

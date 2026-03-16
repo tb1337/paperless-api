@@ -30,7 +30,7 @@ class TagService(
     _resource_cls = Tag
 
     @asynccontextmanager
-    async def filter(self, **kwargs: Unpack[TagFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[TagFilters]) -> AsyncGenerator[Self]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.TagFilters` for available keys.

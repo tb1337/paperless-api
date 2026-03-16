@@ -30,7 +30,7 @@ class StoragePathService(
     _resource_cls = StoragePath
 
     @asynccontextmanager
-    async def filter(self, **kwargs: Unpack[StoragePathFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[StoragePathFilters]) -> AsyncGenerator[Self]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.StoragePathFilters` for available keys.

@@ -91,9 +91,9 @@ class PaperlessModel(BaseModel):
         for field_name, field_info in self.__class__.model_fields.items():
             if field_name in self.data:
                 value = self.data[field_name]
-                if field_info.annotation is not None:
+                if annotation := field_info.annotation:
                     try:
-                        adapter = self._get_type_adapter(field_name, field_info.annotation)
+                        adapter = self._get_type_adapter(field_name, annotation)
                         value = adapter.validate_python(value)
                     except (ValueError, TypeError):
                         pass

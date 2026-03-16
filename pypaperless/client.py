@@ -10,12 +10,12 @@ from . import services
 from .const import API_PATH, API_VERSION
 from .exceptions import (
     BadJsonResponseError,
+    ForbiddenError,
+    InactiveOrDeletedError,
     InitializationError,
+    InvalidTokenError,
     JsonResponseWithError,
     PaperlessConnectionError,
-    PaperlessForbiddenError,
-    PaperlessInactiveOrDeletedError,
-    PaperlessInvalidTokenError,
 )
 from .utils import normalize_base_url, process_form_data
 
@@ -241,12 +241,12 @@ class Paperless:
                 detail = ""
 
             if "inactive" in detail.lower() or "deleted" in detail.lower():
-                raise PaperlessInactiveOrDeletedError(res)
+                raise InactiveOrDeletedError(res)
 
-            raise PaperlessInvalidTokenError(res)
+            raise InvalidTokenError(res)
 
         if res.status_code == 403:
-            raise PaperlessForbiddenError(res)
+            raise ForbiddenError(res)
 
         return res
 

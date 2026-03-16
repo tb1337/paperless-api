@@ -118,7 +118,7 @@ class CustomFieldMonetaryValue(CustomFieldValue):
     def currency(self) -> str | None:
         """Return the currency of the `value` field."""
         if self.value and (match := re.match(r"^([a-zA-Z]{3})", self.value)):
-            return match.group(1) if match else self.value
+            return match.group(1)
         if self.extra_data and self.extra_data.default_currency:
             return self.extra_data.default_currency
         return ""

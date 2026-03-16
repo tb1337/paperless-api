@@ -30,7 +30,7 @@ class CorrespondentService(
     _resource_cls = Correspondent
 
     @asynccontextmanager
-    async def filter(self, **kwargs: Unpack[CorrespondentFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[CorrespondentFilters]) -> AsyncGenerator[Self]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.CorrespondentFilters` for available keys.

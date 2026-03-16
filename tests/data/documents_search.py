@@ -1,7 +1,5 @@
 """Documents search snapshot."""
 
-# mypy: ignore-errors
-
 DATA_DOCUMENTS_SEARCH = {
     "count": 1,
     "next": None,

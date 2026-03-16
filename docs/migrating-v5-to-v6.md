@@ -1,6 +1,14 @@
 # Migrating from v5 to v6
 
-v6 is almost a full rewrite of pypaperless. Three things drove it:
+## Python version requirement raised to 3.13
+
+v6 drops support for **Python 3.12**. The minimum required version is now **Python 3.13**.
+
+If you are still on Python 3.12, upgrade your runtime before updating pypaperless to v6.
+
+---
+
+v6 is also almost a full rewrite of pypaperless. Three things drove it:
 
 - **Models were too tightly coupled to the HTTP layer.** In v5, every model instance carried a reference to the client and called it directly. That made testing awkward and sharing models between contexts impossible. v6 models are plain data — all I/O goes through services.
 - **No runtime type safety.** v5 used dataclasses with manual dict conversion, so bad API responses would silently produce wrong values. v6 uses Pydantic v2, which validates every response at parse time.
@@ -21,6 +29,7 @@ v6 is almost a full rewrite of pypaperless. Three things drove it:
 | 7   | Note deletion: `note.delete()` → service call                              | [Document notes](#document-notes)                                             |
 | 8   | `generate_api_token()` custom-client argument renamed                      | [Token generation](#token-generation)                                         |
 | 9   | New: `paperless.profile`, `paperless.trash`, `paperless.documents.history` | [New resources](#new-resources)                                               |
+| 10  | Rename four `Paperless`-prefixed exception classes                         | [Error handling](#error-handling)                                             |
 
 ---
 
@@ -321,4 +330,46 @@ for entry in entries:
     except PaperlessConnectionError:
         ...
     ```
-```
+
+### Exception renames
+
+Four exception classes lost their `Paperless` prefix to follow standard Python naming conventions. `PaperlessConnectionError` is the only exception kept as-is, because it would otherwise shadow Python's built-in `ConnectionError`.
+
+| v5                                | v6                       |
+| --------------------------------- | ------------------------ |
+| `PaperlessAuthError`              | `AuthError`              |
+| `PaperlessInvalidTokenError`      | `InvalidTokenError`      |
+| `PaperlessInactiveOrDeletedError` | `InactiveOrDeletedError` |
+| `PaperlessForbiddenError`         | `ForbiddenError`         |
+
+=== "v5"
+    ```python
+    from pypaperless.exceptions import PaperlessAuthError, PaperlessForbiddenError
+
+    except PaperlessAuthError:
+        ...
+    except PaperlessForbiddenError:
+        ...
+    ```
+
+=== "v6"
+    ```python
+    from pypaperless.exceptions import AuthError, ForbiddenError
+
+    except AuthError:
+        ...
+    except ForbiddenError:
+        ...
+    ```
+
+### New exception base classes
+
+v6 introduces intermediate base classes that you can use to catch whole groups of related errors:
+
+| Class                 | Catches                                                             |
+| --------------------- | ------------------------------------------------------------------- |
+| `InitializationError` | All session/transport errors (unchanged from v5)                    |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`                     |
+| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                 |
+| `ResourceError`       | `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
+| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                 |

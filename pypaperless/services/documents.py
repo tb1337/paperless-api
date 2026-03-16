@@ -292,7 +292,7 @@ class DocumentService(
     _resource_cls = Document
 
     @asynccontextmanager
-    async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self, None]:
+    async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self]:
         """Iterate with server-side filters.
 
         See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
