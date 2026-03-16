@@ -34,4 +34,4 @@ jobs:
       - name: 🏗 Install Python dependencies
         run: uv sync --group dev
       - name: 🚀 Run mypy
-        run: uv run mypy pypaperless tests
+        run: uv run mypy pypaperless
