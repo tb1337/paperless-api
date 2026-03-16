@@ -31,8 +31,6 @@ from .trash import DATA_TRASH
 from .users import DATA_USERS
 from .workflows import DATA_WORKFLOW_ACTIONS, DATA_WORKFLOW_TRIGGERS, DATA_WORKFLOWS
 
-# mypy: ignore-errors
-
 
 def _read_schema() -> dict:
     filepath = Path("tests/data/schema.json")

@@ -16,8 +16,6 @@ from pypaperless.models.types import (
     WorkflowTriggerType,
 )
 
-# mypy: ignore-errors
-
 _NEVER_STR = "!never_existing_type!"
 _NEVER_INT = 99952342
 

@@ -33,8 +33,6 @@ from tests.const import (
 
 from .data import DATA_PATHS, DATA_TOKEN
 
-# mypy: ignore-errors
-
 
 async def test_init(httpx_mock: HTTPXMock, api: Paperless) -> None:
     """Test initialization."""

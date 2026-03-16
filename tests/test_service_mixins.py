@@ -36,8 +36,6 @@ from .mappings import (
     ResourceTestMapping,
 )
 
-# mypy: ignore-errors
-
 
 class _SharedServiceTests:
     """Shared read-only test methods inherited by TestReadOnly and TestReadWrite."""

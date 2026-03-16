@@ -27,8 +27,6 @@ from .data import (
     DATA_WORKFLOWS,
 )
 
-# mypy: ignore-errors
-
 
 @dataclass
 class ResourceTestMapping:

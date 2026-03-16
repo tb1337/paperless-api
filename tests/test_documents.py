@@ -55,8 +55,6 @@ from .data import (
 )
 from .mappings import DOCUMENT_MAP
 
-# mypy: ignore-errors
-
 
 class TestDocuments:
     """Document service: full CRUD, lazy loading, files, notes, history, custom fields."""

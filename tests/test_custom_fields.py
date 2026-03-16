@@ -35,9 +35,6 @@ from pypaperless.models.types import CustomFieldQueryOr as TypesCustomFieldQuery
 from .const import PAPERLESS_TEST_URL
 from .data import DATA_CUSTOM_FIELDS
 
-# mypy: ignore-errors
-
-
 # ---------------------------------------------------------------------------
 # CustomField value types
 # ---------------------------------------------------------------------------

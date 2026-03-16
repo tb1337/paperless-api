@@ -13,8 +13,6 @@ from pypaperless.exceptions import (
     PaperlessConnectionError,
 )
 
-# mypy: ignore-errors
-
 
 @pytest.mark.parametrize(
     "exception_cls",

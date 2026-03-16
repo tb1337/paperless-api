@@ -32,8 +32,6 @@ from .data import (
     DATA_USERS,
 )
 
-# mypy: ignore-errors
-
 _ALL_FILTER_CLASSES = (
     CorrespondentFilters,
     CustomFieldFilters,

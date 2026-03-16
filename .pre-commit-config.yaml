@@ -59,6 +59,7 @@ repos:
         language: system
         types: [python]
         entry: uv run mypy
+        pass_filenames: false
         require_serial: true
       - id: pytest
         name: 🧪 Running tests and test coverage with pytest
