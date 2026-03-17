@@ -331,6 +331,28 @@ async def test_documents(p: Paperless) -> None:
         except Exception as exc:
             fail("doc properties", exc)
 
+        # shortcuts on Document instance
+        await check(
+            "doc.metadata() (shortcut)",
+            doc.metadata(),
+            detail_fn=lambda r: f"mime={r.original_mime_type}",
+        )
+        await check(
+            "doc.thumbnail() (shortcut)",
+            doc.thumbnail(),
+            detail_fn=lambda r: f"bytes={len(r.content or b'')}",
+        )
+        await check(
+            "doc.suggestions() (shortcut)",
+            doc.suggestions(),
+            detail_fn=lambda r: f"tags={r.tags}",
+        )
+        try:
+            similar = [d async for d in doc.more_like()]
+            ok("doc.more_like() (shortcut)", f"similar={len(similar)}")
+        except Exception as exc:
+            fail("doc.more_like() shortcut", exc)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_document_history(p: Paperless) -> None:

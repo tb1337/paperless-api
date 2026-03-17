@@ -2,7 +2,7 @@
 
 import datetime
 import json
-from collections.abc import Iterator
+from collections.abc import AsyncGenerator, Iterator
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
@@ -260,6 +260,31 @@ class Document(
 
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
+
+    async def download(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.download(self.id)``."""
+        return await self._client.documents.download(cast("int", self.id), original=original)
+
+    async def preview(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.preview(self.id)``."""
+        return await self._client.documents.preview(cast("int", self.id), original=original)
+
+    async def thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.thumbnail(self.id)``."""
+        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
+
+    async def metadata(self) -> "DocumentMeta":
+        """Shortcut for ``paperless.documents.metadata(self.id)``."""
+        return await self._client.documents.metadata(cast("int", self.id))
+
+    async def suggestions(self) -> "DocumentSuggestions":
+        """Shortcut for ``paperless.documents.suggestions(self.id)``."""
+        return await self._client.documents.suggestions(cast("int", self.id))
+
+    async def more_like(self) -> AsyncGenerator["Document"]:
+        """Shortcut for ``paperless.documents.more_like(self.id)``."""
+        async for doc in self._client.documents.more_like(cast("int", self.id)):
+            yield doc
 
     @property
     def created_date(self) -> datetime.date | None:

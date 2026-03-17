@@ -130,6 +130,113 @@ class TestDocuments:
         )
         assert not await paperless.documents.delete(to_delete)
 
+    async def test_shortcut_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Document.download/preview/thumbnail() shortcuts delegate to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        doc = await paperless.documents(1)
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^"
+                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_download']}".format(pk=1)
+                + r"\?.*$"
+            ),
+            status_code=200,
+            headers={
+                "Content-Type": "application/pdf",
+                "Content-Disposition": "attachment;filename=any.pdf",
+            },
+            content=b"Binary data",
+        )
+        assert isinstance(await doc.download(), DownloadedDocument)
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^"
+                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_preview']}".format(pk=1)
+                + r"\?.*$"
+            ),
+            status_code=200,
+            headers={"Content-Type": "application/pdf"},
+            content=b"Binary data",
+        )
+        assert isinstance(await doc.preview(), DownloadedDocument)
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^"
+                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_thumbnail']}".format(pk=1)
+                + r"\?.*$"
+            ),
+            status_code=200,
+            content=b"Binary data",
+        )
+        assert isinstance(await doc.thumbnail(), DownloadedDocument)
+
+    async def test_shortcut_metadata(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Document.metadata() shortcut delegates to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        doc = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_METADATA,
+        )
+        assert isinstance(await doc.metadata(), DocumentMeta)
+
+    async def test_shortcut_suggestions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Document.suggestions() shortcut delegates to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        doc = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_SUGGESTIONS,
+        )
+        assert isinstance(await doc.suggestions(), DocumentSuggestions)
+
+    async def test_shortcut_more_like(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Document.more_like() shortcut yields Document items."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        doc = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{API_PATH['documents']}"
+                r"\?.*more_like_id.*$"
+            ),
+            status_code=200,
+            json=DATA_DOCUMENTS_SEARCH,
+        )
+        async for item in doc.more_like():
+            assert isinstance(item, Document)
+
     async def test_meta(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """get_metadata() returns a DocumentMeta with original and archive metadata lists."""
         httpx_mock.add_response(

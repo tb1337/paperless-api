@@ -38,9 +38,9 @@ Or using an already-fetched document:
 ```python
 doc = await paperless.documents(42)
 
-download  = await doc.get_download()
-preview   = await doc.get_preview()
-thumbnail = await doc.get_thumbnail()
+download  = await doc.download()
+preview   = await doc.preview()
+thumbnail = await doc.thumbnail()
 ```
 
 `DownloadedDocument` gives you the raw bytes plus everything from the response headers you'd need to save or serve the file:
@@ -110,6 +110,11 @@ Find documents similar to a given document:
 ```python
 async for document in paperless.documents.more_like(42):
     print(document.title)
+
+# or via a fetched document
+doc = await paperless.documents(42)
+async for document in doc.more_like():
+    print(document.title)
 ```
 
 ---
@@ -121,7 +126,7 @@ meta = await paperless.documents.metadata(42)
 
 # or via a fetched document
 doc = await paperless.documents(42)
-meta = await doc.get_metadata()
+meta = await doc.metadata()
 ```
 
 The returned `DocumentMeta` object includes embedded metadata from the file (e.g. EXIF or PDF metadata):
@@ -142,7 +147,7 @@ suggestions = await paperless.documents.suggestions(42)
 
 # or via a fetched document
 doc = await paperless.documents(42)
-suggestions = await doc.get_suggestions()
+suggestions = await doc.suggestions()
 
 print(suggestions.correspondents)
 print(suggestions.document_types)

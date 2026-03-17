@@ -18,18 +18,18 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 
 ## Quick checklist
 
-| #   | What to change                                                             | Section                                                                       |
-| --- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1   | Replace `aiohttp` / `yarl` with `httpx`                                    | [Dependencies](#dependencies)                                                 |
-| 2   | Update `Paperless(...)` constructor arguments                              | [Initializing the client](#initializing-the-client)                           |
-| 3   | Replace `reduce()` with `filter()` — different call pattern                | [Iteration and filtering](#iteration-and-filtering)                           |
-| 4   | Move `update()`, `delete()`, `save()` from model instances to services     | [CRUD](#crud-update-delete-save)                                              |
-| 5   | Replace `request_permissions = True` with `with_permissions()`             | [Permissions](#permissions)                                                   |
-| 6   | Replace `doc.get_download()`, `get_metadata()`, etc.                       | [Document convenience methods removed](#document-convenience-methods-removed) |
-| 7   | Note deletion: `note.delete()` → service call                              | [Document notes](#document-notes)                                             |
-| 8   | `generate_api_token()` custom-client argument renamed                      | [Token generation](#token-generation)                                         |
-| 9   | New: `paperless.profile`, `paperless.trash`, `paperless.documents.history` | [New resources](#new-resources)                                               |
-| 10  | Rename four `Paperless`-prefixed exception classes                         | [Error handling](#error-handling)                                             |
+| #   | What to change                                                               | Section                                                                       |
+| --- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | Replace `aiohttp` / `yarl` with `httpx`                                      | [Dependencies](#dependencies)                                                 |
+| 2   | Update `Paperless(...)` constructor arguments                                | [Initializing the client](#initializing-the-client)                           |
+| 3   | Replace `reduce()` with `filter()` — different call pattern                  | [Iteration and filtering](#iteration-and-filtering)                           |
+| 4   | Move `update()`, `delete()`, `save()` from model instances to services       | [CRUD](#crud-update-delete-save)                                              |
+| 5   | Replace `request_permissions = True` with `with_permissions()`               | [Permissions](#permissions)                                                   |
+| 6   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. — shortcuts are back | [Document convenience methods renamed](#document-convenience-methods-renamed) |
+| 7   | Note deletion: `note.delete()` → service call                                | [Document notes](#document-notes)                                             |
+| 8   | `generate_api_token()` custom-client argument renamed                        | [Token generation](#token-generation)                                         |
+| 9   | New: `paperless.profile`, `paperless.trash`, `paperless.documents.history`   | [New resources](#new-resources)                                               |
+| 10  | Rename four `Paperless`-prefixed exception classes                           | [Error handling](#error-handling)                                             |
 
 ---
 
@@ -247,18 +247,19 @@ The mutable `request_permissions` setter was replaced by a `with_permissions()` 
 
 ---
 
-## Document convenience methods removed
+## Document convenience methods renamed
 
-The shortcut methods on `Document` instances that delegated back to the helper were removed. Call the service directly.
+The `get_*` shortcut methods on `Document` instances were renamed. The canonical API lives on the service, but the model shortcuts are still available:
 
-| v5 (on model instance)                  | v6 (on service)                                             |
-| --------------------------------------- | ----------------------------------------------------------- |
-| `await doc.get_download()`              | `await paperless.documents.download(doc.id)`                |
-| `await doc.get_download(original=True)` | `await paperless.documents.download(doc.id, original=True)` |
-| `await doc.get_metadata()`              | `await paperless.documents.metadata(doc.id)`                |
-| `await doc.get_preview()`               | `await paperless.documents.preview(doc.id)`                 |
-| `await doc.get_thumbnail()`             | `await paperless.documents.thumbnail(doc.id)`               |
-| `await doc.get_suggestions()`           | `await paperless.documents.suggestions(doc.id)`             |
+| v5 (on model instance)                  | v6 – model shortcut                 | v6 – service (canonical)                                    |
+| --------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
+| `await doc.get_download()`              | `await doc.download()`              | `await paperless.documents.download(doc.id)`                |
+| `await doc.get_download(original=True)` | `await doc.download(original=True)` | `await paperless.documents.download(doc.id, original=True)` |
+| `await doc.get_preview()`               | `await doc.preview()`               | `await paperless.documents.preview(doc.id)`                 |
+| `await doc.get_thumbnail()`             | `await doc.thumbnail()`             | `await paperless.documents.thumbnail(doc.id)`               |
+| `await doc.get_metadata()`              | `await doc.metadata()`              | `await paperless.documents.metadata(doc.id)`                |
+| `await doc.get_suggestions()`           | `await doc.suggestions()`           | `await paperless.documents.suggestions(doc.id)`             |
+| *(not available)*                       | `async for d in doc.more_like()`    | `async for d in paperless.documents.more_like(doc.id)`      |
 
 ---
 

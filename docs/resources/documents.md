@@ -76,6 +76,25 @@ draft.document = raw_bytes
 task_id = await draft.save()
 ```
 
+Document instances also expose shortcuts for the sub-resource operations:
+
+```python
+doc = await paperless.documents(42)
+
+# file access
+downloaded = await doc.download()
+preview    = await doc.preview()
+thumb      = await doc.thumbnail()
+
+# metadata and suggestions
+meta        = await doc.metadata()
+suggestions = await doc.suggestions()
+
+# similar documents (async generator)
+async for similar in doc.more_like():
+    print(similar.title)
+```
+
 ## Permissions
 
 ```python
