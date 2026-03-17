@@ -368,6 +368,14 @@ KNOWN_UTILITY_PATHS: set[str] = {
     "/api/users/{id}/deactivate_totp/",
 }
 
+# ── Schema paths intentionally out of scope for pypaperless ──────────────────
+INTENTIONALLY_SKIPPED_PATHS: set[str] = {
+    "/api/logs/",  # server log streaming, not a resource
+    "/api/logs/{id}/",  # server log streaming, not a resource
+    "/api/search/autocomplete/",  # UI helper, not a library concern
+    "/api/ui_settings/",  # paperless-ngx front-end settings, not exposed
+}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Data structures
@@ -537,6 +545,8 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
     result: list[tuple[str, str]] = []
     for path, path_item in sorted(schema["paths"].items()):
         if path in KNOWN_UTILITY_PATHS:
+            continue
+        if path in INTENTIONALLY_SKIPPED_PATHS:
             continue
         if _norm(path) not in known_normalised:
             methods = ", ".join(
