@@ -13,7 +13,7 @@ from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.utils import object_to_dict_value
 
 from . import mixins
-from .base import PaperlessModel, PaperlessModelData
+from .base import PaperlessCustomDataModel, PaperlessModel
 from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomField,
@@ -80,14 +80,15 @@ class DocumentHistory(PaperlessModel):
     actor: DocumentHistoryActor | None = None
 
 
-class DocumentCustomFieldList(PaperlessModelData):
+class DocumentCustomFieldList(PaperlessCustomDataModel):
     """Represent a list of Paperless custom field instances typically on documents."""
+
+    _fields: list[CustomFieldValue] = PrivateAttr(default_factory=list)
 
     def __init__(self, client: "Paperless", data: list[dict[str, Any]]) -> None:
         """Initialize a `DocumentCustomFieldList` instance."""
-        self._client = client
-        self._data = data
-        self._fields: list[CustomFieldValue] = []
+        super().__init__(client=client, data=data)
+        self._fields = []
 
         cache = client.cache.custom_fields
 
@@ -111,8 +112,11 @@ class DocumentCustomFieldList(PaperlessModelData):
         item_id = field.id if isinstance(field, CustomField) else field
         return any(item.field == item_id for item in self._fields)
 
-    def __iter__(self) -> Iterator[CustomFieldValue]:
+    def __iter__(self) -> Iterator[CustomFieldValue]:  # type: ignore[override]
         """Iterate over custom fields.
+
+        This intentionally behaves like a container iterator (yielding
+        ``CustomFieldValue`` items) instead of Pydantic's field-pair iterator.
 
         Example:
         -------
@@ -147,7 +151,6 @@ class DocumentCustomFieldList(PaperlessModelData):
             else field
         )
         self._fields = [field for field in self._fields if field.field != item_id]
-
         return self
 
     @overload
@@ -186,23 +189,13 @@ class DocumentCustomFieldList(PaperlessModelData):
     ) -> CustomFieldValue | CustomFieldValueT:
         """Access and return a (typed) `CustomFieldValue` from the list."""
         item_id = field.id if isinstance(field, CustomField) else field
-
         for item in self._fields:
             if item.field == item_id:
                 if expected_type is not None and not isinstance(item, expected_type):
                     msg = f"Expected {expected_type.__name__}, got {type(item).__name__}"
                     raise TypeError(msg)
                 return item
-
         raise ItemNotFoundError
-
-    @classmethod
-    def unserialize(cls, client: "Paperless", data: list[dict[str, Any]]) -> Self:
-        """Return a new instance of `cls` from `data`.
-
-        Primarily used by `dict_value_to_object` when instantiating model classes.
-        """
-        return cls(client, data=data)
 
     def serialize(self) -> list[dict[str, Any]]:
         """Serialize the class data."""

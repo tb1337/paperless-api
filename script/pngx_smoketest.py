@@ -726,7 +726,7 @@ async def test_correspondents(p: Paperless) -> None:
     )
 
     # create
-    draft = CorrespondentDraft.create_with_data(
+    draft = CorrespondentDraft.from_data(
         p,
         {
             "name": "pypaperless Smoke Test Corp",
@@ -782,7 +782,7 @@ async def test_tags(p: Paperless) -> None:
 
     await check("tags.as_list()", p.tags.as_list(), detail_fn=lambda r: f"count={len(r)}")
 
-    draft = TagDraft.create_with_data(
+    draft = TagDraft.from_data(
         p,
         {
             "name": "pypaperless-smoke-test",
@@ -845,7 +845,7 @@ async def test_tags(p: Paperless) -> None:
     parent_id: int | None = None
     child_id: int | None = None
 
-    _parent_draft = TagDraft.create_with_data(
+    _parent_draft = TagDraft.from_data(
         p,
         {
             "name": "pypaperless-smoke-parent",
@@ -863,7 +863,7 @@ async def test_tags(p: Paperless) -> None:
         fail("tags.save(parent_draft)", exc)
 
     if parent_id is not None:
-        _child_draft = TagDraft.create_with_data(
+        _child_draft = TagDraft.from_data(
             p,
             {
                 "name": "pypaperless-smoke-child",
@@ -920,7 +920,7 @@ async def test_document_types(p: Paperless) -> None:
         detail_fn=lambda r: f"count={len(r)}",
     )
 
-    draft = DocumentTypeDraft.create_with_data(
+    draft = DocumentTypeDraft.from_data(
         p,
         {
             "name": "pypaperless Smoke Test Type",
@@ -964,7 +964,7 @@ async def test_storage_paths(p: Paperless) -> None:
         detail_fn=lambda r: f"count={len(r)}",
     )
 
-    draft = StoragePathDraft.create_with_data(
+    draft = StoragePathDraft.from_data(
         p,
         {
             "name": "pypaperless Smoke Test Path",
@@ -1009,7 +1009,7 @@ async def test_share_links(p: Paperless) -> None:
         detail_fn=lambda r: f"count={len(r)}",
     )
 
-    draft = ShareLinkDraft.create_with_data(
+    draft = ShareLinkDraft.from_data(
         p,
         {
             "document": TEST_DOCUMENT_ID,
@@ -1159,7 +1159,7 @@ async def test_document_post(p: Paperless) -> None:
     _hdr("Document POST – upload a minimal PDF")
 
     token = str(uuid.uuid4())
-    draft = DocumentDraft.create_with_data(
+    draft = DocumentDraft.from_data(
         p,
         {
             "document": _make_unique_pdf(token),
@@ -1192,7 +1192,7 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
     # Variant A: list[int] – assign field IDs only (empty values)
     token_a = str(uuid.uuid4())
-    draft_a = DocumentDraft.create_with_data(
+    draft_a = DocumentDraft.from_data(
         p,
         {
             "document": _make_unique_pdf(token_a),
@@ -1214,7 +1214,7 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
     cf += CustomFieldStringValue(field=8, value="pypaperless-smoke")
     cf += CustomFieldIntegerValue(field=3, value=1)
 
-    draft_b = DocumentDraft.create_with_data(
+    draft_b = DocumentDraft.from_data(
         p,
         {
             "document": _make_unique_pdf(token_b),

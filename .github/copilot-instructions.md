@@ -38,18 +38,14 @@ Dev venv: `/home/vscode/.local/dev-venv/bin/activate`
 
    Required: 0 failures.
 
-3. **API field coverage audit**
-   ```
-   python script/pngx_audit_coverage.py
-   ```
-   Required: no new gaps compared to before the change.
-
-Report all three results explicitly before closing the task.
+Report both results explicitly before closing the task.
 
 ---
 
 ## Code Conventions
 
+- **Ruff compliance is mandatory for all newly generated code**: always follow the currently active Ruff rules/configuration in this repository when writing or modifying code.
+- **Mypy compliance is mandatory for all newly generated code**: all new and modified code must type-check cleanly under the repository's active mypy configuration.
 - Models use **Pydantic v2** (`BaseModel`, `model_validator`, `Field`).
 - Services use **httpx** for async HTTP.
 - Context managers (`@asynccontextmanager`) always use `try/finally` to guarantee cleanup.

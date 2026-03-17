@@ -17,4 +17,4 @@ class StatisticService(ServiceBase):
     async def __call__(self) -> Statistic:
         """Request the `Statistic` model data."""
         res = await self._client.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._client, res)
+        return self._resource_cls.from_data(self._client, res)

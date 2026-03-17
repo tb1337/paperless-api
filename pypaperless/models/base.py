@@ -1,11 +1,11 @@
 """Provide base classes."""
 
-from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr, TypeAdapter
+from pydantic import BaseModel, ConfigDict, PrivateAttr, TypeAdapter, model_serializer
 
 from pypaperless.const import API_PATH
+from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
@@ -15,11 +15,7 @@ ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
 class PaperlessModel(BaseModel):
-    """Base class for all models in PyPaperless.
-
-    Models are pure data containers. All API operations (load, save, update,
-    delete) are handled by services.
-    """
+    """Base class for all models in PyPaperless."""
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -72,14 +68,14 @@ class PaperlessModel(BaseModel):
 
     @final
     @classmethod
-    def create_with_data(
+    def from_data(
         cls,
         client: "Paperless",
         data: dict[str, Any],
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
-        Primarily used by class factories to create new model instances.
+        Primarily used by service-level factory methods.
         """
         return cls(client=client, data=data, **data)
 
@@ -110,14 +106,43 @@ class PaperlessModel(BaseModel):
         return cache[field_name]
 
 
-class PaperlessModelData(ABC):
+class PaperlessCustomDataModel(BaseModel):
     """Base class for all custom data types in PyPaperless."""
 
-    @classmethod
-    @abstractmethod
-    def unserialize(cls, client: "Paperless", data: Any) -> Self:
-        """Return a new instance of `cls` from `data`."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    @abstractmethod
+    _client: "Paperless" = PrivateAttr()
+    _data: Any = PrivateAttr(default=None)
+
+    @property
+    def data(self) -> Any:
+        """Return the internal custom-model data payload."""
+        return self._data
+
+    @data.setter
+    def data(self, value: Any) -> None:
+        """Set the internal custom-model data payload."""
+        self._data = value
+
+    def __init__(self, client: "Paperless", data: Any, **kwargs: Any) -> None:
+        """Initialize a ``PaperlessCustomDataModel`` instance."""
+        super().__init__(**kwargs)
+        self._client = client
+        self._data = data
+
+    @classmethod
+    def from_data(cls, client: "Paperless", data: Any) -> Self:
+        """Return a new instance of ``cls`` from API data."""
+        return cls(client=client, data=data)
+
     def serialize(self) -> Any:
-        """Serialize the class data."""
+        """Return the JSON-compatible payload for this model."""
+        payload = {
+            field_name: getattr(self, field_name) for field_name in self.__class__.model_fields
+        }
+        return object_to_dict_value(payload)
+
+    @model_serializer(mode="plain")
+    def _model_serializer(self) -> Any:
+        """Delegate Pydantic serialization to the custom ``serialize`` method."""
+        return self.serialize()

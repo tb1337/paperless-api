@@ -85,7 +85,7 @@ class TestDocuments:
 
     async def test_create_date_property(self, paperless: Paperless) -> None:
         """created_date is an alias for the created field."""
-        document = Document.create_with_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
+        document = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
         assert document.created_date == document.created
 
     async def test_update(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
@@ -445,7 +445,7 @@ class TestDocuments:
         for field in item.custom_fields:
             assert isinstance(field, CustomFieldValue)
 
-        test_cf = CustomField.create_with_data(
+        test_cf = CustomField.from_data(
             client=paperless,
             data=DATA_CUSTOM_FIELDS["results"][0],
         )
@@ -553,19 +553,19 @@ class TestDocuments:
 
     async def test_is_deleted(self, paperless: Paperless) -> None:
         """Document.is_deleted is True when deleted_at is set, False otherwise."""
-        doc_alive = Document.create_with_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
+        doc_alive = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
         assert not doc_alive.is_deleted
 
-        doc_trashed = Document.create_with_data(
+        doc_trashed = Document.from_data(
             paperless,
             data={**DATA_DOCUMENTS["results"][0], "deleted_at": "2024-01-01T00:00:00Z"},
         )
         assert doc_trashed.is_deleted
 
-    async def test_custom_field_list_unserialize(self, paperless: Paperless) -> None:
-        """DocumentCustomFieldList.unserialize() constructs the list from raw API data."""
+    async def test_custom_field_list_from_data(self, paperless: Paperless) -> None:
+        """DocumentCustomFieldList.from_data() constructs the list from raw API data."""
         raw = [{"field": 1, "value": "hello"}, {"field": 2, "value": 42}]
-        cf_list = DocumentCustomFieldList.unserialize(paperless, raw)
+        cf_list = DocumentCustomFieldList.from_data(paperless, raw)
         assert isinstance(cf_list, DocumentCustomFieldList)
         assert len(list(cf_list)) == 2
 
@@ -629,7 +629,7 @@ class TestDocuments:
         self, paperless: Paperless
     ) -> None:
         """_check_permissions_field exits without changes when permissions not in data."""
-        item = Correspondent.create_with_data(
+        item = Correspondent.from_data(
             paperless,
             data={
                 "id": 1,

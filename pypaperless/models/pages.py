@@ -66,7 +66,7 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
         """
 
         def mapper(data: dict[str, Any]) -> ResourceT:
-            return self._resource_cls.create_with_data(self._client, data)
+            return self._resource_cls.from_data(self._client, data)
 
         return list(map(mapper, self.results))
 

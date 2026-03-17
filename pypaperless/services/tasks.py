@@ -49,7 +49,7 @@ class TaskService(ServiceBase):
         """
         res = await self._client.request_json("get", self._api_path, params=dict(kwargs))
         for data in res:
-            yield self._resource_cls.create_with_data(self._client, data)
+            yield self._resource_cls.from_data(self._client, data)
 
     async def __call__(self, task_id: int | str) -> Task:
         """Request exactly one task by id.
@@ -71,10 +71,10 @@ class TaskService(ServiceBase):
             }
             res = await self._client.request_json("get", self._api_path, params=params)
             try:
-                return self._resource_cls.create_with_data(self._client, res.pop())
+                return self._resource_cls.from_data(self._client, res.pop())
             except IndexError as exc:
                 raise TaskNotFoundError(task_id) from exc
         else:
             api_path = self._resource_cls.format_api_path(pk=task_id)
             data = await self._client.request_json("get", api_path)
-            return self._resource_cls.create_with_data(self._client, data)
+            return self._resource_cls.from_data(self._client, data)

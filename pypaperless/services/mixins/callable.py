@@ -29,7 +29,7 @@ class CallableMixin(ServiceProtocol[ResourceT]):
 
         """
         if lazy:
-            return self._resource_cls.create_with_data(self._client, {"id": pk})
+            return self._resource_cls.from_data(self._client, {"id": pk})
 
         params: dict[str, Any] = {}
         if getattr(self, "_request_full_perms", False):
@@ -38,4 +38,4 @@ class CallableMixin(ServiceProtocol[ResourceT]):
         api_path = self._resource_cls.format_api_path(pk=pk)
         data = await self._client.request_json("get", api_path, params=params or None)
 
-        return self._resource_cls.create_with_data(self._client, data)
+        return self._resource_cls.from_data(self._client, data)

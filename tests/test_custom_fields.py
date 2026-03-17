@@ -42,7 +42,7 @@ from .data import DATA_CUSTOM_FIELDS
 
 async def test_draft_value_without_cache(paperless: Paperless) -> None:
     """draft_value() returns a plain object when the custom field cache is empty."""
-    custom_field = CustomField.create_with_data(
+    custom_field = CustomField.from_data(
         paperless,
         data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
     )
@@ -63,7 +63,7 @@ async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperles
     )
     paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
-    custom_field = CustomField.create_with_data(
+    custom_field = CustomField.from_data(
         client=paperless,
         data=DATA_CUSTOM_FIELDS["results"][5],
     )
@@ -271,7 +271,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
             }
         ],
     }
-    tag = Tag.create_with_data(api, data=tag_data)
+    tag = Tag.from_data(api, data=tag_data)
     assert tag.name == "Parent Tag"
     assert isinstance(tag.children, list)
     child = tag.children[0]
@@ -284,14 +284,14 @@ def test_tag_with_nested_children(api: Paperless) -> None:
 
 def test_tag_with_empty_children(api: Paperless) -> None:
     """Tag._validate_children returns the falsy value unchanged (empty list / None)."""
-    tag_empty = Tag.create_with_data(
+    tag_empty = Tag.from_data(
         api,
         data={"id": 5, "slug": "leaf", "name": "Leaf Tag", "children": []},
     )
     # empty list — _validate_children early-returns the empty list
     assert tag_empty.children == []
 
-    tag_none = Tag.create_with_data(
+    tag_none = Tag.from_data(
         api,
         data={"id": 6, "slug": "leaf2", "name": "Leaf Tag 2"},
     )

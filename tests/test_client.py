@@ -278,7 +278,7 @@ async def test_pages_object(api: Paperless) -> None:
         data["all"].append(i)
         data["results"].append({"id": i})
 
-    page = Page.create_with_data(api, data=data)
+    page = Page.from_data(api, data=data)
     page.set_resource_cls(TestResource)
 
     assert isinstance(page, Page)

@@ -28,7 +28,7 @@ class DraftableMixin(ServiceProtocol[ResourceT]):
             raise DraftNotSupportedError(message)
         kwargs.update({"id": -1})
 
-        return self._draft_cls.create_with_data(self._client, data=kwargs)
+        return self._draft_cls.from_data(self._client, data=kwargs)
 
     async def save(self, draft: ResourceT) -> int | str:
         """Create a new `resource item` in Paperless.
