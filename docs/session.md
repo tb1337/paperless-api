@@ -46,6 +46,7 @@ Set the `PYPAPERLESS_*` environment variables and call `Paperless()` with no arg
 ```bash
 export PYPAPERLESS_URL=https://paperless.example.com
 export PYPAPERLESS_TOKEN=your-api-token
+export PYPAPERLESS_REQUEST_API_VERSION=9
 ```
 
 ```python

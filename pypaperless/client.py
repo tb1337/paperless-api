@@ -83,7 +83,8 @@ class Paperless:
         ```
 
         **3. Environment variables (no arguments):**
-        Set ``PYPAPERLESS_URL`` and ``PYPAPERLESS_TOKEN`` before starting your application.
+        Set ``PYPAPERLESS_URL`` and optionally ``PYPAPERLESS_TOKEN`` /
+        ``PYPAPERLESS_REQUEST_API_VERSION`` before starting your application.
         ```python
         paperless = Paperless()
         ```

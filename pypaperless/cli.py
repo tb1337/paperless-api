@@ -18,6 +18,7 @@ except ImportError:
     _PYGMENTS = False
 
 from . import Paperless
+from .const import ENV_TOKEN, ENV_URL
 from .exceptions import (
     ForbiddenError,
     InitializationError,
@@ -66,23 +67,20 @@ async def _with_client(
         raise click.ClickException(msg) from exc
 
 
-# ── Root group ────────────────────────────────────────────────────────────────
-
-
 @click.group()
 @click.option(
     "--url",
-    envvar="PYPAPERLESS_URL",
+    envvar=ENV_URL,
     default=None,
     metavar="URL",
-    help="Paperless-ngx base URL  [env: PYPAPERLESS_URL]",
+    help=f"Paperless-ngx base URL  [env: {ENV_URL}]",
 )
 @click.option(
     "--token",
-    envvar="PYPAPERLESS_TOKEN",
+    envvar=ENV_TOKEN,
     default=None,
     metavar="TOKEN",
-    help="API token  [env: PYPAPERLESS_TOKEN]",
+    help=f"API token  [env: {ENV_TOKEN}]",
 )
 @click.pass_context
 def cli(ctx: click.Context, url: str | None, token: str | None) -> None:
@@ -96,9 +94,6 @@ def cli(ctx: click.Context, url: str | None, token: str | None) -> None:
     ctx.ensure_object(dict)
     ctx.obj["url"] = url
     ctx.obj["token"] = token
-
-
-# ── status ────────────────────────────────────────────────────────────────────
 
 
 @cli.command("status")
@@ -121,9 +116,6 @@ def cmd_status(ctx: click.Context) -> None:
     asyncio.run(_with_client(ctx.obj["url"], ctx.obj["token"], _fetch))
 
 
-# ── profile ───────────────────────────────────────────────────────────────────
-
-
 @cli.command("profile")
 @click.pass_context
 def cmd_profile(ctx: click.Context) -> None:
@@ -134,9 +126,6 @@ def cmd_profile(ctx: click.Context) -> None:
         _out(item.model_dump(mode="json"))
 
     asyncio.run(_with_client(ctx.obj["url"], ctx.obj["token"], _fetch))
-
-
-# ── resource group factory ────────────────────────────────────────────────────
 
 
 def _resource_group(
@@ -173,7 +162,7 @@ def _resource_group(
         @click.pass_context
         def list_cmd(ctx: click.Context, limit: int | None) -> None:
             """List all items."""
-            _attr = service_attr  # explicit closure capture
+            _attr = service_attr
 
             async def _fetch(p: Paperless) -> None:
                 service = getattr(p, _attr)
@@ -195,7 +184,7 @@ def _resource_group(
         @click.pass_context
         def get_cmd(ctx: click.Context, item_id: Any) -> None:
             """Fetch a single item by ID."""
-            _attr = service_attr  # explicit closure capture
+            _attr = service_attr
 
             async def _fetch(p: Paperless) -> None:
                 service = getattr(p, _attr)
@@ -206,8 +195,6 @@ def _resource_group(
 
     return grp
 
-
-# ── resource commands ─────────────────────────────────────────────────────────
 
 cli.add_command(_resource_group("correspondents", "correspondents"))
 cli.add_command(_resource_group("custom-fields", "custom_fields"))

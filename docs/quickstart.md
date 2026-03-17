@@ -60,6 +60,7 @@ Instead of hard-coding credentials you can set environment variables and call `P
 ```bash
 export PYPAPERLESS_URL=https://paperless.example.com
 export PYPAPERLESS_TOKEN=your-api-token
+export PYPAPERLESS_REQUEST_API_VERSION=9
 ```
 
 ```python

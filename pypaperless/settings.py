@@ -3,7 +3,7 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .const import API_VERSION
+from .const import API_VERSION, ENV_PREFIX, ENV_URL
 
 
 class PaperlessConfig(BaseSettings):
@@ -31,7 +31,7 @@ class PaperlessConfig(BaseSettings):
     ```
     """
 
-    model_config = SettingsConfigDict(env_prefix="PYPAPERLESS_")
+    model_config = SettingsConfigDict(env_prefix=ENV_PREFIX)
 
     url: str = ""
     token: str | None = None
@@ -42,7 +42,7 @@ class PaperlessConfig(BaseSettings):
         if not self.url:
             msg = (
                 "PaperlessConfig requires a URL. "
-                "Pass url= explicitly or set the PYPAPERLESS_URL environment variable."
+                f"Pass url= explicitly or set the {ENV_URL} environment variable."
             )
             raise ValueError(msg)
         return self
