@@ -33,7 +33,7 @@ filtered = [
 ## Create
 
 ```python
-draft = paperless.correspondents.draft()
+draft = paperless.correspondents.create()
 draft.name = "ACME Corp"
 
 pk = await paperless.correspondents.save(draft)
@@ -62,6 +62,21 @@ await paperless.correspondents.update(c, only_changed=False)
 ```python
 c = await paperless.correspondents(7)
 deleted = await paperless.correspondents.delete(c)  # True on success
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+c = await paperless.correspondents(7)
+c.name = "ACME Corp (renamed)"
+changed = await c.update()
+
+await c.delete()
+
+draft = paperless.correspondents.create(name="New Corp")
+pk = await draft.save()
 ```
 
 ## Permissions

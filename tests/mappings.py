@@ -43,6 +43,8 @@ class ResourceTestMapping:
     # field and value used by test_update
     update_field: str = "name"
     update_value: Any = "Name Updated"
+    # explicit mock JSON for test_draft_save; None → {"id": N} default
+    draft_response_json: Any = None
 
 
 CONFIG_MAP = ResourceTestMapping(
@@ -95,6 +97,9 @@ DOCUMENT_MAP = ResourceTestMapping(
         "created": None,
         "archive_serial_number": 1,
     },
+    update_field="title",
+    update_value="Updated Title",
+    draft_response_json="11112222-3333-4444-5555-666677778888",
 )
 
 DOCUMENT_TYPE_MAP = ResourceTestMapping(

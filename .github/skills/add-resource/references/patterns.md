@@ -130,7 +130,7 @@ class DocumentHistoryService(ServiceBase):
         doc_pk = self._get_document_pk(pk)
         res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
         return [
-            self._resource_cls.create_with_data(self._client, {**item, "document": doc_pk})
+            self._resource_cls.from_data(self._client, {**item, "document": doc_pk})
             for item in res
         ]
 
@@ -255,7 +255,7 @@ KNOWN_SCHEMA_EXTRAS["WidgetMeta"] = {
 | ------------------- | --------------------------------------------------------------------- |
 | `CallableMixin[T]`  | `await service(pk)` — fetch single item                               |
 | `IterableMixin[T]`  | `async for item in service` + `.pages()` + `.as_list()` + `.filter()` |
-| `DraftableMixin[D]` | `service.draft(...)` + `await service.save(draft)`                    |
+| `DraftableMixin[D]` | `service.create(...)` + `await service.save(draft)`                    |
 | `UpdatableMixin[T]` | `await service.update(item)`                                          |
 | `DeletableMixin[T]` | `await service.delete(item)`                                          |
 | `SecurableMixin`    | `permissions` field + `?full_perms=true` on requests                  |

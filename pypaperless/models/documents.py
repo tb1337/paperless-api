@@ -2,18 +2,18 @@
 
 import datetime
 import json
-from collections.abc import Iterator
+from collections.abc import AsyncGenerator, Iterator
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.utils import object_to_dict_value
 
 from . import mixins
-from .base import PaperlessModel, PaperlessModelData
+from .base import PaperlessCustomDataModel, PaperlessModel
 from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomField,
@@ -23,7 +23,6 @@ from .custom_fields import (
 )
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
     from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
 
 
@@ -80,18 +79,19 @@ class DocumentHistory(PaperlessModel):
     actor: DocumentHistoryActor | None = None
 
 
-class DocumentCustomFieldList(PaperlessModelData):
+class DocumentCustomFieldList(PaperlessCustomDataModel):
     """Represent a list of Paperless custom field instances typically on documents."""
 
-    def __init__(self, client: "Paperless", data: list[dict[str, Any]]) -> None:
-        """Initialize a `DocumentCustomFieldList` instance."""
-        self._client = client
-        self._data = data
-        self._fields: list[CustomFieldValue] = []
+    _fields: list[CustomFieldValue] = PrivateAttr(default_factory=list)
 
-        cache = client.cache.custom_fields
+    def model_post_init(self, __context: Any, /) -> None:
+        """Populate ``_fields`` from the raw API payload stored in ``_data``."""
+        super().model_post_init(__context)
+        self._fields = []
 
-        for item in data:
+        cache = self._client.cache.custom_fields
+
+        for item in self._data:
             if cache and (field := cache.get(item["field"], None)):
                 klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
                     field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
@@ -111,8 +111,11 @@ class DocumentCustomFieldList(PaperlessModelData):
         item_id = field.id if isinstance(field, CustomField) else field
         return any(item.field == item_id for item in self._fields)
 
-    def __iter__(self) -> Iterator[CustomFieldValue]:
+    def __iter__(self) -> Iterator[CustomFieldValue]:  # type: ignore[override]
         """Iterate over custom fields.
+
+        This intentionally behaves like a container iterator (yielding
+        ``CustomFieldValue`` items) instead of Pydantic's field-pair iterator.
 
         Example:
         -------
@@ -147,7 +150,6 @@ class DocumentCustomFieldList(PaperlessModelData):
             else field
         )
         self._fields = [field for field in self._fields if field.field != item_id]
-
         return self
 
     @overload
@@ -186,23 +188,13 @@ class DocumentCustomFieldList(PaperlessModelData):
     ) -> CustomFieldValue | CustomFieldValueT:
         """Access and return a (typed) `CustomFieldValue` from the list."""
         item_id = field.id if isinstance(field, CustomField) else field
-
         for item in self._fields:
             if item.field == item_id:
                 if expected_type is not None and not isinstance(item, expected_type):
                     msg = f"Expected {expected_type.__name__}, got {type(item).__name__}"
                     raise TypeError(msg)
                 return item
-
         raise ItemNotFoundError
-
-    @classmethod
-    def unserialize(cls, client: "Paperless", data: list[dict[str, Any]]) -> Self:
-        """Return a new instance of `cls` from `data`.
-
-        Primarily used by `dict_value_to_object` when instantiating model classes.
-        """
-        return cls(client, data=data)
 
     def serialize(self) -> list[dict[str, Any]]:
         """Serialize the class data."""
@@ -212,10 +204,13 @@ class DocumentCustomFieldList(PaperlessModelData):
 class Document(
     PaperlessModel,
     mixins.SecurableMixin,
+    mixins.UpdatableMixin,
+    mixins.DeletableMixin,
 ):
     """Represent a Paperless `Document`."""
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _history: "DocumentHistoryService | None" = PrivateAttr(default=None)
     _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
@@ -240,18 +235,13 @@ class Document(
     mime_type: str | None = None
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Document` instance."""
-        # Convert custom_fields list to DocumentCustomFieldList before pydantic validation
-        if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
-            kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
-        super().__init__(client, data, **kwargs)
-
-    def apply_data(self) -> None:
-        """Apply data from `self._data` to model fields, converting custom_fields."""
-        super().apply_data()
-        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
+    @field_validator("custom_fields", mode="before")
+    @classmethod
+    def _coerce_custom_fields(cls, v: Any, info: ValidationInfo) -> Any:
+        """Convert a raw list of custom field dicts into a ``DocumentCustomFieldList``."""
+        if isinstance(v, list) and isinstance(info.context, dict) and "client" in info.context:
+            return DocumentCustomFieldList.from_data(info.context["client"], v)
+        return v
 
     @property
     def history(self) -> "DocumentHistoryService":
@@ -270,6 +260,48 @@ class Document(
 
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
+
+    async def download(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.download(self.id)``."""
+        return await self._client.documents.download(cast("int", self.id), original=original)
+
+    async def preview(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.preview(self.id)``."""
+        return await self._client.documents.preview(cast("int", self.id), original=original)
+
+    async def thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
+        """Shortcut for ``paperless.documents.thumbnail(self.id)``."""
+        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
+
+    async def metadata(self) -> "DocumentMeta":
+        """Shortcut for ``paperless.documents.metadata(self.id)``."""
+        return await self._client.documents.metadata(cast("int", self.id))
+
+    async def suggestions(self) -> "DocumentSuggestions":
+        """Shortcut for ``paperless.documents.suggestions(self.id)``."""
+        return await self._client.documents.suggestions(cast("int", self.id))
+
+    async def more_like(self) -> AsyncGenerator["Document"]:
+        """Shortcut for ``paperless.documents.more_like(self.id)``."""
+        async for doc in self._client.documents.more_like(cast("int", self.id)):
+            yield doc
+
+    async def email(
+        self,
+        *,
+        addresses: str,
+        subject: str,
+        message: str,
+        use_archive_version: bool = True,
+    ) -> None:
+        """Shortcut for ``paperless.documents.email(self.id, ...)``."""
+        await self._client.documents.email(
+            cast("int", self.id),
+            addresses=addresses,
+            subject=subject,
+            message=message,
+            use_archive_version=use_archive_version,
+        )
 
     @property
     def created_date(self) -> datetime.date | None:
@@ -291,31 +323,20 @@ class Document(
         """Return the document search hit."""
         return self.search_hit_
 
-    async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.download(cast("int", self.id), original=original)
-
-    async def get_metadata(self) -> "DocumentMeta":
-        """Request and return the documents `DocumentMeta` class."""
-        return await self._client.documents.metadata(cast("int", self.id))
-
-    async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.preview(cast("int", self.id), original=original)
-
-    async def get_suggestions(self) -> "DocumentSuggestions":
-        """Request and return the `DocumentSuggestions` class."""
-        return await self._client.documents.suggestions(cast("int", self.id))
-
-    async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
+    def apply_data(self) -> None:
+        """Apply data from `self._data` to model fields, converting custom_fields."""
+        super().apply_data()
+        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
+            self.custom_fields = DocumentCustomFieldList.from_data(
+                self._client, self._data["custom_fields"]
+            )
 
 
-class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
+class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_post"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _create_required_fields: ClassVar[set[str]] = {"document"}
 
@@ -371,6 +392,10 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
+    async def delete(self) -> bool:
+        """Shortcut for ``paperless.documents.notes.delete(self)``."""
+        return await self._client.documents.notes.delete(self)
+
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
@@ -382,6 +407,10 @@ class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
 
     note: str | None = None
     document: int | None = None
+
+    async def save(self) -> tuple[int, int]:
+        """Shortcut for ``paperless.documents.notes.save(self)``."""
+        return await self._client.documents.notes.save(self)
 
 
 class DocumentMeta(PaperlessModel):

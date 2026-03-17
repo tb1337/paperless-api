@@ -2,7 +2,7 @@
 
 import logging
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, overload
 
 import httpx
 
@@ -17,6 +17,7 @@ from .exceptions import (
     JsonResponseWithError,
     PaperlessConnectionError,
 )
+from .settings import PaperlessConfig
 from .utils import normalize_base_url, process_form_data
 
 
@@ -32,27 +33,88 @@ class Paperless:
         """Exit context manager."""
         await self.close()
 
+    @overload
     def __init__(
         self,
         url: str,
+        token: str | None = ...,
+        *,
+        client: httpx.AsyncClient | None = ...,
+        request_api_version: int | None = ...,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        config: PaperlessConfig,
+        client: httpx.AsyncClient | None = ...,
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self,
+        *,
+        client: httpx.AsyncClient | None = ...,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        url: str | None = None,
         token: str | None = None,
         *,
+        config: PaperlessConfig | None = None,
         client: httpx.AsyncClient | None = None,
         request_api_version: int | None = None,
     ) -> None:
         """Initialize a `Paperless` instance.
 
-        You have to permit either a client, or an url / token pair.
+        Three configuration modes are supported:
 
-        `url`: A hostname or IP-address as string.
-        `token`: An api token created in Paperless Django settings, or via the helper function.
-        `client`: A custom `httpx.AsyncClient` object, if existing.
+        **1. Explicit parameters:**
+        ```python
+        paperless = Paperless("localhost:8000", "your-token")
+        ```
+
+        **2. Config object:**
+        ```python
+        cfg = PaperlessConfig(url="localhost:8000", token="your-token")
+        paperless = Paperless(config=cfg)
+        ```
+
+        **3. Environment variables (no arguments):**
+        Set ``PYPAPERLESS_URL`` and optionally ``PYPAPERLESS_TOKEN`` /
+        ``PYPAPERLESS_REQUEST_API_VERSION`` before starting your application.
+        ```python
+        paperless = Paperless()
+        ```
+
+        `url`: A hostname, IP-address, or full URL string.
+        `token`: An API token generated in Paperless Django settings, or via `generate_api_token`.
+        `config`: A `PaperlessConfig` instance with all connection parameters.
+        `client`: A custom `httpx.AsyncClient` to use for requests.
+        `request_api_version`: Override the API version header sent with each request.
         """
-        self._base_url = normalize_base_url(url)
+        if config is not None:
+            _url = config.url
+            _token = config.token
+            _request_api_version = config.request_api_version
+        elif url is not None:
+            _url = url
+            _token = token
+            _request_api_version = request_api_version or API_VERSION
+        else:
+            # No args supplied — read everything from environment variables.
+            _cfg = PaperlessConfig()
+            _url = _cfg.url
+            _token = _cfg.token
+            _request_api_version = _cfg.request_api_version
+
+        self._base_url = normalize_base_url(_url)
         self._client = client
         self._initialized = False
-        self._request_api_version = request_api_version or API_VERSION
-        self._token = token
+        self._request_api_version = _request_api_version
+        self._token = _token
 
         self._api_version = API_VERSION
         self._version: str | None = None

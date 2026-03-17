@@ -32,7 +32,7 @@ To upload a new document, use `draft()` + `save()`. The first positional argumen
 with open("invoice.pdf", "rb") as fh:
     raw = fh.read()
 
-draft = paperless.documents.draft()
+draft = paperless.documents.create()
 draft.title = "Invoice 2024"
 draft.correspondent = 7
 draft.tags = [1, 3]
@@ -56,6 +56,58 @@ changed = await paperless.documents.update(doc)
 ```python
 doc = await paperless.documents(42)
 deleted = await paperless.documents.delete(doc)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+doc = await paperless.documents(42)
+doc.title = "Updated title"
+changed = await doc.update()
+
+await doc.delete()
+
+# Draft.save() returns a task UUID, same as paperless.documents.save(draft)
+draft = paperless.documents.create()
+draft.title = "Invoice 2024"
+draft.document = raw_bytes
+task_id = await draft.save()
+```
+
+Document instances also expose shortcuts for the sub-resource operations:
+
+```python
+doc = await paperless.documents(42)
+
+# file access
+downloaded = await doc.download()
+preview    = await doc.preview()
+thumb      = await doc.thumbnail()
+
+# metadata and suggestions
+meta        = await doc.metadata()
+suggestions = await doc.suggestions()
+
+# similar documents (async generator)
+async for similar in doc.more_like():
+    print(similar.title)
+
+# send by e-mail
+await doc.email(
+    addresses="alice@example.com",
+    subject="Invoice",
+    message="See attachment.",
+)
+
+# notes and history (bound sub-services)
+notes   = await doc.notes()           # list[DocumentNote]
+entries = await doc.history()         # list[DocumentHistory]
+note_draft = doc.notes.create(note="Checked.")
+await doc.notes.save(note_draft)
+await note_draft.save()               # same, as a draft shortcut
+await notes[0].delete()               # note instance shortcut
 ```
 
 ## Permissions

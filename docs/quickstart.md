@@ -53,6 +53,23 @@ async def main():
     await paperless.close()
 ```
 
+### Configuration via environment variables
+
+Instead of hard-coding credentials you can set environment variables and call `Paperless()` without any arguments:
+
+```bash
+export PYPAPERLESS_URL=https://paperless.example.com
+export PYPAPERLESS_TOKEN=your-api-token
+export PYPAPERLESS_REQUEST_API_VERSION=9
+```
+
+```python
+async with Paperless() as paperless:
+    ...
+```
+
+See [Session management](session.md#configuration-modes) for all three configuration modes.
+
 ---
 
 ## URL formats

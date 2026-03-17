@@ -40,7 +40,7 @@ class DocumentSuggestionsService(ServiceBase):
         data = await self._client.request_json("get", api_path)
         data["id"] = pk
 
-        return self._resource_cls.create_with_data(self._client, data)
+        return self._resource_cls.from_data(self._client, data)
 
 
 class DocumentSubServiceBase(ServiceBase):
@@ -83,7 +83,7 @@ class DocumentSubServiceBase(ServiceBase):
                 if stripped.startswith("filename="):
                     data["disposition_filename"] = stripped.split("=", 1)[1].strip('"')
 
-        return self._resource_cls.create_with_data(self._client, data)
+        return self._resource_cls.from_data(self._client, data)
 
 
 class DocumentFileDownloadService(DocumentSubServiceBase):
@@ -156,8 +156,7 @@ class DocumentHistoryService(ServiceBase):
         doc_pk = self._get_document_pk(pk)
         res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
         return [
-            self._resource_cls.create_with_data(self._client, {**item, "document": doc_pk})
-            for item in res
+            self._resource_cls.from_data(self._client, {**item, "document": doc_pk}) for item in res
         ]
 
     def _get_document_pk(self, pk: int | None = None) -> int:
@@ -208,7 +207,7 @@ class DocumentNoteService(ServiceBase):
         #       .document -> does not exist (so we add it here)
         #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
         return [
-            self._resource_cls.create_with_data(
+            self._resource_cls.from_data(
                 self._client,
                 {
                     **item,
@@ -232,19 +231,19 @@ class DocumentNoteService(ServiceBase):
         """Return the formatted api path."""
         return self._api_path.format(pk=pk)
 
-    def draft(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
+    def create(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
         """Return a fresh and empty `DocumentNoteDraft` instance.
 
         Example:
         -------
         ```python
-        draft = paperless.documents.notes.draft(...)
+        draft = paperless.documents.notes.create(...)
         # do something
         ```
 
         """
         kwargs.update({"document": self._get_document_pk(pk)})
-        return DocumentNoteDraft.create_with_data(
+        return DocumentNoteDraft.from_data(
             self._client,
             data=kwargs,
         )
@@ -319,13 +318,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.download(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_download()
         ```
 
         """
@@ -356,12 +349,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request metadata of a document directly...
         metadata = await paperless.documents.metadata(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        metadata = await doc.get_metadata()
         ```
 
         """
@@ -392,13 +380,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.preview(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_preview()
         ```
 
         """
@@ -411,13 +393,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document suggestions directly...
         suggestions = await paperless.documents.suggestions(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.suggestions(42)
-
-        suggestions = await doc.get_suggestions()
         ```
 
         """
@@ -430,13 +406,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.thumbnail(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_thumbnail()
         ```
 
         """

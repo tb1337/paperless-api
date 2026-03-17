@@ -38,9 +38,9 @@ Or using an already-fetched document:
 ```python
 doc = await paperless.documents(42)
 
-download  = await doc.get_download()
-preview   = await doc.get_preview()
-thumbnail = await doc.get_thumbnail()
+download  = await doc.download()
+preview   = await doc.preview()
+thumbnail = await doc.thumbnail()
 ```
 
 `DownloadedDocument` gives you the raw bytes plus everything from the response headers you'd need to save or serve the file:
@@ -110,6 +110,11 @@ Find documents similar to a given document:
 ```python
 async for document in paperless.documents.more_like(42):
     print(document.title)
+
+# or via a fetched document
+doc = await paperless.documents(42)
+async for document in doc.more_like():
+    print(document.title)
 ```
 
 ---
@@ -121,7 +126,7 @@ meta = await paperless.documents.metadata(42)
 
 # or via a fetched document
 doc = await paperless.documents(42)
-meta = await doc.get_metadata()
+meta = await doc.metadata()
 ```
 
 The returned `DocumentMeta` object includes embedded metadata from the file (e.g. EXIF or PDF metadata):
@@ -142,7 +147,7 @@ suggestions = await paperless.documents.suggestions(42)
 
 # or via a fetched document
 doc = await paperless.documents(42)
-suggestions = await doc.get_suggestions()
+suggestions = await doc.suggestions()
 
 print(suggestions.correspondents)
 print(suggestions.document_types)
@@ -173,7 +178,7 @@ for note in notes:
 
 ```python
 # Pass the document pk as the first positional argument
-draft = paperless.documents.notes.draft(42, note="This needs review")
+draft = paperless.documents.notes.create(42, note="This needs review")
 note_id, doc_id = await paperless.documents.notes.save(draft)
 ```
 
@@ -181,8 +186,11 @@ Or via a fetched document (the document pk is bound automatically):
 
 ```python
 doc = await paperless.documents(42)
-draft = doc.notes.draft(note="This needs review")
+draft = doc.notes.create(note="This needs review")
 note_id, doc_id = await doc.notes.save(draft)
+
+# or use the shortcut directly on the draft
+note_id, doc_id = await draft.save()
 ```
 
 ### Deleting a note
@@ -190,6 +198,9 @@ note_id, doc_id = await doc.notes.save(draft)
 ```python
 note = notes[0]
 await paperless.documents.notes.delete(note)
+
+# or via the note instance directly
+await note.delete()
 ```
 
 ---
@@ -207,13 +218,13 @@ print(f"Next ASN: {next_asn}")
 
 ## Uploading a document
 
-Use `draft()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`. All fields except `document` are optional.
+Use `create()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`. All fields except `document` are optional.
 
 ```python
 with open("invoice.pdf", "rb") as f:
     content = f.read()
 
-draft = paperless.documents.draft(
+draft = paperless.documents.create(
     document=content,           # required — raw file bytes
     filename="invoice.pdf",     # original filename
     title="Invoice 2024-01",
@@ -245,7 +256,7 @@ cf_list = DocumentCustomFieldList(paperless, data=[])
 cf_list += CustomFieldValue(field=3, value="ACME Corp")
 cf_list += CustomFieldValue(field=8, value=42)
 
-draft = paperless.documents.draft(document=content, custom_fields=cf_list)
+draft = paperless.documents.create(document=content, custom_fields=cf_list)
 ```
 
 See [Custom fields](custom_fields.md) for the full custom field API.
@@ -299,7 +310,7 @@ await paperless.documents.email(
 )
 ```
 
-A single document can also be passed as an integer:
+A single document can also be passed as an integer, or use the shortcut on a fetched `Document` instance:
 
 ```python
 await paperless.documents.email(
@@ -308,6 +319,15 @@ await paperless.documents.email(
     subject="Invoice",
     message="See attachment.",
     use_archive_version=False,  # send original instead of archived version
+)
+
+# shortcut — document pk is bound automatically
+doc = await paperless.documents(42)
+await doc.email(
+    addresses="alice@example.com",
+    subject="Invoice",
+    message="See attachment.",
+    use_archive_version=False,
 )
 ```
 

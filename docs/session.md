@@ -1,16 +1,72 @@
 # Session management
 
-This page covers advanced session configuration: custom HTTP clients, API version pinning and connection lifecycle details.
+This page covers all configuration modes, custom HTTP clients, API version pinning and connection lifecycle details.
 
 ---
 
-## The `Paperless` constructor
+## Configuration modes
+
+**pypaperless** can be configured in three ways:
+
+### 1. Explicit parameters
+
+Pass `url` and `token` directly to the constructor:
+
+```python
+paperless = Paperless("localhost:8000", "your-api-token")
+```
+
+### 2. `PaperlessConfig` object
+
+Build a `PaperlessConfig` instance and pass it via the `config` keyword. Useful when you want to construct or validate settings separately:
+
+```python
+from pypaperless import Paperless, PaperlessConfig
+
+cfg = PaperlessConfig(
+    url="https://paperless.example.com",
+    token="your-api-token",
+    request_api_version=9,  # optional — defaults to the built-in value
+)
+
+async with Paperless(config=cfg) as paperless:
+    ...
+```
+
+### 3. Environment variables
+
+Set the `PYPAPERLESS_*` environment variables and call `Paperless()` with no arguments. Ideal for containers, CI pipelines and twelve-factor apps:
+
+| Environment variable              | Field                | Required |
+| --------------------------------- | -------------------- | :------: |
+| `PYPAPERLESS_URL`                 | Base URL             |    ✓     |
+| `PYPAPERLESS_TOKEN`               | API token            |          |
+| `PYPAPERLESS_REQUEST_API_VERSION` | API version override |          |
+
+```bash
+export PYPAPERLESS_URL=https://paperless.example.com
+export PYPAPERLESS_TOKEN=your-api-token
+export PYPAPERLESS_REQUEST_API_VERSION=9
+```
+
+```python
+async with Paperless() as paperless:
+    ...
+```
+
+!!! note
+    `PYPAPERLESS_URL` is required. If it is not set and no `url` argument is provided, a `ValidationError` is raised immediately.
+
+---
+
+## The `Paperless` constructor reference
 
 ```python
 Paperless(
-    url: str,
+    url: str | None = None,
     token: str | None = None,
     *,
+    config: PaperlessConfig | None = None,
     client: httpx.AsyncClient | None = None,
     request_api_version: int | None = None,
 )
@@ -20,6 +76,7 @@ Paperless(
 | --------------------- | ----------------------------------------------------------------------- |
 | `url`                 | Hostname, IP address or full URL of your Paperless-ngx instance         |
 | `token`               | API token obtained from Paperless-ngx settings                          |
+| `config`              | A `PaperlessConfig` instance (alternative to `url` / `token`)           |
 | `client`              | Optional custom HTTP client (see below)                                 |
 | `request_api_version` | Pin a specific Paperless API version (defaults to the latest supported) |
 

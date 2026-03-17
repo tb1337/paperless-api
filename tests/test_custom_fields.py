@@ -18,6 +18,7 @@ from pypaperless.models.custom_field_query import (
     CustomFieldQueryNot,
     CustomFieldQueryOr,
 )
+from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
@@ -42,7 +43,7 @@ from .data import DATA_CUSTOM_FIELDS
 
 async def test_draft_value_without_cache(paperless: Paperless) -> None:
     """draft_value() returns a plain object when the custom field cache is empty."""
-    custom_field = CustomField.create_with_data(
+    custom_field = CustomField.from_data(
         paperless,
         data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
     )
@@ -63,7 +64,7 @@ async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperles
     )
     paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
 
-    custom_field = CustomField.create_with_data(
+    custom_field = CustomField.from_data(
         client=paperless,
         data=DATA_CUSTOM_FIELDS["results"][5],
     )
@@ -252,6 +253,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
         "name": "Parent Tag",
         "color": "#000000",
         "text_color": "#ffffff",
+        "matching_algorithm": 2,
         "children": [
             {
                 "id": 2,
@@ -259,6 +261,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
                 "name": "Child Tag",
                 "color": "#000000",
                 "text_color": "#ffffff",
+                "matching_algorithm": 1,
                 "children": [
                     {
                         "id": 3,
@@ -266,32 +269,35 @@ def test_tag_with_nested_children(api: Paperless) -> None:
                         "name": "Grandchild Tag",
                         "color": "#000000",
                         "text_color": "#ffffff",
+                        "matching_algorithm": 6,
                     }
                 ],
             }
         ],
     }
-    tag = Tag.create_with_data(api, data=tag_data)
+    tag = Tag.from_data(api, data=tag_data)
     assert tag.name == "Parent Tag"
     assert isinstance(tag.children, list)
     child = tag.children[0]
     assert isinstance(child, Tag)
     assert child.name == "Child Tag"
+    assert child.matching_algorithm == MatchingAlgorithm.ANY
     assert isinstance(child.children, list)
     assert isinstance(child.children[0], Tag)
     assert child.children[0].name == "Grandchild Tag"
+    assert child.children[0].matching_algorithm == MatchingAlgorithm.AUTO
 
 
 def test_tag_with_empty_children(api: Paperless) -> None:
     """Tag._validate_children returns the falsy value unchanged (empty list / None)."""
-    tag_empty = Tag.create_with_data(
+    tag_empty = Tag.from_data(
         api,
         data={"id": 5, "slug": "leaf", "name": "Leaf Tag", "children": []},
     )
     # empty list — _validate_children early-returns the empty list
     assert tag_empty.children == []
 
-    tag_none = Tag.create_with_data(
+    tag_none = Tag.from_data(
         api,
         data={"id": 6, "slug": "leaf2", "name": "Leaf Tag 2"},
     )

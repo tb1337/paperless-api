@@ -17,7 +17,7 @@ class ProfileService(ServiceBase):
     async def __call__(self) -> Profile:
         """Request the `Profile` model data."""
         res = await self._client.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._client, res)
+        return self._resource_cls.from_data(self._client, res)
 
     async def update(
         self,
@@ -46,4 +46,4 @@ class ProfileService(ServiceBase):
         if last_name is not None:
             payload["last_name"] = last_name
         res = await self._client.request_json("patch", self._api_path, json=payload)
-        return self._resource_cls.create_with_data(self._client, res)
+        return self._resource_cls.from_data(self._client, res)

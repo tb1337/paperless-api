@@ -8,7 +8,7 @@ from typing import Any, ClassVar, TypeVar, overload
 
 from pydantic import BaseModel, Field, field_validator
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -197,10 +197,13 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
 
 class CustomField(
     PaperlessModel,
+    mixins.UpdatableMixin,
+    mixins.DeletableMixin,
 ):
     """Represent a Paperless `CustomField`."""
 
     _api_path: ClassVar[str] = API_PATH["custom_fields_single"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
     id: int
     name: str | None = None
@@ -240,10 +243,11 @@ class CustomField(
         return CustomFieldValue(field=self.id, value=value)
 
 
-class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin):
+class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["custom_fields"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
     _create_required_fields: ClassVar[set[str]] = {"name", "data_type"}
 

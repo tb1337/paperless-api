@@ -102,7 +102,7 @@ class ResourceError(PaperlessError):
 
 
 class ItemNotFoundError(ResourceError):
-    """Raise when trying to access non-existing items in PaperlessModelData classes."""
+    """Raise when trying to access non-existing items in PaperlessCustomDataModel classes."""
 
 
 class PrimaryKeyRequiredError(ResourceError):

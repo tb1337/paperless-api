@@ -200,12 +200,12 @@ await paperless.documents.update(document)
 
 ## Creating a custom field
 
-Use `draft()` and `save()` on `paperless.custom_fields`:
+Use `create()` and `save()` on `paperless.custom_fields`:
 
 ```python
 from pypaperless.models.custom_fields import CustomFieldType
 
-draft = paperless.custom_fields.draft(
+draft = paperless.custom_fields.create(
     name="Invoice amount",
     data_type=CustomFieldType.MONETARY,
 )
@@ -221,7 +221,7 @@ from pypaperless.models.custom_fields import (
     CustomFieldType,
 )
 
-draft = paperless.custom_fields.draft(
+draft = paperless.custom_fields.create(
     name="Status",
     data_type=CustomFieldType.SELECT,
     extra_data=CustomFieldExtraData(

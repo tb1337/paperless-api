@@ -94,7 +94,7 @@ perms = Permissions(
     change_groups=[1],
 )
 
-draft = paperless.tags.draft(
+draft = paperless.tags.create(
     name="confidential",
     owner=1,
     set_permissions=perms,

@@ -1,10 +1,8 @@
 """Provide `Tag` related models."""
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
-from pydantic import field_validator
-
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -14,10 +12,13 @@ class Tag(
     PaperlessModel,
     mixins.MatchingFieldsMixin,
     mixins.SecurableMixin,
+    mixins.UpdatableMixin,
+    mixins.DeletableMixin,
 ):
     """Represent a Paperless `Tag`."""
 
     _api_path: ClassVar[str] = API_PATH["tags_single"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     id: int | None = None
     slug: str | None = None
@@ -29,31 +30,18 @@ class Tag(
     parent: int | None = None
     children: list["Tag"] | None = None
 
-    @classmethod
-    def _build_child_tag(cls, item: dict[str, Any]) -> "Tag":
-        nested = [
-            cls._build_child_tag(c) if isinstance(c, dict) else c
-            for c in (item.get("children") or [])
-        ]
-        return cls.model_construct(**{**item, "children": nested or None})
-
-    @field_validator("children", mode="before")
-    @classmethod
-    def _validate_children(cls, v: Any) -> Any:
-        if not v:
-            return v
-        return [cls._build_child_tag(item) if isinstance(item, dict) else item for item in v]
-
 
 class TagDraft(
     PaperlessModel,
     mixins.MatchingFieldsMixin,
     mixins.SecurableDraftMixin,
     mixins.CreatableMixin,
+    mixins.SaveableMixin,
 ):
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["tags"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     _create_required_fields: ClassVar[set[str]] = {
         "name",
