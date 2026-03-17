@@ -28,14 +28,6 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     all: list[int] = Field(default_factory=list)
     results: list[dict[str, Any]] = Field(default_factory=list)
 
-    def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
-        """Return iter of `.items`."""
-        return iter(self.items)
-
-    def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
-        """Set the resource class for items mapping."""
-        self._resource_cls = resource_cls
-
     @property
     def current_count(self) -> int:
         """Return the item count of the current page."""
@@ -93,3 +85,11 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
         if self.previous is None:
             return None
         return self.current_page - 1
+
+    def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
+        """Return iter of `.items`."""
+        return iter(self.items)
+
+    def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
+        """Set the resource class for items mapping."""
+        self._resource_cls = resource_cls

@@ -13,14 +13,14 @@ class PaperlessBase:
 
     _api_path = API_PATH["index"]
 
+    def __init__(self, client: "Paperless") -> None:
+        """Initialize a `PaperlessBase` instance."""
+        self._client = client
+
     @property
     def api_path(self) -> str:
         """Return the API path for the object."""
         return self._api_path
-
-    def __init__(self, client: "Paperless") -> None:
-        """Initialize a `PaperlessBase` instance."""
-        self._client = client
 
 
 class ServiceProtocol[ResourceT](Protocol):

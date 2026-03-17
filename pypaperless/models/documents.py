@@ -240,14 +240,6 @@ class Document(
             return DocumentCustomFieldList.from_data(info.context["client"], v)
         return v
 
-    def apply_data(self) -> None:
-        """Apply data from `self._data` to model fields, converting custom_fields."""
-        super().apply_data()
-        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList.from_data(
-                self._client, self._data["custom_fields"]
-            )
-
     @property
     def history(self) -> "DocumentHistoryService":
         """Return the history service for this document."""
@@ -285,6 +277,14 @@ class Document(
     def search_hit(self) -> DocumentSearchHit | None:
         """Return the document search hit."""
         return self.search_hit_
+
+    def apply_data(self) -> None:
+        """Apply data from `self._data` to model fields, converting custom_fields."""
+        super().apply_data()
+        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
+            self.custom_fields = DocumentCustomFieldList.from_data(
+                self._client, self._data["custom_fields"]
+            )
 
     async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
         """Request and return the `DownloadedDocument` class."""

@@ -29,21 +29,6 @@ class PaperlessModel(BaseModel):
     _client: "Paperless" = PrivateAttr()
     _data: dict[str, Any] = PrivateAttr(default_factory=dict)
 
-    @property
-    def api_path(self) -> str:
-        """Return the API path for this model instance."""
-        return self._api_path
-
-    @property
-    def data(self) -> dict[str, Any]:
-        """Return the internal model data dictionary."""
-        return self._data
-
-    @data.setter
-    def data(self, value: dict[str, Any]) -> None:
-        """Set the internal model data dictionary."""
-        self._data = value
-
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_client` from validation context and resolve the instance API path."""
         if isinstance(__context, dict) and "client" in __context:
@@ -71,6 +56,21 @@ class PaperlessModel(BaseModel):
         instance = cls.model_validate(data, context={"client": client})
         instance._data = data  # noqa: SLF001
         return instance
+
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this model instance."""
+        return self._api_path
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """Return the internal model data dictionary."""
+        return self._data
+
+    @data.setter
+    def data(self, value: dict[str, Any]) -> None:
+        """Set the internal model data dictionary."""
+        self._data = value
 
     def apply_data(self) -> None:
         """Apply data from `self.data` to model fields.
@@ -107,16 +107,6 @@ class PaperlessCustomDataModel(BaseModel):
     _client: "Paperless" = PrivateAttr()
     _data: Any = PrivateAttr(default=None)
 
-    @property
-    def data(self) -> Any:
-        """Return the internal custom-model data payload."""
-        return self._data
-
-    @data.setter
-    def data(self, value: Any) -> None:
-        """Set the internal custom-model data payload."""
-        self._data = value
-
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_client` and `_data` from validation context."""
         if isinstance(__context, dict):
@@ -129,6 +119,16 @@ class PaperlessCustomDataModel(BaseModel):
     def from_data(cls, client: "Paperless", data: Any) -> Self:
         """Return a new instance of ``cls`` from API data."""
         return cls.model_validate({}, context={"client": client, "data": data})
+
+    @property
+    def data(self) -> Any:
+        """Return the internal custom-model data payload."""
+        return self._data
+
+    @data.setter
+    def data(self, value: Any) -> None:
+        """Set the internal custom-model data payload."""
+        self._data = value
 
     def serialize(self) -> Any:
         """Return the JSON-compatible payload for this model."""
