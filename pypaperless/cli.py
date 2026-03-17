@@ -14,7 +14,7 @@ try:
     from pygments.lexers import JsonLexer
 
     _PYGMENTS = True
-except ImportError:
+except ImportError:  # pragma: no cover
     _PYGMENTS = False
 
 from . import Paperless
