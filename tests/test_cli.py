@@ -47,11 +47,12 @@ def test_cli_help() -> None:
 
 
 def test_cli_subcommand_help() -> None:
-    """Tags --help shows list and get subcommands."""
+    """Tags --help shows list, json and get subcommands."""
     runner = CliRunner()
     result = runner.invoke(cli, ["tags", "--help"])
     assert result.exit_code == 0
     assert "list" in result.output
+    assert "json" in result.output
     assert "get" in result.output
 
 
@@ -116,7 +117,7 @@ def test_cli_profile(httpx_mock: HTTPXMock) -> None:
 
 
 def test_cli_tags_list(httpx_mock: HTTPXMock) -> None:
-    """Tags list returns a JSON array of all tag items."""
+    """Tags list returns a structured ID/name console table."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
         url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
@@ -128,13 +129,13 @@ def test_cli_tags_list(httpx_mock: HTTPXMock) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, [*_ARGS, "tags", "list"])
     assert result.exit_code == 0, result.output
-    items = json.loads(result.output)
-    assert isinstance(items, list)
-    assert len(items) == len(DATA_TAGS["results"])
+    assert "ID" in result.output
+    assert "Name" in result.output
+    assert DATA_TAGS["results"][0]["name"] in result.output
 
 
 def test_cli_tags_list_limit(httpx_mock: HTTPXMock) -> None:
-    """Tags list --limit 1 returns exactly 1 item."""
+    """Tags list --limit 1 prints exactly one data row."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
         url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
@@ -146,8 +147,54 @@ def test_cli_tags_list_limit(httpx_mock: HTTPXMock) -> None:
     runner = CliRunner()
     result = runner.invoke(cli, [*_ARGS, "tags", "list", "--limit", "1"])
     assert result.exit_code == 0, result.output
+    lines = [line for line in result.output.splitlines() if line.strip()]
+    data_lines = lines[2:]
+    assert len(data_lines) == 1
+
+
+def test_cli_tags_list_sorted_by_name(httpx_mock: HTTPXMock) -> None:
+    """Tags list sorts rows by name."""
+    _mock_init(httpx_mock)
+    httpx_mock.add_response(
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        method="GET",
+        status_code=200,
+        json={
+            "count": 2,
+            "next": None,
+            "previous": None,
+            "results": [
+                {"id": 2, "name": "Zulu"},
+                {"id": 1, "name": "alpha"},
+            ],
+        },
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [*_ARGS, "tags", "list"])
+    assert result.exit_code == 0, result.output
+    lines = [line for line in result.output.splitlines() if line.strip()]
+    data_lines = lines[2:]
+    assert data_lines[0].endswith("alpha")
+    assert data_lines[1].endswith("Zulu")
+
+
+def test_cli_tags_json(httpx_mock: HTTPXMock) -> None:
+    """Tags json returns a JSON array of all tag items."""
+    _mock_init(httpx_mock)
+    httpx_mock.add_response(
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        method="GET",
+        status_code=200,
+        json=DATA_TAGS,
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [*_ARGS, "tags", "json"])
+    assert result.exit_code == 0, result.output
     items = json.loads(result.output)
-    assert len(items) == 1
+    assert isinstance(items, list)
+    assert len(items) == len(DATA_TAGS["results"])
 
 
 # ── resource get ──────────────────────────────────────────────────────────────
@@ -210,7 +257,7 @@ def test_cli_env_credentials(httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPa
 
     runner = CliRunner()
     # No --url / --token options — should pick up from env
-    result = runner.invoke(cli, ["tags", "list"])
+    result = runner.invoke(cli, ["tags", "json"])
     assert result.exit_code == 0, result.output
     assert isinstance(json.loads(result.output), list)
 

@@ -22,6 +22,9 @@ Dev venv: `/home/vscode/.local/dev-venv/bin/activate`
 
 **After any code change, always run the full validation sequence before considering the task complete:**
 
+**Exception:** for CLI-only changes limited to `pypaperless/cli.py` and/or CLI-focused tests/docs, the live smoketest is not required on every change.
+In this case, run unit tests + coverage and report that the smoketest was intentionally skipped due to CLI-only scope.
+
 1. **Unit tests + coverage**
 
    ```

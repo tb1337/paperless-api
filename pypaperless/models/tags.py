@@ -35,7 +35,28 @@ class Tag(
             cls._build_child_tag(c) if isinstance(c, dict) else c
             for c in (item.get("children") or [])
         ]
-        return cls.model_construct(**{**item, "children": nested or None})
+        payload: dict[str, Any] = {}
+        for field_name, value in item.items():
+            if field_name == "children":
+                continue
+            field_info = cls.model_fields.get(field_name)
+            if field_info is None or field_info.annotation is None:
+                payload[field_name] = value
+                continue
+            try:
+                payload[field_name] = cls._get_type_adapter(
+                    field_name,
+                    field_info.annotation,
+                ).validate_python(value)
+            except (ValueError, TypeError):
+                payload[field_name] = value
+
+        return cls.model_construct(
+            **{
+                **payload,
+                "children": nested or None,
+            }
+        )
 
     @field_validator("children", mode="before")
     @classmethod

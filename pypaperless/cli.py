@@ -35,6 +35,27 @@ def _out(obj: Any) -> None:
     click.echo(text)
 
 
+def _render_compact_list(items: list[Any]) -> None:
+    """Render a compact ID/Name listing from model instances."""
+    rows: list[tuple[str, str]] = []
+    for item in items:
+        item_id = str(getattr(item, "id", "") or "")
+        row_name = ""
+        for key in ("name", "title", "username", "task_id", "slug"):
+            value = getattr(item, key, None)
+            if value not in (None, ""):
+                row_name = str(value)
+                break
+        rows.append((item_id, row_name))
+
+    rows.sort(key=lambda row: (row[1].casefold(), row[0]))
+    id_width = max((len(row[0]) for row in rows), default=2)
+    click.echo(f"{'ID':<{id_width}}  Name")
+    click.echo(f"{'-' * id_width}  {'-' * 40}")
+    for row_id, row_name in rows:
+        click.echo(f"{row_id:<{id_width}}  {row_name}")
+
+
 async def _with_client(
     url: str | None,
     token: str | None,
@@ -161,7 +182,33 @@ def _resource_group(
         )
         @click.pass_context
         def list_cmd(ctx: click.Context, limit: int | None) -> None:
-            """List all items."""
+            """List item IDs and names in a compact console format."""
+            _attr = service_attr
+
+            async def _fetch(p: Paperless) -> None:
+                service = getattr(p, _attr)
+                results: list[Any] = []
+                count = 0
+                async for item in service:
+                    results.append(item)
+                    count += 1
+                    if limit is not None and count >= limit:
+                        break
+                _render_compact_list(results)
+
+            asyncio.run(_with_client(ctx.obj["url"], ctx.obj["token"], _fetch))
+
+        @grp.command("json")
+        @click.option(
+            "--limit",
+            default=None,
+            type=int,
+            metavar="N",
+            help="Stop after N items (default: all).",
+        )
+        @click.pass_context
+        def json_cmd(ctx: click.Context, limit: int | None) -> None:
+            """List full items as JSON objects."""
             _attr = service_attr
 
             async def _fetch(p: Paperless) -> None:

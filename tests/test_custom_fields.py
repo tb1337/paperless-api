@@ -18,6 +18,7 @@ from pypaperless.models.custom_field_query import (
     CustomFieldQueryNot,
     CustomFieldQueryOr,
 )
+from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldDateValue,
@@ -252,6 +253,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
         "name": "Parent Tag",
         "color": "#000000",
         "text_color": "#ffffff",
+        "matching_algorithm": 2,
         "children": [
             {
                 "id": 2,
@@ -259,6 +261,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
                 "name": "Child Tag",
                 "color": "#000000",
                 "text_color": "#ffffff",
+                "matching_algorithm": 1,
                 "children": [
                     {
                         "id": 3,
@@ -266,6 +269,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
                         "name": "Grandchild Tag",
                         "color": "#000000",
                         "text_color": "#ffffff",
+                        "matching_algorithm": 6,
                     }
                 ],
             }
@@ -277,9 +281,11 @@ def test_tag_with_nested_children(api: Paperless) -> None:
     child = tag.children[0]
     assert isinstance(child, Tag)
     assert child.name == "Child Tag"
+    assert child.matching_algorithm == MatchingAlgorithm.ANY
     assert isinstance(child.children, list)
     assert isinstance(child.children[0], Tag)
     assert child.children[0].name == "Grandchild Tag"
+    assert child.children[0].matching_algorithm == MatchingAlgorithm.AUTO
 
 
 def test_tag_with_empty_children(api: Paperless) -> None:
