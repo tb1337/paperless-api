@@ -108,7 +108,7 @@ Base class for exceptions raised during draft lifecycle operations. Catch this t
 Raised by `draft.validate_draft()` (called automatically inside `save()`) when one or more required fields are missing.
 
 ```python
-draft = paperless.documents.draft()  # missing `document` field
+draft = paperless.documents.create()  # missing `document` field
 
 try:
     await paperless.documents.save(draft)

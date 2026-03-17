@@ -132,7 +132,9 @@ The `pages()` method was removed. Use `as_list()` or iterate directly.
 
 ## CRUD: update, delete, save
 
-In v5, CRUD operations lived on model instances. In v6 they live on the service.
+In v5, CRUD operations lived on model instances. v6 moves the canonical API to
+the **service** level, but also re-adds **shortcuts** on the model
+instances themselves for convenience (see below).
 
 ### update()
 
@@ -143,11 +145,18 @@ In v5, CRUD operations lived on model instances. In v6 they live on the service.
     await doc.update()
     ```
 
-=== "v6"
+=== "v6 – service (canonical)"
     ```python
     doc = await paperless.documents(42)
     doc.title = "New Title"
     await paperless.documents.update(doc)
+    ```
+
+=== "v6 – model shortcut"
+    ```python
+    doc = await paperless.documents(42)
+    doc.title = "New Title"
+    await doc.update()          # delegates to the service
     ```
 
 ### delete()
@@ -158,10 +167,16 @@ In v5, CRUD operations lived on model instances. In v6 they live on the service.
     await doc.delete()
     ```
 
-=== "v6"
+=== "v6 – service (canonical)"
     ```python
     doc = await paperless.documents(42)
     await paperless.documents.delete(doc)
+    ```
+
+=== "v6 – model shortcut"
+    ```python
+    doc = await paperless.documents(42)
+    await doc.delete()          # delegates to the service
     ```
 
 This applies to every resource — correspondents, tags, custom fields, etc.
@@ -174,10 +189,16 @@ This applies to every resource — correspondents, tags, custom fields, etc.
     pk = await draft.save()
     ```
 
-=== "v6"
+=== "v6 – service (canonical)"
     ```python
-    draft = paperless.documents.draft(document=raw_bytes, title="Invoice")
+    draft = paperless.documents.create(document=raw_bytes, title="Invoice")
     task_id = await paperless.documents.save(draft)
+    ```
+
+=== "v6 – model shortcut"
+    ```python
+    draft = paperless.documents.create(document=raw_bytes, title="Invoice")
+    task_id = await draft.save()    # delegates to the service
     ```
 
 For all other resources (correspondents, tags, …):
@@ -188,10 +209,16 @@ For all other resources (correspondents, tags, …):
     pk = await draft.save()
     ```
 
-=== "v6"
+=== "v6 – service (canonical)"
     ```python
-    draft = paperless.tags.draft(name="urgent")
+    draft = paperless.tags.create(name="urgent")
     pk = await paperless.tags.save(draft)
+    ```
+
+=== "v6 – model shortcut"
+    ```python
+    draft = paperless.tags.create(name="urgent")
+    pk = await draft.save()         # delegates to the service
     ```
 
 ---
@@ -263,7 +290,7 @@ Creating a new note:
 
 === "v6"
     ```python
-    draft = paperless.documents.notes.draft(note="Checked.", document=42)
+    draft = paperless.documents.notes.create(note="Checked.", document=42)
     note_id, doc_id = await paperless.documents.notes.save(draft)
     ```
 

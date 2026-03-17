@@ -231,13 +231,13 @@ class DocumentNoteService(ServiceBase):
         """Return the formatted api path."""
         return self._api_path.format(pk=pk)
 
-    def draft(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
+    def create(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
         """Return a fresh and empty `DocumentNoteDraft` instance.
 
         Example:
         -------
         ```python
-        draft = paperless.documents.notes.draft(...)
+        draft = paperless.documents.notes.create(...)
         # do something
         ```
 
@@ -318,13 +318,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.download(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_download()
         ```
 
         """
@@ -355,12 +349,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request metadata of a document directly...
         metadata = await paperless.documents.metadata(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        metadata = await doc.get_metadata()
         ```
 
         """
@@ -391,13 +380,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.preview(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_preview()
         ```
 
         """
@@ -410,13 +393,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document suggestions directly...
         suggestions = await paperless.documents.suggestions(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.suggestions(42)
-
-        suggestions = await doc.get_suggestions()
         ```
 
         """
@@ -429,13 +406,7 @@ class DocumentService(
         Example:
         -------
         ```python
-        # request document contents directly...
         download = await paperless.documents.thumbnail(42)
-
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-
-        download = await doc.get_thumbnail()
         ```
 
         """

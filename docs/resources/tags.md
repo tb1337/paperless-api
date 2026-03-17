@@ -31,7 +31,7 @@ inbox = next(
 ## Create
 
 ```python
-draft = paperless.tags.draft()
+draft = paperless.tags.create()
 draft.name = "Invoice"
 draft.color = "#a6cee3"
 draft.is_inbox_tag = False
@@ -53,6 +53,21 @@ changed = await paperless.tags.update(tag)
 ```python
 tag = await paperless.tags(5)
 deleted = await paperless.tags.delete(tag)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+tag = await paperless.tags(5)
+tag.color = "#ff0000"
+changed = await tag.update()
+
+await tag.delete()
+
+draft = paperless.tags.create(name="urgent")
+pk = await draft.save()
 ```
 
 ## Permissions

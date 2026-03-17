@@ -309,7 +309,7 @@ async def test_pages_object(api: Paperless) -> None:
 
 
 async def test_draft_not_supported(api: Paperless) -> None:
-    """Test that DraftableMixin.draft() raises when no draft_cls is configured."""
+    """Test that DraftableMixin.create() raises when no draft_cls is configured."""
 
     class TestResource(PaperlessModel):
         pass
@@ -321,7 +321,7 @@ async def test_draft_not_supported(api: Paperless) -> None:
 
     service = TestService(api)
     with pytest.raises(DraftNotSupportedError):
-        service.draft()
+        service.create()
 
 
 async def test_object_to_dict_value() -> None:

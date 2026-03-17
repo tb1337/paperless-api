@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
 
-from pypaperless.const import API_PATH
+from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.utils import object_to_dict_value
 
@@ -204,10 +204,13 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 class Document(
     PaperlessModel,
     mixins.SecurableMixin,
+    mixins.UpdatableMixin,
+    mixins.DeletableMixin,
 ):
     """Represent a Paperless `Document`."""
 
     _api_path: ClassVar[str] = API_PATH["documents_single"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _history: "DocumentHistoryService | None" = PrivateAttr(default=None)
     _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
@@ -286,31 +289,12 @@ class Document(
                 self._client, self._data["custom_fields"]
             )
 
-    async def get_download(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.download(cast("int", self.id), original=original)
 
-    async def get_metadata(self) -> "DocumentMeta":
-        """Request and return the documents `DocumentMeta` class."""
-        return await self._client.documents.metadata(cast("int", self.id))
-
-    async def get_preview(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.preview(cast("int", self.id), original=original)
-
-    async def get_suggestions(self) -> "DocumentSuggestions":
-        """Request and return the `DocumentSuggestions` class."""
-        return await self._client.documents.suggestions(cast("int", self.id))
-
-    async def get_thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
-        """Request and return the `DownloadedDocument` class."""
-        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
-
-
-class DocumentDraft(PaperlessModel, mixins.CreatableMixin):
+class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_post"]
+    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _create_required_fields: ClassVar[set[str]] = {"document"}
 

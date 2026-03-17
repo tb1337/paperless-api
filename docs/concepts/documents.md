@@ -173,7 +173,7 @@ for note in notes:
 
 ```python
 # Pass the document pk as the first positional argument
-draft = paperless.documents.notes.draft(42, note="This needs review")
+draft = paperless.documents.notes.create(42, note="This needs review")
 note_id, doc_id = await paperless.documents.notes.save(draft)
 ```
 
@@ -181,7 +181,7 @@ Or via a fetched document (the document pk is bound automatically):
 
 ```python
 doc = await paperless.documents(42)
-draft = doc.notes.draft(note="This needs review")
+draft = doc.notes.create(note="This needs review")
 note_id, doc_id = await doc.notes.save(draft)
 ```
 
@@ -207,13 +207,13 @@ print(f"Next ASN: {next_asn}")
 
 ## Uploading a document
 
-Use `draft()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`. All fields except `document` are optional.
+Use `create()` to construct a document upload and `save()` to submit it. The document content must be provided as `bytes`. All fields except `document` are optional.
 
 ```python
 with open("invoice.pdf", "rb") as f:
     content = f.read()
 
-draft = paperless.documents.draft(
+draft = paperless.documents.create(
     document=content,           # required — raw file bytes
     filename="invoice.pdf",     # original filename
     title="Invoice 2024-01",
@@ -245,7 +245,7 @@ cf_list = DocumentCustomFieldList(paperless, data=[])
 cf_list += CustomFieldValue(field=3, value="ACME Corp")
 cf_list += CustomFieldValue(field=8, value=42)
 
-draft = paperless.documents.draft(document=content, custom_fields=cf_list)
+draft = paperless.documents.create(document=content, custom_fields=cf_list)
 ```
 
 See [Custom fields](custom_fields.md) for the full custom field API.

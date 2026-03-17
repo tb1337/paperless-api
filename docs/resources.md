@@ -133,14 +133,14 @@ Use `draft()` to create a new draft model and `save()` to persist it:
 
 ```python
 # Create a new tag
-draft = paperless.tags.draft(name="important", color="#ff0000")
+draft = paperless.tags.create(name="important", color="#ff0000")
 new_id = await paperless.tags.save(draft)
 print(f"Created tag with id {new_id}")
 ```
 
 ```python
 # Create a new correspondent
-draft = paperless.correspondents.draft(name="ACME Corp")
+draft = paperless.correspondents.create(name="ACME Corp")
 new_id = await paperless.correspondents.save(draft)
 ```
 

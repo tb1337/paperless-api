@@ -27,7 +27,7 @@ types = await paperless.document_types.as_dict()
 ## Create
 
 ```python
-draft = paperless.document_types.draft()
+draft = paperless.document_types.create()
 draft.name = "Invoice"
 
 pk = await paperless.document_types.save(draft)
@@ -47,6 +47,21 @@ changed = await paperless.document_types.update(dt)
 ```python
 dt = await paperless.document_types(4)
 deleted = await paperless.document_types.delete(dt)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+dt = await paperless.document_types(4)
+dt.name = "Invoice (updated)"
+changed = await dt.update()
+
+await dt.delete()
+
+draft = paperless.document_types.create(name="Contract")
+pk = await draft.save()
 ```
 
 ## Permissions

@@ -27,7 +27,7 @@ paths = await paperless.storage_paths.as_dict()
 ## Create
 
 ```python
-draft = paperless.storage_paths.draft()
+draft = paperless.storage_paths.create()
 draft.name = "By year and type"
 draft.path = "{created_year}/{document_type}/{title}"
 
@@ -48,6 +48,21 @@ changed = await paperless.storage_paths.update(sp)
 ```python
 sp = await paperless.storage_paths(2)
 deleted = await paperless.storage_paths.delete(sp)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+sp = await paperless.storage_paths(2)
+sp.path = "{created_year}/{correspondent}/{title}"
+changed = await sp.update()
+
+await sp.delete()
+
+draft = paperless.storage_paths.create(name="Archive", path="{created_year}/{title}")
+pk = await draft.save()
 ```
 
 ## Permissions

@@ -198,7 +198,7 @@ class TestReadWrite(_SharedServiceTests):
     ) -> None:
         """Test create."""
         service = getattr(paperless, mapping.resource)
-        draft = service.draft(**mapping.draft_defaults)
+        draft = service.create(**mapping.draft_defaults)
         assert isinstance(draft, mapping.draft_cls)
         # test that blanking out the required field raises DraftFieldRequiredError
         if mapping.required_field is not None:
@@ -440,3 +440,97 @@ async def test_iterable_filter_base_method(paperless: Paperless) -> None:
     async with svc.filter(title__icontains="test") as ctx:
         assert ctx._aiter_filters == {"title__icontains": "test"}
     assert svc._aiter_filters is None
+
+
+# ---------------------------------------------------------------------------
+# Active Record model mixin tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "mapping",
+    [
+        CORRESPONDENT_MAP,
+        CUSTOM_FIELD_MAP,
+        DOCUMENT_MAP,
+        DOCUMENT_TYPE_MAP,
+        SHARE_LINK_MAP,
+        STORAGE_PATH_MAP,
+        TAG_MAP,
+    ],
+    scope="class",
+)
+class TestActiveRecord:
+    """Active Record shortcuts: model.update(), model.delete(), draft.save()."""
+
+    async def test_model_update(
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """model.update() delegates to the bound service and updates model state."""
+        update_field = mapping.update_field
+        update_value = mapping.update_value
+        pk = mapping.data["results"][0]["id"]
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json=mapping.data["results"][0],
+        )
+        item = await getattr(paperless, mapping.resource)(pk)
+        setattr(item, update_field, update_value)
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json={**item._data, update_field: update_value},
+        )
+        result = await item.update()
+        assert result is True
+        assert getattr(item, update_field) == update_value
+
+    async def test_model_delete(
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """model.delete() delegates to the bound service."""
+        pk = mapping.data["results"][0]["id"]
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=200,
+            json=mapping.data["results"][0],
+        )
+        item = await getattr(paperless, mapping.resource)(pk)
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=204,
+        )
+        assert await item.delete() is True
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=404,
+        )
+        assert await item.delete() is False
+
+    async def test_draft_save(
+        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+    ) -> None:
+        """draft.save() delegates to the bound service and returns the new pk."""
+        if mapping.draft_defaults is None:
+            pytest.skip("No draft_defaults defined for this mapping.")
+        service = getattr(paperless, mapping.resource)
+        draft = service.create(**mapping.draft_defaults)
+        response_json = (
+            mapping.draft_response_json
+            if mapping.draft_response_json is not None
+            else {"id": len(mapping.data["results"])}
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{draft.api_path}",
+            status_code=200,
+            json=response_json,
+        )
+        new_pk = await draft.save()
+        assert isinstance(new_pk, str) or new_pk >= 1

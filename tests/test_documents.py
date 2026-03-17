@@ -68,7 +68,7 @@ class TestDocuments:
     async def test_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """Draft upload validates required fields and POSTs via the correct endpoint."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
-        draft = paperless.documents.draft(**defaults)
+        draft = paperless.documents.create(**defaults)
         assert isinstance(draft, DocumentDraft)
         backup = draft.document
         draft.document = None
@@ -134,18 +134,11 @@ class TestDocuments:
         """get_metadata() returns a DocumentMeta with original and archive metadata lists."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENTS["results"][0],
-        )
-        document = await paperless.documents(1)
-        httpx_mock.add_response(
-            method="GET",
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_METADATA,
         )
-        meta = await document.get_metadata()
+        meta = await paperless.documents.metadata(1)
         assert isinstance(meta, DocumentMeta)
         assert isinstance(meta.original_metadata, list)
         for item in meta.original_metadata:
@@ -156,14 +149,6 @@ class TestDocuments:
 
     async def test_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """get_download/preview/thumbnail each return a DownloadedDocument."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENTS["results"][0],
-        )
-        document = await paperless.documents(1)
-
         httpx_mock.add_response(
             method="GET",
             url=re.compile(
@@ -178,7 +163,7 @@ class TestDocuments:
             },
             content=b"Binary data: download",
         )
-        download = await document.get_download()
+        download = await paperless.documents.download(1)
         assert isinstance(download, DownloadedDocument)
         assert download.mode == FileRetrieveMode.DOWNLOAD
 
@@ -193,7 +178,7 @@ class TestDocuments:
             headers={"Content-Type": "application/pdf"},
             content=b"Binary data: preview",
         )
-        preview = await document.get_preview()
+        preview = await paperless.documents.preview(1)
         assert isinstance(preview, DownloadedDocument)
         assert preview.mode == FileRetrieveMode.PREVIEW
 
@@ -207,7 +192,7 @@ class TestDocuments:
             status_code=200,
             content=b"Binary data: thumbnail",
         )
-        thumbnail = await document.get_thumbnail()
+        thumbnail = await paperless.documents.thumbnail(1)
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == FileRetrieveMode.THUMBNAIL
 
@@ -215,18 +200,11 @@ class TestDocuments:
         """get_suggestions() returns a DocumentSuggestions instance."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENTS["results"][0],
-        )
-        document = await paperless.documents(1)
-        httpx_mock.add_response(
-            method="GET",
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_SUGGESTIONS,
         )
-        assert isinstance(await document.get_suggestions(), DocumentSuggestions)
+        assert isinstance(await paperless.documents.suggestions(1), DocumentSuggestions)
 
     async def test_get_next_asn(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """get_next_asn() returns an int on success and raises AsnRequestError on failure."""
@@ -322,7 +300,7 @@ class TestDocuments:
             json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
-        draft = item.notes.draft(note="Test note.")
+        draft = item.notes.create(note="Test note.")
         assert isinstance(draft, DocumentNoteDraft)
         backup = draft.note
         draft.note = None
@@ -475,7 +453,7 @@ class TestDocuments:
 
     async def test_draft_custom_fields_as_id_list(self, paperless: Paperless) -> None:
         """DocumentDraft serialises list[int] custom_fields as repeated form values."""
-        draft = paperless.documents.draft(document=b"pdf", custom_fields=[1, 3, 5])
+        draft = paperless.documents.create(document=b"pdf", custom_fields=[1, 3, 5])
         serialized = draft.serialize()
         assert serialized["form"]["custom_fields"] == [1, 3, 5]
 
@@ -485,7 +463,7 @@ class TestDocuments:
         cf += CustomFieldStringValue(field=6, value="hello")
         cf += CustomFieldIntegerValue(field=3, value=42)
 
-        draft = paperless.documents.draft(document=b"pdf")
+        draft = paperless.documents.create(document=b"pdf")
         draft.custom_fields = cf
 
         serialized = draft.serialize()
@@ -503,7 +481,7 @@ class TestDocuments:
         cf = DocumentCustomFieldList.from_data(paperless, [])
         cf += CustomFieldStringValue(field=6, value="smoke")
 
-        draft = paperless.documents.draft(document=b"%PDF-fake", title="CF Mapping Test")
+        draft = paperless.documents.create(document=b"%PDF-fake", title="CF Mapping Test")
         draft.custom_fields = cf
 
         httpx_mock.add_response(
@@ -573,13 +551,6 @@ class TestDocuments:
         self, httpx_mock: HTTPXMock, paperless: Paperless
     ) -> None:
         """Download with a Content-Disposition that has a non-filename= part is handled."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENTS["results"][0],
-        )
-        document = await paperless.documents(1)
         # Content-Disposition has an extra part that is NOT filename=
         httpx_mock.add_response(
             method="GET",
@@ -595,7 +566,7 @@ class TestDocuments:
             },
             content=b"binary",
         )
-        download = await document.get_download()
+        download = await paperless.documents.download(1)
         assert isinstance(download, DownloadedDocument)
         assert download.disposition_filename == "doc.pdf"
 

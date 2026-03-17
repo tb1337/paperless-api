@@ -34,7 +34,7 @@ doc_links = [
 import datetime
 from pypaperless.models.share_links import ShareLinkFileVersion
 
-draft = paperless.share_links.draft()
+draft = paperless.share_links.create()
 draft.document = 42
 draft.file_version = ShareLinkFileVersion.ARCHIVE
 draft.expiration = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
@@ -61,4 +61,19 @@ changed = await paperless.share_links.update(link)
 ```python
 link = await paperless.share_links(8)
 deleted = await paperless.share_links.delete(link)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+link = await paperless.share_links(8)
+link.expiration = datetime.datetime(2027, 1, 1, tzinfo=datetime.timezone.utc)
+changed = await link.update()
+
+await link.delete()
+
+draft = paperless.share_links.create(document=42, file_version=ShareLinkFileVersion.ARCHIVE)
+slug = await draft.save()
 ```

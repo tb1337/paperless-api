@@ -32,7 +32,7 @@ To upload a new document, use `draft()` + `save()`. The first positional argumen
 with open("invoice.pdf", "rb") as fh:
     raw = fh.read()
 
-draft = paperless.documents.draft()
+draft = paperless.documents.create()
 draft.title = "Invoice 2024"
 draft.correspondent = 7
 draft.tags = [1, 3]
@@ -56,6 +56,24 @@ changed = await paperless.documents.update(doc)
 ```python
 doc = await paperless.documents(42)
 deleted = await paperless.documents.delete(doc)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+doc = await paperless.documents(42)
+doc.title = "Updated title"
+changed = await doc.update()
+
+await doc.delete()
+
+# Draft.save() returns a task UUID, same as paperless.documents.save(draft)
+draft = paperless.documents.create()
+draft.title = "Invoice 2024"
+draft.document = raw_bytes
+task_id = await draft.save()
 ```
 
 ## Permissions

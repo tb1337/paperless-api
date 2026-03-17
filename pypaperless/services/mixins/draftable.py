@@ -12,13 +12,13 @@ class DraftableMixin(ServiceProtocol[ResourceT]):
 
     _draft_cls: type[ResourceT]
 
-    def draft(self, **kwargs: Any) -> ResourceT:
+    def create(self, **kwargs: Any) -> ResourceT:
         """Return a fresh and empty `PaperlessModel` instance.
 
         Example:
         -------
         ```python
-        draft = paperless.documents.draft(document=bytes(...), title="New Document")
+        draft = paperless.documents.create(document=bytes(...), title="New Document")
         # do something
         ```
 
@@ -38,7 +38,7 @@ class DraftableMixin(ServiceProtocol[ResourceT]):
         Example:
         -------
         ```python
-        draft = paperless.documents.draft(document=bytes(...))
+        draft = paperless.documents.create(document=bytes(...))
         draft.title = "Add a title"
 
         # request Paperless to store the new item

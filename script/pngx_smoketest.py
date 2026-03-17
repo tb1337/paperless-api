@@ -316,12 +316,11 @@ async def test_documents(p: Paperless) -> None:
     )
 
     # suggestions
-    if doc is not None:
-        await check(
-            "doc.get_suggestions()",
-            doc.get_suggestions(),
-            detail_fn=lambda r: f"tags={r.tags}, correspondents={r.correspondents}",
-        )
+    await check(
+        f"documents.suggestions({TEST_DOCUMENT_ID})",
+        p.documents.suggestions(TEST_DOCUMENT_ID),
+        detail_fn=lambda r: f"tags={r.tags}, correspondents={r.correspondents}",
+    )
 
     # helper properties on document
     if doc is not None:
@@ -379,7 +378,7 @@ async def test_document_notes(p: Paperless) -> None:
     # create a note
     note_id = None
     try:
-        draft: DocumentNoteDraft = p.documents.notes.draft(
+        draft: DocumentNoteDraft = p.documents.notes.create(
             TEST_DOCUMENT_ID, note="pypaperless smoke-test note"
         )
         note_id, doc_id = await p.documents.notes.save(draft)
@@ -758,6 +757,25 @@ async def test_correspondents(p: Paperless) -> None:
                 p.correspondents.update(corr),
                 detail_fn=lambda r: f"changed={r}",
             )
+
+        # model shortcuts – update() and draft.save()
+        try:
+            ar_draft = p.correspondents.create(
+                name="pypaperless AR Shortcut Corp",
+                match="",
+                matching_algorithm=0,
+                is_insensitive=True,
+            )
+            ar_id = int(await ar_draft.save())
+            ok("correspondent_draft.save()", f"id={ar_id}  (shortcut)")
+            ar_corr = await p.correspondents(ar_id)
+            ar_corr.name = "pypaperless AR Shortcut Corp (updated)"
+            ar_changed = await ar_corr.update()
+            ok("correspondent.update()", f"changed={ar_changed}  (shortcut)")
+            ar_deleted = await ar_corr.delete()
+            ok("correspondent.delete()", f"deleted={ar_deleted}  (shortcut)")
+        except Exception as exc:
+            fail("model shortcut (correspondent)", exc)
 
         # permissions
         async with p.correspondents.with_permissions():

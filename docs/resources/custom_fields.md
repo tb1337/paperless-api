@@ -29,7 +29,7 @@ fields = await paperless.custom_fields.as_dict()
 ```python
 from pypaperless.models.custom_fields import CustomFieldType
 
-draft = paperless.custom_fields.draft()
+draft = paperless.custom_fields.create()
 draft.name = "Invoice amount"
 draft.data_type = CustomFieldType.MONETARY
 
@@ -46,7 +46,7 @@ from pypaperless.models.custom_fields import (
     CustomFieldType,
 )
 
-draft = paperless.custom_fields.draft()
+draft = paperless.custom_fields.create()
 draft.name = "Priority"
 draft.data_type = CustomFieldType.SELECT
 draft.extra_data = CustomFieldExtraData(
@@ -73,4 +73,19 @@ changed = await paperless.custom_fields.update(field)
 ```python
 field = await paperless.custom_fields(3)
 deleted = await paperless.custom_fields.delete(field)
+```
+
+## Shortcuts
+
+Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+
+```python
+field = await paperless.custom_fields(3)
+field.name = "Invoice total"
+changed = await field.update()
+
+await field.delete()
+
+draft = paperless.custom_fields.create(name="Notes", data_type=CustomFieldType.STRING)
+pk = await draft.save()
 ```
