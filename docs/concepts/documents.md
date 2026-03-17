@@ -188,6 +188,9 @@ Or via a fetched document (the document pk is bound automatically):
 doc = await paperless.documents(42)
 draft = doc.notes.create(note="This needs review")
 note_id, doc_id = await doc.notes.save(draft)
+
+# or use the shortcut directly on the draft
+note_id, doc_id = await draft.save()
 ```
 
 ### Deleting a note
@@ -195,6 +198,9 @@ note_id, doc_id = await doc.notes.save(draft)
 ```python
 note = notes[0]
 await paperless.documents.notes.delete(note)
+
+# or via the note instance directly
+await note.delete()
 ```
 
 ---
@@ -304,7 +310,7 @@ await paperless.documents.email(
 )
 ```
 
-A single document can also be passed as an integer:
+A single document can also be passed as an integer, or use the shortcut on a fetched `Document` instance:
 
 ```python
 await paperless.documents.email(
@@ -313,6 +319,15 @@ await paperless.documents.email(
     subject="Invoice",
     message="See attachment.",
     use_archive_version=False,  # send original instead of archived version
+)
+
+# shortcut — document pk is bound automatically
+doc = await paperless.documents(42)
+await doc.email(
+    addresses="alice@example.com",
+    subject="Invoice",
+    message="See attachment.",
+    use_archive_version=False,
 )
 ```
 

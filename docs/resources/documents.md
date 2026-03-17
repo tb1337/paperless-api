@@ -93,6 +93,21 @@ suggestions = await doc.suggestions()
 # similar documents (async generator)
 async for similar in doc.more_like():
     print(similar.title)
+
+# send by e-mail
+await doc.email(
+    addresses="alice@example.com",
+    subject="Invoice",
+    message="See attachment.",
+)
+
+# notes and history (bound sub-services)
+notes   = await doc.notes()           # list[DocumentNote]
+entries = await doc.history()         # list[DocumentHistory]
+note_draft = doc.notes.create(note="Checked.")
+await doc.notes.save(note_draft)
+await note_draft.save()               # same, as a draft shortcut
+await notes[0].delete()               # note instance shortcut
 ```
 
 ## Permissions

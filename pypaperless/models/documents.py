@@ -286,6 +286,23 @@ class Document(
         async for doc in self._client.documents.more_like(cast("int", self.id)):
             yield doc
 
+    async def email(
+        self,
+        *,
+        addresses: str,
+        subject: str,
+        message: str,
+        use_archive_version: bool = True,
+    ) -> None:
+        """Shortcut for ``paperless.documents.email(self.id, ...)``."""
+        await self._client.documents.email(
+            cast("int", self.id),
+            addresses=addresses,
+            subject=subject,
+            message=message,
+            use_archive_version=use_archive_version,
+        )
+
     @property
     def created_date(self) -> datetime.date | None:
         """Backward compatibility for the removed `created_date` field."""
@@ -375,6 +392,10 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
+    async def delete(self) -> bool:
+        """Shortcut for ``paperless.documents.notes.delete(self)``."""
+        return await self._client.documents.notes.delete(self)
+
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
@@ -386,6 +407,10 @@ class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
 
     note: str | None = None
     document: int | None = None
+
+    async def save(self) -> tuple[int, int]:
+        """Shortcut for ``paperless.documents.notes.save(self)``."""
+        return await self._client.documents.notes.save(self)
 
 
 class DocumentMeta(PaperlessModel):

@@ -237,6 +237,27 @@ class TestDocuments:
         async for item in doc.more_like():
             assert isinstance(item, Document)
 
+    async def test_shortcut_email(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Document.email() shortcut delegates to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        doc = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
+            status_code=200,
+            json={"message": "Email sent"},
+        )
+        await doc.email(
+            addresses="test@example.org",
+            subject="Test",
+            message="Body",
+        )
+
     async def test_meta(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """get_metadata() returns a DocumentMeta with original and archive metadata lists."""
         httpx_mock.add_response(
@@ -447,6 +468,52 @@ class TestDocuments:
             status_code=204,
         )
         assert await item.notes.delete(results.pop())
+
+    async def test_shortcut_note_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """DocumentNote.delete() shortcut delegates to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        item = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes = await item.notes()
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=204,
+        )
+        assert await notes[0].delete()
+
+    async def test_shortcut_note_draft_save(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """DocumentNoteDraft.save() shortcut delegates to the service."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        item = await paperless.documents(1)
+        draft = item.notes.create(note="Shortcut test.")
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        result = await draft.save()
+        assert isinstance(result, tuple)
 
     async def test_history_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """History returns typed entries; direct service call and missing pk error both work."""
