@@ -481,7 +481,7 @@ class TestDocuments:
 
     async def test_draft_custom_fields_as_object_mapping(self, paperless: Paperless) -> None:
         """DocumentDraft serialises DocumentCustomFieldList as a JSON string."""
-        cf = DocumentCustomFieldList(paperless, [])
+        cf = DocumentCustomFieldList.from_data(paperless, [])
         cf += CustomFieldStringValue(field=6, value="hello")
         cf += CustomFieldIntegerValue(field=3, value=42)
 
@@ -500,7 +500,7 @@ class TestDocuments:
         self, httpx_mock: HTTPXMock, paperless: Paperless
     ) -> None:
         """A draft with a DocumentCustomFieldList can be POSTed successfully."""
-        cf = DocumentCustomFieldList(paperless, [])
+        cf = DocumentCustomFieldList.from_data(paperless, [])
         cf += CustomFieldStringValue(field=6, value="smoke")
 
         draft = paperless.documents.draft(document=b"%PDF-fake", title="CF Mapping Test")

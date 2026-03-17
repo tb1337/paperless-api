@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from enum import StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
 
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
 
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import ItemNotFoundError
@@ -23,7 +23,6 @@ from .custom_fields import (
 )
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
     from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
 
 
@@ -85,14 +84,14 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 
     _fields: list[CustomFieldValue] = PrivateAttr(default_factory=list)
 
-    def __init__(self, client: "Paperless", data: list[dict[str, Any]]) -> None:
-        """Initialize a `DocumentCustomFieldList` instance."""
-        super().__init__(client=client, data=data)
+    def model_post_init(self, __context: Any, /) -> None:
+        """Populate ``_fields`` from the raw API payload stored in ``_data``."""
+        super().model_post_init(__context)
         self._fields = []
 
-        cache = client.cache.custom_fields
+        cache = self._client.cache.custom_fields
 
-        for item in data:
+        for item in self._data:
             if cache and (field := cache.get(item["field"], None)):
                 klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
                     field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
@@ -233,18 +232,21 @@ class Document(
     mime_type: str | None = None
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `Document` instance."""
-        # Convert custom_fields list to DocumentCustomFieldList before pydantic validation
-        if "custom_fields" in kwargs and isinstance(kwargs["custom_fields"], list):
-            kwargs["custom_fields"] = DocumentCustomFieldList(client, kwargs["custom_fields"])
-        super().__init__(client, data, **kwargs)
+    @field_validator("custom_fields", mode="before")
+    @classmethod
+    def _coerce_custom_fields(cls, v: Any, info: ValidationInfo) -> Any:
+        """Convert a raw list of custom field dicts into a ``DocumentCustomFieldList``."""
+        if isinstance(v, list) and isinstance(info.context, dict) and "client" in info.context:
+            return DocumentCustomFieldList.from_data(info.context["client"], v)
+        return v
 
     def apply_data(self) -> None:
         """Apply data from `self._data` to model fields, converting custom_fields."""
         super().apply_data()
         if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList(self._client, self._data["custom_fields"])
+            self.custom_fields = DocumentCustomFieldList.from_data(
+                self._client, self._data["custom_fields"]
+            )
 
     @property
     def history(self) -> "DocumentHistoryService":

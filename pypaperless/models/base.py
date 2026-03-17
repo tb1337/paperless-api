@@ -44,22 +44,13 @@ class PaperlessModel(BaseModel):
         """Set the internal model data dictionary."""
         self._data = value
 
-    def __init__(self, client: "Paperless", data: dict[str, Any], **kwargs: Any) -> None:
-        """Initialize a `PaperlessModel` instance."""
-        super().__init__(**kwargs)
-        self._client = client
-        self._data = dict(data)
-        self._set_api_path(self._data)
-
-    def _set_api_path(self, data: dict[str, Any], **format_kwargs: Any) -> None:
-        """Set the instance's `_api_path` by resolving its `{pk}` placeholder.
-
-        Uses `_pk_field` to determine which data key provides the primary key value.
-        Override `_pk_field` on a subclass to use a different source field.
-        """
-        format_kwargs.setdefault("pk", data.get(self._pk_field))
-        if format_kwargs["pk"] is not None:
-            object.__setattr__(self, "_api_path", self._api_path.format(**format_kwargs))
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind `_client` from validation context and resolve the instance API path."""
+        if isinstance(__context, dict) and "client" in __context:
+            self._client = __context["client"]
+        pk = getattr(self, self._pk_field, None)
+        if pk is not None:
+            object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
 
     @classmethod
     def format_api_path(cls, **kwargs: Any) -> str:
@@ -77,7 +68,9 @@ class PaperlessModel(BaseModel):
 
         Primarily used by service-level factory methods.
         """
-        return cls(client=client, data=data, **data)
+        instance = cls.model_validate(data, context={"client": client})
+        instance._data = data  # noqa: SLF001
+        return instance
 
     def apply_data(self) -> None:
         """Apply data from `self.data` to model fields.
@@ -124,16 +117,18 @@ class PaperlessCustomDataModel(BaseModel):
         """Set the internal custom-model data payload."""
         self._data = value
 
-    def __init__(self, client: "Paperless", data: Any, **kwargs: Any) -> None:
-        """Initialize a ``PaperlessCustomDataModel`` instance."""
-        super().__init__(**kwargs)
-        self._client = client
-        self._data = data
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind `_client` and `_data` from validation context."""
+        if isinstance(__context, dict):
+            if "client" in __context:
+                self._client = __context["client"]
+            if "data" in __context:
+                self._data = __context["data"]
 
     @classmethod
     def from_data(cls, client: "Paperless", data: Any) -> Self:
         """Return a new instance of ``cls`` from API data."""
-        return cls(client=client, data=data)
+        return cls.model_validate({}, context={"client": client, "data": data})
 
     def serialize(self) -> Any:
         """Return the JSON-compatible payload for this model."""

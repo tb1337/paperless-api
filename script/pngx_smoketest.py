@@ -1210,7 +1210,7 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
     # Variant B: DocumentCustomFieldList – object mapping with typed values
     token_b = str(uuid.uuid4())
-    cf = DocumentCustomFieldList(p, [])
+    cf = DocumentCustomFieldList.from_data(p, [])
     cf += CustomFieldStringValue(field=8, value="pypaperless-smoke")
     cf += CustomFieldIntegerValue(field=3, value=1)
 

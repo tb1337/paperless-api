@@ -1,8 +1,6 @@
 """Provide `Tag` related models."""
 
-from typing import Any, ClassVar
-
-from pydantic import field_validator
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 
@@ -28,42 +26,6 @@ class Tag(
     document_count: int | None = None
     parent: int | None = None
     children: list["Tag"] | None = None
-
-    @classmethod
-    def _build_child_tag(cls, item: dict[str, Any]) -> "Tag":
-        nested = [
-            cls._build_child_tag(c) if isinstance(c, dict) else c
-            for c in (item.get("children") or [])
-        ]
-        payload: dict[str, Any] = {}
-        for field_name, value in item.items():
-            if field_name == "children":
-                continue
-            field_info = cls.model_fields.get(field_name)
-            if field_info is None or field_info.annotation is None:
-                payload[field_name] = value
-                continue
-            try:
-                payload[field_name] = cls._get_type_adapter(
-                    field_name,
-                    field_info.annotation,
-                ).validate_python(value)
-            except (ValueError, TypeError):
-                payload[field_name] = value
-
-        return cls.model_construct(
-            **{
-                **payload,
-                "children": nested or None,
-            }
-        )
-
-    @field_validator("children", mode="before")
-    @classmethod
-    def _validate_children(cls, v: Any) -> Any:
-        if not v:
-            return v
-        return [cls._build_child_tag(item) if isinstance(item, dict) else item for item in v]
 
 
 class TagDraft(
