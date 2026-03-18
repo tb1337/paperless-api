@@ -4,10 +4,10 @@ from typing import Any, ClassVar
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.documents.document import DownloadedDocument, FileRetrieveMode
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
-class _DocumentFileServiceBase(ServiceBase):
+class _DocumentFileServiceBase(ResourceService):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_suggestions"]

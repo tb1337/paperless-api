@@ -9,11 +9,11 @@ from pypaperless.models.filters import StoragePathFilters
 from pypaperless.models.storage_paths import StoragePath, StoragePathDraft
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class StoragePathService(
-    ServiceBase,
+    ResourceService,
     mixins.SecurableMixin,
     mixins.CallableMixin[StoragePath],
     mixins.CreatableMixin[StoragePathDraft],

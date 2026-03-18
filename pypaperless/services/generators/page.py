@@ -5,13 +5,13 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Self
 
 from pypaperless.models.pages import Page
-from pypaperless.services.base import PaperlessBase
+from pypaperless.services.base import PaperlessService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class PageGenerator(PaperlessBase, AsyncIterator):
+class PageGenerator(PaperlessService, AsyncIterator):
     """Iterator for DRF paginated endpoints.
 
     `client`: An instance of :class:`Paperless`.

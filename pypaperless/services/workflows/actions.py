@@ -3,11 +3,11 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.workflows.actions import WorkflowAction
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class WorkflowActionService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[WorkflowAction],
     mixins.IterableMixin[WorkflowAction],
 ):

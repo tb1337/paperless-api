@@ -3,10 +3,10 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.statistics import Statistic
 
-from .base import ServiceBase
+from .base import ResourceService
 
 
-class StatisticService(ServiceBase):
+class StatisticService(ResourceService):
     """Represent a factory for Paperless `Statistic` models."""
 
     _api_path = API_PATH["statistics"]

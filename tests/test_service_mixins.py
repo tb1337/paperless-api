@@ -14,7 +14,7 @@ from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.types import Permissions
 from pypaperless.services import mixins as svc_mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 from .const import PAPERLESS_TEST_URL
 from .data import DATA_OBJECT_PERMISSIONS
@@ -430,7 +430,7 @@ async def test_iterable_filter_base_method(paperless: Paperless) -> None:
     class _MinimalModel(PaperlessModel):
         id: int | None = None
 
-    class _MinimalService(ServiceBase, svc_mixins.IterableMixin[_MinimalModel]):
+    class _MinimalService(ResourceService, svc_mixins.IterableMixin[_MinimalModel]):
         _api_path = API_PATH["correspondents"]
         _resource = "correspondents"
         _resource_cls = _MinimalModel

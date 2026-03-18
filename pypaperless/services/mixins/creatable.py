@@ -4,7 +4,7 @@ from typing import Any, Protocol
 
 from pypaperless.exceptions import DraftNotSupportedError
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 
 
 class _DraftLike(Protocol):
@@ -18,7 +18,7 @@ class _DraftLike(Protocol):
     def serialize(self) -> dict[str, Any]: ...
 
 
-class CreatableMixin(ServiceProtocol[ResourceT]):
+class CreatableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide the `create` and `save` methods for PyPaperless services."""
 
     _draft_cls: type[ResourceT]

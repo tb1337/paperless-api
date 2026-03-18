@@ -9,11 +9,11 @@ from pypaperless.models.correspondents import Correspondent, CorrespondentDraft
 from pypaperless.models.filters import CorrespondentFilters
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class CorrespondentService(
-    ServiceBase,
+    ResourceService,
     mixins.SecurableMixin,
     mixins.CallableMixin[Correspondent],
     mixins.CreatableMixin[CorrespondentDraft],

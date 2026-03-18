@@ -9,11 +9,11 @@ from pypaperless.models.custom_fields import CustomField, CustomFieldDraft
 from pypaperless.models.filters import CustomFieldFilters
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class CustomFieldService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[CustomField],
     mixins.CreatableMixin[CustomFieldDraft],
     mixins.IterableMixin[CustomField],

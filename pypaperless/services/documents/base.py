@@ -3,13 +3,13 @@
 from typing import TYPE_CHECKING, cast
 
 from pypaperless.exceptions import PrimaryKeyRequiredError
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class DocumentScopedServiceBase(ServiceBase):
+class DocumentScopedServiceBase(ResourceService):
     """Base class for sub-services scoped to a specific document.
 
     Manages the optional `attached_to` document pk and provides

@@ -8,11 +8,11 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.filters import UserFilters
 from pypaperless.models.permissions.users import User
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class UserService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[User],
     mixins.IterableMixin[User],
 ):

@@ -3,10 +3,10 @@
 from typing import Any
 
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 
 
-class CallableMixin(ServiceProtocol[ResourceT]):
+class CallableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide methods for calling a specific resource item."""
 
     async def __call__(

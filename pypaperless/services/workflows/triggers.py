@@ -3,11 +3,11 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.workflows.triggers import WorkflowTrigger
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class WorkflowTriggerService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[WorkflowTrigger],
     mixins.IterableMixin[WorkflowTrigger],
 ):

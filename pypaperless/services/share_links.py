@@ -9,11 +9,11 @@ from pypaperless.models.filters import ShareLinkFilters
 from pypaperless.models.share_links import ShareLink, ShareLinkDraft
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class ShareLinkService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[ShareLink],
     mixins.CreatableMixin[ShareLinkDraft],
     mixins.IterableMixin[ShareLink],

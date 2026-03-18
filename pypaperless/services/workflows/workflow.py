@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.workflows.workflow import Workflow
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 from .actions import WorkflowActionService
 from .triggers import WorkflowTriggerService
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class WorkflowService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[Workflow],
     mixins.IterableMixin[Workflow],
 ):

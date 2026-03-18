@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 from pypaperless.services.generators import PageGenerator
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class _BaseFilters(TypedDict, total=False):
     """
 
 
-class IterableMixin(ServiceProtocol[ResourceT]):
+class IterableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
     _aiter_filters: dict[str, Any] | None

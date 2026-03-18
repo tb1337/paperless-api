@@ -8,10 +8,10 @@ from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models.filters import TaskFilters
 from pypaperless.models.tasks import Task
 
-from .base import ServiceBase
+from .base import ResourceService
 
 
-class TaskService(ServiceBase):
+class TaskService(ResourceService):
     """Represent a factory for Paperless `Task` models."""
 
     _api_path = API_PATH["tasks"]

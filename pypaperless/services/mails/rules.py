@@ -3,11 +3,11 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.mails.rules import MailRule
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class MailRuleService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[MailRule],
     mixins.IterableMixin[MailRule],
     mixins.SecurableMixin,

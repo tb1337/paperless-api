@@ -3,11 +3,11 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.mails.accounts import MailAccount
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class MailAccountService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[MailAccount],
     mixins.IterableMixin[MailAccount],
     mixins.SecurableMixin,

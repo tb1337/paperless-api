@@ -8,11 +8,11 @@ from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.filters import GroupFilters
 from pypaperless.models.permissions.groups import Group
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 
 class GroupService(
-    ServiceBase,
+    ResourceService,
     mixins.CallableMixin[Group],
     mixins.IterableMixin[Group],
 ):

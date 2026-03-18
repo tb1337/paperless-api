@@ -14,7 +14,7 @@ from pypaperless.models.documents.document import (
 )
 from pypaperless.models.filters import DocumentFilters
 from pypaperless.services import mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 
 from .files import (
     DocumentFileDownloadService,
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class DocumentSuggestionsService(ServiceBase):
+class DocumentSuggestionsService(ResourceService):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
     _api_path = API_PATH["documents_suggestions"]
@@ -46,7 +46,7 @@ class DocumentSuggestionsService(ServiceBase):
         return self._resource_cls.from_data(self._client, data)
 
 
-class DocumentMetaService(ServiceBase, mixins.CallableMixin[DocumentMeta]):
+class DocumentMetaService(ResourceService, mixins.CallableMixin[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
@@ -56,7 +56,7 @@ class DocumentMetaService(ServiceBase, mixins.CallableMixin[DocumentMeta]):
 
 
 class DocumentService(
-    ServiceBase,
+    ResourceService,
     mixins.SecurableMixin,
     mixins.CallableMixin[Document],
     mixins.CreatableMixin[DocumentDraft],
