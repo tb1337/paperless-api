@@ -15,7 +15,7 @@ from .base import ServiceBase
 class CustomFieldService(
     ServiceBase,
     mixins.CallableMixin[CustomField],
-    mixins.DraftableMixin[CustomFieldDraft],
+    mixins.CreatableMixin[CustomFieldDraft],
     mixins.IterableMixin[CustomField],
     mixins.UpdatableMixin[CustomField],
     mixins.DeletableMixin[CustomField],

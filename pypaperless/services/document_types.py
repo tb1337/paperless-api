@@ -16,7 +16,7 @@ class DocumentTypeService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[DocumentType],
-    mixins.DraftableMixin[DocumentTypeDraft],
+    mixins.CreatableMixin[DocumentTypeDraft],
     mixins.IterableMixin[DocumentType],
     mixins.UpdatableMixin[DocumentType],
     mixins.DeletableMixin[DocumentType],

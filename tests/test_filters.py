@@ -125,7 +125,7 @@ def test_filter_contains_expected_fields(cls: Any, expected_keys: Any) -> None:
     ],
     ids=["documents", "correspondents", "tags", "storage_paths", "trash", "groups", "users"],
 )
-async def test_service_filter_accepts_typed_kwargs(  # noqa: PLR0913
+async def test_service_filter_accepts_typed_kwargs(
     httpx_mock: HTTPXMock,
     paperless: Paperless,
     api_key: str,

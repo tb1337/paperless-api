@@ -77,7 +77,7 @@ class WidgetService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[Widget],
-    mixins.DraftableMixin[WidgetDraft],
+    mixins.CreatableMixin[WidgetDraft],
     mixins.IterableMixin[Widget],
     mixins.UpdatableMixin[Widget],
     mixins.DeletableMixin[Widget],
@@ -261,7 +261,7 @@ KNOWN_SCHEMA_EXTRAS["WidgetMeta"] = {
 | ------------------- | --------------------------------------------------------------------- |
 | `CallableMixin[T]`  | `await service(pk)` — fetch single item                               |
 | `IterableMixin[T]`  | `async for item in service` + `.pages()` + `.as_list()` + `.filter()` |
-| `DraftableMixin[D]` | `service.create(...)` + `await service.save(draft)`                    |
+| `CreatableMixin[D]` | `service.create(...)` + `await service.save(draft)`                    |
 | `UpdatableMixin[T]` | `await service.update(item)`                                          |
 | `DeletableMixin[T]` | `await service.delete(item)`                                          |
 | `SecurableMixin`    | `permissions` field + `?full_perms=true` on requests                  |

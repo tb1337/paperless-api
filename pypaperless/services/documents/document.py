@@ -114,7 +114,7 @@ class DocumentService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[Document],
-    mixins.DraftableMixin[DocumentDraft],
+    mixins.CreatableMixin[DocumentDraft],
     mixins.IterableMixin[Document],
     mixins.UpdatableMixin[Document],
     mixins.DeletableMixin[Document],

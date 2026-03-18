@@ -16,7 +16,7 @@ class StoragePathService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[StoragePath],
-    mixins.DraftableMixin[StoragePathDraft],
+    mixins.CreatableMixin[StoragePathDraft],
     mixins.IterableMixin[StoragePath],
     mixins.UpdatableMixin[StoragePath],
     mixins.DeletableMixin[StoragePath],

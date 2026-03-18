@@ -1,4 +1,4 @@
-"""DraftableMixin for PyPaperless services."""
+"""CreatableMixin for PyPaperless services."""
 
 from typing import Any, Protocol
 
@@ -18,8 +18,8 @@ class _DraftLike(Protocol):
     def serialize(self) -> dict[str, Any]: ...
 
 
-class DraftableMixin(ServiceProtocol[ResourceT]):
-    """Provide the `draft` and `save` methods for PyPaperless services."""
+class CreatableMixin(ServiceProtocol[ResourceT]):
+    """Provide the `create` and `save` methods for PyPaperless services."""
 
     _draft_cls: type[ResourceT]
 

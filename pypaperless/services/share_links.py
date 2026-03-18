@@ -15,7 +15,7 @@ from .base import ServiceBase
 class ShareLinkService(
     ServiceBase,
     mixins.CallableMixin[ShareLink],
-    mixins.DraftableMixin[ShareLinkDraft],
+    mixins.CreatableMixin[ShareLinkDraft],
     mixins.IterableMixin[ShareLink],
     mixins.UpdatableMixin[ShareLink],
     mixins.DeletableMixin[ShareLink],

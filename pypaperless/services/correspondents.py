@@ -16,7 +16,7 @@ class CorrespondentService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[Correspondent],
-    mixins.DraftableMixin[CorrespondentDraft],
+    mixins.CreatableMixin[CorrespondentDraft],
     mixins.IterableMixin[Correspondent],
     mixins.UpdatableMixin[Correspondent],
     mixins.DeletableMixin[Correspondent],

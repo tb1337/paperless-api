@@ -16,7 +16,7 @@ class TagService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[Tag],
-    mixins.DraftableMixin[TagDraft],
+    mixins.CreatableMixin[TagDraft],
     mixins.IterableMixin[Tag],
     mixins.UpdatableMixin[Tag],
     mixins.DeletableMixin[Tag],
