@@ -12,6 +12,7 @@ from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
+    MailAccount,
     Profile,
     Status,
     Task,
@@ -27,6 +28,7 @@ from pypaperless.services.workflows import WorkflowActionService, WorkflowTrigge
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
+    DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_STATISTICS,
@@ -275,6 +277,59 @@ class TestTasks:
         )
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")
+
+
+# ---------------------------------------------------------------------------
+# Mail Accounts
+# ---------------------------------------------------------------------------
+
+
+class TestMailAccounts:
+    """Mail account service action endpoints."""
+
+    async def test_test(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """mail_accounts.test() POSTs to the endpoint and returns JSON."""
+        payload = {"success": True}
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_test']}",
+            status_code=200,
+            json=payload,
+        )
+        response = await paperless.mail_accounts.test()
+        assert response == payload
+
+    async def test_process(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """mail_accounts.process(pk) POSTs to the account process endpoint."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            status_code=200,
+            json={"result": "ok"},
+        )
+        await paperless.mail_accounts.process(1)
+
+    async def test_model_process_shortcut(
+        self,
+        httpx_mock: HTTPXMock,
+        paperless: Paperless,
+    ) -> None:
+        """MailAccount.process() delegates to mail_accounts.process(self.id)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_MAIL_ACCOUNTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            status_code=200,
+            json={"result": "ok"},
+        )
+        account = await paperless.mail_accounts(1)
+        assert isinstance(account, MailAccount)
+        await account.process()
 
 
 # ---------------------------------------------------------------------------

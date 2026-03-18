@@ -1,7 +1,7 @@
 """Provide `MailAccount` related models."""
 
 import datetime
-from typing import ClassVar
+from typing import ClassVar, cast
 
 from pypaperless.const import API_PATH
 from pypaperless.models import mixins
@@ -24,3 +24,7 @@ class MailAccount(PaperlessModel, mixins.SecurableMixin):
     is_token: bool | None = None
     account_type: int | None = None
     expiration: datetime.datetime | None = None
+
+    async def process(self) -> None:
+        """Shortcut for ``paperless.mail_accounts.process(self.id)``."""
+        await self._client.mail_accounts.process(cast("int", self.id))
