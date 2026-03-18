@@ -1,20 +1,12 @@
 """MatchingFieldsMixin for PyPaperless models."""
 
 from enum import Enum
+from typing import Self
 
 from pydantic import BaseModel
 
 
-class EnumWithMissingFallback(Enum):
-    """Mixin for Enum classes that fall back to UNKNOWN for unrecognised values."""
-
-    @classmethod
-    def _missing_(cls, *_: object) -> "EnumWithMissingFallback":
-        """Return the UNKNOWN member for any unrecognised value."""
-        return cls["UNKNOWN"]
-
-
-class MatchingAlgorithm(EnumWithMissingFallback):
+class MatchingAlgorithm(Enum):
     """Text-matching algorithm used by `Correspondent`, `DocumentType`, `StoragePath`, and `Tag`."""
 
     NONE = 0
@@ -25,6 +17,11 @@ class MatchingAlgorithm(EnumWithMissingFallback):
     FUZZY = 5
     AUTO = 6
     UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class MatchingFieldsMixin(BaseModel):

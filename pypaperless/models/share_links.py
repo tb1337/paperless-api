@@ -1,21 +1,26 @@
 """Provide `ShareLink` related models."""
 
 import datetime
-from typing import ClassVar
+from enum import StrEnum
+from typing import ClassVar, Self
 
 from pypaperless.const import API_PATH, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
-from .mixins.data_fields import EnumWithMissingFallback
 
 
-class ShareLinkFileVersion(EnumWithMissingFallback):
+class ShareLinkFileVersion(StrEnum):
     """Represent a subtype of `ShareLink`."""
 
     ARCHIVE = "archive"
     ORIGINAL = "original"
     UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class ShareLink(

@@ -34,7 +34,6 @@ class PageGenerator(PaperlessService, AsyncIterator):
         res = await self._client.request_json("get", self._url, params=self.params)
         data = {
             **res,
-            "_api_path": self._url,
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }

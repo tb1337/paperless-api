@@ -1,14 +1,14 @@
 """Provide `WorkflowTrigger` related models."""
 
-from typing import ClassVar
+from enum import Enum, StrEnum
+from typing import ClassVar, Self
 
 from pypaperless.const import API_PATH
 from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
-from pypaperless.models.mixins.data_fields import EnumWithMissingFallback
 
 
-class WorkflowTriggerType(EnumWithMissingFallback):
+class WorkflowTriggerType(Enum):
     """Represent a subtype of `Workflow`."""
 
     CONSUMPTION = 1
@@ -17,8 +17,13 @@ class WorkflowTriggerType(EnumWithMissingFallback):
     SCHEDULED = 4
     UNKNOWN = -1
 
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
-class WorkflowTriggerScheduleDateField(EnumWithMissingFallback):
+
+class WorkflowTriggerScheduleDateField(StrEnum):
     """Represent a subtype of `WorkflowTrigger`."""
 
     ADDED = "added"
@@ -27,8 +32,13 @@ class WorkflowTriggerScheduleDateField(EnumWithMissingFallback):
     CUSTOM_FIELD = "custom_field"
     UNKNOWN = "unknown"
 
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
-class WorkflowTriggerSource(EnumWithMissingFallback):
+
+class WorkflowTriggerSource(Enum):
     """Represent a subtype of `Workflow`."""
 
     CONSUME_FOLDER = 1
@@ -36,6 +46,11 @@ class WorkflowTriggerSource(EnumWithMissingFallback):
     MAIL_FETCH = 3
     WEB_UI = 4
     UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
