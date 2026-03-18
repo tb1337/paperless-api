@@ -132,13 +132,8 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
         params: dict[str, Any] = dict(getattr(self, "_aiter_filters", None) or {})
 
         for param, value in params.items():
-            if param.endswith("__in"):
-                try:
-                    value.extend([])  # throw AttributeError if not a list
-                    params[param] = ",".join(map(str, value))
-                except AttributeError:
-                    # value is not a list, don't modify
-                    continue
+            if param.endswith("__in") and isinstance(value, list):
+                params[param] = ",".join(map(str, value))
 
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)

@@ -97,4 +97,4 @@ class Status(PaperlessModel):
             ],
         ]
 
-        return any(st == StatusType.ERROR for st in statuses)
+        return StatusType.ERROR in statuses

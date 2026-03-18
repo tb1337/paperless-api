@@ -64,7 +64,7 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
             if name in model.data and new_value != model.data[name]:
                 changed[name] = new_value
 
-        if len(changed) == 0:
+        if not changed:
             return False
 
         self._check_permissions_field(model, changed)

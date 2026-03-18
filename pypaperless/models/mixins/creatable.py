@@ -30,7 +30,7 @@ class CreatableMixin:
         """Check required fields before persisting the item to Paperless."""
         missing = [field for field in self._create_required_fields if getattr(self, field) is None]
 
-        if len(missing) == 0:
+        if not missing:
             return
 
         message = f"Missing fields for saving a `{type(self).__name__}`: {', '.join(missing)}."
