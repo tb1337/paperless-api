@@ -1,28 +1,23 @@
 """Provide `Status` related models."""
 
 import datetime
-from enum import Enum
 from typing import ClassVar, cast
 
 from pydantic import BaseModel, Field
 
 from pypaperless.const import API_PATH
+from pypaperless.models.mixins.data_fields import EnumWithMissingFallback
 
 from .base import PaperlessModel
 
 
-class StatusType(Enum):
+class StatusType(EnumWithMissingFallback):
     """Represent a subtype of `Status`."""
 
     OK = "OK"
     ERROR = "ERROR"
     WARNING = "WARNING"
     UNKNOWN = "UNKNOWN"
-
-    @classmethod
-    def _missing_(cls: type, *_: object) -> "StatusType":
-        """Set default member on unknown value."""
-        return StatusType.UNKNOWN
 
 
 class StatusDatabaseMigration(BaseModel):

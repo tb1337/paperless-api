@@ -1,15 +1,15 @@
 """Provide `Task` related models."""
 
 import datetime
-from enum import Enum
 from typing import ClassVar
 
 from pypaperless.const import API_PATH
+from pypaperless.models.mixins.data_fields import EnumWithMissingFallback
 
 from .base import PaperlessModel
 
 
-class TaskType(Enum):
+class TaskType(EnumWithMissingFallback):
     """Represent a subtype of `Task`."""
 
     AUTO = "auto_task"
@@ -17,13 +17,8 @@ class TaskType(Enum):
     MANUAL = "manual_task"
     UNKNOWN = "unknown"
 
-    @classmethod
-    def _missing_(cls: type, *_: object) -> "TaskType":
-        """Set default member on unknown value."""
-        return TaskType.UNKNOWN
 
-
-class TaskStatus(Enum):
+class TaskStatus(EnumWithMissingFallback):
     """Represent a subtype of `Task`."""
 
     FAILURE = "FAILURE"
@@ -34,11 +29,6 @@ class TaskStatus(Enum):
     STARTED = "STARTED"
     SUCCESS = "SUCCESS"
     UNKNOWN = "UNKNOWN"
-
-    @classmethod
-    def _missing_(cls: type, *_: object) -> "TaskStatus":
-        """Set default member on unknown value."""
-        return TaskStatus.UNKNOWN
 
 
 class Task(PaperlessModel):

@@ -3,7 +3,6 @@
 import contextlib
 import datetime
 import re
-from enum import Enum
 from typing import Any, ClassVar, TypeVar, overload
 
 from pydantic import BaseModel, Field, field_validator
@@ -12,6 +11,7 @@ from pypaperless.const import API_PATH, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
+from .mixins.data_fields import EnumWithMissingFallback
 
 
 class CustomFieldSelectOptions(BaseModel):
@@ -28,7 +28,7 @@ class CustomFieldExtraData(BaseModel):
     select_options: list[CustomFieldSelectOptions | None] = Field(default_factory=list)
 
 
-class CustomFieldType(Enum):
+class CustomFieldType(EnumWithMissingFallback):
     """Represent a subtype of `CustomField`."""
 
     STRING = "string"
@@ -42,11 +42,6 @@ class CustomFieldType(Enum):
     SELECT = "select"
     LONGTEXT = "longtext"
     UNKNOWN = "unknown"
-
-    @classmethod
-    def _missing_(cls: type, *_: object) -> "CustomFieldType":
-        """Set default member on unknown value."""
-        return CustomFieldType.UNKNOWN
 
 
 class CustomFieldValue(BaseModel):

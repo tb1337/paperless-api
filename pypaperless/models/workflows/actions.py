@@ -1,15 +1,15 @@
 """Provide `WorkflowAction` related models."""
 
-from enum import Enum
 from typing import Any, ClassVar
 
 from pydantic import BaseModel
 
 from pypaperless.const import API_PATH
 from pypaperless.models.base import PaperlessModel
+from pypaperless.models.mixins.data_fields import EnumWithMissingFallback
 
 
-class WorkflowActionType(Enum):
+class WorkflowActionType(EnumWithMissingFallback):
     """Represent a subtype of `Workflow`."""
 
     ASSIGNMENT = 1
@@ -17,11 +17,6 @@ class WorkflowActionType(Enum):
     EMAIL = 3
     WEBHOOK = 4
     UNKNOWN = -1
-
-    @classmethod
-    def _missing_(cls: type, *_: object) -> "WorkflowActionType":
-        """Set default member on unknown value."""
-        return WorkflowActionType.UNKNOWN
 
 
 class WorkflowActionEmail(BaseModel):
