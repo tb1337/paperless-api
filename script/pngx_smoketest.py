@@ -353,16 +353,7 @@ async def test_documents(p: Paperless) -> None:
         except Exception as exc:
             fail("doc.more_like() shortcut", exc)
 
-        # doc.email() shortcut — we expect success or SendEmailError depending on server config
-        try:
-            await doc.email(
-                addresses="smoketest@example.org",
-                subject="pypaperless smoketest",
-                message="Automated shortcut test.",
-            )
-            ok("doc.email() (shortcut)", "sent")
-        except Exception as exc:
-            ok("doc.email() (shortcut)", f"skipped – {type(exc).__name__}: {exc}")
+        ok("doc.email() (shortcut)", "skipped – email sending disabled in smoketest")
 
 
 # ──────────────────────────────────────────────────────────────────────────────

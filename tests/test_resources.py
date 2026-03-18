@@ -278,6 +278,70 @@ class TestTasks:
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")
 
+    async def test_acknowledge(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tasks.acknowledge([...]) POSTs and returns acknowledged count."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            status_code=200,
+            json={"result": 1},
+        )
+        result = await paperless.tasks.acknowledge([1])
+        assert result == 1
+
+    async def test_run(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tasks.run(task_id) POSTs and returns a Task."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        item = await paperless.tasks.run(DATA_TASKS[0]["task_id"])
+        assert isinstance(item, Task)
+
+    async def test_model_acknowledge_shortcut(
+        self,
+        httpx_mock: HTTPXMock,
+        paperless: Paperless,
+    ) -> None:
+        """Task.acknowledge() delegates to tasks.acknowledge([self.id])."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            status_code=200,
+            json={"result": 1},
+        )
+        task = await paperless.tasks(1)
+        assert isinstance(task, Task)
+        result = await task.acknowledge()
+        assert result == 1
+
+    async def test_model_run_shortcut(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Task.run() delegates to tasks.run(self.task_id)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        task = await paperless.tasks(1)
+        assert isinstance(task, Task)
+        rerun = await task.run()
+        assert isinstance(rerun, Task)
+
 
 # ---------------------------------------------------------------------------
 # Mail Accounts

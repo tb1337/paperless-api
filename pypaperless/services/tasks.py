@@ -1,7 +1,7 @@
 """Provide `Task` service."""
 
 from collections.abc import AsyncIterator
-from typing import Unpack
+from typing import Unpack, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
@@ -78,3 +78,27 @@ class TaskService(ResourceService):
             api_path = self._resource_cls.format_api_path(pk=task_id)
             data = await self._client.request_json("get", api_path)
             return self._resource_cls.from_data(self._client, data)
+
+    async def acknowledge(self, tasks: list[int]) -> int:
+        """Acknowledge a list of task primary keys."""
+        data = cast(
+            "dict[str, object]",
+            await self._client.request_json(
+                "post",
+                API_PATH["tasks_acknowledge"],
+                json={"tasks": tasks},
+            ),
+        )
+        return cast("int", data["result"])
+
+    async def run(self, task_id: str) -> Task:
+        """Run a task by Celery UUID and return the created task."""
+        data = cast(
+            "dict[str, object]",
+            await self._client.request_json(
+                "post",
+                API_PATH["tasks_run"],
+                json={"task_id": task_id},
+            ),
+        )
+        return self._resource_cls.from_data(self._client, data)

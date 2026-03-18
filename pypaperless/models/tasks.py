@@ -2,7 +2,7 @@
 
 import datetime
 from enum import StrEnum
-from typing import ClassVar, Self
+from typing import ClassVar, Self, cast
 
 from pypaperless.const import API_PATH
 
@@ -58,3 +58,11 @@ class Task(PaperlessModel):
     acknowledged: bool | None = None
     related_document: int | None = None
     owner: int | None = None
+
+    async def acknowledge(self) -> int:
+        """Shortcut for ``paperless.tasks.acknowledge([self.id])``."""
+        return await self._client.tasks.acknowledge([cast("int", self.id)])
+
+    async def run(self) -> "Task":
+        """Shortcut for ``paperless.tasks.run(self.task_id)``."""
+        return await self._client.tasks.run(cast("str", self.task_id))
