@@ -25,7 +25,7 @@ class WorkflowTriggerScheduleDateField(EnumWithMissingFallback):
     CREATED = "created"
     MODIFIED = "modified"
     CUSTOM_FIELD = "custom_field"
-    UNKNOWN = -1
+    UNKNOWN = "unknown"
 
 
 class WorkflowTriggerSource(EnumWithMissingFallback):

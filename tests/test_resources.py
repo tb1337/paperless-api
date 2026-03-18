@@ -41,23 +41,16 @@ from .data import (
 
 
 async def test_config_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
-    """config() fetches a Config item and raises HTTPStatusError for unknown pk."""
+    """config() fetches the singleton Config without requiring a pk."""
     httpx_mock.add_response(
         method="GET",
         url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
         status_code=200,
         json=DATA_CONFIG[0],
     )
-    item = await paperless.config(1)
+    item = await paperless.config()
     assert item
     assert isinstance(item, Config)
-    httpx_mock.add_response(
-        method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1337),
-        status_code=404,
-    )
-    with pytest.raises(httpx.HTTPStatusError):
-        await paperless.config(1337)
 
 
 # ---------------------------------------------------------------------------

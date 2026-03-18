@@ -205,7 +205,7 @@ async def test_system(p: Paperless) -> None:
 async def test_config(p: Paperless) -> None:
     _hdr("Config")
 
-    await check("config(1)", p.config(1), detail_fn=lambda r: f"id={r.id}")
+    await check("config()", p.config(), detail_fn=lambda r: f"id={r.id}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
