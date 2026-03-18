@@ -23,7 +23,11 @@ from .custom_fields import (
 )
 
 if TYPE_CHECKING:
-    from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
+    from pypaperless.services.documents import (
+        DocumentHistoryService,
+        DocumentNoteService,
+        DocumentShareLinkService,
+    )
 
 
 class DocumentMetaEntry(BaseModel):
@@ -214,6 +218,7 @@ class Document(
 
     _history: "DocumentHistoryService | None" = PrivateAttr(default=None)
     _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
+    _share_links: "DocumentShareLinkService | None" = PrivateAttr(default=None)
 
     id: int | None = None
     correspondent: int | None = None
@@ -260,6 +265,15 @@ class Document(
 
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
+
+    @property
+    def share_links(self) -> "DocumentShareLinkService":
+        """Return the share links service for this document."""
+        if self._share_links is None:
+            from pypaperless.services.documents import DocumentShareLinkService  # noqa: PLC0415
+
+            self._share_links = DocumentShareLinkService(self._client, cast("int", self.id))
+        return self._share_links
 
     async def download(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.download(self.id)``."""

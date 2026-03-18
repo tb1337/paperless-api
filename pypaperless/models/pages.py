@@ -2,16 +2,16 @@
 
 import math
 from collections.abc import Iterator
-from typing import Any, ClassVar, Generic
+from typing import Any, ClassVar
 
 from pydantic import Field
 
 from pypaperless.const import API_PATH
 
-from .base import PaperlessModel, ResourceT
+from .base import PaperlessModel
 
 
-class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
+class Page[ResourceT: PaperlessModel](PaperlessModel):
     """Represent a Paperless DRF `Paginated`."""
 
     _api_path: ClassVar[str] = API_PATH["index"]

@@ -105,6 +105,7 @@ ignore = [
   "D213", # Conflicts with other rules
   "D417", # False positives in some occasions
   "PLR2004", # Just annoying, not really useful
+  "PLR0913", # Too many arguments: not actionable without breaking public API
   "RUF012", # Just annoying
 
   # Conflicts with the Ruff formatter

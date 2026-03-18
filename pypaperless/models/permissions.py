@@ -25,8 +25,7 @@ class User(PaperlessModel):
 
     id: int
     username: str | None = None
-    # model exclude
-    # password: str | None = None  # noqa: ERA001
+    # password: intentionally excluded
     email: str | None = None
     first_name: str | None = None
     last_name: str | None = None

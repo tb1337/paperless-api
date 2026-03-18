@@ -29,6 +29,7 @@ from pypaperless.models import (
     DocumentNoteDraft,
     DocumentSuggestions,
     DownloadedDocument,
+    ShareLink,
 )
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
@@ -49,6 +50,7 @@ from .data import (
     DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
     DATA_DOCUMENT_NOTES,
+    DATA_DOCUMENT_SHARE_LINKS,
     DATA_DOCUMENT_SUGGESTIONS,
     DATA_DOCUMENTS,
     DATA_DOCUMENTS_SEARCH,
@@ -556,6 +558,40 @@ class TestDocuments:
 
         with pytest.raises(PrimaryKeyRequiredError):
             await paperless.documents.history()
+
+    async def test_share_links_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Share links returns ShareLink instances; missing pk raises PrimaryKeyRequiredError."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        item = await paperless.documents(1)
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_share_links']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_SHARE_LINKS,
+        )
+        results = await item.share_links()
+        assert isinstance(results, list)
+        assert len(results) == len(DATA_DOCUMENT_SHARE_LINKS)
+        for link in results:
+            assert isinstance(link, ShareLink)
+
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_share_links']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_SHARE_LINKS,
+        )
+        results_direct = await paperless.documents.share_links(1)
+        assert isinstance(results_direct, list)
+        assert len(results_direct) == len(DATA_DOCUMENT_SHARE_LINKS)
+
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.share_links()
 
     async def test_custom_field_list_without_cache(
         self, httpx_mock: HTTPXMock, paperless: Paperless

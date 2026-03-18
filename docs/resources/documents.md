@@ -101,9 +101,10 @@ await doc.email(
     message="See attachment.",
 )
 
-# notes and history (bound sub-services)
+# notes, history, and share links (bound sub-services)
 notes   = await doc.notes()           # list[DocumentNote]
 entries = await doc.history()         # list[DocumentHistory]
+links   = await doc.share_links()     # list[ShareLink]
 note_draft = doc.notes.create(note="Checked.")
 await doc.notes.save(note_draft)
 await note_draft.save()               # same, as a draft shortcut

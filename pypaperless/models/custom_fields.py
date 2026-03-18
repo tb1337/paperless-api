@@ -222,7 +222,7 @@ class CustomField(
     def draft_value(
         self,
         value: Any,
-        expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002
+        expected_type: type[CustomFieldValueT] | None = None,
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
         cache = self._client.cache.custom_fields
@@ -238,9 +238,15 @@ class CustomField(
                 "data_type": self.data_type,
                 "extra_data": self.extra_data,
             }
-            return klass(**klass_data)
+            result: CustomFieldValue = klass(**klass_data)
+        else:
+            result = CustomFieldValue(field=self.id, value=value)
 
-        return CustomFieldValue(field=self.id, value=value)
+        if expected_type is not None and not isinstance(result, expected_type):
+            msg = f"Expected {expected_type.__name__}, got {type(result).__name__}"
+            raise TypeError(msg)
+
+        return result
 
 
 class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):

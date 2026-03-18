@@ -234,7 +234,7 @@ class Paperless:
         self._initialized = True
         self.logger.info("Initialized.")
 
-    async def request(  # noqa: PLR0913
+    async def request(
         self,
         method: str,
         path: str,

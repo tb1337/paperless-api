@@ -205,6 +205,24 @@ await note.delete()
 
 ---
 
+## Share links for a document
+
+Every document can have share links attached to it. These are read-only from the document sub-service — to create or delete share links use `paperless.share_links`.
+
+```python
+# Fetch share links for a document
+links = await paperless.documents.share_links(42)
+
+# or via a fetched document
+doc = await paperless.documents(42)
+links = await doc.share_links()
+
+for link in links:
+    print(link.slug, link.expiration)
+```
+
+---
+
 ## Next available ASN
 
 Request the next free archive serial number from Paperless-ngx:

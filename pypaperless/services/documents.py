@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Self, Unpack, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Self, Unpack, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, PrimaryKeyRequiredError, SendEmailError
@@ -18,6 +18,7 @@ from pypaperless.models.documents import (
     FileRetrieveMode,
 )
 from pypaperless.models.filters import DocumentFilters
+from pypaperless.models.share_links import ShareLink
 
 from . import mixins
 from .base import ServiceBase
@@ -48,27 +49,21 @@ class DocumentSubServiceBase(ServiceBase):
 
     _api_path = API_PATH["documents_suggestions"]
     _resource = PaperlessResource.DOCUMENTS
+    _mode: ClassVar[FileRetrieveMode]
 
     _resource_cls = DownloadedDocument
 
-    async def __call__(
-        self,
-        pk: int,
-        mode: FileRetrieveMode,
-        api_path: str,
-        *,
-        original: bool,
-    ) -> DownloadedDocument:
+    async def __call__(self, pk: int, *, original: bool = False) -> DownloadedDocument:
         """Request exactly one resource item."""
         params = {
             "original": "true" if original else "false",
         }
 
-        res = await self._client.request("get", api_path.format(pk=pk), params=params)
+        res = await self._client.request("get", self._api_path.format(pk=pk), params=params)
 
         data: dict[str, Any] = {
             "id": pk,
-            "mode": mode,
+            "mode": self._mode,
             "original": original,
             "content": res.content,
             "content_type": res.headers.get("content-type"),
@@ -90,51 +85,21 @@ class DocumentFileDownloadService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_download"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, FileRetrieveMode.DOWNLOAD, self._api_path, original=original
-        )
+    _mode = FileRetrieveMode.DOWNLOAD
 
 
 class DocumentFilePreviewService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_preview"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, FileRetrieveMode.PREVIEW, self._api_path, original=original
-        )
+    _mode = FileRetrieveMode.PREVIEW
 
 
 class DocumentFileThumbnailService(DocumentSubServiceBase):
     """Represent a factory for Paperless `DownloadedDocument` models."""
 
     _api_path = API_PATH["documents_thumbnail"]
-
-    async def __call__(  # type: ignore[override]
-        self,
-        pk: int,
-        *,
-        original: bool = False,
-    ) -> DownloadedDocument:
-        """Request exactly one resource item."""
-        return await super().__call__(
-            pk, FileRetrieveMode.THUMBNAIL, self._api_path, original=original
-        )
+    _mode = FileRetrieveMode.THUMBNAIL
 
 
 class DocumentHistoryService(ServiceBase):
@@ -158,6 +123,34 @@ class DocumentHistoryService(ServiceBase):
         return [
             self._resource_cls.from_data(self._client, {**item, "document": doc_pk}) for item in res
         ]
+
+    def _get_document_pk(self, pk: int | None = None) -> int:
+        """Return the attached document pk, or the parameter."""
+        if not any((self._attached_to, pk)):
+            message = f"Accessing {type(self).__name__} data without a primary key."
+            raise PrimaryKeyRequiredError(message)
+        return cast("int", self._attached_to or pk)
+
+
+class DocumentShareLinkService(ServiceBase):
+    """Represent a factory for document-scoped Paperless `ShareLink` models."""
+
+    _api_path = API_PATH["documents_share_links"]
+    _resource = PaperlessResource.DOCUMENTS
+
+    _resource_cls = ShareLink
+
+    def __init__(self, client: "Paperless", attached_to: int | None = None) -> None:
+        """Initialize a `DocumentShareLinkService` instance."""
+        super().__init__(client)
+
+        self._attached_to = attached_to
+
+    async def __call__(self, pk: int | None = None) -> list[ShareLink]:
+        """Request and return the document's `ShareLink` list."""
+        doc_pk = self._get_document_pk(pk)
+        res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
+        return [self._resource_cls.from_data(self._client, item) for item in res]
 
     def _get_document_pk(self, pk: int | None = None) -> int:
         """Return the attached document pk, or the parameter."""
@@ -308,6 +301,7 @@ class DocumentService(
         self._meta = DocumentMetaService(client)
         self._notes = DocumentNoteService(client)
         self._preview = DocumentFilePreviewService(client)
+        self._share_links = DocumentShareLinkService(client)
         self._suggestions = DocumentSuggestionsService(client)
         self._thumbnail = DocumentFileThumbnailService(client)
 
@@ -372,6 +366,24 @@ class DocumentService(
 
         """
         return self._notes
+
+    @property
+    def share_links(self) -> DocumentShareLinkService:
+        """Return the attached `DocumentShareLinkService` instance.
+
+        Example:
+        -------
+        ```python
+        # request document share links directly...
+        links = await paperless.documents.share_links(42)
+
+        # ... or by using an already fetched document
+        doc = await paperless.documents(42)
+        links = await doc.share_links()
+        ```
+
+        """
+        return self._share_links
 
     @property
     def preview(self) -> DocumentFilePreviewService:

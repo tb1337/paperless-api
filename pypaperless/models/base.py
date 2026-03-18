@@ -33,6 +33,8 @@ class PaperlessModel(BaseModel):
         """Bind `_client` from validation context and resolve the instance API path."""
         if isinstance(__context, dict) and "client" in __context:
             self._client = __context["client"]
+        if isinstance(__context, dict) and "raw_data" in __context:
+            self._data = __context["raw_data"]
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
@@ -53,9 +55,7 @@ class PaperlessModel(BaseModel):
 
         Primarily used by service-level factory methods.
         """
-        instance = cls.model_validate(data, context={"client": client})
-        instance._data = data  # noqa: SLF001
-        return instance
+        return cls.model_validate(data, context={"client": client, "raw_data": data})
 
     @property
     def api_path(self) -> str:

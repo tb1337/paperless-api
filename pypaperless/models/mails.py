@@ -20,8 +20,7 @@ class MailAccount(PaperlessModel, mixins.SecurableMixin):
     imap_port: int | None = None
     imap_security: int | None = None
     username: str | None = None
-    # exclude that from the dataclass
-    # password: str | None = None  # noqa: ERA001
+    # password:intentionally excluded
     character_set: str | None = None
     is_token: bool | None = None
     account_type: int | None = None
