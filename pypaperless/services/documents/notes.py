@@ -1,29 +1,20 @@
 """Provide `DocumentNote` related services."""
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.exceptions import PrimaryKeyRequiredError
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
-from pypaperless.services.base import ServiceBase
 
-if TYPE_CHECKING:
-    from pypaperless import Paperless
+from .base import DocumentScopedServiceBase
 
 
-class DocumentNoteService(ServiceBase):
+class DocumentNoteService(DocumentScopedServiceBase):
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = API_PATH["documents_notes"]
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentNote
-
-    def __init__(self, client: "Paperless", attached_to: int | None = None) -> None:
-        """Initialize a `DocumentNoteService` instance."""
-        super().__init__(client)
-
-        self._attached_to = attached_to
 
     async def __call__(
         self,
@@ -54,13 +45,6 @@ class DocumentNoteService(ServiceBase):
             )
             for item in res
         ]
-
-    def _get_document_pk(self, pk: int | None = None) -> int:
-        """Return the attached document pk, or the parameter."""
-        if not any((self._attached_to, pk)):
-            message = f"Accessing {type(self).__name__} data without a primary key."
-            raise PrimaryKeyRequiredError(message)
-        return cast("int", self._attached_to or pk)
 
     def _get_api_path(self, pk: int) -> str:
         """Return the formatted api path."""
