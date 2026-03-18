@@ -9,14 +9,14 @@ from pypaperless.models.filters import TagFilters
 from pypaperless.models.tags import Tag, TagDraft
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class TagService(
-    ServiceBase,
+    ResourceService,
     mixins.SecurableMixin,
     mixins.CallableMixin[Tag],
-    mixins.DraftableMixin[TagDraft],
+    mixins.CreatableMixin[TagDraft],
     mixins.IterableMixin[Tag],
     mixins.UpdatableMixin[Tag],
     mixins.DeletableMixin[Tag],

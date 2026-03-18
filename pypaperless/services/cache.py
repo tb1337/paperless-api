@@ -2,14 +2,14 @@
 
 from typing import TYPE_CHECKING
 
-from .base import PaperlessBase
+from .base import PaperlessService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
     from pypaperless.models.custom_fields import CustomField
 
 
-class CacheService(PaperlessBase):
+class CacheService(PaperlessService):
     """Cache for Paperless master data, accessible via `Paperless.cache`."""
 
     def __init__(self, client: "Paperless") -> None:

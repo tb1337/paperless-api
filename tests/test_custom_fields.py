@@ -10,14 +10,14 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
-from pypaperless.const import API_PATH
-from pypaperless.models import CustomField, Tag
-from pypaperless.models.custom_field_query import (
+from pypaperless.builders.custom_fields import (
     CustomFieldQuery,
     CustomFieldQueryAnd,
     CustomFieldQueryNot,
     CustomFieldQueryOr,
 )
+from pypaperless.const import API_PATH
+from pypaperless.models import CustomField, Tag
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,

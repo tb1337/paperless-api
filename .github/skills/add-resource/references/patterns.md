@@ -77,7 +77,7 @@ class WidgetService(
     ServiceBase,
     mixins.SecurableMixin,
     mixins.CallableMixin[Widget],
-    mixins.DraftableMixin[WidgetDraft],
+    mixins.CreatableMixin[WidgetDraft],
     mixins.IterableMixin[Widget],
     mixins.UpdatableMixin[Widget],
     mixins.DeletableMixin[Widget],
@@ -145,18 +145,28 @@ class DocumentHistoryService(ServiceBase):
 
 ## Document Sub-service Wiring
 
-### On `Document` model (lazy init via `PrivateAttr`)
+Sub-services attached to a `Document` instance live in their own module to avoid circular imports.
+The model and service files are:
+
+- `DocumentHistory`, `DocumentHistoryAction` — `from pypaperless.models import DocumentHistory, DocumentHistoryAction`
+- `DocumentHistoryService` — `pypaperless/services/documents/history.py`
+- `DocumentNote`, `DocumentNoteDraft` — `from pypaperless.models import DocumentNote, DocumentNoteDraft`
+- `DocumentNoteService` — `pypaperless/services/documents/notes.py`
+- `DocumentShareLinkService` — `pypaperless/services/documents/share_links.py`
+
+### On `Document` model (direct import, no lazy init)
 
 ```python
-# In Document class body:
-from pydantic import PrivateAttr
+# In models/documents/document.py — top-level imports (no circular dep because the service
+# files do not import from models/documents/document.py):
+from pypaperless.services.documents.history import DocumentHistoryService
 
-_history: "DocumentHistoryService | None" = PrivateAttr(default=None)
+# In Document class body:
+_history: DocumentHistoryService | None = PrivateAttr(default=None)
 
 @property
-def history(self) -> "DocumentHistoryService":
+def history(self) -> DocumentHistoryService:
     if self._history is None:
-        from pypaperless.services.documents import DocumentHistoryService  # noqa: PLC0415
         self._history = DocumentHistoryService(self._client, cast(int, self.id))
     return self._history
 ```
@@ -164,6 +174,9 @@ def history(self) -> "DocumentHistoryService":
 ### On `DocumentService` (register + expose property)
 
 ```python
+# In services/documents/document.py — import from the sub-service module:
+from pypaperless.services.documents.history import DocumentHistoryService
+
 # In DocumentService.__init__:
 self._history = DocumentHistoryService(client)
 
@@ -171,13 +184,6 @@ self._history = DocumentHistoryService(client)
 @property
 def history(self) -> DocumentHistoryService:
     return self._history
-```
-
-### TYPE_CHECKING import in documents.py
-
-```python
-if TYPE_CHECKING:
-    from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
 ```
 
 ---
@@ -255,7 +261,7 @@ KNOWN_SCHEMA_EXTRAS["WidgetMeta"] = {
 | ------------------- | --------------------------------------------------------------------- |
 | `CallableMixin[T]`  | `await service(pk)` — fetch single item                               |
 | `IterableMixin[T]`  | `async for item in service` + `.pages()` + `.as_list()` + `.filter()` |
-| `DraftableMixin[D]` | `service.create(...)` + `await service.save(draft)`                    |
+| `CreatableMixin[D]` | `service.create(...)` + `await service.save(draft)`                    |
 | `UpdatableMixin[T]` | `await service.update(item)`                                          |
 | `DeletableMixin[T]` | `await service.delete(item)`                                          |
 | `SecurableMixin`    | `permissions` field + `?full_perms=true` on requests                  |

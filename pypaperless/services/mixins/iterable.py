@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 from pypaperless.services.generators import PageGenerator
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class _BaseFilters(TypedDict, total=False):
     """
 
 
-class IterableMixin(ServiceProtocol[ResourceT]):
+class IterableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
     _aiter_filters: dict[str, Any] | None
@@ -64,9 +64,6 @@ class IterableMixin(ServiceProtocol[ResourceT]):
     ) -> AsyncGenerator[Self]:
         """Provide context for iterating over resource items with query parameters.
 
-        `kwargs`: Insert any Paperless api supported filter keywords here.
-        You can provide `page` and `page_size` parameters, as well.
-
         Example:
         -------
         ```python
@@ -92,7 +89,7 @@ class IterableMixin(ServiceProtocol[ResourceT]):
     async def all(self) -> list[int]:
         """Return a list of all resource item primary keys.
 
-        When used within a `reduce` context, returns a list of filtered primary keys.
+        When used within a `filter()` context, returns a list of filtered primary keys.
         """
         page = await anext(self.pages(page=1))
         return page.all
@@ -100,14 +97,14 @@ class IterableMixin(ServiceProtocol[ResourceT]):
     async def as_dict(self) -> dict[int, ResourceT]:
         """Shortcut for returning a primary key/object dict of all resource items.
 
-        When used within a `reduce` context, data is filtered.
+        When used within a `filter()` context, data is filtered.
         """
         return {item.id: item async for item in self}  # type: ignore[attr-defined]
 
     async def as_list(self) -> list[ResourceT]:
         """Shortcut for returning a list of all resource items.
 
-        When used within a `reduce` context, data is filtered.
+        When used within a `filter()` context, data is filtered.
         """
         return [item async for item in self]
 
@@ -132,13 +129,8 @@ class IterableMixin(ServiceProtocol[ResourceT]):
         params: dict[str, Any] = dict(getattr(self, "_aiter_filters", None) or {})
 
         for param, value in params.items():
-            if param.endswith("__in"):
-                try:
-                    value.extend([])  # throw AttributeError if not a list
-                    params[param] = ",".join(map(str, value))
-                except AttributeError:
-                    # value is not a list, don't modify
-                    continue
+            if param.endswith("__in") and isinstance(value, list):
+                params[param] = ",".join(map(str, value))
 
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)

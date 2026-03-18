@@ -9,11 +9,11 @@ from pypaperless.models.documents import Document
 from pypaperless.models.filters import DocumentFilters
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class TrashService(
-    ServiceBase,
+    ResourceService,
     mixins.IterableMixin[Document],
 ):
     """Represent a factory for Paperless trashed `Document` models."""

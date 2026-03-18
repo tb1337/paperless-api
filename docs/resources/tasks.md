@@ -4,7 +4,7 @@ Tasks represent Celery background jobs — primarily document consumption jobs. 
 
 ## Model
 
-See [`pypaperless/models/tasks.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tasks.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
+See [`pypaperless/models/tasks.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tasks.py) for all fields and [`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py) for enum and filter types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch by UUID
 

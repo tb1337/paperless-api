@@ -1,15 +1,15 @@
 """Provide `Task` related models."""
 
 import datetime
-from enum import Enum
-from typing import ClassVar
+from enum import StrEnum
+from typing import ClassVar, Self
 
 from pypaperless.const import API_PATH
 
 from .base import PaperlessModel
 
 
-class TaskType(Enum):
+class TaskType(StrEnum):
     """Represent a subtype of `Task`."""
 
     AUTO = "auto_task"
@@ -18,12 +18,12 @@ class TaskType(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, *_: object) -> "TaskType":
-        """Set default member on unknown value."""
-        return TaskType.UNKNOWN
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
-class TaskStatus(Enum):
+class TaskStatus(StrEnum):
     """Represent a subtype of `Task`."""
 
     FAILURE = "FAILURE"
@@ -36,9 +36,9 @@ class TaskStatus(Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls: type, *_: object) -> "TaskStatus":
-        """Set default member on unknown value."""
-        return TaskStatus.UNKNOWN
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class Task(PaperlessModel):

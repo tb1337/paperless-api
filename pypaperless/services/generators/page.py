@@ -5,19 +5,19 @@ from copy import deepcopy
 from typing import TYPE_CHECKING, Any, Self
 
 from pypaperless.models.pages import Page
-from pypaperless.services.base import PaperlessBase
+from pypaperless.services.base import PaperlessService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class PageGenerator(PaperlessBase, AsyncIterator):
-    """Iterator for DRF paginated endpoints.
+class PageGenerator(PaperlessService, AsyncIterator):
+    """Async iterator that yields :class:`Page` objects for a Paperless API endpoint.
 
-    `client`: An instance of :class:`Paperless`.
-    `url`: A url returning DRF page contents.
-    `resource`: A target resource model type for mapping results with.
-    `params`: Optional dict of query string parameters.
+    `client`: A :class:`Paperless` instance.
+    `url`: The API endpoint URL returning paginated results.
+    `resource_cls`: The model class used to map raw result dicts.
+    `params`: Optional query string parameters.
     """
 
     _page: Page | None
@@ -34,7 +34,6 @@ class PageGenerator(PaperlessBase, AsyncIterator):
         res = await self._client.request_json("get", self._url, params=self.params)
         data = {
             **res,
-            "_api_path": self._url,
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }

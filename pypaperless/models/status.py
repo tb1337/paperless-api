@@ -1,8 +1,8 @@
 """Provide `Status` related models."""
 
 import datetime
-from enum import Enum
-from typing import ClassVar, cast
+from enum import StrEnum
+from typing import ClassVar, Self
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +11,7 @@ from pypaperless.const import API_PATH
 from .base import PaperlessModel
 
 
-class StatusType(Enum):
+class StatusType(StrEnum):
     """Represent a subtype of `Status`."""
 
     OK = "OK"
@@ -20,9 +20,9 @@ class StatusType(Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls: type, *_: object) -> "StatusType":
-        """Set default member on unknown value."""
-        return StatusType.UNKNOWN
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class StatusDatabaseMigration(BaseModel):
@@ -86,15 +86,15 @@ class Status(PaperlessModel):
         """Return whether any status flag is `ERROR`."""
         statuses: list[StatusType] = [
             self.database.status if self.database and self.database.status else StatusType.OK,
-            *[
-                cast("StatusType", getattr(self.tasks, status, StatusType.OK))
-                for status in (
-                    "redis_status",
-                    "celery_status",
-                    "classifier_status",
-                )
-                if self.tasks
-            ],
         ]
 
-        return any(st == StatusType.ERROR for st in statuses)
+        if self.tasks:
+            statuses.extend(
+                [
+                    self.tasks.redis_status or StatusType.OK,
+                    self.tasks.celery_status or StatusType.OK,
+                    self.tasks.classifier_status or StatusType.OK,
+                ]
+            )
+
+        return StatusType.ERROR in statuses

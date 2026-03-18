@@ -1,6 +1,7 @@
 """PyPaperless constants."""
 
 from enum import StrEnum
+from typing import Self
 
 API_VERSION = 9
 
@@ -54,6 +55,7 @@ API_PATH = {
     f"{DOCUMENTS}_thumbnail": f"/api/{DOCUMENTS}/{{pk}}/thumb/",
     f"{DOCUMENTS}_post": f"/api/{DOCUMENTS}/post_document/",
     f"{DOCUMENTS}_single": f"/api/{DOCUMENTS}/{{pk}}/",
+    f"{DOCUMENTS}_share_links": f"/api/{DOCUMENTS}/{{pk}}/share_links/",
     f"{DOCUMENTS}_suggestions": f"/api/{DOCUMENTS}/{{pk}}/suggestions/",
     f"{DOCUMENT_TYPES}": f"/api/{DOCUMENT_TYPES}/",
     f"{DOCUMENT_TYPES}_single": f"/api/{DOCUMENT_TYPES}/{{pk}}/",
@@ -120,6 +122,6 @@ class PaperlessResource(StrEnum):
     UNKNOWN = UNKNOWN
 
     @classmethod
-    def _missing_(cls: "type[PaperlessResource]", *_: object) -> "PaperlessResource":
+    def _missing_(cls, *_: object) -> Self:
         """Set default member on unknown value."""
         return cls.UNKNOWN

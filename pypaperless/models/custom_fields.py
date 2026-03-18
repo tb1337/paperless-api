@@ -3,8 +3,8 @@
 import contextlib
 import datetime
 import re
-from enum import Enum
-from typing import Any, ClassVar, TypeVar, overload
+from enum import StrEnum
+from typing import Any, ClassVar, Self, TypeVar, overload
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -28,7 +28,7 @@ class CustomFieldExtraData(BaseModel):
     select_options: list[CustomFieldSelectOptions | None] = Field(default_factory=list)
 
 
-class CustomFieldType(Enum):
+class CustomFieldType(StrEnum):
     """Represent a subtype of `CustomField`."""
 
     STRING = "string"
@@ -44,9 +44,9 @@ class CustomFieldType(Enum):
     UNKNOWN = "unknown"
 
     @classmethod
-    def _missing_(cls: type, *_: object) -> "CustomFieldType":
-        """Set default member on unknown value."""
-        return CustomFieldType.UNKNOWN
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class CustomFieldValue(BaseModel):
@@ -110,6 +110,7 @@ class CustomFieldMonetaryValue(CustomFieldValue):
     @field_validator("value", mode="before")
     @classmethod
     def _coerce_value_to_str(cls, v: Any) -> str | None:
+        """Coerce a non-string monetary value to a string."""
         if v is None:
             return None
         return str(v)
@@ -222,7 +223,7 @@ class CustomField(
     def draft_value(
         self,
         value: Any,
-        expected_type: type[CustomFieldValueT] | None = None,  # noqa: ARG002
+        expected_type: type[CustomFieldValueT] | None = None,
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
         cache = self._client.cache.custom_fields
@@ -238,9 +239,15 @@ class CustomField(
                 "data_type": self.data_type,
                 "extra_data": self.extra_data,
             }
-            return klass(**klass_data)
+            result: CustomFieldValue = klass(**klass_data)
+        else:
+            result = CustomFieldValue(field=self.id, value=value)
 
-        return CustomFieldValue(field=self.id, value=value)
+        if expected_type is not None and not isinstance(result, expected_type):
+            msg = f"Expected {expected_type.__name__}, got {type(result).__name__}"
+            raise TypeError(msg)
+
+        return result
 
 
 class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):

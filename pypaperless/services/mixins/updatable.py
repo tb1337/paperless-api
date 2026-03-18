@@ -4,15 +4,15 @@ from copy import deepcopy
 from typing import Any
 
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 from pypaperless.utils import object_to_dict_value
 
 
-class UpdatableMixin(ServiceProtocol[ResourceT]):
+class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide the `update` method for PyPaperless services."""
 
     async def update(self, model: ResourceT, *, only_changed: bool = True) -> bool:
-        """Send actually changed `model data` to DRF.
+        """Send changed `model data` to Paperless.
 
         Return `True` when any attribute was updated, `False` otherwise.
 
@@ -46,7 +46,7 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
 
     @staticmethod
     def _check_permissions_field(model: ResourceT, data: dict) -> None:
-        """Rewrite permissions field to set_permissions for DRF."""
+        """Rewrite the permissions field to set_permissions before sending to Paperless."""
         if not hasattr(model, "has_permissions"):
             return
         if not model.has_permissions:
@@ -64,7 +64,7 @@ class UpdatableMixin(ServiceProtocol[ResourceT]):
             if name in model.data and new_value != model.data[name]:
                 changed[name] = new_value
 
-        if len(changed) == 0:
+        if not changed:
             return False
 
         self._check_permissions_field(model, changed)

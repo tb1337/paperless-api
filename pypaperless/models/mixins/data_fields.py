@@ -1,12 +1,13 @@
 """MatchingFieldsMixin for PyPaperless models."""
 
 from enum import Enum
+from typing import Self
 
 from pydantic import BaseModel
 
 
 class MatchingAlgorithm(Enum):
-    """Represent a subtype of `Correspondent`, `DocumentType`, `StoragePath` and `Tag`."""
+    """Text-matching algorithm used by `Correspondent`, `DocumentType`, `StoragePath`, and `Tag`."""
 
     NONE = 0
     ANY = 1
@@ -18,9 +19,9 @@ class MatchingAlgorithm(Enum):
     UNKNOWN = -1
 
     @classmethod
-    def _missing_(cls: type, *_: object) -> "MatchingAlgorithm":
-        """Set default member on unknown value."""
-        return MatchingAlgorithm.UNKNOWN
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class MatchingFieldsMixin(BaseModel):

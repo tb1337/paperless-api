@@ -3,10 +3,10 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.status import Status
 
-from .base import ServiceBase
+from .base import ResourceService
 
 
-class StatusService(ServiceBase):
+class StatusService(ResourceService):
     """Represent a factory for the Paperless `Status` model."""
 
     _api_path = API_PATH["status"]

@@ -3,7 +3,7 @@
 Combine atoms with ``&`` (AND), ``|`` (OR) and ``~`` (NOT), then pass
 ``str(q)`` as the ``custom_field_query`` kwarg to :meth:`documents.filter`::
 
-    from pypaperless.models.custom_field_query import CustomFieldQuery
+    from pypaperless.builders.custom_fields import CustomFieldQuery
 
     q = CustomFieldQuery("Amount", "gte", 100) & ~CustomFieldQuery("Archived", "exact", True)
     async with paperless.documents.filter(custom_field_query=str(q)) as docs:

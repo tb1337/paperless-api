@@ -9,14 +9,14 @@ from pypaperless.models.document_types import DocumentType, DocumentTypeDraft
 from pypaperless.models.filters import DocumentTypeFilters
 
 from . import mixins
-from .base import ServiceBase
+from .base import ResourceService
 
 
 class DocumentTypeService(
-    ServiceBase,
+    ResourceService,
     mixins.SecurableMixin,
     mixins.CallableMixin[DocumentType],
-    mixins.DraftableMixin[DocumentTypeDraft],
+    mixins.CreatableMixin[DocumentTypeDraft],
     mixins.IterableMixin[DocumentType],
     mixins.UpdatableMixin[DocumentType],
     mixins.DeletableMixin[DocumentType],

@@ -23,8 +23,7 @@ class Profile(PaperlessModel):
     _api_path: ClassVar[str] = API_PATH["profile"]
 
     email: str | None = None
-    # model exclude
-    # password: str | None = None  # noqa: ERA001
+    # password: intentionally excluded
     first_name: str | None = None
     last_name: str | None = None
     auth_token: str | None = None

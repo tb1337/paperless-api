@@ -9,6 +9,7 @@ from .custom_fields import DATA_CUSTOM_FIELDS
 from .document_history import DATA_DOCUMENT_HISTORY
 from .document_metadata import DATA_DOCUMENT_METADATA
 from .document_notes import DATA_DOCUMENT_NOTES
+from .document_share_links import DATA_DOCUMENT_SHARE_LINKS
 from .document_suggestions import DATA_DOCUMENT_SUGGESTIONS
 from .document_types import DATA_DOCUMENT_TYPES
 from .documents import DATA_DOCUMENTS
@@ -50,6 +51,7 @@ __all__ = (
     "DATA_DOCUMENT_HISTORY",
     "DATA_DOCUMENT_METADATA",
     "DATA_DOCUMENT_NOTES",
+    "DATA_DOCUMENT_SHARE_LINKS",
     "DATA_DOCUMENT_SUGGESTIONS",
     "DATA_DOCUMENT_TYPES",
     "DATA_GROUPS",

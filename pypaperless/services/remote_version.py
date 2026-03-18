@@ -3,10 +3,10 @@
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.remote_version import RemoteVersion
 
-from .base import ServiceBase
+from .base import ResourceService
 
 
-class RemoteVersionService(ServiceBase):
+class RemoteVersionService(ResourceService):
     """Represent a factory for Paperless `Remote Version` models."""
 
     _api_path = API_PATH["remote_version"]

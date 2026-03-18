@@ -45,6 +45,23 @@ Report both results explicitly before closing the task.
 
 ---
 
+## Suppression Policy
+
+**`# noqa`, `# type: ignore`, and any other lint/type suppression comments are forbidden without explicit user confirmation — with one narrow exception.**
+
+- Never add suppressions to work around a linting or type-checking issue.
+- Always find a clean solution first (restructure the code, fix the type, adjust the import order, etc.).
+- If no clean solution exists, **stop and ask the user** before adding a suppression — explain what the issue is and what the suppression would silence.
+- This applies to all suppression forms: `# noqa`, `# noqa: <code>`, `# type: ignore`, `# type: ignore[<code>]`, `# pyright: ignore`, etc.
+
+**Exception — pythonically idiomatic suppressions:** A suppression is permitted without confirmation only when it is the universally accepted Python/ecosystem convention for that exact pattern, and there is genuinely no cleaner alternative. Current recognised examples in this codebase:
+
+- `# noqa: F401` on re-export lines in `__init__.py` files (the standard way to mark intentional public re-exports).
+
+Any suppression not covered by an already-approved idiomatic pattern still requires explicit user confirmation.
+
+---
+
 ## Code Conventions
 
 - **Ruff compliance is mandatory for all newly generated code**: always follow the currently active Ruff rules/configuration in this repository when writing or modifying code.

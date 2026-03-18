@@ -8,23 +8,16 @@ if TYPE_CHECKING:
     from pypaperless import Paperless
 
 
-class PaperlessBase:
-    """Superclass for all classes in PyPaperless."""
-
-    _api_path = API_PATH["index"]
+class PaperlessService:
+    """Base class for all services in PyPaperless."""
 
     def __init__(self, client: "Paperless") -> None:
-        """Initialize a `PaperlessBase` instance."""
+        """Initialize a `PaperlessService` instance."""
         self._client = client
 
-    @property
-    def api_path(self) -> str:
-        """Return the API path for the object."""
-        return self._api_path
 
-
-class ServiceProtocol[ResourceT](Protocol):
-    """Protocol for any `ServiceBase` instances and its ancestors."""
+class ResourceServiceProtocol[ResourceT](Protocol):
+    """Protocol capturing the minimum interface required by all resource service mixins."""
 
     _client: "Paperless"
     _api_path: str
@@ -32,7 +25,13 @@ class ServiceProtocol[ResourceT](Protocol):
     _resource_cls: type[ResourceT]
 
 
-class ServiceBase(PaperlessBase):
-    """Base class for all services in PyPaperless."""
+class ResourceService(PaperlessService):
+    """Base class for all resource services in PyPaperless."""
 
+    _api_path = API_PATH["index"]
     _resource: PaperlessResource
+
+    @property
+    def api_path(self) -> str:
+        """Return the API path for the object."""
+        return self._api_path

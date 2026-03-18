@@ -2,20 +2,21 @@
 
 import math
 from collections.abc import Iterator
-from typing import Any, ClassVar, Generic
+from typing import TYPE_CHECKING, Any
 
-from pydantic import Field
+from pydantic import BaseModel, Field, PrivateAttr
 
-from pypaperless.const import API_PATH
+if TYPE_CHECKING:
+    from pypaperless import Paperless
 
-from .base import PaperlessModel, ResourceT
+    from .base import PaperlessModel
 
 
-class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
-    """Represent a Paperless DRF `Paginated`."""
+class Page[ResourceT: "PaperlessModel"](BaseModel):
+    """Represent a single paginated response page from the Paperless API."""
 
-    _api_path: ClassVar[str] = API_PATH["index"]
-    _resource_cls: type[ResourceT]
+    _client: "Paperless" = PrivateAttr()
+    _resource_cls: type[ResourceT] = PrivateAttr()
 
     # our fields
     current_page: int = 0
@@ -89,6 +90,13 @@ class Page(PaperlessModel, Generic[ResourceT]):  # noqa: UP046
     def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
         """Return iter of `.items`."""
         return iter(self.items)
+
+    @classmethod
+    def from_data(cls, client: "Paperless", data: Any) -> "Page[ResourceT]":
+        """Create a Page instance from raw API response data."""
+        instance = cls.model_validate(data)
+        object.__setattr__(instance, "_client", client)
+        return instance
 
     def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
         """Set the resource class for items mapping."""

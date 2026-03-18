@@ -4,7 +4,7 @@ Documents are the core resource in Paperless-ngx. This page shows the essential 
 
 ## Models
 
-See [`pypaperless/models/documents.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/documents.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
+See [`pypaperless/models/documents/document.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/documents/document.py) for all fields and [`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py) for enum and filter types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 
@@ -101,9 +101,10 @@ await doc.email(
     message="See attachment.",
 )
 
-# notes and history (bound sub-services)
+# notes, history, and share links (bound sub-services)
 notes   = await doc.notes()           # list[DocumentNote]
 entries = await doc.history()         # list[DocumentHistory]
+links   = await doc.share_links()     # list[ShareLink]
 note_draft = doc.notes.create(note="Checked.")
 await doc.notes.save(note_draft)
 await note_draft.save()               # same, as a draft shortcut

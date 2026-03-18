@@ -22,7 +22,7 @@ from pypaperless.exceptions import (
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.services import mixins as service_mixins
-from pypaperless.services.base import ServiceBase
+from pypaperless.services.base import ResourceService
 from pypaperless.utils import normalize_base_url, object_to_dict_value, process_form_data
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
@@ -309,12 +309,12 @@ async def test_pages_object(api: Paperless) -> None:
 
 
 async def test_draft_not_supported(api: Paperless) -> None:
-    """Test that DraftableMixin.create() raises when no draft_cls is configured."""
+    """Test that CreatableMixin.create() raises when no draft_cls is configured."""
 
     class TestResource(PaperlessModel):
         pass
 
-    class TestService(ServiceBase, service_mixins.DraftableMixin):
+    class TestService(ResourceService, service_mixins.CreatableMixin):
         _api_path = "any.url"
         _resource = "test"
         _resource_cls = TestResource
@@ -374,9 +374,9 @@ async def test_request_json_400_body_not_json(httpx_mock: HTTPXMock, api: Paperl
 
 
 async def test_service_base_api_path(api: Paperless) -> None:
-    """ServiceBase.api_path property returns the configured _api_path."""
+    """ResourceService.api_path property returns the configured _api_path."""
 
-    class _TestService(ServiceBase):
+    class _TestService(ResourceService):
         _api_path = "/api/test/"
 
     svc = _TestService(api)

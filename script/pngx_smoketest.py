@@ -205,7 +205,7 @@ async def test_system(p: Paperless) -> None:
 async def test_config(p: Paperless) -> None:
     _hdr("Config")
 
-    await check("config(1)", p.config(1), detail_fn=lambda r: f"id={r.id}")
+    await check("config()", p.config(), detail_fn=lambda r: f"id={r.id}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -385,6 +385,28 @@ async def test_document_history(p: Paperless) -> None:
             )
         except Exception as exc:
             fail("doc.history() property", exc)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+async def test_document_share_links(p: Paperless) -> None:
+    _hdr("Document Share Links – list via service and document property")
+
+    links = await check(
+        f"documents.share_links({TEST_DOCUMENT_ID})",
+        p.documents.share_links(TEST_DOCUMENT_ID),
+        detail_fn=lambda r: f"count={len(r)}",
+    )
+
+    if links is not None:
+        try:
+            doc = await p.documents(TEST_DOCUMENT_ID)
+            links_via_doc = await doc.share_links()
+            ok(
+                f"doc.share_links() property [{TEST_DOCUMENT_ID}]",
+                f"count={len(links_via_doc)}",
+            )
+        except Exception as exc:
+            fail("doc.share_links() property", exc)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -683,7 +705,7 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 async def test_custom_field_query(p: Paperless) -> None:
     _hdr("CustomFieldQuery – builder serialisation and live filter")
 
-    from pypaperless.models.custom_field_query import (
+    from pypaperless.builders.custom_fields import (
         CustomFieldQuery,
         CustomFieldQueryAnd,
         CustomFieldQueryNot,
@@ -1400,6 +1422,7 @@ async def main() -> int:
         await test_config(paperless)
         await test_documents(paperless)
         await test_document_history(paperless)
+        await test_document_share_links(paperless)
         await test_trash(paperless)
         await test_document_notes(paperless)
         await test_custom_fields(paperless)

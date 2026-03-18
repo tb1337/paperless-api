@@ -11,8 +11,6 @@ from pydantic import BaseModel
 def normalize_base_url(url: str) -> str:
     """Normalize a URL string for use as a Paperless API base URL."""
     url = url.rstrip("/")
-    if "://" not in url:
-        url = f"https://{url}"
     if not url.startswith(("https://", "http://")):
         url = f"https://{url}"
     return url

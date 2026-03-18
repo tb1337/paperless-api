@@ -1,14 +1,14 @@
 """DeletableMixin for PyPaperless services."""
 
 from pypaperless.models.base import ResourceT
-from pypaperless.services.base import ServiceProtocol
+from pypaperless.services.base import ResourceServiceProtocol
 
 
-class DeletableMixin(ServiceProtocol[ResourceT]):
+class DeletableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide the `delete` method for PyPaperless services."""
 
     async def delete(self, model: ResourceT) -> bool:
-        """Delete a `resource item` from DRF. There is no point of return.
+        """Delete a `resource item` from Paperless. This cannot be undone.
 
         Return `True` when deletion was successful, `False` otherwise.
 
