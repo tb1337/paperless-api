@@ -6,7 +6,7 @@ from typing import Self
 
 
 class SecurableMixin:
-    """Provide the `request_full_permissions` property for PyPaperless services."""
+    """Provide `request_permissions` and `with_permissions()` for PyPaperless services."""
 
     _request_full_perms: bool = False
 

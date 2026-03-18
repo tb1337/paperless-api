@@ -8,9 +8,9 @@ from pypaperless.services.base import ResourceService
 
 
 class _DocumentFileServiceBase(ResourceService):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
+    """Base class for document file retrieval services (download, preview, thumbnail)."""
 
-    _api_path = API_PATH["documents_suggestions"]
+    _api_path = API_PATH["documents_download"]
     _resource = PaperlessResource.DOCUMENTS
     _mode: ClassVar[FileRetrieveMode]
 
@@ -45,21 +45,21 @@ class _DocumentFileServiceBase(ResourceService):
 
 
 class DocumentFileDownloadService(_DocumentFileServiceBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
+    """Retrieve the archived file of a document for download."""
 
     _api_path = API_PATH["documents_download"]
     _mode = FileRetrieveMode.DOWNLOAD
 
 
 class DocumentFilePreviewService(_DocumentFileServiceBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
+    """Retrieve the archived file of a document for inline preview."""
 
     _api_path = API_PATH["documents_preview"]
     _mode = FileRetrieveMode.PREVIEW
 
 
 class DocumentFileThumbnailService(_DocumentFileServiceBase):
-    """Represent a factory for Paperless `DownloadedDocument` models."""
+    """Retrieve the thumbnail image of a document."""
 
     _api_path = API_PATH["documents_thumbnail"]
     _mode = FileRetrieveMode.THUMBNAIL

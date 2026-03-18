@@ -9,7 +9,7 @@
 [![Linting][linting-badge]][linting-url]
 [![Typing][typing-badge]][typing-url]
 
-**pypaperless** is a modern, fully async Python client library for the [Paperless-ngx](https://docs.paperless-ngx.com/) REST API - built on [httpx](https://www.python-httpx.org/) and [Pydantic](https://docs.pydantic.dev/).
+**pypaperless** is a modern, fully async Python client library for the [Paperless-ngx](https://docs.paperless-ngx.com/) REST API.
 
 - [Features](#features)
 - [Quick example](#quick-example)
@@ -34,8 +34,6 @@
 | **Token generation**           | Static helper to exchange username + password for an API token                                                                                                  |
 | **Custom HTTP client**         | Bring your own `httpx.AsyncClient` for full control over timeouts, proxies, TLS, …                                                                              |
 
----
-
 ## Quick example
 
 ```python
@@ -58,8 +56,6 @@ async def main():
 asyncio.run(main())
 ```
 
----
-
 ## Installation
 
 Requires **Python 3.13+**.
@@ -68,13 +64,9 @@ Requires **Python 3.13+**.
 pip install pypaperless
 ```
 
----
-
 ## Documentation
 
 Full documentation is available **[here][docs-url]**.
-
----
 
 ## Compatibility matrix
 
@@ -88,8 +80,6 @@ Full documentation is available **[here][docs-url]**.
 | < v4.0          | < 2.15          | -       | Incompatible with Paperless-ngx >= 2.15 |
 
 > **Recommendation:** Keep both *Paperless-ngx* and **pypaperless** up to date to benefit from the latest API features and bug fixes.
-
----
 
 ## Authors & contributors
 

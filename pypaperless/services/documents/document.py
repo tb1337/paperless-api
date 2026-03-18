@@ -96,7 +96,7 @@ class DocumentService(
 
     @property
     def download(self) -> DocumentFileDownloadService:
-        """Download the contents of an archived file.
+        """Return the attached `DocumentFileDownloadService` instance.
 
         Example:
         -------
@@ -176,7 +176,7 @@ class DocumentService(
 
     @property
     def preview(self) -> DocumentFilePreviewService:
-        """Preview the contents of an archived file.
+        """Return the attached `DocumentFilePreviewService` instance.
 
         Example:
         -------
@@ -202,7 +202,7 @@ class DocumentService(
 
     @property
     def thumbnail(self) -> DocumentFileThumbnailService:
-        """Download the contents of a thumbnail file.
+        """Return the attached `DocumentFileThumbnailService` instance.
 
         Example:
         -------
@@ -214,7 +214,7 @@ class DocumentService(
         return self._thumbnail
 
     async def get_next_asn(self) -> int:
-        """Request the next archive serial number from DRF."""
+        """Request the next archive serial number from Paperless."""
         res = await self._client.request("get", API_PATH["documents_next_asn"])
         try:
             res.raise_for_status()

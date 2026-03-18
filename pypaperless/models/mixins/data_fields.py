@@ -15,7 +15,7 @@ class EnumWithMissingFallback(Enum):
 
 
 class MatchingAlgorithm(EnumWithMissingFallback):
-    """Represent a subtype of `Correspondent`, `DocumentType`, `StoragePath` and `Tag`."""
+    """Text-matching algorithm used by `Correspondent`, `DocumentType`, `StoragePath`, and `Tag`."""
 
     NONE = 0
     ANY = 1

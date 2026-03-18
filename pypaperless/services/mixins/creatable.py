@@ -44,7 +44,7 @@ class CreatableMixin(ResourceServiceProtocol[ResourceT]):
     async def save(self, draft: _DraftLike) -> int | str:
         """Create a new `resource item` in Paperless.
 
-        Return the created item `id`, or a `task_id` in case of documents.
+        Return the created item `id` (int), or a task UUID (str) for asynchronous creation.
 
         Example:
         -------

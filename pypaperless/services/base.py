@@ -17,7 +17,7 @@ class PaperlessService:
 
 
 class ResourceServiceProtocol[ResourceT](Protocol):
-    """Protocol for any `ResourceService` instances and its ancestors."""
+    """Protocol capturing the minimum interface required by all resource service mixins."""
 
     _client: "Paperless"
     _api_path: str

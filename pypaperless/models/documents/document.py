@@ -225,7 +225,7 @@ class Document(
 
     @property
     def notes(self) -> DocumentNoteService:
-        """Return the notes helper for this document."""
+        """Return the notes service for this document."""
         if self._notes is None:
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
@@ -328,7 +328,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin)
     custom_fields: list[int] | DocumentCustomFieldList | None = None
 
     def serialize(self) -> dict[str, Any]:
-        """Serialize."""
+        """Return the multipart form data payload for POSTing a new document."""
         data = {
             "form": {
                 name: object_to_dict_value(getattr(self, name))
@@ -357,7 +357,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin)
 
 
 class DocumentMeta(PaperlessModel):
-    """Represent a Paperless `Document`s metadata."""
+    """Represent a Paperless `Document`'s metadata."""
 
     _api_path: ClassVar[str] = API_PATH["documents_meta"]
 
@@ -377,7 +377,7 @@ class DocumentMeta(PaperlessModel):
 
 
 class DownloadedDocument(PaperlessModel):
-    """Represent a Paperless `Document`s downloaded file."""
+    """Represent a Paperless `Document`'s downloaded file."""
 
     _api_path: ClassVar[str] = API_PATH["documents"]
 
@@ -391,7 +391,7 @@ class DownloadedDocument(PaperlessModel):
 
 
 class DocumentSuggestions(PaperlessModel):
-    """Represent a Paperless `Document` suggestions."""
+    """Represent a Paperless `Document`'s suggestions."""
 
     _api_path: ClassVar[str] = API_PATH["documents_suggestions"]
 

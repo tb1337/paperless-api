@@ -219,7 +219,7 @@ class Paperless:
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
-        """Initialize and test the connection to DRF."""
+        """Initialize and validate the connection to Paperless."""
         res = await self.request("get", API_PATH["index"])
         try:
             res.raise_for_status()

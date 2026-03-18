@@ -12,12 +12,12 @@ if TYPE_CHECKING:
 
 
 class PageGenerator(PaperlessService, AsyncIterator):
-    """Iterator for DRF paginated endpoints.
+    """Async iterator that yields :class:`Page` objects for a Paperless API endpoint.
 
-    `client`: An instance of :class:`Paperless`.
-    `url`: A url returning DRF page contents.
-    `resource`: A target resource model type for mapping results with.
-    `params`: Optional dict of query string parameters.
+    `client`: A :class:`Paperless` instance.
+    `url`: The API endpoint URL returning paginated results.
+    `resource_cls`: The model class used to map raw result dicts.
+    `params`: Optional query string parameters.
     """
 
     _page: Page | None

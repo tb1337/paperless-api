@@ -12,7 +12,7 @@ from .base import PaperlessModel
 
 
 class Page[ResourceT: PaperlessModel](PaperlessModel):
-    """Represent a Paperless DRF `Paginated`."""
+    """Represent a single paginated response page from the Paperless API."""
 
     _api_path: ClassVar[str] = API_PATH["index"]
     _resource_cls: type[ResourceT]

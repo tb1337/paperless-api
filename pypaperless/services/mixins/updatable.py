@@ -12,7 +12,7 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide the `update` method for PyPaperless services."""
 
     async def update(self, model: ResourceT, *, only_changed: bool = True) -> bool:
-        """Send actually changed `model data` to DRF.
+        """Send changed `model data` to Paperless.
 
         Return `True` when any attribute was updated, `False` otherwise.
 
@@ -46,7 +46,7 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
 
     @staticmethod
     def _check_permissions_field(model: ResourceT, data: dict) -> None:
-        """Rewrite permissions field to set_permissions for DRF."""
+        """Rewrite the permissions field to set_permissions before sending to Paperless."""
         if not hasattr(model, "has_permissions"):
             return
         if not model.has_permissions:

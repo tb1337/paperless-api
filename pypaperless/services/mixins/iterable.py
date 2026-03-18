@@ -64,9 +64,6 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     ) -> AsyncGenerator[Self]:
         """Provide context for iterating over resource items with query parameters.
 
-        `kwargs`: Insert any Paperless api supported filter keywords here.
-        You can provide `page` and `page_size` parameters, as well.
-
         Example:
         -------
         ```python
@@ -92,7 +89,7 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     async def all(self) -> list[int]:
         """Return a list of all resource item primary keys.
 
-        When used within a `reduce` context, returns a list of filtered primary keys.
+        When used within a `filter()` context, returns a list of filtered primary keys.
         """
         page = await anext(self.pages(page=1))
         return page.all
@@ -100,14 +97,14 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     async def as_dict(self) -> dict[int, ResourceT]:
         """Shortcut for returning a primary key/object dict of all resource items.
 
-        When used within a `reduce` context, data is filtered.
+        When used within a `filter()` context, data is filtered.
         """
         return {item.id: item async for item in self}  # type: ignore[attr-defined]
 
     async def as_list(self) -> list[ResourceT]:
         """Shortcut for returning a list of all resource items.
 
-        When used within a `reduce` context, data is filtered.
+        When used within a `filter()` context, data is filtered.
         """
         return [item async for item in self]
 

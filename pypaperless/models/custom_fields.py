@@ -105,6 +105,7 @@ class CustomFieldMonetaryValue(CustomFieldValue):
     @field_validator("value", mode="before")
     @classmethod
     def _coerce_value_to_str(cls, v: Any) -> str | None:
+        """Coerce a non-string monetary value to a string."""
         if v is None:
             return None
         return str(v)
