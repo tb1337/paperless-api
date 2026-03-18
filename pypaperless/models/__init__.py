@@ -3,16 +3,14 @@
 from .config import Config
 from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
+from .document_history import DocumentHistory, DocumentHistoryAction
+from .document_notes import DocumentNote, DocumentNoteDraft
 from .document_types import DocumentType, DocumentTypeDraft
 from .documents import (
     Document,
     DocumentCustomFieldList,
     DocumentDraft,
-    DocumentHistory,
-    DocumentHistoryAction,
     DocumentMeta,
-    DocumentNote,
-    DocumentNoteDraft,
     DocumentSuggestions,
     DownloadedDocument,
 )

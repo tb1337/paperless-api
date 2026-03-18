@@ -57,7 +57,6 @@ Report both results explicitly before closing the task.
 **Exception — pythonically idiomatic suppressions:** A suppression is permitted without confirmation only when it is the universally accepted Python/ecosystem convention for that exact pattern, and there is genuinely no cleaner alternative. Current recognised examples in this codebase:
 
 - `# noqa: F401` on re-export lines in `__init__.py` files (the standard way to mark intentional public re-exports).
-- `# noqa: PLC0415` on lazy imports placed inside function/property bodies solely to break a circular import that cannot be resolved by restructuring without a disproportionate refactor.
 
 Any suppression not covered by an already-approved idiomatic pattern still requires explicit user confirmation.
 

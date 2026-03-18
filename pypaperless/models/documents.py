@@ -4,12 +4,15 @@ import datetime
 import json
 from collections.abc import AsyncGenerator, Iterator
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, Self, cast, overload
+from typing import Any, ClassVar, Self, cast, overload
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
+from pypaperless.services.document_history import DocumentHistoryService
+from pypaperless.services.document_notes import DocumentNoteService
+from pypaperless.services.document_share_links import DocumentShareLinkService
 from pypaperless.utils import object_to_dict_value
 
 from . import mixins
@@ -21,13 +24,6 @@ from .custom_fields import (
     CustomFieldValue,
     CustomFieldValueT,
 )
-
-if TYPE_CHECKING:
-    from pypaperless.services.documents import (
-        DocumentHistoryService,
-        DocumentNoteService,
-        DocumentShareLinkService,
-    )
 
 
 class DocumentMetaEntry(BaseModel):
@@ -54,33 +50,6 @@ class FileRetrieveMode(StrEnum):
     DOWNLOAD = "download"
     PREVIEW = "preview"
     THUMBNAIL = "thumb"
-
-
-class DocumentHistoryAction(StrEnum):
-    """Represent the action type of a `DocumentHistory` entry."""
-
-    CREATE = "create"
-    UPDATE = "update"
-
-
-class DocumentHistoryActor(BaseModel):
-    """Represent the actor field of a `DocumentHistory` entry."""
-
-    id: int | None = None
-    username: str | None = None
-
-
-class DocumentHistory(PaperlessModel):
-    """Represent a single Paperless document history (audit-log) entry."""
-
-    _api_path: ClassVar[str] = API_PATH["documents_history"]
-
-    id: int | None = None
-    document: int | None = None
-    timestamp: datetime.datetime | None = None
-    action: DocumentHistoryAction | None = None
-    changes: dict[str, Any] = Field(default_factory=dict)
-    actor: DocumentHistoryActor | None = None
 
 
 class DocumentCustomFieldList(PaperlessCustomDataModel):
@@ -216,9 +185,9 @@ class Document(
     _api_path: ClassVar[str] = API_PATH["documents_single"]
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
-    _history: "DocumentHistoryService | None" = PrivateAttr(default=None)
-    _notes: "DocumentNoteService | None" = PrivateAttr(default=None)
-    _share_links: "DocumentShareLinkService | None" = PrivateAttr(default=None)
+    _history: DocumentHistoryService | None = PrivateAttr(default=None)
+    _notes: DocumentNoteService | None = PrivateAttr(default=None)
+    _share_links: DocumentShareLinkService | None = PrivateAttr(default=None)
 
     id: int | None = None
     correspondent: int | None = None
@@ -249,29 +218,23 @@ class Document(
         return v
 
     @property
-    def history(self) -> "DocumentHistoryService":
+    def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
         if self._history is None:
-            from pypaperless.services.documents import DocumentHistoryService  # noqa: PLC0415
-
             self._history = DocumentHistoryService(self._client, cast("int", self.id))
         return self._history
 
     @property
-    def notes(self) -> "DocumentNoteService":
+    def notes(self) -> DocumentNoteService:
         """Return the notes helper for this document."""
         if self._notes is None:
-            from pypaperless.services.documents import DocumentNoteService  # noqa: PLC0415
-
             self._notes = DocumentNoteService(self._client, cast("int", self.id))
         return self._notes
 
     @property
-    def share_links(self) -> "DocumentShareLinkService":
+    def share_links(self) -> DocumentShareLinkService:
         """Return the share links service for this document."""
         if self._share_links is None:
-            from pypaperless.services.documents import DocumentShareLinkService  # noqa: PLC0415
-
             self._share_links = DocumentShareLinkService(self._client, cast("int", self.id))
         return self._share_links
 
@@ -392,39 +355,6 @@ class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin)
             }
         )
         return data
-
-
-class DocumentNote(PaperlessModel):
-    """Represent a Paperless `DocumentNote`."""
-
-    _api_path: ClassVar[str] = API_PATH["documents_notes"]
-    _pk_field: ClassVar[str] = "document"
-
-    id: int | None = None
-    note: str | None = None
-    created: datetime.datetime | None = None
-    document: int | None = None
-    user: int | None = None
-
-    async def delete(self) -> bool:
-        """Shortcut for ``paperless.documents.notes.delete(self)``."""
-        return await self._client.documents.notes.delete(self)
-
-
-class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
-    """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
-
-    _api_path: ClassVar[str] = API_PATH["documents_notes"]
-    _pk_field: ClassVar[str] = "document"
-
-    _create_required_fields: ClassVar[set[str]] = {"note", "document"}
-
-    note: str | None = None
-    document: int | None = None
-
-    async def save(self) -> tuple[int, int]:
-        """Shortcut for ``paperless.documents.notes.save(self)``."""
-        return await self._client.documents.notes.save(self)
 
 
 class DocumentMeta(PaperlessModel):

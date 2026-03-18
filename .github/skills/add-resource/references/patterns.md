@@ -145,18 +145,28 @@ class DocumentHistoryService(ServiceBase):
 
 ## Document Sub-service Wiring
 
-### On `Document` model (lazy init via `PrivateAttr`)
+Sub-services attached to a `Document` instance live in their own module to avoid circular imports.
+The model and service files are:
+
+- `pypaperless/models/document_history.py` — `DocumentHistory`, `DocumentHistoryAction`
+- `pypaperless/services/document_history.py` — `DocumentHistoryService`
+- `pypaperless/models/document_notes.py` — `DocumentNote`, `DocumentNoteDraft`
+- `pypaperless/services/document_notes.py` — `DocumentNoteService`
+- `pypaperless/services/document_share_links.py` — `DocumentShareLinkService`
+
+### On `Document` model (direct import, no lazy init)
 
 ```python
-# In Document class body:
-from pydantic import PrivateAttr
+# In models/documents.py — top-level imports (no circular dep because the service
+# files do not import from models/documents.py):
+from pypaperless.services.document_history import DocumentHistoryService
 
-_history: "DocumentHistoryService | None" = PrivateAttr(default=None)
+# In Document class body:
+_history: DocumentHistoryService | None = PrivateAttr(default=None)
 
 @property
-def history(self) -> "DocumentHistoryService":
+def history(self) -> DocumentHistoryService:
     if self._history is None:
-        from pypaperless.services.documents import DocumentHistoryService  # noqa: PLC0415
         self._history = DocumentHistoryService(self._client, cast(int, self.id))
     return self._history
 ```
@@ -164,6 +174,9 @@ def history(self) -> "DocumentHistoryService":
 ### On `DocumentService` (register + expose property)
 
 ```python
+# In services/documents.py — import from the sub-service module:
+from .document_history import DocumentHistoryService
+
 # In DocumentService.__init__:
 self._history = DocumentHistoryService(client)
 
@@ -171,13 +184,6 @@ self._history = DocumentHistoryService(client)
 @property
 def history(self) -> DocumentHistoryService:
     return self._history
-```
-
-### TYPE_CHECKING import in documents.py
-
-```python
-if TYPE_CHECKING:
-    from pypaperless.services.documents import DocumentHistoryService, DocumentNoteService
 ```
 
 ---

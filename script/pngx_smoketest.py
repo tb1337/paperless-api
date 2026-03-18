@@ -28,7 +28,8 @@ from pypaperless.models.custom_fields import (
     CustomFieldStringValue,
 )
 from pypaperless.models.document_types import DocumentTypeDraft
-from pypaperless.models.documents import DocumentCustomFieldList, DocumentDraft, DocumentNoteDraft
+from pypaperless.models.document_notes import DocumentNoteDraft
+from pypaperless.models.documents import DocumentCustomFieldList, DocumentDraft
 from pypaperless.models.share_links import ShareLinkDraft, ShareLinkFileVersion
 from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
