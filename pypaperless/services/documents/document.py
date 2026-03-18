@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Self, Unpack
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, SendEmailError
-from pypaperless.models.documents import (
+from pypaperless.models.documents.document import (
     Document,
     DocumentDraft,
     DocumentMeta,
@@ -15,12 +15,12 @@ from pypaperless.models.documents import (
     FileRetrieveMode,
 )
 from pypaperless.models.filters import DocumentFilters
+from pypaperless.services import mixins
+from pypaperless.services.base import ServiceBase
 
-from . import mixins
-from .base import ServiceBase
-from .document_history import DocumentHistoryService
-from .document_notes import DocumentNoteService
-from .document_share_links import DocumentShareLinkService
+from .history import DocumentHistoryService
+from .notes import DocumentNoteService
+from .share_links import DocumentShareLinkService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless

@@ -148,18 +148,18 @@ class DocumentHistoryService(ServiceBase):
 Sub-services attached to a `Document` instance live in their own module to avoid circular imports.
 The model and service files are:
 
-- `pypaperless/models/document_history.py` — `DocumentHistory`, `DocumentHistoryAction`
-- `pypaperless/services/document_history.py` — `DocumentHistoryService`
-- `pypaperless/models/document_notes.py` — `DocumentNote`, `DocumentNoteDraft`
-- `pypaperless/services/document_notes.py` — `DocumentNoteService`
-- `pypaperless/services/document_share_links.py` — `DocumentShareLinkService`
+- `DocumentHistory`, `DocumentHistoryAction` — `from pypaperless.models import DocumentHistory, DocumentHistoryAction`
+- `DocumentHistoryService` — `pypaperless/services/documents/history.py`
+- `DocumentNote`, `DocumentNoteDraft` — `from pypaperless.models import DocumentNote, DocumentNoteDraft`
+- `DocumentNoteService` — `pypaperless/services/documents/notes.py`
+- `DocumentShareLinkService` — `pypaperless/services/documents/share_links.py`
 
 ### On `Document` model (direct import, no lazy init)
 
 ```python
-# In models/documents.py — top-level imports (no circular dep because the service
-# files do not import from models/documents.py):
-from pypaperless.services.document_history import DocumentHistoryService
+# In models/documents/document.py — top-level imports (no circular dep because the service
+# files do not import from models/documents/document.py):
+from pypaperless.services.documents.history import DocumentHistoryService
 
 # In Document class body:
 _history: DocumentHistoryService | None = PrivateAttr(default=None)
@@ -174,8 +174,8 @@ def history(self) -> DocumentHistoryService:
 ### On `DocumentService` (register + expose property)
 
 ```python
-# In services/documents.py — import from the sub-service module:
-from .document_history import DocumentHistoryService
+# In services/documents/document.py — import from the sub-service module:
+from pypaperless.services.documents.history import DocumentHistoryService
 
 # In DocumentService.__init__:
 self._history = DocumentHistoryService(client)

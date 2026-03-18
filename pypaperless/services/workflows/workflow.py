@@ -3,39 +3,15 @@
 from typing import TYPE_CHECKING
 
 from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.workflows import Workflow, WorkflowAction, WorkflowTrigger
+from pypaperless.models.workflows.workflow import Workflow
+from pypaperless.services import mixins
+from pypaperless.services.base import ServiceBase
 
-from . import mixins
-from .base import ServiceBase
+from .actions import WorkflowActionService
+from .triggers import WorkflowTriggerService
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
-
-
-class WorkflowActionService(
-    ServiceBase,
-    mixins.CallableMixin[WorkflowAction],
-    mixins.IterableMixin[WorkflowAction],
-):
-    """Represent a factory for Paperless `WorkflowAction` models."""
-
-    _api_path = API_PATH["workflow_actions"]
-    _resource = PaperlessResource.WORKFLOW_ACTIONS
-
-    _resource_cls = WorkflowAction
-
-
-class WorkflowTriggerService(
-    ServiceBase,
-    mixins.CallableMixin[WorkflowTrigger],
-    mixins.IterableMixin[WorkflowTrigger],
-):
-    """Represent a factory for Paperless `WorkflowTrigger` models."""
-
-    _api_path = API_PATH["workflow_triggers"]
-    _resource = PaperlessResource.WORKFLOW_TRIGGERS
-
-    _resource_cls = WorkflowTrigger
 
 
 class WorkflowService(

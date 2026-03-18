@@ -4,9 +4,8 @@ import datetime
 from typing import ClassVar
 
 from pypaperless.const import API_PATH
-
-from . import mixins
-from .base import PaperlessModel
+from pypaperless.models import mixins
+from pypaperless.models.base import PaperlessModel
 
 
 class DocumentNote(PaperlessModel):

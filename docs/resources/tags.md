@@ -4,7 +4,7 @@ Tags are labels that can be applied to documents for classification and filterin
 
 ## Models
 
-See [`pypaperless/models/tags.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tags.py) for all fields and types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
+See [`pypaperless/models/tags.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/tags.py) for all fields and [`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py) for enum and filter types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
 
 ## Fetch one
 

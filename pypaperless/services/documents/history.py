@@ -4,9 +4,8 @@ from typing import TYPE_CHECKING, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequiredError
-from pypaperless.models.document_history import DocumentHistory
-
-from .base import ServiceBase
+from pypaperless.models.documents.history import DocumentHistory
+from pypaperless.services.base import ServiceBase
 
 if TYPE_CHECKING:
     from pypaperless import Paperless

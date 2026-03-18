@@ -13,10 +13,10 @@ The `custom_field_query` filter lets you search documents by custom field values
 | `CustomFieldQueryOr(q1, q2, …)`      | `q1 \| q2`        | `["OR", [q1, q2, …]]`  |
 | `CustomFieldQueryNot(q)`             | `~q`              | `["NOT", q]`           |
 
-Import from `pypaperless.models.custom_field_query` (or via `pypaperless.models.types`):
+Import from `pypaperless.builders.custom_fields` (or via `pypaperless.models.types`):
 
 ```python
-from pypaperless.models.custom_field_query import CustomFieldQuery
+from pypaperless.builders.custom_fields import CustomFieldQuery
 ```
 
 ---
@@ -26,7 +26,7 @@ from pypaperless.models.custom_field_query import CustomFieldQuery
 Build an expression and pass `str(q)` to the `custom_field_query` kwarg of `documents.filter()`:
 
 ```python
-from pypaperless.models.custom_field_query import CustomFieldQuery
+from pypaperless.builders.custom_fields import CustomFieldQuery
 
 q = CustomFieldQuery("Status", "exact", "open")
 

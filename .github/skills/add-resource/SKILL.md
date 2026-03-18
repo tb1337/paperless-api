@@ -75,6 +75,7 @@ See [model templates](./references/patterns.md#model-templates) for full code ex
 - Use `datetime.datetime | None` for timestamps
 - Use `StrEnum` subclasses for typed enum fields
 - Export from `pypaperless/models/__init__.py`
+- Re-export any public enum and filter types from `pypaperless/models/types.py`
 
 **If reusing an existing model** (e.g. `Document` for `/api/trash/`): no new model needed.
 
@@ -195,6 +196,10 @@ Follow the style of existing pages such as
 `docs/resources/statistics.md` (direct call) or
 `docs/resources/correspondents.md` (full CRUD).
 
+In the **Model** section of the new page, always link both the model file and
+[`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py)
+whenever the resource has enum or filter types re-exported there.
+
 Then update **`docs/resources.md`**:
 
 - Add the new resource to the **capability matrix** table (alphabetical order).
@@ -243,7 +248,7 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 ## Checklist
 
 - [ ] `const.py` — string constant + `API_PATH` + `PaperlessResource`
-- [ ] Model class with `_api_path`, typed fields, `StrEnum` for enums
+- [ ] Model class with `_api_path`, typed fields, `StrEnum` for enums; public enum/filter types re-exported via `models/types.py`
 - [ ] `models/__init__.py` — export
 - [ ] Service class with correct mixins
 - [ ] `services/__init__.py` — export

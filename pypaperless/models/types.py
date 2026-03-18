@@ -6,12 +6,13 @@ types used across the PyPaperless model layer:
     from pypaperless.models.types import CustomFieldType, FileRetrieveMode, ...
 """
 
-from .custom_field_query import (
+from pypaperless.builders.custom_fields import (
     CustomFieldQuery,
     CustomFieldQueryAnd,
     CustomFieldQueryNot,
     CustomFieldQueryOr,
 )
+
 from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,

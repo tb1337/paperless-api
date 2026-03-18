@@ -7,8 +7,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field
 
 from pypaperless.const import API_PATH
-
-from .base import PaperlessModel
+from pypaperless.models.base import PaperlessModel
 
 
 class DocumentHistoryAction(StrEnum):

@@ -10,20 +10,19 @@ from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_valida
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
-from pypaperless.services.document_history import DocumentHistoryService
-from pypaperless.services.document_notes import DocumentNoteService
-from pypaperless.services.document_share_links import DocumentShareLinkService
-from pypaperless.utils import object_to_dict_value
-
-from . import mixins
-from .base import PaperlessCustomDataModel, PaperlessModel
-from .custom_fields import (
+from pypaperless.models import mixins
+from pypaperless.models.base import PaperlessCustomDataModel, PaperlessModel
+from pypaperless.models.custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomField,
     CustomFieldType,
     CustomFieldValue,
     CustomFieldValueT,
 )
+from pypaperless.services.documents.history import DocumentHistoryService
+from pypaperless.services.documents.notes import DocumentNoteService
+from pypaperless.services.documents.share_links import DocumentShareLinkService
+from pypaperless.utils import object_to_dict_value
 
 
 class DocumentMetaEntry(BaseModel):

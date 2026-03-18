@@ -5,8 +5,7 @@ from typing import TYPE_CHECKING, cast
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import PrimaryKeyRequiredError
 from pypaperless.models.share_links import ShareLink
-
-from .base import ServiceBase
+from pypaperless.services.base import ServiceBase
 
 if TYPE_CHECKING:
     from pypaperless import Paperless
