@@ -22,6 +22,7 @@ from .permissions import Group, User
 from .profile import Profile, ProfileSocialAccount
 from .remote_version import RemoteVersion
 from .saved_views import SavedView
+from .search import SearchResult
 from .share_links import ShareLink, ShareLinkDraft
 from .statistics import Statistic
 from .status import Status
@@ -57,6 +58,7 @@ __all__ = (
     "ProfileSocialAccount",
     "RemoteVersion",
     "SavedView",
+    "SearchResult",
     "ShareLink",
     "ShareLinkDraft",
     "Statistic",

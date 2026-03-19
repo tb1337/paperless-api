@@ -6,11 +6,9 @@ types used across the PyPaperless model layer:
     from pypaperless.models.types import CustomFieldType, FileRetrieveMode, ...
 """
 
-from pypaperless.builders.custom_fields import (
+from pypaperless.builders import (
     CustomFieldQuery,
-    CustomFieldQueryAnd,
-    CustomFieldQueryNot,
-    CustomFieldQueryOr,
+    SearchQuery,
 )
 
 from .custom_fields import (
@@ -81,9 +79,6 @@ __all__ = (
     "CustomFieldIntegerValue",
     "CustomFieldMonetaryValue",
     "CustomFieldQuery",
-    "CustomFieldQueryAnd",
-    "CustomFieldQueryNot",
-    "CustomFieldQueryOr",
     "CustomFieldSelectOptions",
     "CustomFieldSelectValue",
     "CustomFieldStringValue",
@@ -100,6 +95,7 @@ __all__ = (
     "MatchingAlgorithm",
     "Permissions",
     "SavedViewFilterRule",
+    "SearchQuery",
     "ShareLinkFileVersion",
     "ShareLinkFilters",
     "StatisticDocumentFileTypeCount",

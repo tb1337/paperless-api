@@ -21,6 +21,7 @@ MAIL_RULES = "mail_rules"
 PROCESSED_MAIL = "processed_mail"
 PROFILE = "profile"
 SAVED_VIEWS = "saved_views"
+SEARCH = "search"
 SHARE_LINKS = "share_links"
 STATISTICS = "statistics"
 REMOTE_VERSION = "remote_version"
@@ -72,6 +73,7 @@ API_PATH = {
     f"{PROFILE}": f"/api/{PROFILE}/",
     f"{SAVED_VIEWS}": f"/api/{SAVED_VIEWS}/",
     f"{SAVED_VIEWS}_single": f"/api/{SAVED_VIEWS}/{{pk}}/",
+    f"{SEARCH}": f"/api/{SEARCH}/",
     f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
     f"{SHARE_LINKS}_single": f"/api/{SHARE_LINKS}/{{pk}}/",
     f"{STATISTICS}": f"/api/{STATISTICS}/",
@@ -111,6 +113,7 @@ class PaperlessResource(StrEnum):
     PROCESSED_MAIL = PROCESSED_MAIL
     PROFILE = PROFILE
     SAVED_VIEWS = SAVED_VIEWS
+    SEARCH = SEARCH
     SHARE_LINKS = SHARE_LINKS
     STATISTICS = STATISTICS
     REMOTE_VERSION = REMOTE_VERSION

@@ -54,6 +54,7 @@ from pypaperless.models import (
     Profile,
     RemoteVersion,
     SavedView,
+    SearchResult,
     ShareLink,
     Statistic,
     Status,
@@ -474,6 +475,9 @@ ENDPOINTS: list[EndpointSpec] = [
         "RemoteVersion", "/api/remote_version/", RemoteVersion, "direct", None
     ),  # untyped in schema
     EndpointSpec("SavedView", "/api/saved_views/?page_size=1", SavedView, "paginated", "SavedView"),
+    EndpointSpec(
+        "SearchResult", "/api/search/?query=invoice", SearchResult, "direct", "SearchResult"
+    ),
     EndpointSpec("ShareLink", "/api/share_links/?page_size=1", ShareLink, "paginated", "ShareLink"),
     EndpointSpec("Statistic", "/api/statistics/", Statistic, "direct", None),  # untyped in schema
     EndpointSpec("Status", "/api/status/", Status, "direct", "SystemStatus"),

@@ -12,9 +12,9 @@ from pytest_httpx import HTTPXMock
 from pypaperless import Paperless
 from pypaperless.builders.custom_fields import (
     CustomFieldQuery,
-    CustomFieldQueryAnd,
-    CustomFieldQueryNot,
-    CustomFieldQueryOr,
+    _CustomFieldQueryAnd,
+    _CustomFieldQueryNot,
+    _CustomFieldQueryOr,
 )
 from pypaperless.const import API_PATH
 from pypaperless.models import CustomField, Tag
@@ -28,10 +28,6 @@ from pypaperless.models.types import (
     CustomFieldSelectValue,
     CustomFieldType,
 )
-from pypaperless.models.types import CustomFieldQuery as TypesCustomFieldQuery
-from pypaperless.models.types import CustomFieldQueryAnd as TypesCustomFieldQueryAnd
-from pypaperless.models.types import CustomFieldQueryNot as TypesCustomFieldQueryNot
-from pypaperless.models.types import CustomFieldQueryOr as TypesCustomFieldQueryOr
 
 from .const import PAPERLESS_TEST_URL
 from .data import DATA_CUSTOM_FIELDS
@@ -154,8 +150,8 @@ def test_atom(field: Any, op: Any, value: Any, expected: Any) -> None:
 @pytest.mark.parametrize(
     ("combine", "expected_cls", "expected_tag", "expected_operands"),
     [
-        (_op.and_, CustomFieldQueryAnd, "AND", [["A", "exact", 1], ["B", "exact", 2]]),
-        (_op.or_, CustomFieldQueryOr, "OR", [["A", "exact", 1], ["B", "exact", 2]]),
+        (_op.and_, _CustomFieldQueryAnd, "AND", [["A", "exact", 1], ["B", "exact", 2]]),
+        (_op.or_, _CustomFieldQueryOr, "OR", [["A", "exact", 1], ["B", "exact", 2]]),
     ],
     ids=["AND", "OR"],
 )
@@ -173,8 +169,8 @@ def test_binary_operator(
 @pytest.mark.parametrize(
     ("combine", "expected_cls", "expected_tag"),
     [
-        (_op.and_, CustomFieldQueryAnd, "AND"),
-        (_op.or_, CustomFieldQueryOr, "OR"),
+        (_op.and_, _CustomFieldQueryAnd, "AND"),
+        (_op.or_, _CustomFieldQueryOr, "OR"),
     ],
     ids=["AND", "OR"],
 )
@@ -191,10 +187,10 @@ def test_binary_operator_flattens(combine: Any, expected_cls: Any, expected_tag:
 
 
 def test_not_operator() -> None:
-    """~ produces a CustomFieldQueryNot wrapping the operand."""
+    """~ produces a _CustomFieldQueryNot wrapping the operand."""
     q = CustomFieldQuery("Archived", "exact", value=True)
     negated = ~q
-    assert isinstance(negated, CustomFieldQueryNot)
+    assert isinstance(negated, _CustomFieldQueryNot)
     assert negated.build() == ["NOT", ["Archived", "exact", True]]
 
 
@@ -213,21 +209,6 @@ def test_str_is_valid_json() -> None:
     q = CustomFieldQuery("A", "gte", 0) | CustomFieldQuery("B", "icontains", "foo")
     parsed = json.loads(str(q))
     assert parsed[0] == "OR"
-
-
-@pytest.mark.parametrize(
-    ("alias", "real"),
-    [
-        (TypesCustomFieldQuery, CustomFieldQuery),
-        (TypesCustomFieldQueryAnd, CustomFieldQueryAnd),
-        (TypesCustomFieldQueryNot, CustomFieldQueryNot),
-        (TypesCustomFieldQueryOr, CustomFieldQueryOr),
-    ],
-    ids=["Query", "QueryAnd", "QueryNot", "QueryOr"],
-)
-def test_builder_exported_from_types(alias: Any, real: Any) -> None:
-    """Builder classes are re-exported via pypaperless.models.types."""
-    assert alias is real
 
 
 def test_repr() -> None:

@@ -7,6 +7,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
+from pypaperless.builders import SearchQuery
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models import (
@@ -14,6 +15,7 @@ from pypaperless.models import (
     Document,
     MailAccount,
     Profile,
+    SearchResult,
     Status,
     Task,
 )
@@ -31,6 +33,7 @@ from .data import (
     DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
+    DATA_SEARCH,
     DATA_STATISTICS,
     DATA_STATUS,
     DATA_TASKS,
@@ -456,3 +459,51 @@ class TestTrash:
             json={"result": "emptied"},
         )
         await paperless.trash.empty([100])
+
+
+# ---------------------------------------------------------------------------
+# Search
+# ---------------------------------------------------------------------------
+
+
+class TestSearch:
+    """Global search service: query and db_only flag."""
+
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search('query') returns a SearchResult with documents."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        result = await paperless.search("invoice")
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]
+        assert result.documents is not None
+        assert len(result.documents) == len(DATA_SEARCH["documents"])
+
+    async def test_call_with_db_only(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search('query', db_only=True) passes db_only param and returns SearchResult."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*db_only.*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        result = await paperless.search("invoice", db_only=True)
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]
+
+    async def test_call_with_builder(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search(SearchQuery(...)) converts the builder to a string automatically."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        q = SearchQuery("invoice") & SearchQuery.field("tag", "unpaid")
+        result = await paperless.search(q)
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]

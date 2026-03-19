@@ -1,15 +1,9 @@
 """PyPaperless query builders."""
 
-from .custom_fields import (
-    CustomFieldQuery,
-    CustomFieldQueryAnd,
-    CustomFieldQueryNot,
-    CustomFieldQueryOr,
-)
+from .custom_fields import CustomFieldQuery
+from .search import SearchQuery
 
 __all__ = (
     "CustomFieldQuery",
-    "CustomFieldQueryAnd",
-    "CustomFieldQueryNot",
-    "CustomFieldQueryOr",
+    "SearchQuery",
 )

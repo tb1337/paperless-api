@@ -13,6 +13,7 @@ from .permissions import GroupService, UserService  # noqa: F401
 from .profile import ProfileService  # noqa: F401
 from .remote_version import RemoteVersionService  # noqa: F401
 from .saved_views import SavedViewService  # noqa: F401
+from .search import SearchService  # noqa: F401
 from .share_links import ShareLinkService  # noqa: F401
 from .statistics import StatisticService  # noqa: F401
 from .status import StatusService  # noqa: F401

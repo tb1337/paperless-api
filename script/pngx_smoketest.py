@@ -22,6 +22,7 @@ from typing import Any
 import httpx
 
 from pypaperless import Paperless
+from pypaperless.builders import SearchQuery
 from pypaperless.models.correspondents import CorrespondentDraft
 from pypaperless.models.custom_fields import (
     CustomFieldIntegerValue,
@@ -198,6 +199,26 @@ async def test_system(p: Paperless) -> None:
         "remote_version()",
         p.remote_version(),
         detail_fn=lambda r: f"version={r.version}, update_available={r.update_available}",
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+async def test_search(p: Paperless) -> None:
+    _hdr("Search")
+
+    await check(
+        "search('invoice')",
+        p.search("invoice"),
+        detail_fn=lambda r: (
+            f"total={r.total}, documents={len(r.documents or [])}, tags={len(r.tags or [])}"
+        ),
+    )
+
+    q = SearchQuery("invoice") & SearchQuery.field("tag", "unpaid")
+    await check(
+        "search(SearchQuery builder)",
+        p.search(q),
+        detail_fn=lambda r: f"total={r.total}, query={str(q)!r}",
     )
 
 
@@ -1409,6 +1430,7 @@ async def main() -> int:
 
     async with paperless:
         await test_system(paperless)
+        await test_search(paperless)
         await test_profile(paperless)
         await test_config(paperless)
         await test_documents(paperless)

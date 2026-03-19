@@ -149,6 +149,49 @@ def cmd_profile(ctx: click.Context) -> None:
     asyncio.run(_with_client(ctx.obj["url"], ctx.obj["token"], _fetch))
 
 
+_SEARCH_RESULT_SECTIONS: tuple[tuple[str, str], ...] = (
+    ("Documents", "documents"),
+    ("Tags", "tags"),
+    ("Correspondents", "correspondents"),
+    ("Document Types", "document_types"),
+    ("Groups", "groups"),
+    ("Users", "users"),
+    ("Mail Accounts", "mail_accounts"),
+    ("Mail Rules", "mail_rules"),
+    ("Saved Views", "saved_views"),
+    ("Storage Paths", "storage_paths"),
+    ("Workflows", "workflows"),
+    ("Custom Fields", "custom_fields"),
+)
+
+
+@cli.command("search")
+@click.argument("query", type=str, metavar="QUERY")
+@click.option(
+    "--db-only", is_flag=True, default=False, help="Search only the database (skip full-text index)"
+)
+@click.option(
+    "--json", "as_json", is_flag=True, default=False, help="Output full SearchResult as JSON"
+)
+@click.pass_context
+def cmd_search(ctx: click.Context, query: str, *, db_only: bool, as_json: bool) -> None:
+    """Global search across all resource types. QUERY is a Whoosh string or builder expression."""
+
+    async def _fetch(p: Paperless) -> None:
+        result = await p.search(query, db_only=db_only)
+        if as_json:
+            _out(result.model_dump(mode="json"))
+        else:
+            click.echo(f"Total matches: {result.total}")
+            for label, attr in _SEARCH_RESULT_SECTIONS:
+                items = getattr(result, attr)
+                if items:
+                    click.echo(f"\n{label}:")
+                    _render_compact_list(items)
+
+    asyncio.run(_with_client(ctx.obj["url"], ctx.obj["token"], _fetch))
+
+
 def _resource_group(
     name: str,
     service_attr: str,
