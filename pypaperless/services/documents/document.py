@@ -16,6 +16,7 @@ from pypaperless.models.filters import DocumentFilters
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
 
+from .bulk_edit import DocumentBulkEditService
 from .files import (
     DocumentFileDownloadService,
     DocumentFilePreviewService,
@@ -85,6 +86,7 @@ class DocumentService(
         """Initialize a `DocumentService` instance."""
         super().__init__(client)
 
+        self._bulk_edit = DocumentBulkEditService(client)
         self._download = DocumentFileDownloadService(client)
         self._history = DocumentHistoryService(client)
         self._meta = DocumentMetaService(client)
@@ -93,6 +95,19 @@ class DocumentService(
         self._share_links = DocumentShareLinkService(client)
         self._suggestions = DocumentSuggestionsService(client)
         self._thumbnail = DocumentFileThumbnailService(client)
+
+    @property
+    def bulk_edit(self) -> DocumentBulkEditService:
+        """Return the attached `DocumentBulkEditService` instance.
+
+        Example:
+        -------
+        ```python
+        await paperless.documents.bulk_edit.set_correspondent([1, 2], 5)
+        ```
+
+        """
+        return self._bulk_edit
 
     @property
     def download(self) -> DocumentFileDownloadService:

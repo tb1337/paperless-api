@@ -482,6 +482,52 @@ async def test_bulk_edit_objects(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_documents_bulk_edit(p: Paperless) -> None:
+    _hdr("DocumentsBulkEdit – set_permissions, reprocess, modify_tags")
+
+    from pypaperless.models.mixins.securable import Permissions
+
+    # set_permissions with merge=True — idempotent, safe on any document
+    try:
+        await p.documents.bulk_edit.set_permissions(
+            [TEST_DOCUMENT_ID],
+            owner=1,
+            permissions=Permissions(view_users=[], change_users=[]),
+            merge=True,
+        )
+        ok("documents.bulk_edit.set_permissions()", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        fail("documents.bulk_edit.set_permissions()", exc)
+
+    # modify_tags with empty lists — no-op, verifies endpoint plumbing
+    try:
+        await p.documents.bulk_edit.modify_tags(
+            [TEST_DOCUMENT_ID],
+            add_tags=[],
+            remove_tags=[],
+        )
+        ok("documents.bulk_edit.modify_tags() empty", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        fail("documents.bulk_edit.modify_tags() empty", exc)
+
+    # reprocess — queues document for OCR, harmless.
+    # NOTE: This is a Paperless-ngx v10+ dedicated endpoint; skip gracefully on older servers.
+    try:
+        await p.documents.bulk_edit.reprocess([TEST_DOCUMENT_ID])
+        ok("documents.bulk_edit.reprocess()", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        import httpx as _httpx
+
+        if isinstance(exc, _httpx.HTTPStatusError) and exc.response.status_code == 405:
+            ok(
+                "documents.bulk_edit.reprocess() [skipped – server <v10]",
+                "405 Method Not Allowed (endpoint not available on this server)",
+            )
+        else:
+            fail("documents.bulk_edit.reprocess()", exc)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_document_notes(p: Paperless) -> None:
     _hdr("Document Notes – list, create, delete")
 
@@ -1487,6 +1533,7 @@ async def main() -> int:
         await test_document_share_links(paperless)
         await test_trash(paperless)
         await test_bulk_edit_objects(paperless)
+        await test_documents_bulk_edit(paperless)
         await test_document_notes(paperless)
         await test_custom_fields(paperless)
         await test_custom_field_values_on_document(paperless)
