@@ -1,6 +1,7 @@
 """Provide `DocumentBulkEdit` service."""
 
 from pypaperless.const import API_PATH
+from pypaperless.exceptions import BulkEditError
 from pypaperless.models.bulk_edit import CustomFieldsInput, EditPdfOperation, SourceMode
 from pypaperless.models.mixins.securable import Permissions
 from pypaperless.services.base import PaperlessService
@@ -10,6 +11,12 @@ class DocumentBulkEditService(PaperlessService):
     """Perform bulk operations on a list of documents."""
 
     _api_path = API_PATH["documents_bulk_edit"]
+
+    async def _post(self, path: str, *, json: dict) -> None:
+        """POST to *path* and raise `BulkEditError` when the result is not ``"OK"``."""
+        data = await self._client.request_json("post", path, json=json)
+        if data.get("result") != "OK":
+            raise BulkEditError(str(data.get("result")))
 
     async def set_correspondent(
         self,
@@ -28,8 +35,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "set_correspondent",
             "parameters": {"correspondent": correspondent},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def set_document_type(
         self,
@@ -48,8 +54,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "set_document_type",
             "parameters": {"document_type": document_type},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def set_storage_path(
         self,
@@ -68,8 +73,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "set_storage_path",
             "parameters": {"storage_path": storage_path},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def add_tag(
         self,
@@ -88,8 +92,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "add_tag",
             "parameters": {"tag": tag},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def remove_tag(
         self,
@@ -108,8 +111,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "remove_tag",
             "parameters": {"tag": tag},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def modify_tags(
         self,
@@ -131,8 +133,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "modify_tags",
             "parameters": {"add_tags": add_tags, "remove_tags": remove_tags},
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def modify_custom_fields(
         self,
@@ -159,8 +160,7 @@ class DocumentBulkEditService(PaperlessService):
                 "remove_custom_fields": remove_custom_fields,
             },
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def set_permissions(
         self,
@@ -193,8 +193,7 @@ class DocumentBulkEditService(PaperlessService):
             "method": "set_permissions",
             "parameters": parameters,
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._post(self._api_path, json=payload)
 
     async def delete(self, documents: list[int]) -> None:
         """Move a list of documents to the trash.
@@ -203,12 +202,7 @@ class DocumentBulkEditService(PaperlessService):
             documents: List of document primary keys to move to trash.
 
         """
-        res = await self._client.request(
-            "post",
-            API_PATH["documents_delete"],
-            json={"documents": documents},
-        )
-        res.raise_for_status()
+        await self._post(API_PATH["documents_delete"], json={"documents": documents})
 
     async def reprocess(self, documents: list[int]) -> None:
         """Reprocess (re-run OCR) on a list of documents.
@@ -217,12 +211,7 @@ class DocumentBulkEditService(PaperlessService):
             documents: List of document primary keys to reprocess.
 
         """
-        res = await self._client.request(
-            "post",
-            API_PATH["documents_reprocess"],
-            json={"documents": documents},
-        )
-        res.raise_for_status()
+        await self._post(API_PATH["documents_reprocess"], json={"documents": documents})
 
     async def rotate(
         self,
@@ -244,8 +233,7 @@ class DocumentBulkEditService(PaperlessService):
             "degrees": degrees,
             "source_mode": source_mode,
         }
-        res = await self._client.request("post", API_PATH["documents_rotate"], json=payload)
-        res.raise_for_status()
+        await self._post(API_PATH["documents_rotate"], json=payload)
 
     async def merge(
         self,
@@ -279,8 +267,7 @@ class DocumentBulkEditService(PaperlessService):
         }
         if metadata_document_id is not None:
             payload["metadata_document_id"] = metadata_document_id
-        res = await self._client.request("post", API_PATH["documents_merge"], json=payload)
-        res.raise_for_status()
+        await self._post(API_PATH["documents_merge"], json=payload)
 
     async def edit_pdf(
         self,
@@ -319,8 +306,7 @@ class DocumentBulkEditService(PaperlessService):
             "include_metadata": include_metadata,
             "source_mode": source_mode,
         }
-        res = await self._client.request("post", API_PATH["documents_edit_pdf"], json=payload)
-        res.raise_for_status()
+        await self._post(API_PATH["documents_edit_pdf"], json=payload)
 
     async def remove_password(
         self,
@@ -353,7 +339,4 @@ class DocumentBulkEditService(PaperlessService):
             "include_metadata": include_metadata,
             "source_mode": source_mode,
         }
-        res = await self._client.request(
-            "post", API_PATH["documents_remove_password"], json=payload
-        )
-        res.raise_for_status()
+        await self._post(API_PATH["documents_remove_password"], json=payload)

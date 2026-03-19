@@ -79,6 +79,14 @@ class JsonResponseWithError(ResponseError):
         super().__init__(f"Paperless [{key_chain}]: {message}")
 
 
+class BulkEditError(ResponseError):
+    """Raised when a bulk edit operation returned a non-OK result."""
+
+    def __init__(self, result: str) -> None:
+        """Initialize a `BulkEditError` instance."""
+        super().__init__(f"Bulk edit operation returned a non-OK result: {result!r}")
+
+
 # Draft lifecycle
 
 

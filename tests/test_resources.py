@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 from pypaperless import Paperless
 from pypaperless.builders import SearchQuery
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import TaskNotFoundError
+from pypaperless.exceptions import BulkEditError, TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
@@ -798,3 +798,14 @@ class TestDocumentsBulkEdit:
         assert body["documents"] == [5]
         assert body["password"] == "s3cr3t"
         assert body["source_mode"] == "latest_version"
+
+    async def test_error_result_raises(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """A non-OK result field (e.g. 'ERROR') raises BulkEditError on HTTP 200."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json={"result": "ERROR"},
+        )
+        with pytest.raises(BulkEditError):
+            await paperless.documents.bulk_edit.modify_tags([1], add_tags=[3], remove_tags=[])

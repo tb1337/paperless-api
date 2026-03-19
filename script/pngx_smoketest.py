@@ -33,6 +33,7 @@ from pypaperless.models.documents import DocumentCustomFieldList, DocumentDraft,
 from pypaperless.models.share_links import ShareLinkDraft, ShareLinkFileVersion
 from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
+from pypaperless.builders.custom_fields import CustomFieldQuery
 
 # ── PDF helper ────────────────────────────────────────────────────────────────
 
@@ -811,13 +812,6 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_custom_field_query(p: Paperless) -> None:
     _hdr("CustomFieldQuery – builder serialisation and live filter")
-
-    from pypaperless.builders.custom_fields import (
-        CustomFieldQuery,
-        CustomFieldQueryAnd,
-        CustomFieldQueryNot,
-        CustomFieldQueryOr,
-    )
 
     # --- build() / str() correctness (no network) ---
     try:
