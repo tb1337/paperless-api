@@ -21,6 +21,7 @@ from .paths import DATA_PATHS
 from .profile import DATA_PROFILE
 from .remote_version import DATA_REMOTE_VERSION
 from .saved_views import DATA_SAVED_VIEWS
+from .search import DATA_SEARCH
 from .share_links import DATA_SHARE_LINKS
 from .statistics import DATA_STATISTICS
 from .status import DATA_STATUS
@@ -64,6 +65,7 @@ __all__ = (
     "DATA_REMOTE_VERSION",
     "DATA_SAVED_VIEWS",
     "DATA_SCHEMA",
+    "DATA_SEARCH",
     "DATA_SHARE_LINKS",
     "DATA_STATISTICS",
     "DATA_STATUS",

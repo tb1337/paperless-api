@@ -14,7 +14,27 @@ See :class:`CustomFieldQuery` for the full list of supported operators.
 """
 
 import json
-from typing import Any
+from typing import Any, Literal
+
+# The following list is based on the schema defined in:
+# https://github.com/paperless-ngx/paperless-ngx/blob/dev/src/documents/filters.py
+# -> CustomFieldQueryParser
+
+type _QueryOperation = Literal[
+    "exact",
+    "in",
+    "isnull",
+    "exists",
+    "icontains",
+    "istartswith",
+    "iendswith",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "range",
+    "contains",
+]
 
 
 class CustomFieldQuery:
@@ -41,7 +61,7 @@ class CustomFieldQuery:
 
     """
 
-    def __init__(self, field: int | str, op: str, value: Any) -> None:
+    def __init__(self, field: int | str, op: _QueryOperation, value: Any) -> None:
         """Initialise a query atom."""
         self._field = field
         self._op = op
@@ -59,20 +79,20 @@ class CustomFieldQuery:
         """Return a developer-friendly representation."""
         return f"{type(self).__name__}({self.build()!r})"
 
-    def __and__(self, other: "CustomFieldQuery") -> "CustomFieldQueryAnd":
+    def __and__(self, other: "CustomFieldQuery") -> "_CustomFieldQueryAnd":
         """Combine with *other* using logical AND."""
-        return CustomFieldQueryAnd(self, other)
+        return _CustomFieldQueryAnd(self, other)
 
-    def __or__(self, other: "CustomFieldQuery") -> "CustomFieldQueryOr":
+    def __or__(self, other: "CustomFieldQuery") -> "_CustomFieldQueryOr":
         """Combine with *other* using logical OR."""
-        return CustomFieldQueryOr(self, other)
+        return _CustomFieldQueryOr(self, other)
 
-    def __invert__(self) -> "CustomFieldQueryNot":
+    def __invert__(self) -> "_CustomFieldQueryNot":
         """Negate this expression."""
-        return CustomFieldQueryNot(self)
+        return _CustomFieldQueryNot(self)
 
 
-class CustomFieldQueryAnd(CustomFieldQuery):
+class _CustomFieldQueryAnd(CustomFieldQuery):
     """Logical AND of two or more sub-expressions: ``["AND", [q0, q1, …]]``.
 
     Prefer the ``&`` operator over instantiating this class directly::
@@ -83,7 +103,7 @@ class CustomFieldQueryAnd(CustomFieldQuery):
             & CustomFieldQuery("Urgent", "exact", True)
         )
         # equivalent to:
-        q = CustomFieldQueryAnd(
+        q = _CustomFieldQueryAnd(
             CustomFieldQuery("Status", "exact", "open"),
             CustomFieldQuery("Amount", "gte", 100),
             CustomFieldQuery("Urgent", "exact", True),
@@ -98,12 +118,12 @@ class CustomFieldQueryAnd(CustomFieldQuery):
         """Return the JSON-serialisable list for this expression."""
         return ["AND", [q.build() for q in self._queries]]
 
-    def __and__(self, other: CustomFieldQuery) -> "CustomFieldQueryAnd":
+    def __and__(self, other: CustomFieldQuery) -> "_CustomFieldQueryAnd":
         """Flatten: extend the existing AND instead of nesting."""
-        return CustomFieldQueryAnd(*self._queries, other)
+        return _CustomFieldQueryAnd(*self._queries, other)
 
 
-class CustomFieldQueryOr(CustomFieldQuery):
+class _CustomFieldQueryOr(CustomFieldQuery):
     """Logical OR of two or more sub-expressions: ``["OR", [q0, q1, …]]``.
 
     Prefer the ``|`` operator over instantiating this class directly::
@@ -122,12 +142,12 @@ class CustomFieldQueryOr(CustomFieldQuery):
         """Return the JSON-serialisable list for this expression."""
         return ["OR", [q.build() for q in self._queries]]
 
-    def __or__(self, other: CustomFieldQuery) -> "CustomFieldQueryOr":
+    def __or__(self, other: CustomFieldQuery) -> "_CustomFieldQueryOr":
         """Flatten: extend the existing OR instead of nesting."""
-        return CustomFieldQueryOr(*self._queries, other)
+        return _CustomFieldQueryOr(*self._queries, other)
 
 
-class CustomFieldQueryNot(CustomFieldQuery):
+class _CustomFieldQueryNot(CustomFieldQuery):
     """Logical NOT of a sub-expression: ``["NOT", q]``.
 
     Prefer the ``~`` prefix operator over instantiating this class directly::

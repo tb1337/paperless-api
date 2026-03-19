@@ -7,12 +7,15 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import Paperless
+from pypaperless.builders import SearchQuery
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
+    MailAccount,
     Profile,
+    SearchResult,
     Status,
     Task,
 )
@@ -27,8 +30,10 @@ from pypaperless.services.workflows import WorkflowActionService, WorkflowTrigge
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CONFIG,
+    DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
+    DATA_SEARCH,
     DATA_STATISTICS,
     DATA_STATUS,
     DATA_TASKS,
@@ -276,6 +281,123 @@ class TestTasks:
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")
 
+    async def test_acknowledge(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tasks.acknowledge([...]) POSTs and returns acknowledged count."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            status_code=200,
+            json={"result": 1},
+        )
+        result = await paperless.tasks.acknowledge([1])
+        assert result == 1
+
+    async def test_run(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """tasks.run(task_id) POSTs and returns a Task."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        item = await paperless.tasks.run(DATA_TASKS[0]["task_id"])
+        assert isinstance(item, Task)
+
+    async def test_model_acknowledge_shortcut(
+        self,
+        httpx_mock: HTTPXMock,
+        paperless: Paperless,
+    ) -> None:
+        """Task.acknowledge() delegates to tasks.acknowledge([self.id])."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            status_code=200,
+            json={"result": 1},
+        )
+        task = await paperless.tasks(1)
+        assert isinstance(task, Task)
+        result = await task.acknowledge()
+        assert result == 1
+
+    async def test_model_run_shortcut(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """Task.run() delegates to tasks.run(self.task_id)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            status_code=200,
+            json=DATA_TASKS[0],
+        )
+        task = await paperless.tasks(1)
+        assert isinstance(task, Task)
+        rerun = await task.run()
+        assert isinstance(rerun, Task)
+
+
+# ---------------------------------------------------------------------------
+# Mail Accounts
+# ---------------------------------------------------------------------------
+
+
+class TestMailAccounts:
+    """Mail account service action endpoints."""
+
+    async def test_test(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """mail_accounts.test() POSTs to the endpoint and returns JSON."""
+        payload = {"success": True}
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_test']}",
+            status_code=200,
+            json=payload,
+        )
+        response = await paperless.mail_accounts.test()
+        assert response == payload
+
+    async def test_process(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """mail_accounts.process(pk) POSTs to the account process endpoint."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            status_code=200,
+            json={"result": "ok"},
+        )
+        await paperless.mail_accounts.process(1)
+
+    async def test_model_process_shortcut(
+        self,
+        httpx_mock: HTTPXMock,
+        paperless: Paperless,
+    ) -> None:
+        """MailAccount.process() delegates to mail_accounts.process(self.id)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_single']}".format(pk=1),
+            status_code=200,
+            json=DATA_MAIL_ACCOUNTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            status_code=200,
+            json={"result": "ok"},
+        )
+        account = await paperless.mail_accounts(1)
+        assert isinstance(account, MailAccount)
+        await account.process()
+
 
 # ---------------------------------------------------------------------------
 # Workflows
@@ -337,3 +459,51 @@ class TestTrash:
             json={"result": "emptied"},
         )
         await paperless.trash.empty([100])
+
+
+# ---------------------------------------------------------------------------
+# Search
+# ---------------------------------------------------------------------------
+
+
+class TestSearch:
+    """Global search service: query and db_only flag."""
+
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search('query') returns a SearchResult with documents."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        result = await paperless.search("invoice")
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]
+        assert result.documents is not None
+        assert len(result.documents) == len(DATA_SEARCH["documents"])
+
+    async def test_call_with_db_only(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search('query', db_only=True) passes db_only param and returns SearchResult."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*db_only.*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        result = await paperless.search("invoice", db_only=True)
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]
+
+    async def test_call_with_builder(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """search(SearchQuery(...)) converts the builder to a string automatically."""
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            status_code=200,
+            json=DATA_SEARCH,
+        )
+        q = SearchQuery("invoice") & SearchQuery.field("tag", "unpaid")
+        result = await paperless.search(q)
+        assert isinstance(result, SearchResult)
+        assert result.total == DATA_SEARCH["total"]

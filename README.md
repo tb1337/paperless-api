@@ -70,14 +70,13 @@ Full documentation is available **[here][docs-url]**.
 
 ## Compatibility matrix
 
-| **pypaperless** | *Paperless-ngx* | Python  | Notes                                   |
-| --------------- | --------------- | ------- | --------------------------------------- |
-| **v6.0**        | **>= 2.19**     | >= 3.13 | Current release                         |
-| v5.2            | >= 2.19         | >= 3.12 |                                         |
-| v5.1            | >= 2.17         | >= 3.12 |                                         |
-| v5.0            | >= 2.17         | >= 3.12 |                                         |
-| v4.x            | >= 2.15         | >= 3.12 |                                         |
-| < v4.0          | < 2.15          | -       | Incompatible with Paperless-ngx >= 2.15 |
+| **pypaperless** | *Paperless-ngx* | Python | Notes                                   |
+| --------------- | --------------- | ------ | --------------------------------------- |
+| **>= v6.0**     | **>= 3.0**      | 3.13   | Current release                         |
+| >= v5.2         | >= 2.19         | 3.12   |                                         |
+| >= v5.0         | >= 2.17         | 3.12   |                                         |
+| >= v4.x         | >= 2.15         | 3.12   |                                         |
+| < v4.0          | < 2.15          | 3.11   | Incompatible with Paperless-ngx >= 2.15 |
 
 > **Recommendation:** Keep both *Paperless-ngx* and **pypaperless** up to date to benefit from the latest API features and bug fixes.
 

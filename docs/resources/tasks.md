@@ -66,3 +66,27 @@ async for task in paperless.tasks.filter(status="SUCCESS"):
 async for task in paperless.tasks.filter(acknowledged=False, type="ConsumptionTask"):
     print(task.task_id)
 ```
+
+## Acknowledge tasks
+
+```python
+# Service action
+count = await paperless.tasks.acknowledge([1, 2, 3])
+print("Acknowledged:", count)
+
+# Model shortcut
+task = await paperless.tasks(1)
+await task.acknowledge()
+```
+
+## Run task
+
+```python
+# Service action (by Celery task UUID)
+rerun = await paperless.tasks.run("123e4567-e89b-12d3-a456-426614174000")
+print(rerun.status)
+
+# Model shortcut
+task = await paperless.tasks(1)
+rerun = await task.run()
+```

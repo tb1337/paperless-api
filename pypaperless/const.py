@@ -21,6 +21,7 @@ MAIL_RULES = "mail_rules"
 PROCESSED_MAIL = "processed_mail"
 PROFILE = "profile"
 SAVED_VIEWS = "saved_views"
+SEARCH = "search"
 SHARE_LINKS = "share_links"
 STATISTICS = "statistics"
 REMOTE_VERSION = "remote_version"
@@ -62,7 +63,9 @@ API_PATH = {
     f"{GROUPS}": f"/api/{GROUPS}/",
     f"{GROUPS}_single": f"/api/{GROUPS}/{{pk}}/",
     f"{MAIL_ACCOUNTS}": f"/api/{MAIL_ACCOUNTS}/",
+    f"{MAIL_ACCOUNTS}_process": f"/api/{MAIL_ACCOUNTS}/{{pk}}/process/",
     f"{MAIL_ACCOUNTS}_single": f"/api/{MAIL_ACCOUNTS}/{{pk}}/",
+    f"{MAIL_ACCOUNTS}_test": f"/api/{MAIL_ACCOUNTS}/test/",
     f"{MAIL_RULES}": f"/api/{MAIL_RULES}/",
     f"{MAIL_RULES}_single": f"/api/{MAIL_RULES}/{{pk}}/",
     f"{PROCESSED_MAIL}": f"/api/{PROCESSED_MAIL}/",
@@ -70,6 +73,7 @@ API_PATH = {
     f"{PROFILE}": f"/api/{PROFILE}/",
     f"{SAVED_VIEWS}": f"/api/{SAVED_VIEWS}/",
     f"{SAVED_VIEWS}_single": f"/api/{SAVED_VIEWS}/{{pk}}/",
+    f"{SEARCH}": f"/api/{SEARCH}/",
     f"{SHARE_LINKS}": f"/api/{SHARE_LINKS}/",
     f"{SHARE_LINKS}_single": f"/api/{SHARE_LINKS}/{{pk}}/",
     f"{STATISTICS}": f"/api/{STATISTICS}/",
@@ -79,7 +83,9 @@ API_PATH = {
     f"{STORAGE_PATHS}_single": f"/api/{STORAGE_PATHS}/{{pk}}/",
     f"{TAGS}": f"/api/{TAGS}/",
     f"{TAGS}_single": f"/api/{TAGS}/{{pk}}/",
+    f"{TASKS}_acknowledge": f"/api/{TASKS}/acknowledge/",
     f"{TASKS}": f"/api/{TASKS}/",
+    f"{TASKS}_run": f"/api/{TASKS}/run/",
     f"{TASKS}_single": f"/api/{TASKS}/{{pk}}/",
     f"{TRASH}": f"/api/{TRASH}/",
     f"{USERS}": f"/api/{USERS}/",
@@ -107,6 +113,7 @@ class PaperlessResource(StrEnum):
     PROCESSED_MAIL = PROCESSED_MAIL
     PROFILE = PROFILE
     SAVED_VIEWS = SAVED_VIEWS
+    SEARCH = SEARCH
     SHARE_LINKS = SHARE_LINKS
     STATISTICS = STATISTICS
     REMOTE_VERSION = REMOTE_VERSION

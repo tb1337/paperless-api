@@ -1,5 +1,7 @@
 """Provide `MailAccount` related services."""
 
+from typing import cast
+
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.models.mails.accounts import MailAccount
 from pypaperless.services import mixins
@@ -18,3 +20,19 @@ class MailAccountService(
     _resource = PaperlessResource.MAIL_ACCOUNTS
 
     _resource_cls = MailAccount
+
+    async def test(self) -> dict[str, object]:
+        """Test the configured mail account connections."""
+        return cast(
+            "dict[str, object]",
+            await self._client.request_json("post", API_PATH["mail_accounts_test"], json={}),
+        )
+
+    async def process(self, pk: int) -> None:
+        """Process unread mail for the given account id."""
+        res = await self._client.request(
+            "post",
+            API_PATH["mail_accounts_process"].format(pk=pk),
+            json={},
+        )
+        res.raise_for_status()

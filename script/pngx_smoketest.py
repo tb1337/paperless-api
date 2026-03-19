@@ -22,6 +22,7 @@ from typing import Any
 import httpx
 
 from pypaperless import Paperless
+from pypaperless.builders import SearchQuery
 from pypaperless.models.correspondents import CorrespondentDraft
 from pypaperless.models.custom_fields import (
     CustomFieldIntegerValue,
@@ -202,6 +203,26 @@ async def test_system(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_search(p: Paperless) -> None:
+    _hdr("Search")
+
+    await check(
+        "search('invoice')",
+        p.search("invoice"),
+        detail_fn=lambda r: (
+            f"total={r.total}, documents={len(r.documents or [])}, tags={len(r.tags or [])}"
+        ),
+    )
+
+    q = SearchQuery("invoice") & SearchQuery.field("tag", "unpaid")
+    await check(
+        "search(SearchQuery builder)",
+        p.search(q),
+        detail_fn=lambda r: f"total={r.total}, query={str(q)!r}",
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_config(p: Paperless) -> None:
     _hdr("Config")
 
@@ -353,16 +374,7 @@ async def test_documents(p: Paperless) -> None:
         except Exception as exc:
             fail("doc.more_like() shortcut", exc)
 
-        # doc.email() shortcut — we expect success or SendEmailError depending on server config
-        try:
-            await doc.email(
-                addresses="smoketest@example.org",
-                subject="pypaperless smoketest",
-                message="Automated shortcut test.",
-            )
-            ok("doc.email() (shortcut)", "sent")
-        except Exception as exc:
-            ok("doc.email() (shortcut)", f"skipped – {type(exc).__name__}: {exc}")
+        ok("doc.email() (shortcut)", "skipped – email sending disabled in smoketest")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1418,6 +1430,7 @@ async def main() -> int:
 
     async with paperless:
         await test_system(paperless)
+        await test_search(paperless)
         await test_profile(paperless)
         await test_config(paperless)
         await test_documents(paperless)
