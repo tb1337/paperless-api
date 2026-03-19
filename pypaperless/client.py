@@ -123,6 +123,7 @@ class Paperless:
         self.cache = services.CacheService(self)
 
         # API services
+        self.bulk_edit_objects = services.BulkEditObjectsService(self)
         self.config = services.ConfigService(self)
         self.correspondents = services.CorrespondentService(self)
         self.custom_fields = services.CustomFieldService(self)

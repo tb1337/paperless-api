@@ -19,6 +19,7 @@ from pypaperless.models import (
     Status,
     Task,
 )
+from pypaperless.models.mixins.securable import Permissions
 from pypaperless.models.types import (
     StatisticDocumentFileTypeCount,
     StatusDatabase,
@@ -29,6 +30,7 @@ from pypaperless.services.workflows import WorkflowActionService, WorkflowTrigge
 
 from .const import PAPERLESS_TEST_URL
 from .data import (
+    DATA_BULK_EDIT_OBJECTS,
     DATA_CONFIG,
     DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
@@ -507,3 +509,72 @@ class TestSearch:
         result = await paperless.search(q)
         assert isinstance(result, SearchResult)
         assert result.total == DATA_SEARCH["total"]
+
+
+# ---------------------------------------------------------------------------
+# BulkEditObjects
+# ---------------------------------------------------------------------------
+
+
+class TestBulkEditObjects:
+    """BulkEditObjects service: set_permissions and delete operations."""
+
+    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_permissions() POSTs the correct payload and returns None."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        perms = Permissions(view_users=[2], change_users=[1])
+        result = await paperless.bulk_edit_objects.set_permissions(
+            "tags",
+            [1, 2, 3],
+            owner=1,
+            permissions=perms,
+        )
+        assert result is None
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert body["object_type"] == "tags"
+        assert body["operation"] == "set_permissions"
+        assert body["objects"] == [1, 2, 3]
+        assert body["owner"] == 1
+        assert "permissions" in body
+
+    async def test_set_permissions_no_optional_fields(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """set_permissions() without owner/permissions omits those keys."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        await paperless.bulk_edit_objects.set_permissions("correspondents", [7])
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert "owner" not in body
+        assert "permissions" not in body
+        assert body["merge"] is False
+
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """delete() POSTs the correct payload and returns None."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        result = await paperless.bulk_edit_objects.delete("document_types", [10, 11])
+        assert result is None
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert body["object_type"] == "document_types"
+        assert body["operation"] == "delete"
+        assert body["objects"] == [10, 11]

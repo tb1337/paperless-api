@@ -343,6 +343,7 @@ UNTYPED_ENUM_FIELDS: list[tuple[str, str, str]] = [
 
 # ── Schema paths that are action/utility endpoints (no resource model needed) ─
 KNOWN_UTILITY_PATHS: set[str] = {
+    "/api/bulk_edit_objects/",
     "/api/schema/",
     "/api/token/",
     "/api/oauth/callback/",

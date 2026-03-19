@@ -433,6 +433,55 @@ async def test_trash(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_bulk_edit_objects(p: Paperless) -> None:
+    _hdr("BulkEditObjects – set_permissions and delete")
+
+    from pypaperless.models.types import BulkEditObjectType
+    from pypaperless.models.mixins.securable import Permissions
+
+    # Create a temporary tag to exercise bulk operations on
+    from pypaperless.models.tags import TagDraft
+
+    tmp_tag_id: int | None = None
+    try:
+        draft = TagDraft.from_data(
+            p,
+            {
+                "name": "pypaperless-bulk-edit-smoke-test",
+                "color": "#aabbcc",
+                "is_inbox_tag": False,
+                "match": "",
+                "matching_algorithm": 0,
+                "is_insensitive": True,
+            },
+        )
+        tmp_tag_id = int(await p.tags.save(draft))
+        ok("tags.save(draft)", f"id={tmp_tag_id} (temporary tag for bulk test)")
+    except Exception as exc:
+        fail("tags.save(draft)", exc)
+
+    if tmp_tag_id is not None:
+        # set_permissions: change owner to user 1
+        try:
+            await p.bulk_edit_objects.set_permissions(
+                "tags",
+                [tmp_tag_id],
+                owner=1,
+                permissions=Permissions(view_users=[], change_users=[]),
+            )
+            ok("bulk_edit_objects.set_permissions()", f"tag_id={tmp_tag_id}")
+        except Exception as exc:
+            fail("bulk_edit_objects.set_permissions()", exc)
+
+        # delete: permanently remove the temporary tag
+        try:
+            await p.bulk_edit_objects.delete("tags", [tmp_tag_id])
+            ok("bulk_edit_objects.delete()", f"tag_id={tmp_tag_id} deleted")
+        except Exception as exc:
+            fail("bulk_edit_objects.delete()", exc)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_document_notes(p: Paperless) -> None:
     _hdr("Document Notes – list, create, delete")
 
@@ -1437,6 +1486,7 @@ async def main() -> int:
         await test_document_history(paperless)
         await test_document_share_links(paperless)
         await test_trash(paperless)
+        await test_bulk_edit_objects(paperless)
         await test_document_notes(paperless)
         await test_custom_fields(paperless)
         await test_custom_field_values_on_document(paperless)

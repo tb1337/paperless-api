@@ -11,6 +11,7 @@ from pypaperless.builders import (
     SearchQuery,
 )
 
+from .bulk_edit import BulkEditObjectType
 from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
@@ -69,6 +70,7 @@ from .workflows import (
 
 __all__ = (
     "CUSTOM_FIELD_TYPE_VALUE_MAP",
+    "BulkEditObjectType",
     "CorrespondentFilters",
     "CustomFieldBooleanValue",
     "CustomFieldDateValue",

@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from .bulk_edit_objects import DATA_BULK_EDIT_OBJECTS
 from .config import DATA_CONFIG
 from .correspondents import DATA_CORRESPONDENTS
 from .custom_fields import DATA_CUSTOM_FIELDS
@@ -44,6 +45,7 @@ DATA_SCHEMA = _read_schema()
 
 
 __all__ = (
+    "DATA_BULK_EDIT_OBJECTS",
     "DATA_CONFIG",
     "DATA_CORRESPONDENTS",
     "DATA_CUSTOM_FIELDS",
