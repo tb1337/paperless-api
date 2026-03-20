@@ -4,31 +4,14 @@ The `custom_field_query` filter lets you search documents by custom field values
 
 ---
 
-## Builder classes
-
-| Class                                | Operator shortcut | JSON output            |
-| ------------------------------------ | ----------------- | ---------------------- |
-| `CustomFieldQuery(field, op, value)` | -                 | `[field, op, value]`   |
-| `CustomFieldQueryAnd(q1, q2, …)`     | `q1 & q2`         | `["AND", [q1, q2, …]]` |
-| `CustomFieldQueryOr(q1, q2, …)`      | `q1 \| q2`        | `["OR", [q1, q2, …]]`  |
-| `CustomFieldQueryNot(q)`             | `~q`              | `["NOT", q]`           |
-
-Import from `pypaperless.builders.custom_fields` (or via `pypaperless.models.types`):
-
-```python
-from pypaperless.builders.custom_fields import CustomFieldQuery
-```
-
----
-
 ## Basic usage
 
 Build an expression and pass `str(q)` to the `custom_field_query` kwarg of `documents.filter()`:
 
 ```python
-from pypaperless.builders.custom_fields import CustomFieldQuery
+from pypaperless.builders import CustomFieldQuery as Q
 
-q = CustomFieldQuery("Status", "exact", "open")
+q = Q("Status", "exact", "open")
 
 async with paperless.documents.filter(custom_field_query=str(q)) as docs:
     async for doc in docs:
@@ -43,9 +26,9 @@ Use `&`, `|` and `~` to build boolean queries. Chained `&` and `|` are automatic
 
 ```python
 q = (
-    CustomFieldQuery("Status", "exact", "open")
-    & CustomFieldQuery("Amount", "gte", 100)
-    & ~CustomFieldQuery("Archived", "exact", True)
+    Q("Status", "exact", "open")
+    & Q("Amount", "gte", 100)
+    & ~Q("Archived", "exact", True)
 )
 # Serialises to:
 # ["AND", [["Status","exact","open"], ["Amount","gte",100], ["NOT",["Archived","exact",true]]]]
@@ -55,9 +38,9 @@ OR across multiple categories:
 
 ```python
 q = (
-    CustomFieldQuery("Category", "exact", "A")
-    | CustomFieldQuery("Category", "exact", "B")
-    | CustomFieldQuery("Category", "exact", "C")
+    Q("Category", "exact", "A")
+    | Q("Category", "exact", "B")
+    | Q("Category", "exact", "C")
 )
 ```
 
@@ -68,8 +51,8 @@ q = (
 `field` can be either the **integer ID** or the **name string**:
 
 ```python
-CustomFieldQuery(42, "exists", True)        # by ID
-CustomFieldQuery("Invoice Amount", "gte", 100)  # by name
+Q(42, "exists", True)        # by ID
+Q("Invoice Amount", "gte", 100)  # by name
 ```
 
 ---
@@ -91,8 +74,8 @@ The valid operators depend on the field's data type:
 `exists` is the idiomatic way to check field presence:
 
 ```python
-CustomFieldQuery("Due Date", "exists", True)   # document has the field
-CustomFieldQuery("Due Date", "exists", False)  # document does not have the field
+Q("Due Date", "exists", True)   # document has the field
+Q("Due Date", "exists", False)  # document does not have the field
 ```
 
 ### `in` and `range`
@@ -100,15 +83,15 @@ CustomFieldQuery("Due Date", "exists", False)  # document does not have the fiel
 Pass a list as the value:
 
 ```python
-CustomFieldQuery("Status", "in", ["open", "pending"])
-CustomFieldQuery("Amount", "range", [10, 100])  # start, end (inclusive)
+Q("Status", "in", ["open", "pending"])
+Q("Amount", "range", [10, 100])  # start, end (inclusive)
 ```
 
 ### Date components
 
 ```python
-CustomFieldQuery("Invoice Date", "year__exact", 2024)
-CustomFieldQuery("Invoice Date", "month__exact", 12)
+Q("Invoice Date", "year__exact", 2024)
+Q("Invoice Date", "month__exact", 12)
 ```
 
 ---
@@ -118,7 +101,7 @@ CustomFieldQuery("Invoice Date", "month__exact", 12)
 `str(q)` is shorthand for `json.dumps(q.build())`. Call `build()` directly if you need the raw Python structure:
 
 ```python
-q = CustomFieldQuery("Amount", "gte", 50) & CustomFieldQuery("Status", "exact", "open")
+q = Q("Amount", "gte", 50) & Q("Status", "exact", "open")
 print(q.build())
 # ["AND", [["Amount", "gte", 50], ["Status", "exact", "open"]]]
 
