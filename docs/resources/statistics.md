@@ -8,7 +8,7 @@ See [`pypaperless/models/statistics.py`](https://github.com/tb1337/paperless-api
 
 ## Fetch
 
-No primary key — call without arguments:
+No primary key - call without arguments:
 
 ```python
 stats = await paperless.statistics()

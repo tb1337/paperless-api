@@ -26,7 +26,7 @@ from pypaperless import Paperless, PaperlessConfig
 cfg = PaperlessConfig(
     url="https://paperless.example.com",
     token="your-api-token",
-    request_api_version=9,  # optional — defaults to the built-in value
+    request_api_version=9,  # optional - defaults to the built-in value
 )
 
 async with Paperless(config=cfg) as paperless:
@@ -86,7 +86,7 @@ Paperless(
 
 ### Context manager
 
-The recommended approach — `initialize()` and `close()` are called automatically:
+The recommended approach - `initialize()` and `close()` are called automatically:
 
 ```python
 async with Paperless("localhost:8000", "your-api-token") as paperless:

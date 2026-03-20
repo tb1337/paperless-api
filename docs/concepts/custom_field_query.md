@@ -1,6 +1,6 @@
 # Custom field query
 
-The `custom_field_query` filter lets you search documents by custom field values using a structured boolean expression. Paperless-ngx parses the expression serverside — pypaperless provides a small builder so you never have to construct the JSON by hand.
+The `custom_field_query` filter lets you search documents by custom field values using a structured boolean expression. Paperless-ngx parses the expression serverside - pypaperless provides a small builder so you never have to construct the JSON by hand.
 
 ---
 
@@ -8,7 +8,7 @@ The `custom_field_query` filter lets you search documents by custom field values
 
 | Class                                | Operator shortcut | JSON output            |
 | ------------------------------------ | ----------------- | ---------------------- |
-| `CustomFieldQuery(field, op, value)` | —                 | `[field, op, value]`   |
+| `CustomFieldQuery(field, op, value)` | -                 | `[field, op, value]`   |
 | `CustomFieldQueryAnd(q1, q2, …)`     | `q1 & q2`         | `["AND", [q1, q2, …]]` |
 | `CustomFieldQueryOr(q1, q2, …)`      | `q1 \| q2`        | `["OR", [q1, q2, …]]`  |
 | `CustomFieldQueryNot(q)`             | `~q`              | `["NOT", q]`           |

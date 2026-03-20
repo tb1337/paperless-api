@@ -1,6 +1,6 @@
 # Tasks
 
-Tasks represent Celery background jobs — primarily document consumption jobs. You can look up a task by its UUID (returned when uploading a document) or by its integer primary key, and iterate over all tasks.
+Tasks represent Celery background jobs - primarily document consumption jobs. You can look up a task by its UUID (returned when uploading a document) or by its integer primary key, and iterate over all tasks.
 
 ## Model
 

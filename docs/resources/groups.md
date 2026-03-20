@@ -1,6 +1,6 @@
 # Groups
 
-Groups are Paperless-ngx user groups used for permission management. They are read-only from the API perspective — groups can only be fetched and iterated, not created or modified via pypaperless.
+Groups are Paperless-ngx user groups used for permission management. They are read-only from the API perspective - groups can only be fetched and iterated, not created or modified via pypaperless.
 
 ## Model
 

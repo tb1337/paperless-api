@@ -121,5 +121,5 @@ async with Paperless("localhost:8000", "your-api-token") as paperless:
 
 ## Next steps
 
-- [Session management](session.md) — custom HTTP clients, advanced lifecycle
-- [Resources](resources.md) — learn about all available resources and CRUD operations
+- [Session management](session.md) - custom HTTP clients, advanced lifecycle
+- [Resources](resources.md) - learn about all available resources and CRUD operations

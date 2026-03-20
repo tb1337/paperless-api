@@ -2,7 +2,7 @@
 
 The `SearchQuery` builder provides a fluent, composable DSL for constructing Whoosh-style query strings for the Paperless-ngx global search endpoint (`/api/search/`).
 
-The builder output is a plain string — it is fully compatible with the raw string API. Both raw strings and builder objects are accepted by `paperless.search()`.
+The builder output is a plain string - it is fully compatible with the raw string API. Both raw strings and builder objects are accepted by `paperless.search()`.
 
 ---
 
@@ -61,7 +61,7 @@ SearchQuery.date_range("modified", "2024-01-01", "2024-12-31")
 # → modified:[2024-01-01 to 2024-12-31]
 ```
 
-Paperless-ngx uses Whoosh's date parsing — relative expressions like `today`, `yesterday`, and partial dates like `2024` are all valid.
+Paperless-ngx uses Whoosh's date parsing - relative expressions like `today`, `yesterday`, and partial dates like `2024` are all valid.
 
 ---
 
@@ -130,7 +130,7 @@ print(str(q))
 # (contract AND created:[2015 to 2019])
 ```
 
-This means you can freely mix builder objects and raw strings in your code — both work with `paperless.search()`:
+This means you can freely mix builder objects and raw strings in your code - both work with `paperless.search()`:
 
 ```python
 # These are equivalent:

@@ -1,6 +1,6 @@
 # Users
 
-Users are the Paperless-ngx user accounts. They are read-only from the API perspective — only fetching and iterating is supported.
+Users are the Paperless-ngx user accounts. They are read-only from the API perspective - only fetching and iterating is supported.
 
 ## Model
 

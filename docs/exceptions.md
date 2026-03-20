@@ -18,7 +18,8 @@ PaperlessError
 │   └── ForbiddenError
 ├── ResponseError
 │   ├── BadJsonResponseError
-│   └── JsonResponseWithError
+│   ├── JsonResponseWithError
+│   └── BulkEditError
 ├── DraftError
 │   ├── DraftFieldRequiredError
 │   └── DraftNotSupportedError
@@ -43,7 +44,7 @@ Base class for all pypaperless exceptions. Catch this to handle any pypaperless 
 
 ### `InitializationError`
 
-Raised when `Paperless.initialize()` fails for any reason — connectivity, authentication or authorisation.
+Raised when `Paperless.initialize()` fails for any reason - connectivity, authentication or authorisation.
 
 ```python
 from pypaperless.exceptions import InitializationError
@@ -67,12 +68,12 @@ The server responded with HTTP **401**.
 
 **Subclasses:**
 
-- **`InvalidTokenError`** — 401 because the token is invalid or expired.
-- **`InactiveOrDeletedError`** — 401 because the user account is inactive or deleted.
+- **`InvalidTokenError`** - 401 because the token is invalid or expired.
+- **`InactiveOrDeletedError`** - 401 because the user account is inactive or deleted.
 
 #### `ForbiddenError`
 
-The server responded with HTTP **403** — the user is authenticated but lacks permission to access the resource.
+The server responded with HTTP **403** - the user is authenticated but lacks permission to access the resource.
 
 ---
 
@@ -95,6 +96,19 @@ try:
     await paperless.documents.save(draft)
 except JsonResponseWithError as exc:
     print(exc)  # e.g. "Paperless [document]: No file was submitted."
+```
+
+#### `BulkEditError`
+
+Raised when a bulk edit operation via `paperless.documents.bulk_edit` or `paperless.bulk_edit_objects` returns a non-OK result from the API.
+
+```python
+from pypaperless.exceptions import BulkEditError
+
+try:
+    await paperless.documents.bulk_edit.delete([10, 11])
+except BulkEditError as exc:
+    print(exc)  # "Bulk edit operation returned a non-OK result: ..."
 ```
 
 ---
@@ -190,7 +204,7 @@ try:
 except PaperlessConnectionError:
     print("Cannot reach the Paperless server.")
 except AuthError:
-    print("Authentication failed — check your token.")
+    print("Authentication failed - check your token.")
 except ForbiddenError:
     print("Access denied.")
 except PaperlessError as exc:

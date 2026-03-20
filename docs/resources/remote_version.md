@@ -8,7 +8,7 @@ See [`pypaperless/models/remote_version.py`](https://github.com/tb1337/paperless
 
 ## Fetch
 
-This is a parameter-free call — there is no primary key:
+This is a parameter-free call - there is no primary key:
 
 ```python
 rv = await paperless.remote_version()
