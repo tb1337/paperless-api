@@ -1,7 +1,7 @@
 """UpdatableMixin for PyPaperless services."""
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, cast
 
 from pypaperless.models.base import ResourceT
 from pypaperless.services.base import ResourceServiceProtocol
@@ -34,12 +34,14 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
         params = self._get_request_params()
 
         if only_changed:
-            updated = await self._patch_fields(model, params)
+            response = await self._patch_fields(model, params)
         else:
-            updated = await self._put_fields(model, params)
+            response = await self._put_fields(model, params)
 
-        model.apply_data()
-        return updated
+        if response is not None:
+            model.refresh_from(response)
+            return True
+        return False
 
     def _get_request_params(self) -> dict[str, Any]:
         """Build request parameters."""
@@ -59,29 +61,33 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
             data["set_permissions"] = deepcopy(data["permissions"])
             del data["permissions"]
 
-    async def _patch_fields(self, model: ResourceT, params: dict[str, Any]) -> bool:
+    async def _patch_fields(
+        self, model: ResourceT, params: dict[str, Any]
+    ) -> dict[str, Any] | None:
         """Use the http `PATCH` method for updating only changed fields."""
         changed: dict[str, Any] = {}
         for name in model.__class__.model_fields:
             new_value = object_to_dict_value(getattr(model, name))
 
-            if name in model.data and new_value != model.data[name]:
+            if name in model.snapshot and new_value != model.snapshot[name]:
                 changed[name] = new_value
 
         if not changed:
-            return False
+            return None
 
         self._check_permissions_field(model, changed)
 
-        model.data = await self._client.request_json(
-            "patch",
-            model.api_path,
-            json=changed,
-            params=params or None,
+        return cast(
+            "dict[str, Any]",
+            await self._client.request_json(
+                "patch",
+                model.api_path,
+                json=changed,
+                params=params or None,
+            ),
         )
-        return True
 
-    async def _put_fields(self, model: ResourceT, params: dict[str, Any]) -> bool:
+    async def _put_fields(self, model: ResourceT, params: dict[str, Any]) -> dict[str, Any]:
         """Use the http `PUT` method to replace all fields."""
         data = {
             name: object_to_dict_value(getattr(model, name))
@@ -90,10 +96,12 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
 
         self._check_permissions_field(model, data)
 
-        model.data = await self._client.request_json(
-            "put",
-            model.api_path,
-            json=data,
-            params=params or None,
+        return cast(
+            "dict[str, Any]",
+            await self._client.request_json(
+                "put",
+                model.api_path,
+                json=data,
+                params=params or None,
+            ),
         )
-        return True

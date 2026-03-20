@@ -299,14 +299,6 @@ class Document(
         """Return the document search hit."""
         return self.search_hit_
 
-    def apply_data(self) -> None:
-        """Apply data from `self._data` to model fields, converting custom_fields."""
-        super().apply_data()
-        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList.from_data(
-                self._client, self._data["custom_fields"]
-            )
-
 
 class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""

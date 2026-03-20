@@ -105,7 +105,7 @@ class TestDocuments:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=200,
-            json={**to_update._data, "title": new_title},
+            json={**to_update._snapshot, "title": new_title},
         )
         await paperless.documents.update(to_update)
         assert to_update.title == new_title
@@ -790,8 +790,6 @@ class TestDocuments:
             json={"id": 1, "name": "ACME", "slug": "acme"},
         )
         item = await paperless.correspondents(1)
-        # Sync model fields with _data so nothing appears changed
-        item._data = {"id": item.id, "name": item.name, "slug": item.slug}
         result = await paperless.correspondents.update(item)
         assert result is False
 

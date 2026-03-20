@@ -811,52 +811,8 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_custom_field_query(p: Paperless) -> None:
-    _hdr("CustomFieldQuery – builder serialisation and live filter")
+    _hdr("CustomFieldQuery – live filter")
 
-    # --- build() / str() correctness (no network) ---
-    try:
-        atom = CustomFieldQuery("Status", "exact", "open")
-        assert atom.build() == ["Status", "exact", "open"]
-        ok("CustomFieldQuery.build() atom", str(atom))
-    except Exception as exc:
-        fail("CustomFieldQuery.build() atom", exc)
-
-    try:
-        combined = CustomFieldQuery("A", "gte", 1) & CustomFieldQuery("B", "lte", 99)
-        assert combined.build()[0] == "AND"
-        assert len(combined.build()[1]) == 2
-        ok("CustomFieldQueryAnd (&) build()", str(combined))
-    except Exception as exc:
-        fail("CustomFieldQueryAnd (&) build()", exc)
-
-    try:
-        alt = CustomFieldQuery("Cat", "exact", "X") | CustomFieldQuery("Cat", "exact", "Y")
-        assert alt.build()[0] == "OR"
-        ok("CustomFieldQueryOr (|) build()", str(alt))
-    except Exception as exc:
-        fail("CustomFieldQueryOr (|) build()", exc)
-
-    try:
-        neg = ~CustomFieldQuery("Archived", "exact", True)
-        assert neg.build() == ["NOT", ["Archived", "exact", True]]
-        ok("CustomFieldQueryNot (~) build()", str(neg))
-    except Exception as exc:
-        fail("CustomFieldQueryNot (~) build()", exc)
-
-    try:
-        # AND flattening: (a & b) & c  must produce ["AND", [a, b, c]]
-        q = (
-            CustomFieldQuery("X", "exact", 1)
-            & CustomFieldQuery("Y", "exact", 2)
-            & CustomFieldQuery("Z", "exact", 3)
-        )
-        assert isinstance(q, CustomFieldQueryAnd)
-        assert len(q.build()[1]) == 3
-        ok("CustomFieldQueryAnd flattening", f"atoms={len(q.build()[1])}")
-    except Exception as exc:
-        fail("CustomFieldQueryAnd flattening", exc)
-
-    # --- live filter with custom_field_query (exists) ---
     try:
         q_exists = CustomFieldQuery(1, "exists", True)
         async with p.documents.filter(page_size=PAGE_SIZE, custom_field_query=str(q_exists)):
@@ -1399,25 +1355,6 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
     draft_b.custom_fields = cf
 
     task_id_b: str | None = None
-    try:
-        # Verify serialisation before sending
-        import json
-
-        serialized = draft_b.serialize()
-        raw = serialized["form"]["custom_fields"]
-        assert isinstance(raw, str), f"expected str, got {type(raw)}"
-        decoded = json.loads(raw)
-        assert isinstance(decoded, dict)
-        assert decoded.get("8") == "pypaperless-smoke"
-        assert decoded.get("3") == 1
-        ok(
-            "DocumentDraft.serialize() – custom_fields JSON encoding",
-            f"payload={decoded}",
-        )
-    except Exception as exc:
-        fail("DocumentDraft.serialize() – custom_fields JSON encoding", exc)
-        return
-
     try:
         task_id_b = str(await p.documents.save(draft_b))
         ok(

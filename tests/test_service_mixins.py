@@ -240,7 +240,7 @@ class TestReadWrite(_SharedServiceTests):
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**to_update._data, update_field: update_value},
+            json={**to_update._snapshot, update_field: update_value},
         )
         await service.update(to_update)
         assert getattr(to_update, update_field) == update_value
@@ -252,7 +252,7 @@ class TestReadWrite(_SharedServiceTests):
             method="PUT",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**to_update._data, update_field: update_value},
+            json={**to_update._snapshot, update_field: update_value},
         )
         await service.update(to_update, only_changed=False)
         assert getattr(to_update, update_field) == update_value
@@ -360,7 +360,7 @@ class TestSecurableMixin:
             assert request.url
             json_data = json_mod.loads(request.content)
             assert "set_permissions" in json_data
-            return httpx.Response(status_code=200, json=item._data)
+            return httpx.Response(status_code=200, json=item._snapshot)
 
         httpx_mock.add_callback(
             _lookup_set_permissions,
@@ -482,7 +482,7 @@ class TestActiveRecord:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**item._data, update_field: update_value},
+            json={**item._snapshot, update_field: update_value},
         )
         result = await item.update()
         assert result is True
