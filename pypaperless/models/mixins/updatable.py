@@ -1,4 +1,4 @@
-"""UpdatableMixin for PyPaperless models."""
+"""UpdatableModel for PyPaperless models."""
 
 from typing import TYPE_CHECKING, ClassVar, cast
 
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from pypaperless.const import PaperlessResource
 
 
-class UpdatableMixin:
+class UpdatableModel:
     """Model shortcut: delegate update() to the bound service.
 
     Requires ``_resource`` to be set as a ``ClassVar[PaperlessResource]`` on the
@@ -21,15 +21,18 @@ class UpdatableMixin:
     async def update(self, *, only_changed: bool = True) -> bool:
         """Persist changes on this model to Paperless.
 
-        Delegates to ``service.update()``.
+        Delegates to :meth:`~pypaperless.services.mixins.updatable.UpdatableService.update`.
 
-        Example:
-        -------
-        ```python
-        doc = await paperless.documents(42)
-        doc.title = "New Title"
-        await doc.update()
-        ```
+        Args:
+            only_changed: When ``True`` (default), only changed fields are sent
+                          via ``PATCH``.  Set to ``False`` to replace the full
+                          resource via ``PUT``.
+
+        Example::
+
+            doc = await paperless.documents(42)
+            doc.title = "New Title"
+            await doc.update()
 
         """
         return cast(

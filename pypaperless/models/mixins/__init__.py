@@ -1,18 +1,18 @@
 """Mixins for PyPaperless models."""
 
-from .creatable import CreatableMixin
-from .data_fields import MatchingFieldsMixin
-from .deletable import DeletableMixin
-from .saveable import SaveableMixin
-from .securable import SecurableDraftMixin, SecurableMixin
-from .updatable import UpdatableMixin
+from .creatable import CreatableModel
+from .data_fields import MatchingFieldsModel
+from .deletable import DeletableModel
+from .saveable import SaveableModel
+from .securable import SecurableDraftModel, SecurableModel
+from .updatable import UpdatableModel
 
 __all__ = (
-    "CreatableMixin",
-    "DeletableMixin",
-    "MatchingFieldsMixin",
-    "SaveableMixin",
-    "SecurableDraftMixin",
-    "SecurableMixin",
-    "UpdatableMixin",
+    "CreatableModel",
+    "DeletableModel",
+    "MatchingFieldsModel",
+    "SaveableModel",
+    "SecurableDraftModel",
+    "SecurableModel",
+    "UpdatableModel",
 )

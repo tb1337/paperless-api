@@ -25,7 +25,7 @@ class DocumentNote(PaperlessModel):
         return await self._client.documents.notes.delete(self)
 
 
-class DocumentNoteDraft(PaperlessModel, mixins.CreatableMixin):
+class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_notes"]

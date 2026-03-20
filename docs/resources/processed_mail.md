@@ -20,7 +20,7 @@ print(entry.processed) # datetime(2024, 3, 15, 10, 30, ...)
 ```python
 async for entry in paperless.processed_mail:
     if entry.status == "failed":
-        print(f"Failed: {entry.subject} — {entry.error}")
+        print(f"Failed: {entry.subject} - {entry.error}")
 
 # Collect all failures
 failures = [

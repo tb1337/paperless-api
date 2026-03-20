@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class StoragePathService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[StoragePath],
-    mixins.CreatableMixin[StoragePathDraft],
-    mixins.IterableMixin[StoragePath],
-    mixins.UpdatableMixin[StoragePath],
-    mixins.DeletableMixin[StoragePath],
+    mixins.SecurableService,
+    mixins.CallableService[StoragePath],
+    mixins.CreatableService[StoragePathDraft],
+    mixins.IterableService[StoragePath],
+    mixins.UpdatableService[StoragePath],
+    mixins.DeletableService[StoragePath],
 ):
     """Represent a factory for Paperless `StoragePath` models."""
 
@@ -31,9 +31,16 @@ class StoragePathService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[StoragePathFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate storage paths with server-side filters.
 
-        See :class:`~pypaperless.models.filters.StoragePathFilters` for available keys.
+        See :class:`~pypaperless.models.filters.StoragePathFilters` for all available keys.
+
+        Example::
+
+            async with paperless.storage_paths.filter(name__icontains="archive") as filtered:
+                async for sp in filtered:
+                    print(sp.path)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

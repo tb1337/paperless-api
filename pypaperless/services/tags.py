@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class TagService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[Tag],
-    mixins.CreatableMixin[TagDraft],
-    mixins.IterableMixin[Tag],
-    mixins.UpdatableMixin[Tag],
-    mixins.DeletableMixin[Tag],
+    mixins.SecurableService,
+    mixins.CallableService[Tag],
+    mixins.CreatableService[TagDraft],
+    mixins.IterableService[Tag],
+    mixins.UpdatableService[Tag],
+    mixins.DeletableService[Tag],
 ):
     """Represent a factory for Paperless `Tag` models."""
 
@@ -31,9 +31,16 @@ class TagService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[TagFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate tags with server-side filters.
 
-        See :class:`~pypaperless.models.filters.TagFilters` for available keys.
+        See :class:`~pypaperless.models.filters.TagFilters` for all available keys.
+
+        Example::
+
+            async with paperless.tags.filter(name__icontains="urgent") as filtered:
+                async for tag in filtered:
+                    print(tag.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

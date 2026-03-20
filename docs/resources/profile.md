@@ -8,7 +8,7 @@ See [`pypaperless/models/profile.py`](https://github.com/tb1337/paperless-api/bl
 
 ## Fetch
 
-No primary key — call without arguments:
+No primary key - call without arguments:
 
 ```python
 profile = await paperless.profile()

@@ -8,8 +8,8 @@ from pypaperless.services.base import ResourceService
 
 class WorkflowActionService(
     ResourceService,
-    mixins.CallableMixin[WorkflowAction],
-    mixins.IterableMixin[WorkflowAction],
+    mixins.CallableService[WorkflowAction],
+    mixins.IterableService[WorkflowAction],
 ):
     """Represent a factory for Paperless `WorkflowAction` models."""
 

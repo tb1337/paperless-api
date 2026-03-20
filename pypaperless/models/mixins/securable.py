@@ -1,4 +1,4 @@
-"""SecurableMixin for PyPaperless models."""
+"""SecurableModel for PyPaperless models."""
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -55,7 +55,7 @@ class Permissions(BaseModel):
         }
 
 
-class SecurableMixin(BaseModel):
+class SecurableModel(BaseModel):
     """Provide permission fields for PyPaperless models."""
 
     owner: int | None = None
@@ -68,7 +68,7 @@ class SecurableMixin(BaseModel):
         return self.permissions is not None
 
 
-class SecurableDraftMixin(BaseModel):
+class SecurableDraftModel(BaseModel):
     """Provide permission fields for PyPaperless draft models."""
 
     owner: int | None = None

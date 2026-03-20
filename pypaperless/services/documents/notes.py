@@ -20,7 +20,20 @@ class DocumentNoteService(DocumentScopedServiceBase):
         self,
         pk: int | None = None,
     ) -> list[DocumentNote]:
-        """Request and return the documents `DocumentNote` list."""
+        """Return all notes for a document.
+
+        Args:
+            pk: Document primary key.  May be omitted when the service is
+                accessed via a :class:`~pypaperless.models.documents.document.Document`
+                instance (``doc.notes()``).
+
+        Example::
+
+            notes = await paperless.documents.notes(42)
+            for note in notes:
+                print(note.note)
+
+        """
         doc_pk = self._get_document_pk(pk)
         res = await self._client.request_json("get", self._get_api_path(doc_pk))
 
@@ -51,14 +64,16 @@ class DocumentNoteService(DocumentScopedServiceBase):
         return self._api_path.format(pk=pk)
 
     def create(self, pk: int | None = None, **kwargs: Any) -> DocumentNoteDraft:
-        """Return a fresh and empty `DocumentNoteDraft` instance.
+        """Return a new :class:`~pypaperless.models.documents.notes.DocumentNoteDraft` instance.
 
-        Example:
-        -------
-        ```python
-        draft = paperless.documents.notes.create(...)
-        # do something
-        ```
+        Args:
+            pk: Document primary key.  May be omitted when the service is
+                accessed via a document instance.
+
+        Example::
+
+            draft = paperless.documents.notes.create(42, note="Checked and approved.")
+            note_id, doc_id = await paperless.documents.notes.save(draft)
 
         """
         kwargs.update({"document": self._get_document_pk(pk)})
@@ -68,9 +83,18 @@ class DocumentNoteService(DocumentScopedServiceBase):
         )
 
     async def save(self, draft: DocumentNoteDraft) -> tuple[int, int]:
-        """Create a new `DocumentNote` in Paperless.
+        """Persist a note draft to Paperless.
 
-        Return a tuple of (note_id, document_id).
+        Returns a ``(note_id, document_id)`` tuple.
+
+        Args:
+            draft: A draft instance created by :meth:`create`.
+
+        Example::
+
+            draft = paperless.documents.notes.create(42, note="Approved.")
+            note_id, doc_id = await paperless.documents.notes.save(draft)
+
         """
         draft.validate_draft()
         kwdict = draft.serialize()
@@ -83,7 +107,18 @@ class DocumentNoteService(DocumentScopedServiceBase):
     async def delete(self, note: DocumentNote) -> bool:
         """Delete a document note.
 
-        Return `True` when deletion was successful, `False` otherwise.
+        Returns ``True`` when the deletion was successful, ``False`` otherwise.
+
+        Args:
+            note: The :class:`~pypaperless.models.documents.notes.DocumentNote`
+                  instance to delete.
+
+        Example::
+
+            notes = await paperless.documents.notes(42)
+            if notes:
+                await paperless.documents.notes.delete(notes[0])
+
         """
         params = {
             "id": note.id,

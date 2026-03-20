@@ -1,6 +1,6 @@
 # Documents
 
-`paperless.documents` provides the full feature set of the Paperless-ngx document API — in addition to the standard CRUD operations available on all resources.
+`paperless.documents` provides the full feature set of the Paperless-ngx document API - in addition to the standard CRUD operations available on all resources.
 
 ---
 
@@ -207,7 +207,7 @@ await note.delete()
 
 ## Share links for a document
 
-Every document can have share links attached to it. These are read-only from the document sub-service — to create or delete share links use `paperless.share_links`.
+Every document can have share links attached to it. These are read-only from the document sub-service - to create or delete share links use `paperless.share_links`.
 
 ```python
 # Fetch share links for a document
@@ -243,7 +243,7 @@ with open("invoice.pdf", "rb") as f:
     content = f.read()
 
 draft = paperless.documents.create(
-    document=content,           # required — raw file bytes
+    document=content,           # required - raw file bytes
     filename="invoice.pdf",     # original filename
     title="Invoice 2024-01",
     created=datetime.datetime(2024, 1, 15),
@@ -339,7 +339,7 @@ await paperless.documents.email(
     use_archive_version=False,  # send original instead of archived version
 )
 
-# shortcut — document pk is bound automatically
+# shortcut - document pk is bound automatically
 doc = await paperless.documents(42)
 await doc.email(
     addresses="alice@example.com",
@@ -351,10 +351,10 @@ await doc.email(
 
 | Parameter             | Default | Description                                 |
 | --------------------- | ------- | ------------------------------------------- |
-| `documents`           | —       | Document ID(s) to send                      |
-| `addresses`           | —       | Comma-separated recipient e-mail addresses  |
-| `subject`             | —       | E-mail subject                              |
-| `message`             | —       | E-mail body text                            |
+| `documents`           | -       | Document ID(s) to send                      |
+| `addresses`           | -       | Comma-separated recipient e-mail addresses  |
+| `subject`             | -       | E-mail subject                              |
+| `message`             | -       | E-mail body text                            |
 | `use_archive_version` | `True`  | Send archived version; `False` for original |
 
 Raises `SendEmailError` if the Paperless server rejects the request.
@@ -371,9 +371,85 @@ doc = await paperless.documents(42)
 entries = await doc.history()
 
 for entry in entries:
-    print(entry.timestamp, entry.action, entry.actor.username if entry.actor else "—")
+    print(entry.timestamp, entry.action, entry.actor.username if entry.actor else "-")
     print(entry.changes)   # dict of changed fields
 
 # Via the service, passing the document pk explicitly
 entries = await paperless.documents.history(42)
 ```
+
+---
+
+## Bulk editing
+
+`paperless.documents.bulk_edit` lets you apply operations to many documents at once in a single API call.
+
+### Metadata
+
+```python
+await paperless.documents.bulk_edit.set_correspondent([1, 2, 3], 5)
+await paperless.documents.bulk_edit.set_document_type([1, 2], 3)
+await paperless.documents.bulk_edit.set_storage_path([1, 2], 4)
+
+# clear correspondent
+await paperless.documents.bulk_edit.set_correspondent([1, 2, 3], None)
+```
+
+### Tags
+
+```python
+await paperless.documents.bulk_edit.add_tag([1, 2, 3], 7)
+await paperless.documents.bulk_edit.remove_tag([1, 2, 3], 7)
+
+# Add and remove in one call
+await paperless.documents.bulk_edit.modify_tags(
+    [1, 2, 3],
+    add_tags=[5, 6],
+    remove_tags=[2],
+)
+```
+
+### Custom fields
+
+```python
+await paperless.documents.bulk_edit.modify_custom_fields(
+    [1, 2],
+    add_custom_fields={3: "open"},   # {pk: value} or list of PKs
+    remove_custom_fields=[4],
+)
+```
+
+### Permissions
+
+```python
+from pypaperless.models.types import Permissions
+
+await paperless.documents.bulk_edit.set_permissions(
+    [1, 2, 3],
+    owner=1,
+    permissions=Permissions(view_users=[2, 3], change_users=[1]),
+    merge=False,  # True merges with existing instead of replacing
+)
+```
+
+### Document operations
+
+```python
+# Move to trash
+await paperless.documents.bulk_edit.delete([10, 11, 12])
+
+# Re-run OCR
+await paperless.documents.bulk_edit.reprocess([1, 2, 3])
+
+# Rotate pages
+await paperless.documents.bulk_edit.rotate([1, 2], 90)
+
+# Merge into a new single document
+await paperless.documents.bulk_edit.merge(
+    [10, 11, 12],
+    metadata_document_id=10,   # whose metadata to use for the result
+    delete_originals=True,     # move source documents to trash after merging
+)
+```
+
+All bulk edit operations raise `BulkEditError` (a `ResponseError` subclass) when the API returns a non-OK result.

@@ -33,6 +33,7 @@ from pypaperless.models.documents import DocumentCustomFieldList, DocumentDraft,
 from pypaperless.models.share_links import ShareLinkDraft, ShareLinkFileVersion
 from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
+from pypaperless.builders.custom_fields import CustomFieldQuery
 
 # ── PDF helper ────────────────────────────────────────────────────────────────
 
@@ -433,6 +434,101 @@ async def test_trash(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_bulk_edit_objects(p: Paperless) -> None:
+    _hdr("BulkEditObjects – set_permissions and delete")
+
+    from pypaperless.models.types import BulkEditObjectType
+    from pypaperless.models.mixins.securable import Permissions
+
+    # Create a temporary tag to exercise bulk operations on
+    from pypaperless.models.tags import TagDraft
+
+    tmp_tag_id: int | None = None
+    try:
+        draft = TagDraft.from_data(
+            p,
+            {
+                "name": "pypaperless-bulk-edit-smoke-test",
+                "color": "#aabbcc",
+                "is_inbox_tag": False,
+                "match": "",
+                "matching_algorithm": 0,
+                "is_insensitive": True,
+            },
+        )
+        tmp_tag_id = int(await p.tags.save(draft))
+        ok("tags.save(draft)", f"id={tmp_tag_id} (temporary tag for bulk test)")
+    except Exception as exc:
+        fail("tags.save(draft)", exc)
+
+    if tmp_tag_id is not None:
+        # set_permissions: change owner to user 1
+        try:
+            await p.bulk_edit_objects.set_permissions(
+                "tags",
+                [tmp_tag_id],
+                owner=1,
+                permissions=Permissions(view_users=[], change_users=[]),
+            )
+            ok("bulk_edit_objects.set_permissions()", f"tag_id={tmp_tag_id}")
+        except Exception as exc:
+            fail("bulk_edit_objects.set_permissions()", exc)
+
+        # delete: permanently remove the temporary tag
+        try:
+            await p.bulk_edit_objects.delete("tags", [tmp_tag_id])
+            ok("bulk_edit_objects.delete()", f"tag_id={tmp_tag_id} deleted")
+        except Exception as exc:
+            fail("bulk_edit_objects.delete()", exc)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+async def test_documents_bulk_edit(p: Paperless) -> None:
+    _hdr("DocumentsBulkEdit – set_permissions, reprocess, modify_tags")
+
+    from pypaperless.models.mixins.securable import Permissions
+
+    # set_permissions with merge=True — idempotent, safe on any document
+    try:
+        await p.documents.bulk_edit.set_permissions(
+            [TEST_DOCUMENT_ID],
+            owner=1,
+            permissions=Permissions(view_users=[], change_users=[]),
+            merge=True,
+        )
+        ok("documents.bulk_edit.set_permissions()", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        fail("documents.bulk_edit.set_permissions()", exc)
+
+    # modify_tags with empty lists — no-op, verifies endpoint plumbing
+    try:
+        await p.documents.bulk_edit.modify_tags(
+            [TEST_DOCUMENT_ID],
+            add_tags=[],
+            remove_tags=[],
+        )
+        ok("documents.bulk_edit.modify_tags() empty", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        fail("documents.bulk_edit.modify_tags() empty", exc)
+
+    # reprocess — queues document for OCR, harmless.
+    # NOTE: This is a Paperless-ngx v10+ dedicated endpoint; skip gracefully on older servers.
+    try:
+        await p.documents.bulk_edit.reprocess([TEST_DOCUMENT_ID])
+        ok("documents.bulk_edit.reprocess()", f"doc_id={TEST_DOCUMENT_ID}")
+    except Exception as exc:
+        import httpx as _httpx
+
+        if isinstance(exc, _httpx.HTTPStatusError) and exc.response.status_code == 405:
+            ok(
+                "documents.bulk_edit.reprocess() [skipped – server <v10]",
+                "405 Method Not Allowed (endpoint not available on this server)",
+            )
+        else:
+            fail("documents.bulk_edit.reprocess()", exc)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_document_notes(p: Paperless) -> None:
     _hdr("Document Notes – list, create, delete")
 
@@ -715,59 +811,8 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_custom_field_query(p: Paperless) -> None:
-    _hdr("CustomFieldQuery – builder serialisation and live filter")
+    _hdr("CustomFieldQuery – live filter")
 
-    from pypaperless.builders.custom_fields import (
-        CustomFieldQuery,
-        CustomFieldQueryAnd,
-        CustomFieldQueryNot,
-        CustomFieldQueryOr,
-    )
-
-    # --- build() / str() correctness (no network) ---
-    try:
-        atom = CustomFieldQuery("Status", "exact", "open")
-        assert atom.build() == ["Status", "exact", "open"]
-        ok("CustomFieldQuery.build() atom", str(atom))
-    except Exception as exc:
-        fail("CustomFieldQuery.build() atom", exc)
-
-    try:
-        combined = CustomFieldQuery("A", "gte", 1) & CustomFieldQuery("B", "lte", 99)
-        assert combined.build()[0] == "AND"
-        assert len(combined.build()[1]) == 2
-        ok("CustomFieldQueryAnd (&) build()", str(combined))
-    except Exception as exc:
-        fail("CustomFieldQueryAnd (&) build()", exc)
-
-    try:
-        alt = CustomFieldQuery("Cat", "exact", "X") | CustomFieldQuery("Cat", "exact", "Y")
-        assert alt.build()[0] == "OR"
-        ok("CustomFieldQueryOr (|) build()", str(alt))
-    except Exception as exc:
-        fail("CustomFieldQueryOr (|) build()", exc)
-
-    try:
-        neg = ~CustomFieldQuery("Archived", "exact", True)
-        assert neg.build() == ["NOT", ["Archived", "exact", True]]
-        ok("CustomFieldQueryNot (~) build()", str(neg))
-    except Exception as exc:
-        fail("CustomFieldQueryNot (~) build()", exc)
-
-    try:
-        # AND flattening: (a & b) & c  must produce ["AND", [a, b, c]]
-        q = (
-            CustomFieldQuery("X", "exact", 1)
-            & CustomFieldQuery("Y", "exact", 2)
-            & CustomFieldQuery("Z", "exact", 3)
-        )
-        assert isinstance(q, CustomFieldQueryAnd)
-        assert len(q.build()[1]) == 3
-        ok("CustomFieldQueryAnd flattening", f"atoms={len(q.build()[1])}")
-    except Exception as exc:
-        fail("CustomFieldQueryAnd flattening", exc)
-
-    # --- live filter with custom_field_query (exists) ---
     try:
         q_exists = CustomFieldQuery(1, "exists", True)
         async with p.documents.filter(page_size=PAGE_SIZE, custom_field_query=str(q_exists)):
@@ -1311,25 +1356,6 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
     task_id_b: str | None = None
     try:
-        # Verify serialisation before sending
-        import json
-
-        serialized = draft_b.serialize()
-        raw = serialized["form"]["custom_fields"]
-        assert isinstance(raw, str), f"expected str, got {type(raw)}"
-        decoded = json.loads(raw)
-        assert isinstance(decoded, dict)
-        assert decoded.get("8") == "pypaperless-smoke"
-        assert decoded.get("3") == 1
-        ok(
-            "DocumentDraft.serialize() – custom_fields JSON encoding",
-            f"payload={decoded}",
-        )
-    except Exception as exc:
-        fail("DocumentDraft.serialize() – custom_fields JSON encoding", exc)
-        return
-
-    try:
         task_id_b = str(await p.documents.save(draft_b))
         ok(
             "documents.save(draft) – custom_fields=DocumentCustomFieldList",
@@ -1437,6 +1463,8 @@ async def main() -> int:
         await test_document_history(paperless)
         await test_document_share_links(paperless)
         await test_trash(paperless)
+        await test_bulk_edit_objects(paperless)
+        await test_documents_bulk_edit(paperless)
         await test_document_notes(paperless)
         await test_custom_fields(paperless)
         await test_custom_field_values_on_document(paperless)

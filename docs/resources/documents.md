@@ -1,6 +1,6 @@
 # Documents
 
-Documents are the core resource in Paperless-ngx. This page shows the essential CRUD examples. For the full feature set — downloading, searching, notes, next ASN, email, and upload — see the dedicated [Documents](../concepts/documents.md) page.
+Documents are the core resource in Paperless-ngx. This page shows the essential CRUD examples. For the full feature set - downloading, searching, notes, next ASN, email, and upload - see the dedicated [Documents](../concepts/documents.md) page.
 
 ## Models
 

@@ -42,7 +42,7 @@ from pypaperless.models.types import (
     DocumentSearchHit,
     FileRetrieveMode,
 )
-from pypaperless.services.mixins.updatable import UpdatableMixin
+from pypaperless.services.mixins.updatable import UpdatableService
 
 from .const import PAPERLESS_TEST_URL
 from .data import (
@@ -105,7 +105,7 @@ class TestDocuments:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=200,
-            json={**to_update._data, "title": new_title},
+            json={**to_update._snapshot, "title": new_title},
         )
         await paperless.documents.update(to_update)
         assert to_update.title == new_title
@@ -790,8 +790,6 @@ class TestDocuments:
             json={"id": 1, "name": "ACME", "slug": "acme"},
         )
         item = await paperless.correspondents(1)
-        # Sync model fields with _data so nothing appears changed
-        item._data = {"id": item.id, "name": item.name, "slug": item.slug}
         result = await paperless.correspondents.update(item)
         assert result is False
 
@@ -803,7 +801,7 @@ class TestDocuments:
 
         data: dict = {}
         # Should return without touching data (has no has_permissions attr)
-        UpdatableMixin._check_permissions_field(_PlainModel(id=1), data)
+        UpdatableService._check_permissions_field(_PlainModel(id=1), data)
         assert data == {}
 
     async def test_check_permissions_field_has_permissions_no_perms_key(
@@ -820,7 +818,7 @@ class TestDocuments:
         )
         assert item.has_permissions
         changed: dict = {"name": "New Name"}
-        UpdatableMixin._check_permissions_field(item, changed)
+        UpdatableService._check_permissions_field(item, changed)
         # permissions not in changed, so no set_permissions key added
         assert "set_permissions" not in changed
         assert "name" in changed

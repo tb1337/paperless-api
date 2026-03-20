@@ -7,7 +7,7 @@ from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
 
 
-class MailRule(PaperlessModel, mixins.SecurableMixin):
+class MailRule(PaperlessModel, mixins.SecurableModel):
     """Represent a Paperless `MailRule`."""
 
     _api_path: ClassVar[str] = API_PATH["mail_rules_single"]

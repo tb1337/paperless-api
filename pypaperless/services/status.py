@@ -15,6 +15,13 @@ class StatusService(ResourceService):
     _resource_cls = Status
 
     async def __call__(self) -> Status:
-        """Request the `Status` model data."""
+        """Fetch the Paperless system status.
+
+        Example::
+
+            status = await paperless.status()
+            print(status.storage_type)
+
+        """
         res = await self._client.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)

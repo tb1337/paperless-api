@@ -175,9 +175,9 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 
 class Document(
     PaperlessModel,
-    mixins.SecurableMixin,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.SecurableModel,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `Document`."""
 
@@ -299,16 +299,8 @@ class Document(
         """Return the document search hit."""
         return self.search_hit_
 
-    def apply_data(self) -> None:
-        """Apply data from `self._data` to model fields, converting custom_fields."""
-        super().apply_data()
-        if "custom_fields" in self._data and isinstance(self._data["custom_fields"], list):
-            self.custom_fields = DocumentCustomFieldList.from_data(
-                self._client, self._data["custom_fields"]
-            )
 
-
-class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
+class DocumentDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_post"]

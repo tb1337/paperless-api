@@ -10,10 +10,10 @@ from .base import PaperlessModel
 
 class DocumentType(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableMixin,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableModel,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `DocumentType`."""
 
@@ -28,10 +28,10 @@ class DocumentType(
 
 class DocumentTypeDraft(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableDraftMixin,
-    mixins.CreatableMixin,
-    mixins.SaveableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableDraftModel,
+    mixins.CreatableModel,
+    mixins.SaveableModel,
 ):
     """Represent a new `DocumentType`, which is not yet stored in Paperless."""
 

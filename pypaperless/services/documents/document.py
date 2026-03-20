@@ -16,6 +16,7 @@ from pypaperless.models.filters import DocumentFilters
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
 
+from .bulk_edit import DocumentBulkEditService
 from .files import (
     DocumentFileDownloadService,
     DocumentFilePreviewService,
@@ -46,7 +47,7 @@ class DocumentSuggestionsService(ResourceService):
         return self._resource_cls.from_data(self._client, data)
 
 
-class DocumentMetaService(ResourceService, mixins.CallableMixin[DocumentMeta]):
+class DocumentMetaService(ResourceService, mixins.CallableService[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
@@ -57,12 +58,12 @@ class DocumentMetaService(ResourceService, mixins.CallableMixin[DocumentMeta]):
 
 class DocumentService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[Document],
-    mixins.CreatableMixin[DocumentDraft],
-    mixins.IterableMixin[Document],
-    mixins.UpdatableMixin[Document],
-    mixins.DeletableMixin[Document],
+    mixins.SecurableService,
+    mixins.CallableService[Document],
+    mixins.CreatableService[DocumentDraft],
+    mixins.IterableService[Document],
+    mixins.UpdatableService[Document],
+    mixins.DeletableService[Document],
 ):
     """Represent a factory for Paperless `Document` models."""
 
@@ -74,9 +75,19 @@ class DocumentService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate documents with server-side filters.
 
-        See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
+        See :class:`~pypaperless.models.filters.DocumentFilters` for all available keys.
+
+        Example::
+
+            async with paperless.documents.filter(
+                title__icontains="invoice",
+                tag__id__all=[3, 7],
+            ) as filtered:
+                async for doc in filtered:
+                    print(doc.title)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
@@ -85,6 +96,7 @@ class DocumentService(
         """Initialize a `DocumentService` instance."""
         super().__init__(client)
 
+        self._bulk_edit = DocumentBulkEditService(client)
         self._download = DocumentFileDownloadService(client)
         self._history = DocumentHistoryService(client)
         self._meta = DocumentMetaService(client)
@@ -95,126 +107,132 @@ class DocumentService(
         self._thumbnail = DocumentFileThumbnailService(client)
 
     @property
-    def download(self) -> DocumentFileDownloadService:
-        """Return the attached `DocumentFileDownloadService` instance.
+    def bulk_edit(self) -> DocumentBulkEditService:
+        """Return the ``DocumentBulkEditService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        download = await paperless.documents.download(42)
-        ```
+        Example::
+
+            await paperless.documents.bulk_edit.set_correspondent([1, 2], 5)
+
+        """
+        return self._bulk_edit
+
+    @property
+    def download(self) -> DocumentFileDownloadService:
+        """Return the ``DocumentFileDownloadService`` sub-service.
+
+        Example::
+
+            result = await paperless.documents.download(42)
+            with open(result.disposition_filename, "wb") as f:
+                f.write(result.content)
 
         """
         return self._download
 
     @property
     def history(self) -> DocumentHistoryService:
-        """Return the attached `DocumentHistoryService` instance.
+        """Return the ``DocumentHistoryService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        # request history of a document directly...
-        entries = await paperless.documents.history(42)
+        Example::
 
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        entries = await doc.history()
-        ```
+            # fetch history for a document by pk
+            entries = await paperless.documents.history(42)
+
+            # or via an already-fetched document
+            doc = await paperless.documents(42)
+            entries = await doc.history()
 
         """
         return self._history
 
     @property
     def metadata(self) -> DocumentMetaService:
-        """Return the attached `DocumentMetaService` instance.
+        """Return the ``DocumentMetaService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        metadata = await paperless.documents.metadata(42)
-        ```
+        Example::
+
+            meta = await paperless.documents.metadata(42)
+            print(meta.media_filename)
 
         """
         return self._meta
 
     @property
     def notes(self) -> DocumentNoteService:
-        """Return the attached `DocumentNoteService` instance.
+        """Return the ``DocumentNoteService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        # request document notes directly...
-        notes = await paperless.documents.notes(42)
+        Example::
 
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        notes = await doc.notes()
-        ```
+            # fetch notes by document pk
+            notes = await paperless.documents.notes(42)
+
+            # or via an already-fetched document
+            doc = await paperless.documents(42)
+            notes = await doc.notes()
 
         """
         return self._notes
 
     @property
     def share_links(self) -> DocumentShareLinkService:
-        """Return the attached `DocumentShareLinkService` instance.
+        """Return the ``DocumentShareLinkService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        # request document share links directly...
-        links = await paperless.documents.share_links(42)
+        Example::
 
-        # ... or by using an already fetched document
-        doc = await paperless.documents(42)
-        links = await doc.share_links()
-        ```
+            # fetch share links by document pk
+            links = await paperless.documents.share_links(42)
+
+            # or via an already-fetched document
+            doc = await paperless.documents(42)
+            links = await doc.share_links()
 
         """
         return self._share_links
 
     @property
     def preview(self) -> DocumentFilePreviewService:
-        """Return the attached `DocumentFilePreviewService` instance.
+        """Return the ``DocumentFilePreviewService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        download = await paperless.documents.preview(42)
-        ```
+        Example::
+
+            result = await paperless.documents.preview(42)
 
         """
         return self._preview
 
     @property
     def suggestions(self) -> DocumentSuggestionsService:
-        """Return the attached `DocumentSuggestionsService` instance.
+        """Return the ``DocumentSuggestionsService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        suggestions = await paperless.documents.suggestions(42)
-        ```
+        Example::
+
+            suggestions = await paperless.documents.suggestions(42)
+            print(suggestions.correspondents)
 
         """
         return self._suggestions
 
     @property
     def thumbnail(self) -> DocumentFileThumbnailService:
-        """Return the attached `DocumentFileThumbnailService` instance.
+        """Return the ``DocumentFileThumbnailService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        download = await paperless.documents.thumbnail(42)
-        ```
+        Example::
+
+            result = await paperless.documents.thumbnail(42)
 
         """
         return self._thumbnail
 
     async def get_next_asn(self) -> int:
-        """Request the next archive serial number from Paperless."""
+        """Request the next available archive serial number from Paperless.
+
+        Example::
+
+            asn = await paperless.documents.get_next_asn()
+            draft.archive_serial_number = asn
+
+        """
         res = await self._client.request("get", API_PATH["documents_next_asn"])
         try:
             res.raise_for_status()
@@ -223,11 +241,19 @@ class DocumentService(
             raise AsnRequestError from exc
 
     async def more_like(self, pk: int) -> AsyncGenerator[Document]:
-        """Lookup documents similar to the given document pk.
+        """Iterate documents similar to the given document.
 
-        Shortcut function. Same behaviour is possible using `filter()`.
+        Uses the full-text index to find semantically related documents.
+        Shortcut for :meth:`filter` with ``more_like_id``.
 
-        Documentation: https://docs.paperless-ngx.com/api/#searching-for-documents
+        Args:
+            pk: Primary key of the reference document.
+
+        Example::
+
+            async for doc in paperless.documents.more_like(42):
+                print(doc.title)
+
         """
         async with self.filter(more_like_id=pk):
             async for item in self:
@@ -236,13 +262,30 @@ class DocumentService(
     async def search(
         self, query: str | None = None, custom_field_query: str | None = None
     ) -> AsyncGenerator[Document]:
-        """Lookup documents by a search query and/or custom_field_query.
+        """Iterate documents matching a full-text search and/or custom field query.
 
-        If none of both are provided, all documents are returned.
+        When neither argument is provided, all documents are returned.  This is
+        a shortcut for :meth:`filter` with ``query`` / ``custom_field_query``.
 
-        Shortcut function. Same behaviour is possible using `filter()`.
+        Args:
+            query:              Whoosh-style full-text query string, or a
+                                :class:`~pypaperless.builders.search.SearchQuery`
+                                builder object cast to ``str``.
+            custom_field_query: JSON-encoded custom field query, typically produced
+                                by a :class:`~pypaperless.builders.custom_fields.CustomFieldQuery`
+                                builder object.
 
-        Documentation: https://docs.paperless-ngx.com/usage/#basic-usage_searching
+        Example::
+
+            async for doc in paperless.documents.search("invoice"):
+                print(doc.title)
+
+            # with a custom field filter
+            from pypaperless.builders.custom_fields import CustomFieldQuery
+            q = CustomFieldQuery("Status", "exact", "open")
+            async for doc in paperless.documents.search(custom_field_query=str(q)):
+                print(doc.title)
+
         """
         filters: DocumentFilters = {}
         if query is not None:
@@ -263,19 +306,24 @@ class DocumentService(
         message: str,
         use_archive_version: bool = True,
     ) -> None:
-        """Email documents to one or more recipients as an attachment.
+        """Email one or more documents to recipients as attachments.
 
-        Example:
-        -------
-        ```python
-        # email document directly...
-        await paperless.documents.email(
-            [23, 42],
-            addresses="example@example.com, another@example.com",
-            subject="Subject",
-            message="Message"
-        )
-        ```
+        Args:
+            documents:           Single document pk or a list of pks to send.
+            addresses:           Comma-separated list of recipient e-mail addresses.
+            subject:             E-mail subject line.
+            message:             E-mail body text.
+            use_archive_version: When ``True`` (default), the archived PDF is
+                                 attached instead of the original file.
+
+        Example::
+
+            await paperless.documents.email(
+                [23, 42],
+                addresses="alice@example.com, bob@example.com",
+                subject="Your documents",
+                message="Please find the attached files.",
+            )
 
         """
         data = {
@@ -285,8 +333,7 @@ class DocumentService(
             "message": message,
             "use_archive_version": use_archive_version,
         }
-        res = await self._client.request("post", API_PATH["documents_email"], json=data)
         try:
-            res.raise_for_status()
+            await self._client.request_json("post", API_PATH["documents_email"], json=data)
         except Exception as exc:
             raise SendEmailError from exc

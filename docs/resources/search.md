@@ -8,23 +8,23 @@ See [`pypaperless/models/search.py`](https://github.com/tb1337/paperless-api/blo
 
 ### `SearchResult`
 
-| Field            | Type                      | Description                                  |
-| ---------------- | ------------------------- | -------------------------------------------- |
-| `total`          | `int`                     | Total number of matching objects across all types |
-| `documents`      | `list[Document]`          | Matching documents (full `Document` objects) |
-| `saved_views`    | `list[SavedView]`         | Matching saved views                         |
-| `tags`           | `list[Tag]`               | Matching tags                                |
-| `correspondents` | `list[Correspondent]`     | Matching correspondents                      |
-| `document_types` | `list[DocumentType]`      | Matching document types                      |
-| `storage_paths`  | `list[StoragePath]`       | Matching storage paths                       |
-| `users`          | `list[User]`              | Matching users                               |
-| `groups`         | `list[Group]`             | Matching groups                              |
-| `mail_rules`     | `list[MailRule]`          | Matching mail rules                          |
-| `mail_accounts`  | `list[MailAccount]`       | Matching mail accounts                       |
-| `workflows`      | `list[Workflow]`          | Matching workflows                           |
-| `custom_fields`  | `list[CustomField]`       | Matching custom fields                       |
+| Field            | Type                  | Description                                       |
+| ---------------- | --------------------- | ------------------------------------------------- |
+| `total`          | `int`                 | Total number of matching objects across all types |
+| `documents`      | `list[Document]`      | Matching documents (full `Document` objects)      |
+| `saved_views`    | `list[SavedView]`     | Matching saved views                              |
+| `tags`           | `list[Tag]`           | Matching tags                                     |
+| `correspondents` | `list[Correspondent]` | Matching correspondents                           |
+| `document_types` | `list[DocumentType]`  | Matching document types                           |
+| `storage_paths`  | `list[StoragePath]`   | Matching storage paths                            |
+| `users`          | `list[User]`          | Matching users                                    |
+| `groups`         | `list[Group]`         | Matching groups                                   |
+| `mail_rules`     | `list[MailRule]`      | Matching mail rules                               |
+| `mail_accounts`  | `list[MailAccount]`   | Matching mail accounts                            |
+| `workflows`      | `list[Workflow]`      | Matching workflows                                |
+| `custom_fields`  | `list[CustomField]`   | Matching custom fields                            |
 
-All fields are `None`-able. Nested objects are full model instances — you can call service shortcuts like `.update()` or `.delete()` directly on them.
+All fields are `None`-able. Nested objects are full model instances - you can call service shortcuts like `.update()` or `.delete()` directly on them.
 
 ## Search
 
@@ -59,7 +59,7 @@ result = await paperless.search("contract", db_only=True)
 
 ### Working with results
 
-All nested objects in `SearchResult` are fully hydrated model instances with `_client` set, so you can act on them immediately:
+All nested objects in `SearchResult` are `PaperlessModel` instances, so you can act on them immediately:
 
 ```python
 result = await paperless.search("old project")

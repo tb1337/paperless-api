@@ -1,4 +1,4 @@
-"""Parameterized service mixin tests: ReadOnly, ReadWrite, SecurableMixin."""
+"""Parameterized service mixin tests: ReadOnly, ReadWrite, SecurableService."""
 
 import json as json_mod
 import re
@@ -240,7 +240,7 @@ class TestReadWrite(_SharedServiceTests):
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**to_update._data, update_field: update_value},
+            json={**to_update._snapshot, update_field: update_value},
         )
         await service.update(to_update)
         assert getattr(to_update, update_field) == update_value
@@ -252,7 +252,7 @@ class TestReadWrite(_SharedServiceTests):
             method="PUT",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**to_update._data, update_field: update_value},
+            json={**to_update._snapshot, update_field: update_value},
         )
         await service.update(to_update, only_changed=False)
         assert getattr(to_update, update_field) == update_value
@@ -296,8 +296,8 @@ class TestReadWrite(_SharedServiceTests):
     ],
     scope="class",
 )
-class TestSecurableMixin:
-    """SecurableMixin: request_permissions flag, with_permissions() context manager."""
+class TestSecurableService:
+    """SecurableService: request_permissions flag, with_permissions() context manager."""
 
     async def test_permissions(
         self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
@@ -360,7 +360,7 @@ class TestSecurableMixin:
             assert request.url
             json_data = json_mod.loads(request.content)
             assert "set_permissions" in json_data
-            return httpx.Response(status_code=200, json=item._data)
+            return httpx.Response(status_code=200, json=item._snapshot)
 
         httpx_mock.add_callback(
             _lookup_set_permissions,
@@ -425,12 +425,12 @@ def test_permissions_from_existing_instance() -> None:
 
 
 async def test_iterable_filter_base_method(paperless: Paperless) -> None:
-    """IterableMixin.filter() stores filters for the context duration and clears them after."""
+    """IterableService.filter() stores filters for the context duration and clears them after."""
 
     class _MinimalModel(PaperlessModel):
         id: int | None = None
 
-    class _MinimalService(ResourceService, svc_mixins.IterableMixin[_MinimalModel]):
+    class _MinimalService(ResourceService, svc_mixins.IterableService[_MinimalModel]):
         _api_path = API_PATH["correspondents"]
         _resource = "correspondents"
         _resource_cls = _MinimalModel
@@ -482,7 +482,7 @@ class TestActiveRecord:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=200,
-            json={**item._data, update_field: update_value},
+            json={**item._snapshot, update_field: update_value},
         )
         result = await item.update()
         assert result is True

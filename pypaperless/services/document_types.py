@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class DocumentTypeService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[DocumentType],
-    mixins.CreatableMixin[DocumentTypeDraft],
-    mixins.IterableMixin[DocumentType],
-    mixins.UpdatableMixin[DocumentType],
-    mixins.DeletableMixin[DocumentType],
+    mixins.SecurableService,
+    mixins.CallableService[DocumentType],
+    mixins.CreatableService[DocumentTypeDraft],
+    mixins.IterableService[DocumentType],
+    mixins.UpdatableService[DocumentType],
+    mixins.DeletableService[DocumentType],
 ):
     """Represent a factory for Paperless `DocumentType` models."""
 
@@ -31,9 +31,16 @@ class DocumentTypeService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[DocumentTypeFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate document types with server-side filters.
 
-        See :class:`~pypaperless.models.filters.DocumentTypeFilters` for available keys.
+        See :class:`~pypaperless.models.filters.DocumentTypeFilters` for all available keys.
+
+        Example::
+
+            async with paperless.document_types.filter(name__icontains="invoice") as filtered:
+                async for dt in filtered:
+                    print(dt.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

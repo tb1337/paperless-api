@@ -1,12 +1,12 @@
 # Permissions
 
-Paperless-ngx supports **object-level permissions** — some resources can have explicit `view` and `change` permissions assigned to individual users or groups.
+Paperless-ngx supports **object-level permissions** - some resources can have explicit `view` and `change` permissions assigned to individual users or groups.
 
 ---
 
 ## Resources that support permissions
 
-The following resources include permission fields (`SecurableMixin`):
+The following resources include permission fields (`SecurableModel`):
 
 - `documents`
 - `correspondents`
@@ -50,7 +50,7 @@ By default, Paperless-ngx does not include the full permission table in response
 
 ### Recommended: `with_permissions()` context manager
 
-Use the `with_permissions()` context manager — the flag is set automatically on entry and reset on exit, even if an exception occurs:
+Use the `with_permissions()` context manager - the flag is set automatically on entry and reset on exit, even if an exception occurs:
 
 ```python
 async with paperless.documents.with_permissions():
@@ -147,7 +147,7 @@ class Permissions:
     change: _PermissionScope  # .users: list[int], .groups: list[int]
 ```
 
-Constructed with flat keyword arguments — only specify what you need, omitted keys default to `[]`:
+Constructed with flat keyword arguments - only specify what you need, omitted keys default to `[]`:
 
 | Keyword argument | Meaning                          |
 | ---------------- | -------------------------------- |

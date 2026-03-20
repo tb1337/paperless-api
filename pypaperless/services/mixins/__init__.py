@@ -1,17 +1,17 @@
 """Mixins for PyPaperless services."""
 
-from .callable import CallableMixin
-from .creatable import CreatableMixin
-from .deletable import DeletableMixin
-from .iterable import IterableMixin
-from .securable import SecurableMixin
-from .updatable import UpdatableMixin
+from .callable import CallableService
+from .creatable import CreatableService
+from .deletable import DeletableService
+from .iterable import IterableService
+from .securable import SecurableService
+from .updatable import UpdatableService
 
 __all__ = (
-    "CallableMixin",
-    "CreatableMixin",
-    "DeletableMixin",
-    "IterableMixin",
-    "SecurableMixin",
-    "UpdatableMixin",
+    "CallableService",
+    "CreatableService",
+    "DeletableService",
+    "IterableService",
+    "SecurableService",
+    "UpdatableService",
 )

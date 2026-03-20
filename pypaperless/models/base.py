@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr, TypeAdapter, model_serializer
+from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
 
 from pypaperless.const import API_PATH
 from pypaperless.utils import object_to_dict_value
@@ -14,7 +14,25 @@ if TYPE_CHECKING:
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
-class PaperlessModel(BaseModel):
+class _PaperlessBase(BaseModel):
+    """Internal base: binds ``_client`` from validation context and provides ``from_data``."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    _client: "Paperless" = PrivateAttr()
+
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind ``_client`` from validation context."""
+        if isinstance(__context, dict) and "client" in __context:
+            self._client = __context["client"]
+
+    @classmethod
+    def from_data(cls, client: "Paperless", data: Any, **context: Any) -> Self:
+        """Return a new instance of ``cls`` from ``data``."""
+        return cls.model_validate(data, context={"client": client, **context})
+
+
+class PaperlessModel(_PaperlessBase):
     """Base class for all models in PyPaperless."""
 
     model_config = ConfigDict(
@@ -26,18 +44,21 @@ class PaperlessModel(BaseModel):
     _api_path: ClassVar[str] = API_PATH["index"]
     _pk_field: ClassVar[str] = "id"
 
-    _client: "Paperless" = PrivateAttr()
-    _data: dict[str, Any] = PrivateAttr(default_factory=dict)
+    _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
 
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_client` from validation context and resolve the instance API path."""
-        if isinstance(__context, dict) and "client" in __context:
-            self._client = __context["client"]
-        if isinstance(__context, dict) and "raw_data" in __context:
-            self._data = __context["raw_data"]
+        super().model_post_init(__context)
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
+        self._snapshot = self._build_snapshot()
+
+    def _build_snapshot(self) -> dict[str, Any]:
+        """Return the current field values as a serialized dict."""
+        return {
+            name: object_to_dict_value(getattr(self, name)) for name in self.__class__.model_fields
+        }
 
     @classmethod
     def format_api_path(cls, **kwargs: Any) -> str:
@@ -50,12 +71,13 @@ class PaperlessModel(BaseModel):
         cls,
         client: "Paperless",
         data: dict[str, Any],
+        **_context: Any,
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
         Primarily used by service-level factory methods.
         """
-        return cls.model_validate(data, context={"client": client, "raw_data": data})
+        return cls.model_validate(data, context={"client": client})
 
     @property
     def api_path(self) -> str:
@@ -63,60 +85,31 @@ class PaperlessModel(BaseModel):
         return self._api_path
 
     @property
-    def data(self) -> dict[str, Any]:
-        """Return the internal model data dictionary."""
-        return self._data
+    def snapshot(self) -> dict[str, Any]:
+        """Return the serialized field state as of the last API sync."""
+        return self._snapshot
 
-    @data.setter
-    def data(self, value: dict[str, Any]) -> None:
-        """Set the internal model data dictionary."""
-        self._data = value
-
-    def apply_data(self) -> None:
-        """Apply data from `self.data` to model fields.
-
-        Used by services after update operations to refresh model state.
-        """
-        for field_name, field_info in self.__class__.model_fields.items():
-            if field_name in self.data:
-                value = self.data[field_name]
-                if annotation := field_info.annotation:
-                    try:
-                        adapter = self._get_type_adapter(field_name, annotation)
-                        value = adapter.validate_python(value)
-                    except (ValueError, TypeError):
-                        pass
-                setattr(self, field_name, value)
-
-    @classmethod
-    def _get_type_adapter(cls, field_name: str, annotation: type) -> TypeAdapter:
-        """Return a cached TypeAdapter for the given field."""
-        cache_attr = "__type_adapters__"
-        cache: dict[str, TypeAdapter] = getattr(cls, cache_attr, None) or {}
-        if field_name not in cache:
-            cache[field_name] = TypeAdapter(annotation)
-            setattr(cls, cache_attr, cache)
-        return cache[field_name]
+    def refresh_from(self, data: dict[str, Any]) -> None:
+        """Replace all field values and snapshot in-place from a fresh API response."""
+        fresh = type(self).from_data(self._client, data)
+        for name in self.__class__.model_fields:
+            setattr(self, name, getattr(fresh, name))
+        self._snapshot = self._build_snapshot()
 
 
-class PaperlessCustomDataModel(BaseModel):
+class PaperlessCustomDataModel(_PaperlessBase):
     """Base class for all custom data types in PyPaperless."""
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    _client: "Paperless" = PrivateAttr()
     _data: Any = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_client` and `_data` from validation context."""
-        if isinstance(__context, dict):
-            if "client" in __context:
-                self._client = __context["client"]
-            if "data" in __context:
-                self._data = __context["data"]
+        super().model_post_init(__context)
+        if isinstance(__context, dict) and "data" in __context:
+            self._data = __context["data"]
 
     @classmethod
-    def from_data(cls, client: "Paperless", data: Any) -> Self:
+    def from_data(cls, client: "Paperless", data: Any, **_context: Any) -> Self:
         """Return a new instance of ``cls`` from API data."""
         return cls.model_validate({}, context={"client": client, "data": data})
 

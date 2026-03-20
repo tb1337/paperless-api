@@ -1,4 +1,4 @@
-"""CreatableMixin for PyPaperless models."""
+"""CreatableModel for PyPaperless models."""
 
 from typing import Any, ClassVar
 
@@ -6,7 +6,7 @@ from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.utils import object_to_dict_value
 
 
-class CreatableMixin:
+class CreatableModel:
     """Provide draft validation and serialization for PyPaperless models."""
 
     _create_required_fields: ClassVar[set[str]]

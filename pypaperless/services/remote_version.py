@@ -15,6 +15,13 @@ class RemoteVersionService(ResourceService):
     _resource_cls = RemoteVersion
 
     async def __call__(self) -> RemoteVersion:
-        """Request the `Remote Version` model data."""
+        """Fetch the latest Paperless-ngx release information.
+
+        Example::
+
+            version = await paperless.remote_version()
+            print(version.version)
+
+        """
         res = await self._client.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)

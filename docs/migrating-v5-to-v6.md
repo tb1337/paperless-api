@@ -10,7 +10,7 @@ If you are still on Python 3.12, upgrade your runtime before updating pypaperles
 
 v6 is also almost a full rewrite of pypaperless. Three things drove it:
 
-- **Models were too tightly coupled to the HTTP layer.** In v5, every model instance carried a reference to the client and called it directly. That made testing awkward and sharing models between contexts impossible. v6 models are plain data — all I/O goes through services.
+- **Models were too tightly coupled to the HTTP layer.** In v5, every model instance carried a reference to the client and called it directly. That made testing awkward and sharing models between contexts impossible. v6 models are plain data - all I/O goes through services.
 - **No runtime type safety.** v5 used dataclasses with manual dict conversion, so bad API responses would silently produce wrong values. v6 uses Pydantic v2, which validates every response at parse time.
 - **`aiohttp` got removed.** `httpx` is modern, has a cleaner sync/async API and a built-in mock transport that makes testing easier.
 
@@ -22,13 +22,13 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 | --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | 1   | Replace `aiohttp` / `yarl` with `httpx`                                                                         | [Dependencies](#dependencies)                                                 |
 | 2   | Update `Paperless(...)` constructor arguments; new: `PaperlessConfig` and env vars                              | [Initializing the client](#initializing-the-client)                           |
-| 3   | Replace `reduce()` with `filter()` — different call pattern                                                     | [Iteration and filtering](#iteration-and-filtering)                           |
-| 4   | `draft()` renamed to `create()`; `update()`, `delete()`, `save()` moved to services — shortcuts still on models | [CRUD](#crud)                                                                 |
+| 3   | Replace `reduce()` with `filter()` - different call pattern                                                     | [Iteration and filtering](#iteration-and-filtering)                           |
+| 4   | `draft()` renamed to `create()`; `update()`, `delete()`, `save()` moved to services - shortcuts still on models | [CRUD](#crud)                                                                 |
 | 5   | Replace `request_permissions = True` with `with_permissions()`                                                  | [Permissions](#permissions)                                                   |
-| 6   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. — shortcuts are back                                    | [Document convenience methods renamed](#document-convenience-methods-renamed) |
+| 6   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. - shortcuts are back                                    | [Document convenience methods renamed](#document-convenience-methods-renamed) |
 | 7   | Note deletion: `note.delete()` → service call                                                                   | [Document notes](#document-notes)                                             |
 | 8   | `generate_api_token()` custom-client argument renamed                                                           | [Token generation](#token-generation)                                         |
-| 9   | New: `paperless.profile`, `paperless.trash`, `paperless.documents.history`                                      | [New resources](#new-resources)                                               |
+| 9   | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`         | [New resources](#new-resources)                                               |
 | 10  | Rename four `Paperless`-prefixed exception classes                                                              | [Error handling](#error-handling)                                             |
 
 ---
@@ -75,13 +75,13 @@ The constructor signature changed. `session` was renamed to `client`, and `reque
     paperless = Paperless("http://localhost:8000", "mytoken", client=client)
     ```
 
-The `url` parameter no longer accepts `yarl.URL` objects — pass a plain string.
+The `url` parameter no longer accepts `yarl.URL` objects - pass a plain string.
 
 ### New: `PaperlessConfig` and environment variables
 
 v6 adds two additional initialization modes via the new `PaperlessConfig` class (backed by `pydantic-settings`):
 
-**Config object** — useful when you want to construct or validate settings in one place:
+**Config object** - useful when you want to construct or validate settings in one place:
 
 ```python
 from pypaperless import Paperless, PaperlessConfig
@@ -90,7 +90,7 @@ cfg = PaperlessConfig(url="http://localhost:8000", token="mytoken")
 paperless = Paperless(config=cfg)
 ```
 
-**Environment variables** — pass no arguments at all; `PaperlessConfig` reads the values automatically:
+**Environment variables** - pass no arguments at all; `PaperlessConfig` reads the values automatically:
 
 ```python
 paperless = Paperless()
@@ -206,7 +206,7 @@ instances themselves for convenience (see below).
     await paperless.documents.delete(doc)
     ```
 
-This applies to every resource — correspondents, tags, custom fields, etc.
+This applies to every resource - correspondents, tags, custom fields, etc.
 
 ### save()
 
@@ -294,6 +294,7 @@ The `get_*` shortcut methods on `Document` instances were renamed. The canonical
 | *(not available)*                       | `await doc.email(...)`              | `await paperless.documents.email(doc.id, ...)`              |
 | *(not available)*                       | `notes = await doc.notes()`         | `notes = await paperless.documents.notes(doc.id)`           |
 | *(not available)*                       | `entries = await doc.history()`     | `entries = await paperless.documents.history(doc.id)`       |
+| *(not available)*                       | `links = await doc.share_links()`   | `links = await paperless.documents.share_links(doc.id)`     |
 
 ---
 
@@ -339,7 +340,7 @@ Creating a new note:
     ```
 
 !!! note
-    When using `doc.notes`, the document pk is bound automatically — no need to pass `document=` to `create()`.
+    When using `doc.notes`, the document pk is bound automatically - no need to pass `document=` to `create()`.
 
 === "v6 (service)"
     ```python
@@ -351,7 +352,7 @@ Creating a new note:
 
 ## New resources
 
-Two new top-level services were added.
+Six new services were added.
 
 ### `paperless.profile`
 
@@ -380,6 +381,33 @@ The `Document.is_deleted` property returns `True` for documents retrieved from t
 
 See [Trash](resources/trash.md) for details.
 
+### `paperless.share_links`
+
+Create and manage publicly accessible share links for documents without requiring
+authentication. Supports full CRUD.
+
+```python
+from pypaperless.models.share_links import ShareLinkFileVersion
+
+draft = paperless.share_links.create()
+draft.document = 42
+draft.file_version = ShareLinkFileVersion.ARCHIVE
+slug = await paperless.share_links.save(draft)
+print(slug)  # "abc123xyz"
+
+link = await paperless.share_links(8)
+await paperless.share_links.delete(link)
+```
+
+Document model instances also expose a `share_links()` shortcut:
+
+```python
+doc = await paperless.documents(42)
+links = await doc.share_links()
+```
+
+See [Share Links](resources/share_links.md) for details.
+
 ### `paperless.documents.history`
 
 A new document audit-log sub-service:
@@ -389,6 +417,74 @@ entries = await paperless.documents.history(42)
 for entry in entries:
     print(entry.actor, entry.timestamp, entry.action)
 ```
+
+### `paperless.documents.bulk_edit`
+
+A new sub-service for performing bulk operations across many documents in a single
+API call. All operations accept a list of document primary keys.
+
+```python
+# Assign metadata to multiple documents at once
+await paperless.documents.bulk_edit.set_correspondent([1, 2, 3], 5)
+await paperless.documents.bulk_edit.set_document_type([1, 2], 3)
+await paperless.documents.bulk_edit.set_storage_path([1, 2], 4)
+
+# Tag operations
+await paperless.documents.bulk_edit.add_tag([1, 2, 3], 7)
+await paperless.documents.bulk_edit.remove_tag([1, 2, 3], 7)
+await paperless.documents.bulk_edit.modify_tags([1, 2], add_tags=[5], remove_tags=[2])
+
+# Custom fields
+await paperless.documents.bulk_edit.modify_custom_fields(
+    [1, 2],
+    add_custom_fields={3: "open"},
+    remove_custom_fields=[4],
+)
+
+# Permissions
+from pypaperless.models.types import Permissions
+await paperless.documents.bulk_edit.set_permissions(
+    [1, 2, 3],
+    owner=1,
+    permissions=Permissions(view_users=[2, 3], change_users=[1]),
+)
+
+# Document operations
+await paperless.documents.bulk_edit.delete([10, 11])      # move to trash
+await paperless.documents.bulk_edit.reprocess([1, 2, 3])  # re-run OCR
+await paperless.documents.bulk_edit.rotate([1, 2], 90)
+await paperless.documents.bulk_edit.merge(
+    [10, 11, 12],
+    metadata_document_id=10,
+    delete_originals=True,
+)
+```
+
+Raises `BulkEditError` (a `ResponseError` subclass) when the API returns a non-OK
+result.
+
+### `paperless.bulk_edit_objects`
+
+A new top-level service for setting permissions or deleting multiple non-document
+objects - tags, correspondents, document types, or storage paths - in a single call.
+
+```python
+from pypaperless.models.types import Permissions
+
+# Set permissions on several tags
+await paperless.bulk_edit_objects.set_permissions(
+    "tags",
+    [1, 2, 3],
+    owner=1,
+    permissions=Permissions(view_users=[2], change_users=[1]),
+)
+
+# Permanently delete correspondents
+await paperless.bulk_edit_objects.delete("correspondents", [4, 5])
+```
+
+Raises `BulkEditError` when the API returns a non-OK result.
+See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 ---
 
@@ -411,7 +507,7 @@ for entry in entries:
     ```
 
 !!! tip
-    `PaperlessConnectionError` wraps `httpx.ConnectError` and works in both v5 and v6 — catching it is the most forward-compatible option.
+    `PaperlessConnectionError` wraps `httpx.ConnectError` and works in both v5 and v6 - catching it is the most forward-compatible option.
 
 ### Exception renames
 
@@ -451,7 +547,7 @@ v6 introduces intermediate base classes that you can use to catch whole groups o
 | Class                 | Catches                                                             |
 | --------------------- | ------------------------------------------------------------------- |
 | `InitializationError` | All session/transport errors (unchanged from v5)                    |
-| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`                     |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `BulkEditError`    |
 | `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                 |
 | `ResourceError`       | `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
 | `DocumentError`       | `AsnRequestError`, `SendEmailError`                                 |

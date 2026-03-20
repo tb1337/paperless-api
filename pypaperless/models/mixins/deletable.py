@@ -1,4 +1,4 @@
-"""DeletableMixin for PyPaperless models."""
+"""DeletableModel for PyPaperless models."""
 
 from typing import TYPE_CHECKING, ClassVar, cast
 
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from pypaperless.const import PaperlessResource
 
 
-class DeletableMixin:
+class DeletableModel:
     """Model shortcut: delegate delete() to the bound service.
 
     Requires ``_resource`` to be set as a ``ClassVar[PaperlessResource]`` on the
@@ -19,16 +19,14 @@ class DeletableMixin:
     _client: "Paperless"
 
     async def delete(self) -> bool:
-        """Delete this model from Paperless. There is no point of return.
+        """Delete this model instance from Paperless.  This action cannot be undone.
 
-        Delegates to ``service.delete()``.
+        Delegates to :meth:`~pypaperless.services.mixins.deletable.DeletableService.delete`.
 
-        Example:
-        -------
-        ```python
-        doc = await paperless.documents(42)
-        await doc.delete()
-        ```
+        Example::
+
+            doc = await paperless.documents(42)
+            await doc.delete()
 
         """
         return cast("bool", await getattr(self._client, self._resource).delete(self))

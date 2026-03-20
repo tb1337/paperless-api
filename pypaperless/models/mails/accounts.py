@@ -8,7 +8,7 @@ from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
 
 
-class MailAccount(PaperlessModel, mixins.SecurableMixin):
+class MailAccount(PaperlessModel, mixins.SecurableModel):
     """Represent a Paperless `MailAccount`."""
 
     _api_path: ClassVar[str] = API_PATH["mail_accounts_single"]

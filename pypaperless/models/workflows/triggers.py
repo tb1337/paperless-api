@@ -53,7 +53,7 @@ class WorkflowTriggerSource(Enum):
         return cls["UNKNOWN"]
 
 
-class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsMixin):
+class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsModel):
     """Represent a Paperless `WorkflowTrigger`."""
 
     _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]

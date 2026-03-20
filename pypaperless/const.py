@@ -10,6 +10,7 @@ ENV_URL = f"{ENV_PREFIX}URL"
 ENV_TOKEN = f"{ENV_PREFIX}TOKEN"
 ENV_REQUEST_API_VERSION = f"{ENV_PREFIX}REQUEST_API_VERSION"
 
+BULK_EDIT_OBJECTS = "bulk_edit_objects"
 CONFIG = "config"
 CORRESPONDENTS = "correspondents"
 CUSTOM_FIELDS = "custom_fields"
@@ -39,6 +40,7 @@ UNKNOWN = "unknown"
 API_PATH = {
     "index": "/api/schema/",
     "token": "/api/token/",
+    f"{BULK_EDIT_OBJECTS}": f"/api/{BULK_EDIT_OBJECTS}/",
     f"{CONFIG}": f"/api/{CONFIG}/",
     f"{CONFIG}_single": f"/api/{CONFIG}/{{pk}}/",
     f"{CORRESPONDENTS}": f"/api/{CORRESPONDENTS}/",
@@ -54,7 +56,14 @@ API_PATH = {
     f"{DOCUMENTS}_notes": f"/api/{DOCUMENTS}/{{pk}}/notes/",
     f"{DOCUMENTS}_preview": f"/api/{DOCUMENTS}/{{pk}}/preview/",
     f"{DOCUMENTS}_thumbnail": f"/api/{DOCUMENTS}/{{pk}}/thumb/",
+    f"{DOCUMENTS}_bulk_edit": f"/api/{DOCUMENTS}/bulk_edit/",
+    f"{DOCUMENTS}_delete": f"/api/{DOCUMENTS}/delete/",
+    f"{DOCUMENTS}_edit_pdf": f"/api/{DOCUMENTS}/edit_pdf/",
+    f"{DOCUMENTS}_merge": f"/api/{DOCUMENTS}/merge/",
     f"{DOCUMENTS}_post": f"/api/{DOCUMENTS}/post_document/",
+    f"{DOCUMENTS}_remove_password": f"/api/{DOCUMENTS}/remove_password/",
+    f"{DOCUMENTS}_reprocess": f"/api/{DOCUMENTS}/reprocess/",
+    f"{DOCUMENTS}_rotate": f"/api/{DOCUMENTS}/rotate/",
     f"{DOCUMENTS}_single": f"/api/{DOCUMENTS}/{{pk}}/",
     f"{DOCUMENTS}_share_links": f"/api/{DOCUMENTS}/{{pk}}/share_links/",
     f"{DOCUMENTS}_suggestions": f"/api/{DOCUMENTS}/{{pk}}/suggestions/",
@@ -102,6 +111,7 @@ API_PATH = {
 class PaperlessResource(StrEnum):
     """Represent paths of api endpoints."""
 
+    BULK_EDIT_OBJECTS = BULK_EDIT_OBJECTS
     CONFIG = CONFIG
     CORRESPONDENTS = CORRESPONDENTS
     CUSTOM_FIELDS = CUSTOM_FIELDS

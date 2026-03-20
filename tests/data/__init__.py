@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 
+from .bulk_edit_objects import DATA_BULK_EDIT_OBJECTS
 from .config import DATA_CONFIG
 from .correspondents import DATA_CORRESPONDENTS
 from .custom_fields import DATA_CUSTOM_FIELDS
@@ -13,6 +14,7 @@ from .document_share_links import DATA_DOCUMENT_SHARE_LINKS
 from .document_suggestions import DATA_DOCUMENT_SUGGESTIONS
 from .document_types import DATA_DOCUMENT_TYPES
 from .documents import DATA_DOCUMENTS
+from .documents_bulk_edit import DATA_DOCUMENTS_BULK_EDIT
 from .documents_search import DATA_DOCUMENTS_SEARCH
 from .groups import DATA_GROUPS
 from .mails import DATA_MAIL_ACCOUNTS, DATA_MAIL_RULES, DATA_PROCESSED_MAIL
@@ -44,10 +46,12 @@ DATA_SCHEMA = _read_schema()
 
 
 __all__ = (
+    "DATA_BULK_EDIT_OBJECTS",
     "DATA_CONFIG",
     "DATA_CORRESPONDENTS",
     "DATA_CUSTOM_FIELDS",
     "DATA_DOCUMENTS",
+    "DATA_DOCUMENTS_BULK_EDIT",
     "DATA_DOCUMENTS_SEARCH",
     "DATA_DOCUMENT_HISTORY",
     "DATA_DOCUMENT_METADATA",

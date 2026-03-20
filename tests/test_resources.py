@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 from pypaperless import Paperless
 from pypaperless.builders import SearchQuery
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import TaskNotFoundError
+from pypaperless.exceptions import BulkEditError, TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
@@ -19,6 +19,7 @@ from pypaperless.models import (
     Status,
     Task,
 )
+from pypaperless.models.mixins.securable import Permissions
 from pypaperless.models.types import (
     StatisticDocumentFileTypeCount,
     StatusDatabase,
@@ -29,7 +30,9 @@ from pypaperless.services.workflows import WorkflowActionService, WorkflowTrigge
 
 from .const import PAPERLESS_TEST_URL
 from .data import (
+    DATA_BULK_EDIT_OBJECTS,
     DATA_CONFIG,
+    DATA_DOCUMENTS_BULK_EDIT,
     DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
@@ -507,3 +510,302 @@ class TestSearch:
         result = await paperless.search(q)
         assert isinstance(result, SearchResult)
         assert result.total == DATA_SEARCH["total"]
+
+
+# ---------------------------------------------------------------------------
+# BulkEditObjects
+# ---------------------------------------------------------------------------
+
+
+class TestBulkEditObjects:
+    """BulkEditObjects service: set_permissions and delete operations."""
+
+    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_permissions() POSTs the correct payload and returns None."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        perms = Permissions(view_users=[2], change_users=[1])
+        result = await paperless.bulk_edit_objects.set_permissions(
+            "tags",
+            [1, 2, 3],
+            owner=1,
+            permissions=perms,
+        )
+        assert result is None
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert body["object_type"] == "tags"
+        assert body["operation"] == "set_permissions"
+        assert body["objects"] == [1, 2, 3]
+        assert body["owner"] == 1
+        assert "permissions" in body
+
+    async def test_set_permissions_no_optional_fields(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """set_permissions() without owner/permissions omits those keys."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        await paperless.bulk_edit_objects.set_permissions("correspondents", [7])
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert "owner" not in body
+        assert "permissions" not in body
+        assert body["merge"] is False
+
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """delete() POSTs the correct payload and returns None."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            status_code=200,
+            json=DATA_BULK_EDIT_OBJECTS,
+        )
+        result = await paperless.bulk_edit_objects.delete("document_types", [10, 11])
+        assert result is None
+
+        request = httpx_mock.get_requests()[-1]
+        body = __import__("json").loads(request.content)
+        assert body["object_type"] == "document_types"
+        assert body["operation"] == "delete"
+        assert body["objects"] == [10, 11]
+
+
+# ---------------------------------------------------------------------------
+# DocumentsBulkEdit
+# ---------------------------------------------------------------------------
+
+
+class TestDocumentsBulkEdit:
+    """DocumentBulkEditService: all 14 bulk operations."""
+
+    async def test_set_correspondent(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_correspondent() POSTs the correct payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_correspondent([1, 2], 5)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_correspondent"
+        assert body["documents"] == [1, 2]
+        assert body["parameters"]["correspondent"] == 5
+
+    async def test_set_correspondent_none(
+        self, httpx_mock: HTTPXMock, paperless: Paperless
+    ) -> None:
+        """set_correspondent() accepts None to clear the field."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_correspondent([1], None)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["parameters"]["correspondent"] is None
+
+    async def test_set_document_type(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_document_type() POSTs the correct payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_document_type([3], 7)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_document_type"
+        assert body["parameters"]["document_type"] == 7
+
+    async def test_set_storage_path(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_storage_path() POSTs the correct payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_storage_path([4, 5], 2)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_storage_path"
+        assert body["parameters"]["storage_path"] == 2
+
+    async def test_add_tag(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """add_tag() POSTs the correct payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.add_tag([1], 10)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "add_tag"
+        assert body["parameters"]["tag"] == 10
+
+    async def test_remove_tag(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """remove_tag() POSTs the correct payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.remove_tag([1], 10)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "remove_tag"
+        assert body["parameters"]["tag"] == 10
+
+    async def test_modify_tags(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """modify_tags() POSTs both add/remove lists."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.modify_tags([1], add_tags=[3, 4], remove_tags=[5])
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "modify_tags"
+        assert body["parameters"]["add_tags"] == [3, 4]
+        assert body["parameters"]["remove_tags"] == [5]
+
+    async def test_modify_custom_fields(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """modify_custom_fields() POSTs dict-style custom field input."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.modify_custom_fields(
+            [1], add_custom_fields={1: "value"}, remove_custom_fields=[2]
+        )
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "modify_custom_fields"
+        assert body["parameters"]["add_custom_fields"] == {"1": "value"}
+        assert body["parameters"]["remove_custom_fields"] == [2]
+
+    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """set_permissions() includes owner and set_permissions key in parameters."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        perms = Permissions(view_users=[2], change_users=[1])
+        await paperless.documents.bulk_edit.set_permissions(
+            [1, 2], owner=5, permissions=perms, merge=True
+        )
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_permissions"
+        assert body["parameters"]["owner"] == 5
+        assert body["parameters"]["merge"] is True
+        assert "set_permissions" in body["parameters"]
+
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """delete() POSTs to the dedicated delete endpoint."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_delete']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.delete([1, 2])
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [1, 2]
+
+    async def test_reprocess(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """reprocess() POSTs to the dedicated reprocess endpoint."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_reprocess']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.reprocess([1])
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [1]
+
+    async def test_rotate(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """rotate() POSTs degrees and source_mode."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_rotate']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.rotate([1, 2], 90)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["degrees"] == 90
+        assert body["source_mode"] == "latest_version"
+
+    async def test_merge(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """merge() POSTs optional metadata_document_id when provided."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_merge']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.merge(
+            [1, 2], metadata_document_id=1, delete_originals=True
+        )
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [1, 2]
+        assert body["metadata_document_id"] == 1
+        assert body["delete_originals"] is True
+
+    async def test_edit_pdf(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """edit_pdf() wraps the single document in a list."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_edit_pdf']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        ops = [{"page": 1, "rotate": 90}]
+        await paperless.documents.bulk_edit.edit_pdf(42, ops)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [42]
+        assert body["operations"] == ops
+        assert body["include_metadata"] is True
+
+    async def test_remove_password(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """remove_password() POSTs password and source flags."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_remove_password']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.remove_password([5], "s3cr3t")
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [5]
+        assert body["password"] == "s3cr3t"
+        assert body["source_mode"] == "latest_version"
+
+    async def test_error_result_raises(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+        """A non-OK result field (e.g. 'ERROR') raises BulkEditError on HTTP 200."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json={"result": "ERROR"},
+        )
+        with pytest.raises(BulkEditError):
+            await paperless.documents.bulk_edit.modify_tags([1], add_tags=[3], remove_tags=[])

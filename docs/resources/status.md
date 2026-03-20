@@ -1,6 +1,6 @@
 # Status
 
-The `status` resource reports the health of the Paperless-ngx server — database connectivity, storage availability, background task workers, and the ML classifier. It is a parameter-free singleton call.
+The `status` resource reports the health of the Paperless-ngx server - database connectivity, storage availability, background task workers, and the ML classifier. It is a parameter-free singleton call.
 
 ## Model
 
@@ -8,7 +8,7 @@ See [`pypaperless/models/status.py`](https://github.com/tb1337/paperless-api/blo
 
 ## Fetch
 
-No primary key — call without arguments:
+No primary key - call without arguments:
 
 ```python
 status = await paperless.status()

@@ -1,6 +1,6 @@
 # Config
 
-The `config` resource exposes the Paperless-ngx application configuration. It is a single-item resource — the instance is always fetched with primary key `1`.
+The `config` resource exposes the Paperless-ngx application configuration. It is a single-item resource - the instance is always fetched with primary key `1`.
 
 ## Model
 
@@ -8,7 +8,7 @@ See [`pypaperless/models/config.py`](https://github.com/tb1337/paperless-api/blo
 
 ## Fetch
 
-Config is a singleton — always request it with pk `1`:
+Config is a singleton - always request it with pk `1`:
 
 ```python
 config = await paperless.config(1)

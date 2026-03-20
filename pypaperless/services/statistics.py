@@ -15,6 +15,13 @@ class StatisticService(ResourceService):
     _resource_cls = Statistic
 
     async def __call__(self) -> Statistic:
-        """Request the `Statistic` model data."""
+        """Fetch document statistics from Paperless.
+
+        Example::
+
+            stats = await paperless.statistics()
+            print(f"{stats.documents_total} documents total")
+
+        """
         res = await self._client.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)

@@ -1,34 +1,43 @@
 # Resources
 
-Every Paperless-ngx entity is exposed through a **service** on the `Paperless` instance. Each service supports a consistent set of operations — fetch, iterate, create, update or delete.
+Every Paperless-ngx entity is exposed through a **service** on the `Paperless` instance. Each service supports a consistent set of operations - fetch, iterate, create, update or delete.
 
 ---
 
 ## Capability matrix
 
-| Resource         | `call` | `iterate` | `draft`/`save` | `update` | `delete` | `permissions` |
-| ---------------- | :----: | :-------: | :------------: | :------: | :------: | :-----------: |
-| `config`         |   ✓    |           |                |          |          |               |
-| `correspondents` |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `custom_fields`  |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
-| `documents`      |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `document_types` |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `groups`         |   ✓    |     ✓     |                |          |          |               |
-| `mail_accounts`  |   ✓    |     ✓     |                |          |          |       ✓       |
-| `mail_rules`     |   ✓    |     ✓     |                |          |          |       ✓       |
-| `processed_mail` |   ✓    |     ✓     |                |          |          |       ✓       |
-| `profile`        |   ✓    |           |                |    ✓     |          |               |
-| `saved_views`    |   ✓    |     ✓     |                |          |          |       ✓       |
-| `share_links`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
-| `statistics`     |   ✓    |           |                |          |          |               |
-| `remote_version` |   ✓    |           |                |          |          |               |
-| `status`         |   ✓    |           |                |          |          |               |
-| `storage_paths`  |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `tags`           |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `tasks`          |   ✓    |     ✓     |                |          |          |               |
-| `trash`          |        |     ✓     |                |          |          |               |
-| `users`          |   ✓    |     ✓     |                |          |          |               |
-| `workflows`      |   ✓    |     ✓     |                |          |          |               |
+| Resource            | `call` | `iterate` | `draft`/`save` | `update` | `delete` | `permissions` |
+| ------------------- | :----: | :-------: | :------------: | :------: | :------: | :-----------: |
+| `bulk_edit_objects` |        |           |                |          |          |               |
+| `config`            |   ✓    |           |                |          |          |               |
+| `correspondents`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
+| `custom_fields`     |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
+| `documents`         |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
+| `document_types`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
+| `groups`            |   ✓    |     ✓     |                |          |          |               |
+| `mail_accounts`     |   ✓    |     ✓     |                |          |          |       ✓       |
+| `mail_rules`        |   ✓    |     ✓     |                |          |          |       ✓       |
+| `processed_mail`    |   ✓    |     ✓     |                |          |          |       ✓       |
+| `profile`           |   ✓    |           |                |    ✓     |          |               |
+| `saved_views`       |   ✓    |     ✓     |                |          |          |       ✓       |
+| `share_links`       |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
+| `statistics`        |   ✓    |           |                |          |          |               |
+| `remote_version`    |   ✓    |           |                |          |          |               |
+| `status`            |   ✓    |           |                |          |          |               |
+| `storage_paths`     |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
+| `tags`              |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
+| `tasks`             |   ✓    |     ✓     |                |          |          |               |
+| `trash`             |        |     ✓     |                |          |          |               |
+| `users`             |   ✓    |     ✓     |                |          |          |               |
+| `workflows`         |   ✓    |     ✓     |                |          |          |               |
+
+!!! note "Bulk-action services"
+    `bulk_edit_objects` exposes bulk `set_permissions` and `delete` for tags,
+    correspondents, document types and storage paths. `documents.bulk_edit` exposes
+    bulk operations (set metadata, tags, custom fields, permissions, delete, reprocess,
+    rotate, merge) for documents. Neither service follows the standard CRUD pattern above.
+    See [Bulk Edit Objects](resources/bulk_edit_objects.md) and the
+    [Documents concept page](concepts/documents.md#bulk-editing) for details.
 
 ---
 
@@ -96,7 +105,7 @@ async for page in paperless.documents.pages(page=3):
 ## Filtering with `filter()`
 
 `filter()` is an async context manager that applies server-side filters to iteration.
-Filter keys are fully type-checked — your IDE will autocomplete available parameters
+Filter keys are fully type-checked - your IDE will autocomplete available parameters
 and flag unknown keys.
 
 Each service exposes its own typed filter set (e.g. `DocumentFilters`, `TagFilters`).
@@ -189,7 +198,7 @@ if await paperless.tags.delete(tag):
 
 ## Model fields: matching & algorithms
 
-Resources like `Correspondent`, `Tag`, `DocumentType` and `StoragePath` include matching fields inherited from `MatchingFieldsMixin`:
+Resources like `Correspondent`, `Tag`, `DocumentType` and `StoragePath` include matching fields inherited from `MatchingFieldsModel`:
 
 | Field                | Description                |
 | -------------------- | -------------------------- |

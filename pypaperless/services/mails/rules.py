@@ -8,9 +8,9 @@ from pypaperless.services.base import ResourceService
 
 class MailRuleService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[MailRule],
-    mixins.IterableMixin[MailRule],
+    mixins.SecurableService,
+    mixins.CallableService[MailRule],
+    mixins.IterableService[MailRule],
 ):
     """Represent a factory for Paperless `MailRule` models."""
 

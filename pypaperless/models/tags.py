@@ -10,10 +10,10 @@ from .base import PaperlessModel
 
 class Tag(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableMixin,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableModel,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `Tag`."""
 
@@ -33,10 +33,10 @@ class Tag(
 
 class TagDraft(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableDraftMixin,
-    mixins.CreatableMixin,
-    mixins.SaveableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableDraftModel,
+    mixins.CreatableModel,
+    mixins.SaveableModel,
 ):
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 

@@ -12,12 +12,17 @@ if TYPE_CHECKING:
 
 
 class PageGenerator(PaperlessService, AsyncIterator):
-    """Async iterator that yields :class:`Page` objects for a Paperless API endpoint.
+    """Async iterator that yields :class:`~pypaperless.models.pages.Page` objects.
 
-    `client`: A :class:`Paperless` instance.
-    `url`: The API endpoint URL returning paginated results.
-    `resource_cls`: The model class used to map raw result dicts.
-    `params`: Optional query string parameters.
+    Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableService.pages`
+    to fetch and paginate through API results.
+
+    Args:
+        client:       A :class:`~pypaperless.client.Paperless` instance.
+        url:          The API endpoint URL returning paginated results.
+        resource_cls: The model class used to map raw result dicts.
+        params:       Optional query string parameters.
+
     """
 
     _page: Page | None
@@ -37,9 +42,7 @@ class PageGenerator(PaperlessService, AsyncIterator):
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }
-        self._page = Page.from_data(self._client, data)
-        # Attach the resource class to the page for items mapping
-        self._page.set_resource_cls(self._resource_cls)
+        self._page = Page.from_data(self._client, data, resource_cls=self._resource_cls)
 
         # rise page by one to request next page on next iteration
         self.params["page"] += 1

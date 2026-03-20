@@ -9,9 +9,9 @@ from .base import ResourceService
 
 class SavedViewService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[SavedView],
-    mixins.IterableMixin[SavedView],
+    mixins.SecurableService,
+    mixins.CallableService[SavedView],
+    mixins.IterableService[SavedView],
 ):
     """Represent a factory for Paperless `SavedView` models."""
 
