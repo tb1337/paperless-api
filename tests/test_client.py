@@ -308,12 +308,12 @@ async def test_pages_object(api: Paperless) -> None:
 
 
 async def test_draft_not_supported(api: Paperless) -> None:
-    """Test that CreatableMixin.create() raises when no draft_cls is configured."""
+    """Test that CreatableService.create() raises when no draft_cls is configured."""
 
     class TestResource(PaperlessModel):
         pass
 
-    class TestService(ResourceService, service_mixins.CreatableMixin):
+    class TestService(ResourceService, service_mixins.CreatableService):
         _api_path = "any.url"
         _resource = "test"
         _resource_cls = TestResource

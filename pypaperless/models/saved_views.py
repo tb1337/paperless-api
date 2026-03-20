@@ -17,7 +17,7 @@ class SavedViewFilterRule(BaseModel):
     value: str | None = None
 
 
-class SavedView(PaperlessModel, mixins.SecurableMixin):
+class SavedView(PaperlessModel, mixins.SecurableModel):
     """Represent a Paperless `SavedView`."""
 
     _api_path: ClassVar[str] = API_PATH["saved_views_single"]

@@ -175,9 +175,9 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 
 class Document(
     PaperlessModel,
-    mixins.SecurableMixin,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.SecurableModel,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `Document`."""
 
@@ -300,7 +300,7 @@ class Document(
         return self.search_hit_
 
 
-class DocumentDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
+class DocumentDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_post"]

@@ -1,4 +1,4 @@
-"""CreatableMixin for PyPaperless services."""
+"""CreatableService for PyPaperless services."""
 
 from typing import Any, Protocol
 
@@ -8,7 +8,7 @@ from pypaperless.services.base import ResourceServiceProtocol
 
 
 class _DraftLike(Protocol):
-    """Protocol satisfied by all draft model classes (CreatableMixin + PaperlessModel)."""
+    """Protocol satisfied by all draft model classes (CreatableModel + PaperlessModel)."""
 
     @property
     def api_path(self) -> str: ...
@@ -18,7 +18,7 @@ class _DraftLike(Protocol):
     def serialize(self) -> dict[str, Any]: ...
 
 
-class CreatableMixin(ResourceServiceProtocol[ResourceT]):
+class CreatableService(ResourceServiceProtocol[ResourceT]):
     """Provide the `create` and `save` methods for PyPaperless services."""
 
     _draft_cls: type[ResourceT]

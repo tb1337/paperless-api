@@ -10,10 +10,10 @@ from .base import PaperlessModel
 
 class StoragePath(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableMixin,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableModel,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `StoragePath`."""
 
@@ -29,10 +29,10 @@ class StoragePath(
 
 class StoragePathDraft(
     PaperlessModel,
-    mixins.MatchingFieldsMixin,
-    mixins.SecurableDraftMixin,
-    mixins.CreatableMixin,
-    mixins.SaveableMixin,
+    mixins.MatchingFieldsModel,
+    mixins.SecurableDraftModel,
+    mixins.CreatableModel,
+    mixins.SaveableModel,
 ):
     """Represent a new `StoragePath`, which is not yet stored in Paperless."""
 

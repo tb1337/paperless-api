@@ -1,4 +1,4 @@
-"""Parameterized service mixin tests: ReadOnly, ReadWrite, SecurableMixin."""
+"""Parameterized service mixin tests: ReadOnly, ReadWrite, SecurableService."""
 
 import json as json_mod
 import re
@@ -296,8 +296,8 @@ class TestReadWrite(_SharedServiceTests):
     ],
     scope="class",
 )
-class TestSecurableMixin:
-    """SecurableMixin: request_permissions flag, with_permissions() context manager."""
+class TestSecurableService:
+    """SecurableService: request_permissions flag, with_permissions() context manager."""
 
     async def test_permissions(
         self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
@@ -425,12 +425,12 @@ def test_permissions_from_existing_instance() -> None:
 
 
 async def test_iterable_filter_base_method(paperless: Paperless) -> None:
-    """IterableMixin.filter() stores filters for the context duration and clears them after."""
+    """IterableService.filter() stores filters for the context duration and clears them after."""
 
     class _MinimalModel(PaperlessModel):
         id: int | None = None
 
-    class _MinimalService(ResourceService, svc_mixins.IterableMixin[_MinimalModel]):
+    class _MinimalService(ResourceService, svc_mixins.IterableService[_MinimalModel]):
         _api_path = API_PATH["correspondents"]
         _resource = "correspondents"
         _resource_cls = _MinimalModel

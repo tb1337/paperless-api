@@ -14,7 +14,7 @@ from .base import ResourceService
 
 class TrashService(
     ResourceService,
-    mixins.IterableMixin[Document],
+    mixins.IterableService[Document],
 ):
     """Represent a factory for Paperless trashed `Document` models."""
 

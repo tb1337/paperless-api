@@ -1,11 +1,11 @@
-"""SecurableMixin for PyPaperless services."""
+"""SecurableService for PyPaperless services."""
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self
 
 
-class SecurableMixin:
+class SecurableService:
     """Provide `request_permissions` and `with_permissions()` for PyPaperless services."""
 
     _request_full_perms: bool = False
@@ -31,7 +31,7 @@ class SecurableMixin:
         """Context manager that enables the full permissions payload for a block.
 
         The flag is reset automatically on exit, even if an exception is raised.
-        Combine with :meth:`~pypaperless.services.mixins.iterable.IterableMixin.filter`
+        Combine with :meth:`~pypaperless.services.mixins.iterable.IterableService.filter`
         or direct service calls.
 
         Example::

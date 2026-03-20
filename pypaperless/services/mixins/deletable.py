@@ -1,10 +1,10 @@
-"""DeletableMixin for PyPaperless services."""
+"""DeletableService for PyPaperless services."""
 
 from pypaperless.models.base import ResourceT
 from pypaperless.services.base import ResourceServiceProtocol
 
 
-class DeletableMixin(ResourceServiceProtocol[ResourceT]):
+class DeletableService(ResourceServiceProtocol[ResourceT]):
     """Provide the `delete` method for PyPaperless services."""
 
     async def delete(self, model: ResourceT) -> bool:

@@ -42,7 +42,7 @@ from pypaperless.models.types import (
     DocumentSearchHit,
     FileRetrieveMode,
 )
-from pypaperless.services.mixins.updatable import UpdatableMixin
+from pypaperless.services.mixins.updatable import UpdatableService
 
 from .const import PAPERLESS_TEST_URL
 from .data import (
@@ -801,7 +801,7 @@ class TestDocuments:
 
         data: dict = {}
         # Should return without touching data (has no has_permissions attr)
-        UpdatableMixin._check_permissions_field(_PlainModel(id=1), data)
+        UpdatableService._check_permissions_field(_PlainModel(id=1), data)
         assert data == {}
 
     async def test_check_permissions_field_has_permissions_no_perms_key(
@@ -818,7 +818,7 @@ class TestDocuments:
         )
         assert item.has_permissions
         changed: dict = {"name": "New Name"}
-        UpdatableMixin._check_permissions_field(item, changed)
+        UpdatableService._check_permissions_field(item, changed)
         # permissions not in changed, so no set_permissions key added
         assert "set_permissions" not in changed
         assert "name" in changed

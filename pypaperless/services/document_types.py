@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class DocumentTypeService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[DocumentType],
-    mixins.CreatableMixin[DocumentTypeDraft],
-    mixins.IterableMixin[DocumentType],
-    mixins.UpdatableMixin[DocumentType],
-    mixins.DeletableMixin[DocumentType],
+    mixins.SecurableService,
+    mixins.CallableService[DocumentType],
+    mixins.CreatableService[DocumentTypeDraft],
+    mixins.IterableService[DocumentType],
+    mixins.UpdatableService[DocumentType],
+    mixins.DeletableService[DocumentType],
 ):
     """Represent a factory for Paperless `DocumentType` models."""
 

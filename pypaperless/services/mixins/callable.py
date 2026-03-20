@@ -1,4 +1,4 @@
-"""CallableMixin for PyPaperless services."""
+"""CallableService for PyPaperless services."""
 
 from typing import Any
 
@@ -6,7 +6,7 @@ from pypaperless.models.base import ResourceT
 from pypaperless.services.base import ResourceServiceProtocol
 
 
-class CallableMixin(ResourceServiceProtocol[ResourceT]):
+class CallableService(ResourceServiceProtocol[ResourceT]):
     """Provide methods for calling a specific resource item."""
 
     async def __call__(

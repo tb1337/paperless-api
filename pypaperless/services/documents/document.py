@@ -47,7 +47,7 @@ class DocumentSuggestionsService(ResourceService):
         return self._resource_cls.from_data(self._client, data)
 
 
-class DocumentMetaService(ResourceService, mixins.CallableMixin[DocumentMeta]):
+class DocumentMetaService(ResourceService, mixins.CallableService[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = API_PATH["documents_meta"]
@@ -58,12 +58,12 @@ class DocumentMetaService(ResourceService, mixins.CallableMixin[DocumentMeta]):
 
 class DocumentService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[Document],
-    mixins.CreatableMixin[DocumentDraft],
-    mixins.IterableMixin[Document],
-    mixins.UpdatableMixin[Document],
-    mixins.DeletableMixin[Document],
+    mixins.SecurableService,
+    mixins.CallableService[Document],
+    mixins.CreatableService[DocumentDraft],
+    mixins.IterableService[Document],
+    mixins.UpdatableService[Document],
+    mixins.DeletableService[Document],
 ):
     """Represent a factory for Paperless `Document` models."""
 

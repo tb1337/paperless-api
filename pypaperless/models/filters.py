@@ -2,7 +2,7 @@
 
 Each TypedDict reflects the server-side ``FilterSet`` class for the corresponding
 Paperless-ngx resource, so IDEs can offer autocomplete and type-checking when
-using :meth:`~pypaperless.services.mixins.IterableMixin.filter`.
+using :meth:`~pypaperless.services.mixins.IterableService.filter`.
 
 Usage::
 

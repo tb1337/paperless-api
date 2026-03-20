@@ -1,4 +1,4 @@
-"""MatchingFieldsMixin for PyPaperless models."""
+"""MatchingFieldsModel for PyPaperless models."""
 
 from enum import Enum
 from typing import Self
@@ -24,7 +24,7 @@ class MatchingAlgorithm(Enum):
         return cls["UNKNOWN"]
 
 
-class MatchingFieldsMixin(BaseModel):
+class MatchingFieldsModel(BaseModel):
     """Provide shared matching fields for PyPaperless models."""
 
     match: str | None = None

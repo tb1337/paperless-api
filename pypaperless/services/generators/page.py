@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class PageGenerator(PaperlessService, AsyncIterator):
     """Async iterator that yields :class:`~pypaperless.models.pages.Page` objects.
 
-    Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableMixin.pages`
+    Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableService.pages`
     to fetch and paginate through API results.
 
     Args:

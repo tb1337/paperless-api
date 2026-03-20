@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class CorrespondentService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[Correspondent],
-    mixins.CreatableMixin[CorrespondentDraft],
-    mixins.IterableMixin[Correspondent],
-    mixins.UpdatableMixin[Correspondent],
-    mixins.DeletableMixin[Correspondent],
+    mixins.SecurableService,
+    mixins.CallableService[Correspondent],
+    mixins.CreatableService[CorrespondentDraft],
+    mixins.IterableService[Correspondent],
+    mixins.UpdatableService[Correspondent],
+    mixins.DeletableService[Correspondent],
 ):
     """Represent a factory for Paperless `Correspondent` models."""
 

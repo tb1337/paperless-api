@@ -10,9 +10,9 @@ from pypaperless.services.base import ResourceService
 
 class MailAccountService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[MailAccount],
-    mixins.IterableMixin[MailAccount],
+    mixins.SecurableService,
+    mixins.CallableService[MailAccount],
+    mixins.IterableService[MailAccount],
 ):
     """Represent a factory for Paperless `MailAccount` models."""
 

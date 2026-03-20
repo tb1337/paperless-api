@@ -198,8 +198,8 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
 
 class CustomField(
     PaperlessModel,
-    mixins.UpdatableMixin,
-    mixins.DeletableMixin,
+    mixins.UpdatableModel,
+    mixins.DeletableModel,
 ):
     """Represent a Paperless `CustomField`."""
 
@@ -250,7 +250,7 @@ class CustomField(
         return result
 
 
-class CustomFieldDraft(PaperlessModel, mixins.CreatableMixin, mixins.SaveableMixin):
+class CustomFieldDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["custom_fields"]

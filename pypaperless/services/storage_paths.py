@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class StoragePathService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[StoragePath],
-    mixins.CreatableMixin[StoragePathDraft],
-    mixins.IterableMixin[StoragePath],
-    mixins.UpdatableMixin[StoragePath],
-    mixins.DeletableMixin[StoragePath],
+    mixins.SecurableService,
+    mixins.CallableService[StoragePath],
+    mixins.CreatableService[StoragePathDraft],
+    mixins.IterableService[StoragePath],
+    mixins.UpdatableService[StoragePath],
+    mixins.DeletableService[StoragePath],
 ):
     """Represent a factory for Paperless `StoragePath` models."""
 

@@ -6,7 +6,7 @@ Paperless-ngx supports **object-level permissions** — some resources can have 
 
 ## Resources that support permissions
 
-The following resources include permission fields (`SecurableMixin`):
+The following resources include permission fields (`SecurableModel`):
 
 - `documents`
 - `correspondents`

@@ -8,8 +8,8 @@ from pypaperless.services.base import ResourceService
 
 class WorkflowTriggerService(
     ResourceService,
-    mixins.CallableMixin[WorkflowTrigger],
-    mixins.IterableMixin[WorkflowTrigger],
+    mixins.CallableService[WorkflowTrigger],
+    mixins.IterableService[WorkflowTrigger],
 ):
     """Represent a factory for Paperless `WorkflowTrigger` models."""
 

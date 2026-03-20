@@ -189,7 +189,7 @@ if await paperless.tags.delete(tag):
 
 ## Model fields: matching & algorithms
 
-Resources like `Correspondent`, `Tag`, `DocumentType` and `StoragePath` include matching fields inherited from `MatchingFieldsMixin`:
+Resources like `Correspondent`, `Tag`, `DocumentType` and `StoragePath` include matching fields inherited from `MatchingFieldsModel`:
 
 | Field                | Description                |
 | -------------------- | -------------------------- |

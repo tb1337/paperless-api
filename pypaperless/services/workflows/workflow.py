@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 
 class WorkflowService(
     ResourceService,
-    mixins.CallableMixin[Workflow],
-    mixins.IterableMixin[Workflow],
+    mixins.CallableService[Workflow],
+    mixins.IterableService[Workflow],
 ):
     """Represent a factory for Paperless `Workflow` models."""
 

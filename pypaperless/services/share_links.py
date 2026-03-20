@@ -14,11 +14,11 @@ from .base import ResourceService
 
 class ShareLinkService(
     ResourceService,
-    mixins.CallableMixin[ShareLink],
-    mixins.CreatableMixin[ShareLinkDraft],
-    mixins.IterableMixin[ShareLink],
-    mixins.UpdatableMixin[ShareLink],
-    mixins.DeletableMixin[ShareLink],
+    mixins.CallableService[ShareLink],
+    mixins.CreatableService[ShareLinkDraft],
+    mixins.IterableService[ShareLink],
+    mixins.UpdatableService[ShareLink],
+    mixins.DeletableService[ShareLink],
 ):
     """Represent a factory for Paperless `ShareLink` models."""
 

@@ -1,4 +1,4 @@
-"""IterableMixin for PyPaperless services."""
+"""IterableService for PyPaperless services."""
 
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class _BaseFilters(TypedDict, total=False):
-    """Empty base TypedDict used by IterableMixin.filter().
+    """Empty base TypedDict used by IterableService.filter().
 
     Being empty, every concrete filter TypedDict is a structural supertype
     of this class (PEP 692), so subclass overrides that narrow **kwargs to
@@ -22,7 +22,7 @@ class _BaseFilters(TypedDict, total=False):
     """
 
 
-class IterableMixin(ResourceServiceProtocol[ResourceT]):
+class IterableService(ResourceServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
     _aiter_filters: dict[str, Any] | None

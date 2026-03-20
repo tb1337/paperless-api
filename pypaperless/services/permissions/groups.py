@@ -13,8 +13,8 @@ from pypaperless.services.base import ResourceService
 
 class GroupService(
     ResourceService,
-    mixins.CallableMixin[Group],
-    mixins.IterableMixin[Group],
+    mixins.CallableService[Group],
+    mixins.IterableService[Group],
 ):
     """Represent a factory for Paperless `Group` models."""
 

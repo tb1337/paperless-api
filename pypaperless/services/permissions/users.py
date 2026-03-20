@@ -13,8 +13,8 @@ from pypaperless.services.base import ResourceService
 
 class UserService(
     ResourceService,
-    mixins.CallableMixin[User],
-    mixins.IterableMixin[User],
+    mixins.CallableService[User],
+    mixins.IterableService[User],
 ):
     """Represent a factory for Paperless `User` models."""
 

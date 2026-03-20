@@ -14,11 +14,11 @@ from .base import ResourceService
 
 class CustomFieldService(
     ResourceService,
-    mixins.CallableMixin[CustomField],
-    mixins.CreatableMixin[CustomFieldDraft],
-    mixins.IterableMixin[CustomField],
-    mixins.UpdatableMixin[CustomField],
-    mixins.DeletableMixin[CustomField],
+    mixins.CallableService[CustomField],
+    mixins.CreatableService[CustomFieldDraft],
+    mixins.IterableService[CustomField],
+    mixins.UpdatableService[CustomField],
+    mixins.DeletableService[CustomField],
 ):
     """Represent a factory for Paperless `CustomField` models."""
 

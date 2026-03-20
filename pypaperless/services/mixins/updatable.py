@@ -1,4 +1,4 @@
-"""UpdatableMixin for PyPaperless services."""
+"""UpdatableService for PyPaperless services."""
 
 from copy import deepcopy
 from typing import Any, cast
@@ -8,7 +8,7 @@ from pypaperless.services.base import ResourceServiceProtocol
 from pypaperless.utils import object_to_dict_value
 
 
-class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
+class UpdatableService(ResourceServiceProtocol[ResourceT]):
     """Provide the `update` method for PyPaperless services."""
 
     async def update(self, model: ResourceT, *, only_changed: bool = True) -> bool:

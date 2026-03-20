@@ -14,12 +14,12 @@ from .base import ResourceService
 
 class TagService(
     ResourceService,
-    mixins.SecurableMixin,
-    mixins.CallableMixin[Tag],
-    mixins.CreatableMixin[TagDraft],
-    mixins.IterableMixin[Tag],
-    mixins.UpdatableMixin[Tag],
-    mixins.DeletableMixin[Tag],
+    mixins.SecurableService,
+    mixins.CallableService[Tag],
+    mixins.CreatableService[TagDraft],
+    mixins.IterableService[Tag],
+    mixins.UpdatableService[Tag],
+    mixins.DeletableService[Tag],
 ):
     """Represent a factory for Paperless `Tag` models."""
 
