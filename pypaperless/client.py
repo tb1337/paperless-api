@@ -348,21 +348,11 @@ class Paperless:
         endpoint: str,
         **kwargs: Any,
     ) -> Any:
-        """Make a request to the api and parse response json to dict."""
+        """Make a request to the API and return the parsed JSON payload."""
         res = await self.request(method, endpoint, **kwargs)
 
-        content_type = res.headers.get("content-type", "")
-
-        if res.status_code == 400 and "application/json" in content_type:
-            try:
-                payload = res.json()
-            except ValueError:
-                raise BadJsonResponseError(res) from None
-            raise JsonResponseWithError(payload)
-
-        res.raise_for_status()
-
-        if "application/json" not in content_type:
+        if "application/json" not in res.headers.get("content-type", ""):
+            res.raise_for_status()
             raise BadJsonResponseError(res)
 
         try:
@@ -370,4 +360,8 @@ class Paperless:
         except ValueError:
             raise BadJsonResponseError(res) from None
 
+        if res.status_code == 400:
+            raise JsonResponseWithError(payload)
+
+        res.raise_for_status()
         return payload
