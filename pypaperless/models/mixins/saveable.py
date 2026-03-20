@@ -18,16 +18,14 @@ class SaveableMixin:
     _client: "Paperless"
 
     async def save(self) -> int | str:
-        """Persist this draft to Paperless and return the new resource id.
+        """Persist this draft to Paperless and return the new resource identifier.
 
-        Delegates to ``service.save()``.
+        Delegates to :meth:`~pypaperless.services.mixins.creatable.CreatableMixin.save`.
 
-        Example:
-        -------
-        ```python
-        draft = paperless.tags.create(name="urgent")
-        new_id = await draft.save()
-        ```
+        Example::
+
+            draft = paperless.tags.create(name="urgent")
+            new_id = await draft.save()
 
         """
         return cast("int | str", await getattr(self._client, self._resource).save(self))

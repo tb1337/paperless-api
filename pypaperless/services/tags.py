@@ -31,9 +31,16 @@ class TagService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[TagFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate tags with server-side filters.
 
-        See :class:`~pypaperless.models.filters.TagFilters` for available keys.
+        See :class:`~pypaperless.models.filters.TagFilters` for all available keys.
+
+        Example::
+
+            async with paperless.tags.filter(name__icontains="urgent") as filtered:
+                async for tag in filtered:
+                    print(tag.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

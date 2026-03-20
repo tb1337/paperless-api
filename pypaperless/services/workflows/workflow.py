@@ -35,26 +35,22 @@ class WorkflowService(
 
     @property
     def actions(self) -> WorkflowActionService:
-        """Return the attached `WorkflowActionService` instance.
+        """Return the ``WorkflowActionService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        wf_action = await paperless.workflows.actions(5)
-        ```
+        Example::
+
+            action = await paperless.workflows.actions(5)
 
         """
         return self._actions
 
     @property
     def triggers(self) -> WorkflowTriggerService:
-        """Return the attached `WorkflowTriggerService` instance.
+        """Return the ``WorkflowTriggerService`` sub-service.
 
-        Example:
-        -------
-        ```python
-        wf_trigger = await paperless.workflows.triggers(23)
-        ```
+        Example::
+
+            trigger = await paperless.workflows.triggers(23)
 
         """
         return self._triggers

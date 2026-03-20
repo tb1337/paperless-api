@@ -12,19 +12,23 @@ class UpdatableMixin(ResourceServiceProtocol[ResourceT]):
     """Provide the `update` method for PyPaperless services."""
 
     async def update(self, model: ResourceT, *, only_changed: bool = True) -> bool:
-        """Send changed `model data` to Paperless.
+        """Send changed model data to Paperless.
 
-        Return `True` when any attribute was updated, `False` otherwise.
+        Returns ``True`` when at least one attribute was updated, ``False`` when
+        nothing changed.
 
-        Example:
-        -------
-        ```python
-        document = await paperless.documents(42)
+        Args:
+            model:        The model instance with modified attributes.
+            only_changed: When ``True`` (default), only changed fields are sent
+                          via ``PATCH``.  Set to ``False`` to replace the full
+                          resource via ``PUT``.
 
-        document.title = "New Title"
-        if await paperless.documents.update(document):
-            print("Successfully updated a field!")
-        ```
+        Example::
+
+            document = await paperless.documents(42)
+            document.title = "New Title"
+            if await paperless.documents.update(document):
+                print("Updated.")
 
         """
         params = self._get_request_params()

@@ -19,16 +19,14 @@ class DeletableMixin:
     _client: "Paperless"
 
     async def delete(self) -> bool:
-        """Delete this model from Paperless. There is no point of return.
+        """Delete this model instance from Paperless.  This action cannot be undone.
 
-        Delegates to ``service.delete()``.
+        Delegates to :meth:`~pypaperless.services.mixins.deletable.DeletableMixin.delete`.
 
-        Example:
-        -------
-        ```python
-        doc = await paperless.documents(42)
-        await doc.delete()
-        ```
+        Example::
+
+            doc = await paperless.documents(42)
+            await doc.delete()
 
         """
         return cast("bool", await getattr(self._client, self._resource).delete(self))

@@ -15,17 +15,20 @@ class CallableMixin(ResourceServiceProtocol[ResourceT]):
         *,
         lazy: bool = False,
     ) -> ResourceT:
-        """Request exactly one resource item.
+        """Request exactly one resource item by primary key.
 
-        Example:
-        -------
-        ```python
-        # request a document
-        document = await paperless.documents(42)
+        Args:
+            pk:   Primary key of the resource item to retrieve.
+            lazy: When ``True``, return a model instance without hitting the
+                  API — only the ``id`` field is populated.
 
-        # initialize a model without fetching data
-        document = await paperless.documents(42, lazy=True)
-        ```
+        Example::
+
+            # fetch a document from the API
+            document = await paperless.documents(42)
+
+            # initialise a stub without network access
+            document = await paperless.documents(42, lazy=True)
 
         """
         if lazy:

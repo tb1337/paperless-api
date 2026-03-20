@@ -46,15 +46,16 @@ class Page[ResourceT: "PaperlessModel"](BaseModel):
 
     @property
     def items(self) -> list[ResourceT]:
-        """Return the results list field with mapped PyPaperless `models`.
+        """Return this page's results deserialized as model instances.
 
-        Example:
-        -------
-        ```python
-        async for page in paperless.documents.pages():
-            assert isinstance(page.results.pop(), Document) # fails, it is a dict
-            assert isinstance(page.items.pop(), Document) # ok
-        ```
+        Unlike the raw :attr:`results` list (which contains plain dicts), this
+        property deserializes each entry into the appropriate model class.
+
+        Example::
+
+            async for page in paperless.documents.pages():
+                for doc in page.items:
+                    print(doc.title)  # doc is a Document instance
 
         """
 
@@ -93,7 +94,10 @@ class Page[ResourceT: "PaperlessModel"](BaseModel):
 
     @classmethod
     def from_data(cls, client: "Paperless", data: Any) -> "Page[ResourceT]":
-        """Create a Page instance from raw API response data."""
+        """Construct a :class:`Page` from a raw API response dict.
+
+        Primarily used by :class:`~pypaperless.services.generators.page.PageGenerator`.
+        """
         instance = cls.model_validate(data)
         object.__setattr__(instance, "_client", client)
         return instance

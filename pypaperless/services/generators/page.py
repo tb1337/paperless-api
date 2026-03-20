@@ -12,12 +12,17 @@ if TYPE_CHECKING:
 
 
 class PageGenerator(PaperlessService, AsyncIterator):
-    """Async iterator that yields :class:`Page` objects for a Paperless API endpoint.
+    """Async iterator that yields :class:`~pypaperless.models.pages.Page` objects.
 
-    `client`: A :class:`Paperless` instance.
-    `url`: The API endpoint URL returning paginated results.
-    `resource_cls`: The model class used to map raw result dicts.
-    `params`: Optional query string parameters.
+    Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableMixin.pages`
+    to fetch and paginate through API results.
+
+    Args:
+        client:       A :class:`~pypaperless.client.Paperless` instance.
+        url:          The API endpoint URL returning paginated results.
+        resource_cls: The model class used to map raw result dicts.
+        params:       Optional query string parameters.
+
     """
 
     _page: Page | None

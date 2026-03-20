@@ -15,7 +15,20 @@ class DocumentHistoryService(DocumentScopedServiceBase):
     _resource_cls = DocumentHistory
 
     async def __call__(self, pk: int | None = None) -> list[DocumentHistory]:
-        """Request and return the document history entries."""
+        """Return all history entries for a document.
+
+        Args:
+            pk: Document primary key.  May be omitted when the service is
+                accessed via a :class:`~pypaperless.models.documents.document.Document`
+                instance (``doc.history()``).
+
+        Example::
+
+            entries = await paperless.documents.history(42)
+            for entry in entries:
+                print(entry.type, entry.timestamp)
+
+        """
         doc_pk = self._get_document_pk(pk)
         res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
         return [

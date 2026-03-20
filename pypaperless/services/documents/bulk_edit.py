@@ -29,6 +29,11 @@ class DocumentBulkEditService(PaperlessService):
             documents:     List of document primary keys.
             correspondent: Correspondent primary key to assign, or ``None`` to clear.
 
+        Example::
+
+            await paperless.documents.bulk_edit.set_correspondent([1, 2, 3], 5)
+            await paperless.documents.bulk_edit.set_correspondent([1, 2, 3], None)  # clear
+
         """
         payload = {
             "documents": documents,
@@ -47,6 +52,11 @@ class DocumentBulkEditService(PaperlessService):
         Args:
             documents:     List of document primary keys.
             document_type: DocumentType primary key to assign, or ``None`` to clear.
+
+        Example::
+
+            await paperless.documents.bulk_edit.set_document_type([1, 2], 3)
+            await paperless.documents.bulk_edit.set_document_type([1, 2], None)  # clear
 
         """
         payload = {
@@ -67,6 +77,11 @@ class DocumentBulkEditService(PaperlessService):
             documents:    List of document primary keys.
             storage_path: StoragePath primary key to assign, or ``None`` to clear.
 
+        Example::
+
+            await paperless.documents.bulk_edit.set_storage_path([1, 2], 4)
+            await paperless.documents.bulk_edit.set_storage_path([1, 2], None)  # clear
+
         """
         payload = {
             "documents": documents,
@@ -86,6 +101,10 @@ class DocumentBulkEditService(PaperlessService):
             documents: List of document primary keys.
             tag:       Tag primary key to add.
 
+        Example::
+
+            await paperless.documents.bulk_edit.add_tag([1, 2, 3], 7)
+
         """
         payload = {
             "documents": documents,
@@ -104,6 +123,10 @@ class DocumentBulkEditService(PaperlessService):
         Args:
             documents: List of document primary keys.
             tag:       Tag primary key to remove.
+
+        Example::
+
+            await paperless.documents.bulk_edit.remove_tag([1, 2, 3], 7)
 
         """
         payload = {
@@ -126,6 +149,14 @@ class DocumentBulkEditService(PaperlessService):
             documents:   List of document primary keys.
             add_tags:    List of tag primary keys to add.
             remove_tags: List of tag primary keys to remove.
+
+        Example::
+
+            await paperless.documents.bulk_edit.modify_tags(
+                [1, 2, 3],
+                add_tags=[5, 6],
+                remove_tags=[2],
+            )
 
         """
         payload = {
@@ -150,6 +181,14 @@ class DocumentBulkEditService(PaperlessService):
                                   a ``{pk: value}`` dict.
             remove_custom_fields: Custom fields to remove — either a list of PKs or
                                   a ``{pk: value}`` dict.
+
+        Example::
+
+            await paperless.documents.bulk_edit.modify_custom_fields(
+                [1, 2],
+                add_custom_fields={3: "open"},
+                remove_custom_fields=[4],
+            )
 
         """
         payload = {
@@ -182,6 +221,15 @@ class DocumentBulkEditService(PaperlessService):
                          instead of replacing them.  Owner is only updated for
                          documents that currently have no owner.
 
+        Example::
+
+            from pypaperless.models.types import Permissions
+            await paperless.documents.bulk_edit.set_permissions(
+                [1, 2, 3],
+                owner=1,
+                permissions=Permissions(view_users=[2, 3], change_users=[1]),
+            )
+
         """
         parameters: dict = {"merge": merge}
         if owner is not None:
@@ -201,6 +249,10 @@ class DocumentBulkEditService(PaperlessService):
         Args:
             documents: List of document primary keys to move to trash.
 
+        Example::
+
+            await paperless.documents.bulk_edit.delete([10, 11, 12])
+
         """
         await self._post(API_PATH["documents_delete"], json={"documents": documents})
 
@@ -209,6 +261,10 @@ class DocumentBulkEditService(PaperlessService):
 
         Args:
             documents: List of document primary keys to reprocess.
+
+        Example::
+
+            await paperless.documents.bulk_edit.reprocess([1, 2, 3])
 
         """
         await self._post(API_PATH["documents_reprocess"], json={"documents": documents})
@@ -226,6 +282,10 @@ class DocumentBulkEditService(PaperlessService):
             documents:   List of document primary keys to rotate.
             degrees:     Rotation angle in degrees (e.g. ``90``, ``180``, ``270``).
             source_mode: Whether to operate on ``"latest_version"`` or ``"original"``.
+
+        Example::
+
+            await paperless.documents.bulk_edit.rotate([1, 2], 90)
 
         """
         payload = {
@@ -249,14 +309,22 @@ class DocumentBulkEditService(PaperlessService):
         Args:
             documents:            List of document primary keys to merge.
             metadata_document_id: Primary key of the document whose metadata
-                                  should be used for the new merged document.
-                                  Pass ``None`` to use defaults.
-            delete_originals:     When ``True``, the source documents are moved to
+                                  should be used for the merged result.  Pass
+                                  ``None`` to use defaults.
+            delete_originals:     When ``True``, source documents are moved to
                                   trash after merging.
             archive_fallback:     When ``True``, use the archived version when the
                                   original is unavailable.
             source_mode:          Whether to operate on ``"latest_version"`` or
                                   ``"original"``.
+
+        Example::
+
+            await paperless.documents.bulk_edit.merge(
+                [10, 11, 12],
+                metadata_document_id=10,
+                delete_originals=True,
+            )
 
         """
         payload: dict = {
@@ -284,18 +352,26 @@ class DocumentBulkEditService(PaperlessService):
         Note: the API only supports a **single** document per request.
 
         Args:
-            document:        Primary key of the document to edit.
-            operations:      List of page operations.  Each entry must have a
-                             required ``"page"`` key and optional ``"rotate"`` and
-                             ``"doc"`` keys.
-            delete_original: When ``True``, the source document is moved to trash
-                             after editing.
-            update_document: When ``True``, the source document is updated in-place
-                             rather than creating a new document.
+            document:         Primary key of the document to edit.
+            operations:       List of page operations.  Each entry must have a
+                              required ``"page"`` key and optional ``"rotate"``
+                              and ``"doc"`` keys.
+            delete_original:  When ``True``, the source document is moved to trash
+                              after editing.
+            update_document:  When ``True``, the source document is updated in-place
+                              rather than creating a new document.
             include_metadata: When ``True``, metadata is carried over to the
                               resulting document.
-            source_mode:     Whether to operate on ``"latest_version"`` or
-                             ``"original"``.
+            source_mode:      Whether to operate on ``"latest_version"`` or
+                              ``"original"``.
+
+        Example::
+
+            await paperless.documents.bulk_edit.edit_pdf(
+                42,
+                operations=[{"page": 1, "rotate": 90}, {"page": 3}],
+                delete_original=True,
+            )
 
         """
         payload = {
@@ -329,6 +405,14 @@ class DocumentBulkEditService(PaperlessService):
             include_metadata: When ``True``, metadata is carried over.
             source_mode:      Whether to operate on ``"latest_version"`` or
                               ``"original"``.
+
+        Example::
+
+            await paperless.documents.bulk_edit.remove_password(
+                [5, 6],
+                password="secret",
+                delete_original=True,
+            )
 
         """
         payload = {

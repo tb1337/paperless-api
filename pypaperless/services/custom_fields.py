@@ -30,9 +30,16 @@ class CustomFieldService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[CustomFieldFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate custom fields with server-side filters.
 
-        See :class:`~pypaperless.models.filters.CustomFieldFilters` for available keys.
+        See :class:`~pypaperless.models.filters.CustomFieldFilters` for all available keys.
+
+        Example::
+
+            async with paperless.custom_fields.filter(name__icontains="amount") as filtered:
+                async for cf in filtered:
+                    print(cf.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

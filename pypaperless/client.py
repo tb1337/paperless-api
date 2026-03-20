@@ -22,7 +22,16 @@ from .utils import normalize_base_url, process_form_data
 
 
 class Paperless:
-    """Retrieves and manipulates data from and to Paperless via REST."""
+    """Async client for the Paperless-ngx REST API.
+
+    Use as an async context manager (recommended), or call
+    :meth:`initialize` and :meth:`close` manually::
+
+        async with Paperless("localhost:8000", "your-token") as paperless:
+            doc = await paperless.documents(42)
+            print(doc.title)
+
+    """
 
     async def __aenter__(self) -> "Paperless":
         """Return context manager."""
@@ -67,33 +76,35 @@ class Paperless:
         client: httpx.AsyncClient | None = None,
         request_api_version: int | None = None,
     ) -> None:
-        """Initialize a `Paperless` instance.
+        """Initialize a :class:`Paperless` instance.
 
-        Three configuration modes are supported:
+        Three configuration modes are supported.
 
-        **1. Explicit parameters:**
-        ```python
-        paperless = Paperless("localhost:8000", "your-token")
-        ```
+        Explicit URL and token::
 
-        **2. Config object:**
-        ```python
-        cfg = PaperlessConfig(url="localhost:8000", token="your-token")
-        paperless = Paperless(config=cfg)
-        ```
+            paperless = Paperless("localhost:8000", "your-token")
 
-        **3. Environment variables (no arguments):**
-        Set ``PYPAPERLESS_URL`` and optionally ``PYPAPERLESS_TOKEN`` /
-        ``PYPAPERLESS_REQUEST_API_VERSION`` before starting your application.
-        ```python
-        paperless = Paperless()
-        ```
+        Config object via :class:`~pypaperless.settings.PaperlessConfig`::
 
-        `url`: A hostname, IP-address, or full URL string.
-        `token`: An API token generated in Paperless Django settings, or via `generate_api_token`.
-        `config`: A `PaperlessConfig` instance with all connection parameters.
-        `client`: A custom `httpx.AsyncClient` to use for requests.
-        `request_api_version`: Override the API version header sent with each request.
+            cfg = PaperlessConfig(url="localhost:8000", token="your-token")
+            paperless = Paperless(config=cfg)
+
+        Environment variables — set ``PYPAPERLESS_URL`` and optionally
+        ``PYPAPERLESS_TOKEN`` / ``PYPAPERLESS_REQUEST_API_VERSION``::
+
+            paperless = Paperless()
+
+        Args:
+            url:                  A hostname, IP-address, or full URL string.
+            token:                An API token from Paperless Django admin or via
+                                  :meth:`generate_api_token`.
+            config:               A :class:`~pypaperless.settings.PaperlessConfig`
+                                  with all connection parameters.
+            client:               A custom :class:`httpx.AsyncClient` to use for
+                                  requests.
+            request_api_version:  Override the API version header sent with each
+                                  request.
+
         """
         if config is not None:
             _url = config.url
@@ -176,21 +187,27 @@ class Paperless:
         password: str,
         client: httpx.AsyncClient | None = None,
     ) -> str:
-        """Request Paperless to generate an api token for the given credentials.
+        """Request Paperless to generate an API token for the given credentials.
 
-        Warning: the request is plain and insecure. Don't use this in production
-        environments or businesses.
+        .. warning::
 
-        Warning: error handling is low for this method, as it is just a helper.
+            The token request is sent as plain HTTP — do not use this in
+            production or on untrusted networks.
 
-        Example:
-        -------
-        ```python
-        token = Paperless.generate_api_token("example.com:8000", "api_user", "secret_password")
+        Args:
+            url:      Hostname, IP-address, or full URL of the Paperless instance.
+            username: Paperless user name.
+            password: Paperless user password.
+            client:   Optional :class:`httpx.AsyncClient` to reuse.  A new client
+                      is created and closed automatically when not provided.
 
-        paperless = Paperless("example.com:8000", token)
-        # do something
-        ```
+        Example::
+
+            token = await Paperless.generate_api_token(
+                "example.com:8000", "api_user", "secret"
+            )
+            async with Paperless("example.com:8000", token) as paperless:
+                ...
 
         """
         external_client = client is not None
@@ -221,7 +238,17 @@ class Paperless:
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
-        """Initialize and validate the connection to Paperless."""
+        """Initialize and validate the connection to Paperless.
+
+        Called automatically by :meth:`__aenter__`.  Required when **not**
+        using the async context manager::
+
+            paperless = Paperless("localhost:8000", "your-token")
+            await paperless.initialize()
+            # … use paperless …
+            await paperless.close()
+
+        """
         res = await self.request("get", API_PATH["index"])
         try:
             res.raise_for_status()
@@ -246,17 +273,18 @@ class Paperless:
         params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Send a request to the Paperless api and return the `httpx.Response`.
+        """Send a request to the Paperless API and return the raw :class:`httpx.Response`.
 
-        This method provides a little interface for utilizing multipart form data.
+        Args:
+            method: HTTP method string: ``"get"``, ``"post"``, ``"patch"``,
+                    ``"put"``, ``"delete"``, ``"head"``, or ``"options"``.
+            path:   API path relative to the base URL, or an absolute URL string.
+            json:   Dict to send as JSON request body.
+            data:   Dict to send as form-encoded body.
+            form:   Dict converted to multipart form data (overrides *data*).
+            params: Dict of query string parameters.
+            **kwargs: Forwarded to :meth:`httpx.AsyncClient.request`.
 
-        `method`: A http method: get, post, patch, put, delete, head, options
-        `path`: A path to the endpoint or a string url.
-        `json`: A dict containing the json data.
-        `data`: A dict containing the data to send in the request body.
-        `form`: A dict with form data, which gets converted to multipart form data.
-        `params`: A dict with query parameters.
-        `kwargs`: Optional attributes for the `httpx.AsyncClient.request` method.
         """
         if self._client is None:
             self._client = httpx.AsyncClient()

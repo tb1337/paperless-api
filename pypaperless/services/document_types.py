@@ -31,9 +31,16 @@ class DocumentTypeService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[DocumentTypeFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate document types with server-side filters.
 
-        See :class:`~pypaperless.models.filters.DocumentTypeFilters` for available keys.
+        See :class:`~pypaperless.models.filters.DocumentTypeFilters` for all available keys.
+
+        Example::
+
+            async with paperless.document_types.filter(name__icontains="invoice") as filtered:
+                async for dt in filtered:
+                    print(dt.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

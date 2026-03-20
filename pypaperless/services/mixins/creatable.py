@@ -24,14 +24,15 @@ class CreatableMixin(ResourceServiceProtocol[ResourceT]):
     _draft_cls: type[ResourceT]
 
     def create(self, **kwargs: Any) -> ResourceT:
-        """Return a fresh and empty `PaperlessModel` instance.
+        """Return a new draft :class:`~pypaperless.models.base.PaperlessModel` instance.
 
-        Example:
-        -------
-        ```python
-        draft = paperless.documents.create(document=bytes(...), title="New Document")
-        # do something
-        ```
+        The returned draft is not persisted until :meth:`save` is called.
+
+        Example::
+
+            draft = paperless.tags.create(name="urgent")
+            draft.color = "#ff0000"
+            new_id = await paperless.tags.save(draft)
 
         """
         if not hasattr(self, "_draft_cls"):
@@ -42,19 +43,21 @@ class CreatableMixin(ResourceServiceProtocol[ResourceT]):
         return self._draft_cls.from_data(self._client, data=kwargs)
 
     async def save(self, draft: _DraftLike) -> int | str:
-        """Create a new `resource item` in Paperless.
+        """Persist a draft to Paperless and return the new resource identifier.
 
-        Return the created item `id` (int), or a task UUID (str) for asynchronous creation.
+        Returns the created item ``id`` (``int``) for synchronous creation, or a
+        Celery task UUID (``str``) for asynchronous creation (e.g. documents).
 
-        Example:
-        -------
-        ```python
-        draft = paperless.documents.create(document=bytes(...))
-        draft.title = "Add a title"
+        Args:
+            draft: A draft model instance created by :meth:`create`.
 
-        # request Paperless to store the new item
-        await paperless.documents.save(draft)
-        ```
+        Example::
+
+            draft = paperless.documents.create(
+                document=open("invoice.pdf", "rb").read(),
+                title="Invoice",
+            )
+            task_id = await paperless.documents.save(draft)
 
         """
         draft.validate_draft()

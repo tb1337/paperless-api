@@ -28,14 +28,12 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     _aiter_filters: dict[str, Any] | None
 
     async def __aiter__(self) -> AsyncIterator[ResourceT]:
-        """Iterate over resource items.
+        """Iterate over all resource items, page by page.
 
-        Example:
-        -------
-        ```python
-        async for item in paperless.documents:
-            # do something
-        ```
+        Example::
+
+            async for item in paperless.documents:
+                print(item.title)
 
         """
         async for page in self.pages():
@@ -62,25 +60,22 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
         self: Self,
         **kwargs: Unpack[_BaseFilters],
     ) -> AsyncGenerator[Self]:
-        """Provide context for iterating over resource items with query parameters.
+        """Context manager for iterating over resource items with query parameters.
 
-        Example:
-        -------
-        ```python
-        filters = {
-            "page_size": 1337,
-            "title__icontains": "2023",
-        }
+        The context variable is the service itself, scoped to the given filters.
+        Use :meth:`__aiter__` or :meth:`pages` inside the block.
 
-        async with paperless.documents.filter(**filters):
-            # iterate over resource items ...
-            async for item in paperless.documents:
-                ...
+        Example::
 
-            # ... or iterate pages as-is
-            async for page in paperless.documents.pages():
-                ...
-        ```
+            async with paperless.documents.filter(
+                page_size=25,
+                title__icontains="2023",
+            ) as filtered:
+                async for item in filtered:
+                    print(item.title)
+
+                async for page in filtered.pages():
+                    print(page.count)
 
         """
         async with self._store_filters(**kwargs) as ctx:
@@ -89,22 +84,40 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     async def all(self) -> list[int]:
         """Return a list of all resource item primary keys.
 
-        When used within a `filter()` context, returns a list of filtered primary keys.
+        When used within a :meth:`filter` context, returns only the filtered
+        primary keys.
+
+        Example::
+
+            pks = await paperless.documents.all()
+            # [1, 2, 3, …]
+
         """
         page = await anext(self.pages(page=1))
         return page.all
 
     async def as_dict(self) -> dict[int, ResourceT]:
-        """Shortcut for returning a primary key/object dict of all resource items.
+        """Return a ``{pk: model}`` mapping of all resource items.
 
-        When used within a `filter()` context, data is filtered.
+        When used within a :meth:`filter` context, only filtered items are included.
+
+        Example::
+
+            docs = await paperless.documents.as_dict()
+            doc = docs[42]
+
         """
         return {item.id: item async for item in self}  # type: ignore[attr-defined]
 
     async def as_list(self) -> list[ResourceT]:
-        """Shortcut for returning a list of all resource items.
+        """Return a flat list of all resource items.
 
-        When used within a `filter()` context, data is filtered.
+        When used within a :meth:`filter` context, only filtered items are included.
+
+        Example::
+
+            tags = await paperless.tags.as_list()
+
         """
         return [item async for item in self]
 
@@ -115,15 +128,20 @@ class IterableMixin(ResourceServiceProtocol[ResourceT]):
     ) -> "AsyncIterator[Page[ResourceT]]":
         """Iterate over resource pages.
 
-        `page`: A page number to start with.
-        `page_size`: The page size for each requested batch.
+        Each yielded :class:`~pypaperless.models.pages.Page` contains up to
+        *page_size* items.  Use within a :meth:`filter` context to apply
+        server-side filters.
 
-        Example:
-        -------
-        ```python
-        async for item in paperless.documents.pages():
-            # do something
-        ```
+        Args:
+            page:      Page number to start from (1-based).
+            page_size: Maximum number of items per page.
+
+        Example::
+
+            async for page in paperless.documents.pages(page_size=50):
+                print(f"Page {page.current_page} / {page.last_page}")
+                for doc in page:
+                    print(doc.title)
 
         """
         params: dict[str, Any] = dict(getattr(self, "_aiter_filters", None) or {})

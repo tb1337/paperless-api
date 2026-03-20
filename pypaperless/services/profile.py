@@ -15,7 +15,14 @@ class ProfileService(ResourceService):
     _resource_cls = Profile
 
     async def __call__(self) -> Profile:
-        """Request the `Profile` model data."""
+        """Fetch the current user's Paperless profile.
+
+        Example::
+
+            profile = await paperless.profile()
+            print(profile.email, profile.first_name)
+
+        """
         res = await self._client.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)
 
@@ -27,14 +34,24 @@ class ProfileService(ResourceService):
         first_name: str | None = None,
         last_name: str | None = None,
     ) -> Profile:
-        """Update the user profile partially via PATCH.
+        """Update the current user's profile partially via ``PATCH``.
 
-        Only the provided (non-None) fields are sent to the API.
+        Only fields that are explicitly provided (non-``None``) are sent to the
+        API.  Returns a refreshed :class:`~pypaperless.models.profile.Profile`.
 
-        `email`: new e-mail address.
-        `password`: new plain-text password.
-        `first_name`: first name.
-        `last_name`: last name.
+        Args:
+            email:      New e-mail address.
+            password:   New plain-text password.
+            first_name: First name.
+            last_name:  Last name.
+
+        Example::
+
+            profile = await paperless.profile.update(
+                email="new@example.com",
+                first_name="Ada",
+            )
+
         """
         payload: dict[str, object] = {}
         if email is not None:

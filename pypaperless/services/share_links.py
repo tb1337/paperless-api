@@ -30,9 +30,16 @@ class ShareLinkService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[ShareLinkFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate share links with server-side filters.
 
-        See :class:`~pypaperless.models.filters.ShareLinkFilters` for available keys.
+        See :class:`~pypaperless.models.filters.ShareLinkFilters` for all available keys.
+
+        Example::
+
+            async with paperless.share_links.filter(document=42) as filtered:
+                async for link in filtered:
+                    print(link.slug)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

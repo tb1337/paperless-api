@@ -31,9 +31,16 @@ class CorrespondentService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[CorrespondentFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate correspondents with server-side filters.
 
-        See :class:`~pypaperless.models.filters.CorrespondentFilters` for available keys.
+        See :class:`~pypaperless.models.filters.CorrespondentFilters` for all available keys.
+
+        Example::
+
+            async with paperless.correspondents.filter(name__icontains="acme") as filtered:
+                async for c in filtered:
+                    print(c.name)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx

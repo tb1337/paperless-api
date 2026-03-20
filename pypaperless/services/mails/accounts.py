@@ -22,14 +22,31 @@ class MailAccountService(
     _resource_cls = MailAccount
 
     async def test(self) -> dict[str, object]:
-        """Test the configured mail account connections."""
+        """Test all configured mail account connections.
+
+        Returns a dict with per-account test results from Paperless.
+
+        Example::
+
+            results = await paperless.mail_accounts.test()
+
+        """
         return cast(
             "dict[str, object]",
             await self._client.request_json("post", API_PATH["mail_accounts_test"], json={}),
         )
 
     async def process(self, pk: int) -> None:
-        """Process unread mail for the given account id."""
+        """Trigger processing of unread mail for the given account.
+
+        Args:
+            pk: Primary key of the mail account to process.
+
+        Example::
+
+            await paperless.mail_accounts.process(1)
+
+        """
         res = await self._client.request(
             "post",
             API_PATH["mail_accounts_process"].format(pk=pk),

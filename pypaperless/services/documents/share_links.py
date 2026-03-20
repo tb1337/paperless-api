@@ -15,7 +15,20 @@ class DocumentShareLinkService(DocumentScopedServiceBase):
     _resource_cls = ShareLink
 
     async def __call__(self, pk: int | None = None) -> list[ShareLink]:
-        """Request and return the document's `ShareLink` list."""
+        """Return all share links for a document.
+
+        Args:
+            pk: Document primary key.  May be omitted when the service is
+                accessed via a :class:`~pypaperless.models.documents.document.Document`
+                instance (``doc.share_links()``).
+
+        Example::
+
+            links = await paperless.documents.share_links(42)
+            for link in links:
+                print(link.slug)
+
+        """
         doc_pk = self._get_document_pk(pk)
         res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
         return [self._resource_cls.from_data(self._client, item) for item in res]

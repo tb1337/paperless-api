@@ -22,12 +22,10 @@ class TaskService(ResourceService):
     async def __aiter__(self) -> AsyncIterator[Task]:
         """Iterate over all task items.
 
-        Example:
-        -------
-        ```python
-        async for task in paperless.tasks:
-            # do something
-        ```
+        Example::
+
+            async for task in paperless.tasks:
+                print(task.task_id, task.status)
 
         """
         async for item in self.filter():
@@ -39,12 +37,10 @@ class TaskService(ResourceService):
         See :class:`~pypaperless.models.filters.TaskFilters` for available keys.
         When called with no arguments, returns all tasks (same as iterating directly).
 
-        Example:
-        -------
-        ```python
-        async for task in paperless.tasks.filter(status="SUCCESS", acknowledged=False):
-            # do something
-        ```
+        Example::
+
+            async for task in paperless.tasks.filter(status="SUCCESS", acknowledged=False):
+                print(task.task_id)
 
         """
         res = await self._client.request_json("get", self._api_path, params=dict(kwargs))
@@ -52,17 +48,15 @@ class TaskService(ResourceService):
             yield self._resource_cls.from_data(self._client, data)
 
     async def __call__(self, task_id: int | str) -> Task:
-        """Request exactly one task by id.
+        """Fetch a single task by primary key or Celery UUID.
 
-        If task_id is `str`: interpret it as a task uuid.
-        If task_id is `int`: interpret it as a primary key.
+        Args:
+            task_id: An ``int`` primary key, or a ``str`` Celery task UUID.
 
-        Example:
-        -------
-        ```python
-        task = await paperless.tasks("uuid-string")
-        task = await paperless.tasks(1337)
-        ```
+        Example::
+
+            task = await paperless.tasks("a1b2c3d4-...")
+            task = await paperless.tasks(1337)
 
         """
         if isinstance(task_id, str):
@@ -80,7 +74,18 @@ class TaskService(ResourceService):
             return self._resource_cls.from_data(self._client, data)
 
     async def acknowledge(self, tasks: list[int]) -> int:
-        """Acknowledge a list of task primary keys."""
+        """Acknowledge a list of tasks by primary key.
+
+        Returns the number of tasks that were acknowledged.
+
+        Args:
+            tasks: List of task primary keys to acknowledge.
+
+        Example::
+
+            count = await paperless.tasks.acknowledge([1, 2, 3])
+
+        """
         data = cast(
             "dict[str, object]",
             await self._client.request_json(
@@ -92,7 +97,16 @@ class TaskService(ResourceService):
         return cast("int", data["result"])
 
     async def run(self, task_id: str) -> Task:
-        """Run a task by Celery UUID and return the created task."""
+        """Trigger a task by Celery UUID and return the resulting ``Task``.
+
+        Args:
+            task_id: Celery task UUID string.
+
+        Example::
+
+            task = await paperless.tasks.run("a1b2c3d4-...")
+
+        """
         data = cast(
             "dict[str, object]",
             await self._client.request_json(

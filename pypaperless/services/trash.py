@@ -25,9 +25,16 @@ class TrashService(
 
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self]:
-        """Iterate with server-side filters.
+        """Iterate trashed documents with server-side filters.
 
-        See :class:`~pypaperless.models.filters.DocumentFilters` for available keys.
+        See :class:`~pypaperless.models.filters.DocumentFilters` for all available keys.
+
+        Example::
+
+            async with paperless.trash.filter(title__icontains="old") as filtered:
+                async for doc in filtered:
+                    print(doc.title)
+
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
@@ -35,7 +42,13 @@ class TrashService(
     async def restore(self, documents: list[int]) -> None:
         """Restore the given documents from the trash.
 
-        `documents`: A list of document primary keys to restore.
+        Args:
+            documents: List of document primary keys to restore.
+
+        Example::
+
+            await paperless.trash.restore([10, 11])
+
         """
         res = await self._client.request(
             "post", self._api_path, json={"action": "restore", "documents": documents}
@@ -45,8 +58,15 @@ class TrashService(
     async def empty(self, documents: list[int] | None = None) -> None:
         """Permanently delete documents from the trash.
 
-        `documents`: An optional list of document primary keys to delete.
-        When ``None``, the entire trash is emptied.
+        Args:
+            documents: List of document primary keys to permanently delete.
+                       When ``None``, the entire trash is emptied.
+
+        Example::
+
+            await paperless.trash.empty([10, 11])  # specific documents
+            await paperless.trash.empty()           # empty entire trash
+
         """
         payload: dict = {"action": "empty"}
         if documents is not None:
