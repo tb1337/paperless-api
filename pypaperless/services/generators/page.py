@@ -42,9 +42,7 @@ class PageGenerator(PaperlessService, AsyncIterator):
             "current_page": self.params["page"],
             "page_size": self.params["page_size"],
         }
-        self._page = Page.from_data(self._client, data)
-        # Attach the resource class to the page for items mapping
-        self._page.set_resource_cls(self._resource_cls)
+        self._page = Page.from_data(self._client, data, resource_cls=self._resource_cls)
 
         # rise page by one to request next page on next iteration
         self.params["page"] += 1

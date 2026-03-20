@@ -4,19 +4,18 @@ import math
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import Field, PrivateAttr
+
+from .base import _PaperlessBase
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
-
     from .base import PaperlessModel
 
 
-class Page[ResourceT: "PaperlessModel"](BaseModel):
+class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     """Represent a single paginated response page from the Paperless API."""
 
-    _client: "Paperless" = PrivateAttr()
-    _resource_cls: type[ResourceT] = PrivateAttr()
+    _resource_cls: type[ResourceT] | None = PrivateAttr(default=None)
 
     # our fields
     current_page: int = 0
@@ -28,6 +27,12 @@ class Page[ResourceT: "PaperlessModel"](BaseModel):
     previous: str | None = None
     all: list[int] = Field(default_factory=list)
     results: list[dict[str, Any]] = Field(default_factory=list)
+
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind ``_client`` and ``_resource_cls`` from validation context."""
+        super().model_post_init(__context)
+        if isinstance(__context, dict) and "resource_cls" in __context:
+            self._resource_cls = __context["resource_cls"]
 
     @property
     def current_count(self) -> int:
@@ -60,6 +65,9 @@ class Page[ResourceT: "PaperlessModel"](BaseModel):
         """
 
         def mapper(data: dict[str, Any]) -> ResourceT:
+            if self._resource_cls is None:
+                msg = "Page was created without a resource_cls; pass resource_cls= to from_data()"
+                raise RuntimeError(msg)
             return self._resource_cls.from_data(self._client, data)
 
         return list(map(mapper, self.results))
@@ -91,17 +99,3 @@ class Page[ResourceT: "PaperlessModel"](BaseModel):
     def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
         """Return iter of `.items`."""
         return iter(self.items)
-
-    @classmethod
-    def from_data(cls, client: "Paperless", data: Any) -> "Page[ResourceT]":
-        """Construct a :class:`Page` from a raw API response dict.
-
-        Primarily used by :class:`~pypaperless.services.generators.page.PageGenerator`.
-        """
-        instance = cls.model_validate(data)
-        object.__setattr__(instance, "_client", client)
-        return instance
-
-    def set_resource_cls(self, resource_cls: type[ResourceT]) -> None:
-        """Set the resource class for items mapping."""
-        self._resource_cls = resource_cls

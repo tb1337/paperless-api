@@ -278,8 +278,7 @@ async def test_pages_object(api: Paperless) -> None:
         data["all"].append(i)
         data["results"].append({"id": i})
 
-    page = Page.from_data(api, data=data)
-    page.set_resource_cls(TestResource)
+    page = Page.from_data(api, data, resource_cls=TestResource)
 
     assert isinstance(page, Page)
     assert page.current_count == 100
