@@ -56,8 +56,7 @@ class BulkEditObjectsService(PaperlessService):
             payload["owner"] = owner
         if permissions is not None:
             payload["permissions"] = permissions.model_dump()
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._client.request_json("post", self._api_path, json=payload)
 
     async def delete(
         self,
@@ -81,5 +80,4 @@ class BulkEditObjectsService(PaperlessService):
             "object_type": object_type,
             "operation": "delete",
         }
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._client.request_json("post", self._api_path, json=payload)

@@ -50,10 +50,9 @@ class TrashService(
             await paperless.trash.restore([10, 11])
 
         """
-        res = await self._client.request(
+        await self._client.request_json(
             "post", self._api_path, json={"action": "restore", "documents": documents}
         )
-        res.raise_for_status()
 
     async def empty(self, documents: list[int] | None = None) -> None:
         """Permanently delete documents from the trash.
@@ -71,5 +70,4 @@ class TrashService(
         payload: dict = {"action": "empty"}
         if documents is not None:
             payload["documents"] = documents
-        res = await self._client.request("post", self._api_path, json=payload)
-        res.raise_for_status()
+        await self._client.request_json("post", self._api_path, json=payload)

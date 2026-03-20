@@ -333,8 +333,7 @@ class DocumentService(
             "message": message,
             "use_archive_version": use_archive_version,
         }
-        res = await self._client.request("post", API_PATH["documents_email"], json=data)
         try:
-            res.raise_for_status()
+            await self._client.request_json("post", API_PATH["documents_email"], json=data)
         except Exception as exc:
             raise SendEmailError from exc
