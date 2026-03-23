@@ -7,7 +7,7 @@ import httpx
 
 from . import services
 from .cache import PaperlessCache
-from .const import API_PATH, API_VERSION
+from .const import API_VERSION
 from .exceptions import InitializationError
 from .runtime import PaperlessRuntime
 from .settings import PaperlessSettings
@@ -167,14 +167,14 @@ class PaperlessClient:
             await paperless.close()
 
         """
-        res = await self._runtime.transport.request("get", API_PATH["index"])
         try:
-            res.raise_for_status()
-            self._api_version = int(res.headers.get("x-api-version", API_VERSION))
-            self._version = res.headers.get("x-version", None)
-            res.json()
+            info = await self._runtime.transport.probe()
+        except InitializationError:
+            raise
         except Exception as exc:
             raise InitializationError from exc
+        self._api_version = info.api_version
+        self._version = info.version
 
         self._initialized = True
         self.logger.info("Initialized.")

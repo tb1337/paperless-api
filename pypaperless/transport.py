@@ -1,7 +1,7 @@
 """Provide the HTTP transport layer for PyPaperless."""
 
 from json import JSONDecodeError
-from typing import Any
+from typing import Any, NamedTuple
 
 import httpx
 
@@ -15,6 +15,13 @@ from .exceptions import (
     PaperlessConnectionError,
 )
 from .utils import normalize_base_url, process_form_data
+
+
+class _HostInfo(NamedTuple):
+    """Version metadata returned by :meth:`PaperlessTransport.probe`."""
+
+    api_version: int
+    version: str | None
 
 
 class PaperlessTransport:
@@ -56,6 +63,27 @@ class PaperlessTransport:
         """Close the underlying :class:`httpx.AsyncClient`, if open."""
         if self._httpx_client:
             await self._httpx_client.aclose()
+
+    async def probe(self) -> "_HostInfo":
+        """Request the API index and return parsed host version info.
+
+        Validates that the response is reachable, returns HTTP 2xx, and
+        contains a JSON-parseable body.  Raises on any failure — the caller
+        is responsible for wrapping exceptions.
+
+        Example::
+
+            info = await transport.probe()
+            print(info.api_version, info.version)
+
+        """
+        res = await self.request("get", API_PATH["index"])
+        res.raise_for_status()
+        res.json()
+        return _HostInfo(
+            api_version=int(res.headers.get("x-api-version", API_VERSION)),
+            version=res.headers.get("x-version"),
+        )
 
     async def request(
         self,
