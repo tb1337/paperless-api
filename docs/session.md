@@ -16,14 +16,14 @@ Pass `url` and `token` directly to the constructor:
 paperless = Paperless("localhost:8000", "your-api-token")
 ```
 
-### 2. `PaperlessConfig` object
+### 2. `PaperlessSettings` object
 
-Build a `PaperlessConfig` instance and pass it via the `config` keyword. Useful when you want to construct or validate settings separately:
+Build a `PaperlessSettings` instance and pass it via the `config` keyword. Useful when you want to construct or validate settings separately:
 
 ```python
-from pypaperless import Paperless, PaperlessConfig
+from pypaperless import Paperless, PaperlessSettings
 
-cfg = PaperlessConfig(
+cfg = PaperlessSettings(
     url="https://paperless.example.com",
     token="your-api-token",
     request_api_version=9,  # optional - defaults to the built-in value
@@ -66,7 +66,7 @@ Paperless(
     url: str | None = None,
     token: str | None = None,
     *,
-    config: PaperlessConfig | None = None,
+    config: PaperlessSettings | None = None,
     client: httpx.AsyncClient | None = None,
     request_api_version: int | None = None,
 )
@@ -76,7 +76,7 @@ Paperless(
 | --------------------- | ----------------------------------------------------------------------- |
 | `url`                 | Hostname, IP address or full URL of your Paperless-ngx instance         |
 | `token`               | API token obtained from Paperless-ngx settings                          |
-| `config`              | A `PaperlessConfig` instance (alternative to `url` / `token`)           |
+| `config`              | A `PaperlessSettings` instance (alternative to `url` / `token`)         |
 | `client`              | Optional custom HTTP client (see below)                                 |
 | `request_api_version` | Pin a specific Paperless API version (defaults to the latest supported) |
 

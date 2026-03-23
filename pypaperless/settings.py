@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from .const import ENV_PREFIX, ENV_URL
 
 
-class PaperlessConfig(BaseSettings):
+class PaperlessSettings(BaseSettings):
     """Configuration for the `Paperless` client.
 
     All fields can be supplied via environment variables with the ``PYPAPERLESS_`` prefix:
@@ -23,7 +23,7 @@ class PaperlessConfig(BaseSettings):
 
     Example — explicit config object::
 
-        cfg = PaperlessConfig(url="https://paperless.example.com", token="mytoken")
+        cfg = PaperlessSettings(url="https://paperless.example.com", token="mytoken")
         async with PaperlessClient.from_config(cfg) as paperless:
             ...
     """
@@ -34,10 +34,10 @@ class PaperlessConfig(BaseSettings):
     token: str | None = None
 
     @model_validator(mode="after")
-    def _require_url(self) -> "PaperlessConfig":
+    def _require_url(self) -> "PaperlessSettings":
         if not self.url:
             msg = (
-                "PaperlessConfig requires a URL. "
+                "PaperlessSettings requires a URL. "
                 f"Pass url= explicitly or set the {ENV_URL} environment variable."
             )
             raise ValueError(msg)

@@ -7,7 +7,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pytest_httpx import HTTPXMock
 
-from pypaperless import PaperlessClient, PaperlessConfig, generate_api_token
+from pypaperless import PaperlessClient, PaperlessSettings, generate_api_token
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     BadJsonResponseError,
@@ -409,7 +409,7 @@ def test_process_form_data_duplicate_key_scalar_to_list() -> None:
 
 
 # ---------------------------------------------------------------------------
-# PaperlessConfig / multi-mode init tests
+# PaperlessSettings / multi-mode init tests
 # ---------------------------------------------------------------------------
 
 
@@ -422,7 +422,7 @@ def test_config_explicit_params() -> None:
 
 def test_config_object() -> None:
     """PaperlessClient.from_config(...) wires url and token correctly."""
-    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
+    cfg = PaperlessSettings(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
     api = PaperlessClient.from_config(cfg)
     assert api.base_url == PAPERLESS_TEST_URL
     assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN

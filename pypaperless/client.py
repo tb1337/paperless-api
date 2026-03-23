@@ -10,7 +10,7 @@ from .cache import PaperlessCache
 from .const import API_PATH, API_VERSION
 from .exceptions import InitializationError
 from .runtime import PaperlessRuntime
-from .settings import PaperlessConfig
+from .settings import PaperlessSettings
 from .transport import PaperlessTransport
 
 
@@ -79,19 +79,19 @@ class PaperlessClient:
     @classmethod
     def from_config(
         cls,
-        config: PaperlessConfig,
+        config: PaperlessSettings,
         *,
         client: httpx.AsyncClient | None = None,
     ) -> "PaperlessClient":
-        """Create a :class:`PaperlessClient` from a :class:`~pypaperless.settings.PaperlessConfig`.
+        """Create a :class:`PaperlessClient` from a :class:`.PaperlessSettings`.
 
         Args:
-            config: A :class:`~pypaperless.settings.PaperlessConfig` instance.
+            config: A :class:`~pypaperless.settings.PaperlessSettings` instance.
             client: A custom :class:`httpx.AsyncClient` to use for requests.
 
         Example::
 
-            cfg = PaperlessConfig(url="localhost:8000", token="your-token")
+            cfg = PaperlessSettings(url="localhost:8000", token="your-token")
             async with PaperlessClient.from_config(cfg) as paperless:
                 ...
 
@@ -123,7 +123,7 @@ class PaperlessClient:
                 ...
 
         """
-        return cls.from_config(PaperlessConfig(), client=client)
+        return cls.from_config(PaperlessSettings(), client=client)
 
     @property
     def base_url(self) -> str:

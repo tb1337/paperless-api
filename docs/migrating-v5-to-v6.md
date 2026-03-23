@@ -21,7 +21,7 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 | #   | What to change                                                                                                  | Section                                                                       |
 | --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | 1   | Replace `aiohttp` / `yarl` with `httpx`                                                                         | [Dependencies](#dependencies)                                                 |
-| 2   | Update `Paperless(...)` constructor arguments; new: `PaperlessConfig` and env vars                              | [Initializing the client](#initializing-the-client)                           |
+| 2   | Update `Paperless(...)` constructor arguments; new: `PaperlessSettings` and env vars                            | [Initializing the client](#initializing-the-client)                           |
 | 3   | Replace `reduce()` with `filter()` - different call pattern                                                     | [Iteration and filtering](#iteration-and-filtering)                           |
 | 4   | `draft()` renamed to `create()`; `update()`, `delete()`, `save()` moved to services - shortcuts still on models | [CRUD](#crud)                                                                 |
 | 5   | Replace `request_permissions = True` with `with_permissions()`                                                  | [Permissions](#permissions)                                                   |
@@ -77,20 +77,20 @@ The constructor signature changed. `session` was renamed to `client`, and `reque
 
 The `url` parameter no longer accepts `yarl.URL` objects - pass a plain string.
 
-### New: `PaperlessConfig` and environment variables
+### New: `PaperlessSettings` and environment variables
 
-v6 adds two additional initialization modes via the new `PaperlessConfig` class (backed by `pydantic-settings`):
+v6 adds two additional initialization modes via the new `PaperlessSettings` class (backed by `pydantic-settings`):
 
 **Config object** - useful when you want to construct or validate settings in one place:
 
 ```python
-from pypaperless import Paperless, PaperlessConfig
+from pypaperless import Paperless, PaperlessSettings
 
-cfg = PaperlessConfig(url="http://localhost:8000", token="mytoken")
+cfg = PaperlessSettings(url="http://localhost:8000", token="mytoken")
 paperless = Paperless(config=cfg)
 ```
 
-**Environment variables** - pass no arguments at all; `PaperlessConfig` reads the values automatically:
+**Environment variables** - pass no arguments at all; `PaperlessSettings` reads the values automatically:
 
 ```python
 paperless = Paperless()
