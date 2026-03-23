@@ -24,5 +24,5 @@ class ConfigService(ResourceService):
 
         """
         api_path = self._resource_cls.format_api_path(pk=1)
-        res = await self._client.request_json("get", api_path)
+        res = await self._client.transport.request_json("get", api_path)
         return self._resource_cls.from_data(self._client, res)

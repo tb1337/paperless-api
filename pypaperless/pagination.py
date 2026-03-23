@@ -1,15 +1,17 @@
-"""Provide the `Paginated` class."""
+"""Provide pagination primitives: Page and PageGenerator."""
 
 import math
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
+from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, PrivateAttr
 
-from .base import _PaperlessBase
+from pypaperless.models.base import _PaperlessBase
 
 if TYPE_CHECKING:
-    from .base import PaperlessModel
+    from pypaperless.models.base import PaperlessModel
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
@@ -99,3 +101,56 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     def __iter__(self) -> Iterator[ResourceT]:  # type: ignore[override]
         """Return iter of `.items`."""
         return iter(self.items)
+
+
+class PageGenerator(AsyncIterator["Page"]):
+    """Async iterator that yields :class:`Page` objects.
+
+    Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableService.pages`
+    to fetch and paginate through API results.
+
+    Args:
+        runtime:      A :class:`~pypaperless.runtime.PaperlessRuntime` instance.
+        url:          The API endpoint URL returning paginated results.
+        resource_cls: The model class used to map raw result dicts.
+        params:       Optional query string parameters.
+
+    """
+
+    def __init__(
+        self,
+        runtime: "PaperlessRuntime",
+        url: str,
+        resource_cls: type,
+        params: dict[str, Any] | None = None,
+    ) -> None:
+        """Initialize a :class:`PageGenerator` instance."""
+        self._runtime = runtime
+        self._page: Page | None = None
+        self._resource_cls = resource_cls
+        self._url = url
+
+        self.params = deepcopy(params) if params else {}
+        self.params.setdefault("page", 1)
+        self.params.setdefault("page_size", 150)
+
+    def __aiter__(self) -> "PageGenerator":
+        """Return self as iterator."""
+        return self
+
+    async def __anext__(self) -> "Page":
+        """Return next item from the current batch."""
+        if self._page is not None and self._page.is_last_page:
+            raise StopAsyncIteration
+
+        res = await self._runtime.transport.request_json("get", self._url, params=self.params)
+        data = {
+            **res,
+            "current_page": self.params["page"],
+            "page_size": self.params["page_size"],
+        }
+        self._page = Page.from_data(self._runtime, data, resource_cls=self._resource_cls)
+
+        self.params["page"] += 1
+
+        return self._page

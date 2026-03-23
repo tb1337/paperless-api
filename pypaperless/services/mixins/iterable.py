@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import ResourceT
+from pypaperless.pagination import PageGenerator
 from pypaperless.services.base import ResourceServiceProtocol
-from pypaperless.services.generators import PageGenerator
 
 if TYPE_CHECKING:
     from pypaperless.models import Page

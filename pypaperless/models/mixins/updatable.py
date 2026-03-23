@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, ClassVar, cast
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
     from pypaperless.const import PaperlessResource
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class UpdatableModel:
@@ -12,11 +12,11 @@ class UpdatableModel:
 
     Requires ``_resource`` to be set as a ``ClassVar[PaperlessResource]`` on the
     model. Its string value is the attribute name of the matching service on the
-    ``Paperless`` client (e.g. ``_resource = PaperlessResource.DOCUMENTS``).
+    ``PaperlessClient`` (e.g. ``_resource = PaperlessResource.DOCUMENTS``).
     """
 
     _resource: ClassVar["PaperlessResource"]
-    _client: "Paperless"
+    _client: "PaperlessRuntime"
 
     async def update(self, *, only_changed: bool = True) -> bool:
         """Persist changes on this model to Paperless.

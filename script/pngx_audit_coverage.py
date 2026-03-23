@@ -1,6 +1,6 @@
 """API coverage audit for pypaperless.
 
-Connects to the live Paperless instance and:
+Connects to the live PaperlessClient instance and:
 
   1. Fetches the OpenAPI schema (/api/schema/?format=json) as the authoritative
      source of field definitions for every endpoint.
@@ -36,7 +36,7 @@ from typing import Any
 
 import httpx
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.models import (
     Config,
@@ -240,7 +240,7 @@ SUBMODEL_MAPPINGS: list[tuple[type, str, str]] = [
 SUBMODEL_KNOWN_EXTRAS: dict[str, dict[str, str]] = {
     "StatusTasks": {
         # Schema Tasks only documents 4 fields; live API returns all 15 flat fields.
-        # Paperless consolidates index/classifier/sanity_check into this object.
+        # PaperlessClient consolidates index/classifier/sanity_check into this object.
         "celery_url": "not in schema; live API returns it in tasks object",
         "celery_error": "not in schema; live API returns it in tasks object",
         "index_status": "schema has separate Index component but API flattens into tasks",
@@ -572,7 +572,7 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-async def _fetch_item(p: Paperless, spec: EndpointSpec) -> dict[str, Any] | None:
+async def _fetch_item(p: PaperlessClient, spec: EndpointSpec) -> dict[str, Any] | None:
     """Return a representative raw JSON object for ``spec``, or None on error/no-data."""
     raw = await p.request_json("get", spec.path)
 
@@ -917,7 +917,7 @@ async def main() -> None:
         print(f"{RED}FAILED{RESET}: {exc}")
         oa_schema = {}
 
-    p = Paperless(
+    p = PaperlessClient(
         PAPERLESS_URL,
         PAPERLESS_TOKEN,
         request_api_version=9,

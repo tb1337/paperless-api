@@ -23,7 +23,7 @@ class ProfileService(ResourceService):
             print(profile.email, profile.first_name)
 
         """
-        res = await self._client.request_json("get", self._api_path)
+        res = await self._client.transport.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)
 
     async def update(
@@ -62,5 +62,5 @@ class ProfileService(ResourceService):
             payload["first_name"] = first_name
         if last_name is not None:
             payload["last_name"] = last_name
-        res = await self._client.request_json("patch", self._api_path, json=payload)
+        res = await self._client.transport.request_json("patch", self._api_path, json=payload)
         return self._resource_cls.from_data(self._client, res)

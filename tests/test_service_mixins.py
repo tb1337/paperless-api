@@ -7,7 +7,7 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import DraftFieldRequiredError
 from pypaperless.models import Page
@@ -41,7 +41,7 @@ class _SharedServiceTests:
     """Shared read-only test methods inherited by TestReadOnly and TestReadWrite."""
 
     async def test_pages(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
         httpx_mock.add_response(
@@ -57,7 +57,7 @@ class _SharedServiceTests:
             assert isinstance(item, mapping.model_cls)
 
     async def test_iter(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
         httpx_mock.add_response(
@@ -70,7 +70,7 @@ class _SharedServiceTests:
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
         httpx_mock.add_response(
@@ -85,7 +85,7 @@ class _SharedServiceTests:
             assert isinstance(item, int)
 
     async def test_call(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
         httpx_mock.add_response(
@@ -131,7 +131,7 @@ class TestReadOnly(_SharedServiceTests):
     """Read-only service operations: pages, iteration, dict/list helpers, single fetch."""
 
     async def test_as_dict(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
         httpx_mock.add_response(
@@ -146,7 +146,7 @@ class TestReadOnly(_SharedServiceTests):
             assert isinstance(obj, mapping.model_cls)
 
     async def test_as_list(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test as_list."""
         httpx_mock.add_response(
@@ -176,7 +176,7 @@ class TestReadWrite(_SharedServiceTests):
     """R/W service operations: filter, create, update, delete (in addition to read)."""
 
     async def test_filter(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test iter with filter."""
         httpx_mock.add_response(
@@ -194,7 +194,7 @@ class TestReadWrite(_SharedServiceTests):
                 assert isinstance(item, mapping.model_cls)
 
     async def test_create(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test create."""
         service = getattr(paperless, mapping.resource)
@@ -221,7 +221,7 @@ class TestReadWrite(_SharedServiceTests):
         assert new_pk >= 1
 
     async def test_update(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test update."""
         update_field = mapping.update_field
@@ -258,7 +258,7 @@ class TestReadWrite(_SharedServiceTests):
         assert getattr(to_update, update_field) == update_value
 
     async def test_delete(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test delete."""
         pk = mapping.data["results"][0]["id"]
@@ -300,7 +300,7 @@ class TestSecurableService:
     """SecurableService: request_permissions flag, with_permissions() context manager."""
 
     async def test_permissions(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test permissions."""
         getattr(paperless, mapping.resource).request_permissions = True
@@ -338,7 +338,7 @@ class TestSecurableService:
             assert isinstance(item.permissions, Permissions)
 
     async def test_permission_change(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test permission mutation is serialised in the PATCH request."""
         pk = mapping.data["results"][0]["id"]
@@ -376,7 +376,7 @@ class TestSecurableService:
         await getattr(paperless, mapping.resource).update(item)
 
     async def test_with_permissions_context_manager(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """with_permissions() enables the flag and resets it automatically on exit."""
         service = getattr(paperless, mapping.resource)
@@ -424,7 +424,7 @@ def test_permissions_from_existing_instance() -> None:
     assert result is non_dict_input
 
 
-async def test_iterable_filter_base_method(paperless: Paperless) -> None:
+async def test_iterable_filter_base_method(paperless: PaperlessClient) -> None:
     """IterableService.filter() stores filters for the context duration and clears them after."""
 
     class _MinimalModel(PaperlessModel):
@@ -464,7 +464,7 @@ class TestActiveRecord:
     """Active Record shortcuts: model.update(), model.delete(), draft.save()."""
 
     async def test_model_update(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """model.update() delegates to the bound service and updates model state."""
         update_field = mapping.update_field
@@ -489,7 +489,7 @@ class TestActiveRecord:
         assert getattr(item, update_field) == update_value
 
     async def test_model_delete(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """model.delete() delegates to the bound service."""
         pk = mapping.data["results"][0]["id"]
@@ -514,7 +514,7 @@ class TestActiveRecord:
         assert await item.delete() is False
 
     async def test_draft_save(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """draft.save() delegates to the bound service and returns the new pk."""
         if mapping.draft_defaults is None:

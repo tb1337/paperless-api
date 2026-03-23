@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.models.types import (
     CorrespondentFilters,
@@ -127,7 +127,7 @@ def test_filter_contains_expected_fields(cls: Any, expected_keys: Any) -> None:
 )
 async def test_service_filter_accepts_typed_kwargs(
     httpx_mock: HTTPXMock,
-    paperless: Paperless,
+    paperless: PaperlessClient,
     api_key: str,
     service_attr: str,
     filter_kwargs: dict,

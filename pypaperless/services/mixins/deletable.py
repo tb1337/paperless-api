@@ -22,5 +22,5 @@ class DeletableService(ResourceServiceProtocol[ResourceT]):
                 print("Document deleted.")
 
         """
-        res = await self._client.request("delete", model.api_path)
+        res = await self._client.transport.request("delete", model.api_path)
         return res.status_code == 204

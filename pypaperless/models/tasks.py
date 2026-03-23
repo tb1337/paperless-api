@@ -61,8 +61,8 @@ class Task(PaperlessModel):
 
     async def acknowledge(self) -> int:
         """Shortcut for ``paperless.tasks.acknowledge([self.id])``."""
-        return await self._client.tasks.acknowledge([cast("int", self.id)])
+        return cast("int", await self._client.tasks.acknowledge([cast("int", self.id)]))
 
     async def run(self) -> "Task":
         """Shortcut for ``paperless.tasks.run(self.task_id)``."""
-        return await self._client.tasks.run(cast("str", self.task_id))
+        return cast("Task", await self._client.tasks.run(cast("str", self.task_id)))

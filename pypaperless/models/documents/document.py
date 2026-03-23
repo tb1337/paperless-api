@@ -239,23 +239,35 @@ class Document(
 
     async def download(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.download(self.id)``."""
-        return await self._client.documents.download(cast("int", self.id), original=original)
+        return cast(
+            "DownloadedDocument",
+            await self._client.documents.download(cast("int", self.id), original=original),
+        )
 
     async def preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.preview(self.id)``."""
-        return await self._client.documents.preview(cast("int", self.id), original=original)
+        return cast(
+            "DownloadedDocument",
+            await self._client.documents.preview(cast("int", self.id), original=original),
+        )
 
     async def thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.thumbnail(self.id)``."""
-        return await self._client.documents.thumbnail(cast("int", self.id), original=original)
+        return cast(
+            "DownloadedDocument",
+            await self._client.documents.thumbnail(cast("int", self.id), original=original),
+        )
 
     async def metadata(self) -> "DocumentMeta":
         """Shortcut for ``paperless.documents.metadata(self.id)``."""
-        return await self._client.documents.metadata(cast("int", self.id))
+        return cast("DocumentMeta", await self._client.documents.metadata(cast("int", self.id)))
 
     async def suggestions(self) -> "DocumentSuggestions":
         """Shortcut for ``paperless.documents.suggestions(self.id)``."""
-        return await self._client.documents.suggestions(cast("int", self.id))
+        return cast(
+            "DocumentSuggestions",
+            await self._client.documents.suggestions(cast("int", self.id)),
+        )
 
     async def more_like(self) -> AsyncGenerator["Document"]:
         """Shortcut for ``paperless.documents.more_like(self.id)``."""

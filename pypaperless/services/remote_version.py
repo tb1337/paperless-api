@@ -23,5 +23,5 @@ class RemoteVersionService(ResourceService):
             print(version.version)
 
         """
-        res = await self._client.request_json("get", self._api_path)
+        res = await self._client.transport.request_json("get", self._api_path)
         return self._resource_cls.from_data(self._client, res)

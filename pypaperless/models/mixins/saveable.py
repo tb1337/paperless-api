@@ -3,8 +3,8 @@
 from typing import TYPE_CHECKING, ClassVar, cast
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
     from pypaperless.const import PaperlessResource
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class SaveableModel:
@@ -15,7 +15,7 @@ class SaveableModel:
     """
 
     _resource: ClassVar["PaperlessResource"]
-    _client: "Paperless"
+    _client: "PaperlessRuntime"
 
     async def save(self) -> int | str:
         """Persist this draft to Paperless and return the new resource identifier.

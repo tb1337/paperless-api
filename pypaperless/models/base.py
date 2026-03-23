@@ -8,7 +8,7 @@ from pypaperless.const import API_PATH
 from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
@@ -19,7 +19,7 @@ class _PaperlessBase(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    _client: "Paperless" = PrivateAttr()
+    _client: "PaperlessRuntime" = PrivateAttr()
 
     def model_post_init(self, __context: Any, /) -> None:
         """Bind ``_client`` from validation context."""
@@ -27,7 +27,7 @@ class _PaperlessBase(BaseModel):
             self._client = __context["client"]
 
     @classmethod
-    def from_data(cls, client: "Paperless", data: Any, **context: Any) -> Self:
+    def from_data(cls, client: "PaperlessRuntime", data: Any, **context: Any) -> Self:
         """Return a new instance of ``cls`` from ``data``."""
         return cls.model_validate(data, context={"client": client, **context})
 
@@ -69,7 +69,7 @@ class PaperlessModel(_PaperlessBase):
     @classmethod
     def from_data(
         cls,
-        client: "Paperless",
+        client: "PaperlessRuntime",
         data: dict[str, Any],
         **_context: Any,
     ) -> Self:
@@ -109,7 +109,7 @@ class PaperlessCustomDataModel(_PaperlessBase):
             self._data = __context["data"]
 
     @classmethod
-    def from_data(cls, client: "Paperless", data: Any, **_context: Any) -> Self:
+    def from_data(cls, client: "PaperlessRuntime", data: Any, **_context: Any) -> Self:
         """Return a new instance of ``cls`` from API data."""
         return cls.model_validate({}, context={"client": client, "data": data})
 

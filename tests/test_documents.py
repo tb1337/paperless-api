@@ -8,7 +8,7 @@ import pytest
 from pydantic import BaseModel
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     AsnRequestError,
@@ -61,13 +61,13 @@ from .mappings import DOCUMENT_MAP
 class TestDocuments:
     """Document service: full CRUD, lazy loading, files, notes, history, custom fields."""
 
-    async def test_lazy(self, paperless: Paperless) -> None:
+    async def test_lazy(self, paperless: PaperlessClient) -> None:
         """Lazy-loaded document has id set but no title fetched."""
         document = await paperless.documents(42, lazy=True)
         assert document.id == 42
         assert document.title is None
 
-    async def test_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_create(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Draft upload validates required fields and POSTs via the correct endpoint."""
         defaults = DOCUMENT_MAP.draft_defaults or {}
         draft = paperless.documents.create(**defaults)
@@ -85,12 +85,12 @@ class TestDocuments:
         )
         await paperless.documents.save(draft)
 
-    async def test_create_date_property(self, paperless: Paperless) -> None:
+    async def test_create_date_property(self, paperless: PaperlessClient) -> None:
         """created_date is an alias for the created field."""
         document = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
         assert document.created_date == document.created
 
-    async def test_update(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_update(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Updating a document PATCHes the changed field."""
         httpx_mock.add_response(
             method="GET",
@@ -110,7 +110,7 @@ class TestDocuments:
         await paperless.documents.update(to_update)
         assert to_update.title == new_title
 
-    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Deleting a document returns True on 204 and False on any other status."""
         httpx_mock.add_response(
             method="GET",
@@ -132,7 +132,7 @@ class TestDocuments:
         )
         assert not await paperless.documents.delete(to_delete)
 
-    async def test_shortcut_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_files(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Document.download/preview/thumbnail() shortcuts delegate to the service."""
         httpx_mock.add_response(
             method="GET",
@@ -183,7 +183,9 @@ class TestDocuments:
         )
         assert isinstance(await doc.thumbnail(), DownloadedDocument)
 
-    async def test_shortcut_metadata(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_metadata(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """Document.metadata() shortcut delegates to the service."""
         httpx_mock.add_response(
             method="GET",
@@ -200,7 +202,9 @@ class TestDocuments:
         )
         assert isinstance(await doc.metadata(), DocumentMeta)
 
-    async def test_shortcut_suggestions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_suggestions(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """Document.suggestions() shortcut delegates to the service."""
         httpx_mock.add_response(
             method="GET",
@@ -217,7 +221,9 @@ class TestDocuments:
         )
         assert isinstance(await doc.suggestions(), DocumentSuggestions)
 
-    async def test_shortcut_more_like(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_more_like(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """Document.more_like() shortcut yields Document items."""
         httpx_mock.add_response(
             method="GET",
@@ -239,7 +245,7 @@ class TestDocuments:
         async for item in doc.more_like():
             assert isinstance(item, Document)
 
-    async def test_shortcut_email(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_email(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Document.email() shortcut delegates to the service."""
         httpx_mock.add_response(
             method="GET",
@@ -260,7 +266,7 @@ class TestDocuments:
             message="Body",
         )
 
-    async def test_meta(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_meta(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """get_metadata() returns a DocumentMeta with original and archive metadata lists."""
         httpx_mock.add_response(
             method="GET",
@@ -277,7 +283,7 @@ class TestDocuments:
         for item in meta.archive_metadata:
             assert isinstance(item, DocumentMetaEntry)
 
-    async def test_files(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_files(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """get_download/preview/thumbnail each return a DownloadedDocument."""
         httpx_mock.add_response(
             method="GET",
@@ -326,7 +332,7 @@ class TestDocuments:
         assert isinstance(thumbnail, DownloadedDocument)
         assert thumbnail.mode == FileRetrieveMode.THUMBNAIL
 
-    async def test_suggestions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_suggestions(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """get_suggestions() returns a DocumentSuggestions instance."""
         httpx_mock.add_response(
             method="GET",
@@ -336,7 +342,7 @@ class TestDocuments:
         )
         assert isinstance(await paperless.documents.suggestions(1), DocumentSuggestions)
 
-    async def test_get_next_asn(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_get_next_asn(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """get_next_asn() returns an int on success and raises AsnRequestError on failure."""
         httpx_mock.add_response(
             method="GET",
@@ -353,7 +359,7 @@ class TestDocuments:
         with pytest.raises(AsnRequestError):
             await paperless.documents.get_next_asn()
 
-    async def test_searching(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_searching(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """search(), search(custom_field_query=), and more_like() return typed items."""
         httpx_mock.add_response(
             method="GET",
@@ -396,7 +402,7 @@ class TestDocuments:
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHit)
 
-    async def test_note_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_note_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Notes list returns DocumentNote instances; missing pk raises PrimaryKeyRequiredError."""
         httpx_mock.add_response(
             method="GET",
@@ -421,7 +427,7 @@ class TestDocuments:
         with pytest.raises(PrimaryKeyRequiredError):
             item = await paperless.documents.notes()
 
-    async def test_note_create(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_note_create(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Note draft validates required fields and POSTs to the notes endpoint."""
         httpx_mock.add_response(
             method="GET",
@@ -446,7 +452,7 @@ class TestDocuments:
         result = await item.notes.save(draft)
         assert isinstance(result, tuple)
 
-    async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Deleting a note returns True on 204."""
         httpx_mock.add_response(
             method="GET",
@@ -471,7 +477,9 @@ class TestDocuments:
         )
         assert await item.notes.delete(results.pop())
 
-    async def test_shortcut_note_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_shortcut_note_delete(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """DocumentNote.delete() shortcut delegates to the service."""
         httpx_mock.add_response(
             method="GET",
@@ -497,7 +505,7 @@ class TestDocuments:
         assert await notes[0].delete()
 
     async def test_shortcut_note_draft_save(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """DocumentNoteDraft.save() shortcut delegates to the service."""
         httpx_mock.add_response(
@@ -517,7 +525,7 @@ class TestDocuments:
         result = await draft.save()
         assert isinstance(result, tuple)
 
-    async def test_history_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_history_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """History returns typed entries; direct service call and missing pk error both work."""
         httpx_mock.add_response(
             method="GET",
@@ -559,7 +567,9 @@ class TestDocuments:
         with pytest.raises(PrimaryKeyRequiredError):
             await paperless.documents.history()
 
-    async def test_share_links_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_share_links_call(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """Share links returns ShareLink instances; missing pk raises PrimaryKeyRequiredError."""
         httpx_mock.add_response(
             method="GET",
@@ -594,7 +604,7 @@ class TestDocuments:
             await paperless.documents.share_links()
 
     async def test_custom_field_list_without_cache(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """Without cache, custom fields are plain CustomFieldValue instances."""
         httpx_mock.add_response(
@@ -611,7 +621,7 @@ class TestDocuments:
             assert isinstance(field, CustomFieldValue)
 
     async def test_custom_field_list_with_cache(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """With cache, custom fields are typed; operators += and -= update the list."""
         httpx_mock.add_response(
@@ -661,13 +671,13 @@ class TestDocuments:
         item.custom_fields += test_cf.draft_value(1337)
         assert test_cf in item.custom_fields
 
-    async def test_draft_custom_fields_as_id_list(self, paperless: Paperless) -> None:
+    async def test_draft_custom_fields_as_id_list(self, paperless: PaperlessClient) -> None:
         """DocumentDraft serialises list[int] custom_fields as repeated form values."""
         draft = paperless.documents.create(document=b"pdf", custom_fields=[1, 3, 5])
         serialized = draft.serialize()
         assert serialized["form"]["custom_fields"] == [1, 3, 5]
 
-    async def test_draft_custom_fields_as_object_mapping(self, paperless: Paperless) -> None:
+    async def test_draft_custom_fields_as_object_mapping(self, paperless: PaperlessClient) -> None:
         """DocumentDraft serialises DocumentCustomFieldList as a JSON string."""
         cf = DocumentCustomFieldList.from_data(paperless, [])
         cf += CustomFieldStringValue(field=6, value="hello")
@@ -685,7 +695,7 @@ class TestDocuments:
         assert decoded["3"] == 42
 
     async def test_draft_custom_fields_object_mapping_upload(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """A draft with a DocumentCustomFieldList can be POSTed successfully."""
         cf = DocumentCustomFieldList.from_data(paperless, [])
@@ -711,7 +721,7 @@ class TestDocuments:
         decoded = json.loads(match.group(1))
         assert decoded == {"6": "smoke"}
 
-    async def test_email(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_email(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Email dispatch succeeds on 200 and raises SendEmailError on 400."""
         httpx_mock.add_response(
             method="POST",
@@ -739,7 +749,7 @@ class TestDocuments:
                 message="Test Message",
             )
 
-    async def test_is_deleted(self, paperless: Paperless) -> None:
+    async def test_is_deleted(self, paperless: PaperlessClient) -> None:
         """Document.is_deleted is True when deleted_at is set, False otherwise."""
         doc_alive = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
         assert not doc_alive.is_deleted
@@ -750,7 +760,7 @@ class TestDocuments:
         )
         assert doc_trashed.is_deleted
 
-    async def test_custom_field_list_from_data(self, paperless: Paperless) -> None:
+    async def test_custom_field_list_from_data(self, paperless: PaperlessClient) -> None:
         """DocumentCustomFieldList.from_data() constructs the list from raw API data."""
         raw = [{"field": 1, "value": "hello"}, {"field": 2, "value": 42}]
         cf_list = DocumentCustomFieldList.from_data(paperless, raw)
@@ -758,7 +768,7 @@ class TestDocuments:
         assert len(list(cf_list)) == 2
 
     async def test_download_content_disposition_non_filename_part(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """Download with a Content-Disposition that has a non-filename= part is handled."""
         # Content-Disposition has an extra part that is NOT filename=
@@ -780,7 +790,9 @@ class TestDocuments:
         assert isinstance(download, DownloadedDocument)
         assert download.disposition_filename == "doc.pdf"
 
-    async def test_update_no_changes(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_update_no_changes(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """update() returns False without calling the API when nothing has changed."""
         # Use Correspondent which has only simple string/int fields that won't mismatch
         httpx_mock.add_response(
@@ -805,7 +817,7 @@ class TestDocuments:
         assert data == {}
 
     async def test_check_permissions_field_has_permissions_no_perms_key(
-        self, paperless: Paperless
+        self, paperless: PaperlessClient
     ) -> None:
         """_check_permissions_field exits without changes when permissions not in data."""
         item = Correspondent.from_data(

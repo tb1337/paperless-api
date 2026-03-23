@@ -23,11 +23,11 @@ from .files import (
     DocumentFileThumbnailService,
 )
 from .history import DocumentHistoryService
-from .notes import DocumentNoteService
-from .share_links import DocumentShareLinkService
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
+from .notes import DocumentNoteService
+from .share_links import DocumentShareLinkService
 
 
 class DocumentSuggestionsService(ResourceService):
@@ -41,7 +41,7 @@ class DocumentSuggestionsService(ResourceService):
     async def __call__(self, pk: int) -> DocumentSuggestions:
         """Request exactly one resource item."""
         api_path = self._resource_cls.format_api_path(pk=pk)
-        data = await self._client.request_json("get", api_path)
+        data = await self._client.transport.request_json("get", api_path)
         data["id"] = pk
 
         return self._resource_cls.from_data(self._client, data)
@@ -92,7 +92,7 @@ class DocumentService(
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, client: "PaperlessRuntime") -> None:
         """Initialize a `DocumentService` instance."""
         super().__init__(client)
 
@@ -233,7 +233,7 @@ class DocumentService(
             draft.archive_serial_number = asn
 
         """
-        res = await self._client.request("get", API_PATH["documents_next_asn"])
+        res = await self._client.transport.request("get", API_PATH["documents_next_asn"])
         try:
             res.raise_for_status()
             return int(res.text)
@@ -334,6 +334,8 @@ class DocumentService(
             "use_archive_version": use_archive_version,
         }
         try:
-            await self._client.request_json("post", API_PATH["documents_email"], json=data)
+            await self._client.transport.request_json(
+                "post", API_PATH["documents_email"], json=data
+            )
         except Exception as exc:
             raise SendEmailError from exc

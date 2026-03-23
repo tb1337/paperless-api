@@ -1,39 +1,38 @@
-"""PyPaperless."""
+"""Provide the PaperlessClient class."""
 
 import logging
-from json import JSONDecodeError
-from typing import Any, overload
+from functools import cached_property
 
 import httpx
 
 from . import services
+from .cache import PaperlessCache
 from .const import API_PATH, API_VERSION
-from .exceptions import (
-    BadJsonResponseError,
-    ForbiddenError,
-    InactiveOrDeletedError,
-    InitializationError,
-    InvalidTokenError,
-    JsonResponseWithError,
-    PaperlessConnectionError,
-)
+from .exceptions import InitializationError
+from .runtime import PaperlessRuntime
 from .settings import PaperlessConfig
-from .utils import normalize_base_url, process_form_data
+from .transport import PaperlessTransport
 
 
-class Paperless:
+class PaperlessClient:
     """Async client for the Paperless-ngx REST API.
 
+    The primary entry point for interacting with a Paperless-ngx instance.
     Use as an async context manager (recommended), or call
-    :meth:`initialize` and :meth:`close` manually::
+    :meth:`initialize` and :meth:`close` manually.
 
-        async with Paperless("localhost:8000", "your-token") as paperless:
+    The preferred way to construct a client is directly::
+
+        async with PaperlessClient("localhost:8000", "your-token") as paperless:
             doc = await paperless.documents(42)
             print(doc.title)
 
+    For config-object or environment-variable based initialization use the
+    factory class methods :meth:`from_config` and :meth:`from_env`.
+
     """
 
-    async def __aenter__(self) -> "Paperless":
+    async def __aenter__(self) -> "PaperlessClient":
         """Return context manager."""
         await self.initialize()
         return self
@@ -42,199 +41,141 @@ class Paperless:
         """Exit context manager."""
         await self.close()
 
-    @overload
     def __init__(
         self,
         url: str,
-        token: str | None = ...,
-        *,
-        client: httpx.AsyncClient | None = ...,
-        request_api_version: int | None = ...,
-    ) -> None: ...
-
-    @overload
-    def __init__(
-        self,
-        *,
-        config: PaperlessConfig,
-        client: httpx.AsyncClient | None = ...,
-    ) -> None: ...
-
-    @overload
-    def __init__(
-        self,
-        *,
-        client: httpx.AsyncClient | None = ...,
-    ) -> None: ...
-
-    def __init__(
-        self,
-        url: str | None = None,
         token: str | None = None,
         *,
-        config: PaperlessConfig | None = None,
+        request_api_version: int = API_VERSION,
         client: httpx.AsyncClient | None = None,
-        request_api_version: int | None = None,
     ) -> None:
-        """Initialize a :class:`Paperless` instance.
-
-        Three configuration modes are supported.
-
-        Explicit URL and token::
-
-            paperless = Paperless("localhost:8000", "your-token")
-
-        Config object via :class:`~pypaperless.settings.PaperlessConfig`::
-
-            cfg = PaperlessConfig(url="localhost:8000", token="your-token")
-            paperless = Paperless(config=cfg)
-
-        Environment variables — set ``PYPAPERLESS_URL`` and optionally
-        ``PYPAPERLESS_TOKEN`` / ``PYPAPERLESS_REQUEST_API_VERSION``::
-
-            paperless = Paperless()
+        """Initialize a :class:`PaperlessClient` instance.
 
         Args:
             url:                  A hostname, IP-address, or full URL string.
             token:                An API token from Paperless Django admin or via
-                                  :meth:`generate_api_token`.
-            config:               A :class:`~pypaperless.settings.PaperlessConfig`
-                                  with all connection parameters.
-            client:               A custom :class:`httpx.AsyncClient` to use for
-                                  requests.
+                                  :func:`~pypaperless.transport.generate_api_token`.
             request_api_version:  Override the API version header sent with each
                                   request.
+            client:               A custom :class:`httpx.AsyncClient` to use for
+                                  requests.
+
+        Example::
+
+            paperless = PaperlessClient("localhost:8000", "your-token")
+            await paperless.initialize()
+            doc = await paperless.documents(42)
+            await paperless.close()
 
         """
-        if config is not None:
-            _url = config.url
-            _token = config.token
-            _request_api_version = config.request_api_version
-        elif url is not None:
-            _url = url
-            _token = token
-            _request_api_version = request_api_version or API_VERSION
-        else:
-            # No args supplied — read everything from environment variables.
-            _cfg = PaperlessConfig()
-            _url = _cfg.url
-            _token = _cfg.token
-            _request_api_version = _cfg.request_api_version
+        self._transport = PaperlessTransport(url, token, request_api_version, client)
+        self._cache = PaperlessCache()
+        self._runtime = PaperlessRuntime(self._transport, self._cache)
+        self._runtime.facade = self
 
-        self._base_url = normalize_base_url(_url)
-        self._client = client
         self._initialized = False
-        self._request_api_version = _request_api_version
-        self._token = _token
-
         self._api_version = API_VERSION
         self._version: str | None = None
 
-        # PyPaperless services
-        self.cache = services.CacheService(self)
-
-        # API services
-        self.bulk_edit_objects = services.BulkEditObjectsService(self)
-        self.config = services.ConfigService(self)
-        self.correspondents = services.CorrespondentService(self)
-        self.custom_fields = services.CustomFieldService(self)
-        self.documents = services.DocumentService(self)
-        self.document_types = services.DocumentTypeService(self)
-        self.groups = services.GroupService(self)
-        self.mail_accounts = services.MailAccountService(self)
-        self.mail_rules = services.MailRuleService(self)
-        self.processed_mail = services.ProcessedMailService(self)
-        self.profile = services.ProfileService(self)
-        self.saved_views = services.SavedViewService(self)
-        self.search = services.SearchService(self)
-        self.share_links = services.ShareLinkService(self)
-        self.statistics = services.StatisticService(self)
-        self.remote_version = services.RemoteVersionService(self)
-        self.status = services.StatusService(self)
-        self.storage_paths = services.StoragePathService(self)
-        self.tags = services.TagService(self)
-        self.tasks = services.TaskService(self)
-        self.trash = services.TrashService(self)
-        self.users = services.UserService(self)
-        self.workflows = services.WorkflowService(self)
-
         self.logger = logging.getLogger(f"{__package__}")
+
+    @classmethod
+    def from_config(
+        cls,
+        config: PaperlessConfig,
+        *,
+        client: httpx.AsyncClient | None = None,
+    ) -> "PaperlessClient":
+        """Create a :class:`PaperlessClient` from a :class:`~pypaperless.settings.PaperlessConfig`.
+
+        Args:
+            config: A :class:`~pypaperless.settings.PaperlessConfig` instance.
+            client: A custom :class:`httpx.AsyncClient` to use for requests.
+
+        Example::
+
+            cfg = PaperlessConfig(url="localhost:8000", token="your-token")
+            async with PaperlessClient.from_config(cfg) as paperless:
+                ...
+
+        """
+        return cls(
+            config.url,
+            config.token,
+            request_api_version=config.request_api_version,
+            client=client,
+        )
+
+    @classmethod
+    def from_env(
+        cls,
+        *,
+        client: httpx.AsyncClient | None = None,
+    ) -> "PaperlessClient":
+        """Create a :class:`PaperlessClient` from environment variables.
+
+        Reads ``PYPAPERLESS_URL``, ``PYPAPERLESS_TOKEN``, and optionally
+        ``PYPAPERLESS_REQUEST_API_VERSION`` from the environment.
+
+        Args:
+            client: A custom :class:`httpx.AsyncClient` to use for requests.
+
+        Example::
+
+            # export PYPAPERLESS_URL=https://paperless.example.com
+            # export PYPAPERLESS_TOKEN=mytoken
+            async with PaperlessClient.from_env() as paperless:
+                ...
+
+        """
+        return cls.from_config(PaperlessConfig(), client=client)
+
+    # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
 
     @property
     def base_url(self) -> str:
-        """Return the base url of the Paperless api endpoint."""
-        return self._base_url
+        """Return the base URL of the Paperless API endpoint."""
+        return self._transport.base_url
 
     @property
     def is_initialized(self) -> bool:
-        """Return `True` if connection is initialized."""
+        """Return ``True`` if the connection has been initialized."""
         return self._initialized
 
     @property
     def host_api_version(self) -> int:
-        """Return the api version of the Paperless host."""
+        """Return the API version reported by the Paperless host."""
         return self._api_version
 
     @property
     def host_version(self) -> str | None:
-        """Return the version of the Paperless host."""
+        """Return the application version reported by the Paperless host."""
         return self._version
 
-    @staticmethod
-    async def generate_api_token(
-        url: str,
-        username: str,
-        password: str,
-        client: httpx.AsyncClient | None = None,
-    ) -> str:
-        """Request Paperless to generate an API token for the given credentials.
+    @property
+    def transport(self) -> PaperlessTransport:
+        """Return the underlying :class:`~pypaperless.transport.PaperlessTransport`."""
+        return self._transport
 
-        .. warning::
+    @property
+    def runtime(self) -> PaperlessRuntime:
+        """Return the :class:`~pypaperless.runtime.PaperlessRuntime` shared with services."""
+        return self._runtime
 
-            The token request is sent as plain HTTP — do not use this in
-            production or on untrusted networks.
+    @property
+    def cache(self) -> PaperlessCache:
+        """Return the :class:`~pypaperless.cache.PaperlessCache`."""
+        return self._runtime.cache
 
-        Args:
-            url:      Hostname, IP-address, or full URL of the Paperless instance.
-            username: Paperless user name.
-            password: Paperless user password.
-            client:   Optional :class:`httpx.AsyncClient` to reuse.  A new client
-                      is created and closed automatically when not provided.
-
-        Example::
-
-            token = await Paperless.generate_api_token(
-                "example.com:8000", "api_user", "secret"
-            )
-            async with Paperless("example.com:8000", token) as paperless:
-                ...
-
-        """
-        external_client = client is not None
-        client = client or httpx.AsyncClient()
-        try:
-            url = url.rstrip("/")
-            json_data = {
-                "username": username,
-                "password": password,
-            }
-            res = await client.post(f"{url}{API_PATH['token']}", json=json_data)
-            data = res.json()
-            res.raise_for_status()
-            return str(data["token"])
-        except (JSONDecodeError, KeyError) as exc:
-            message = "Token is missing in response."
-            raise BadJsonResponseError(message) from exc
-        except httpx.HTTPStatusError as exc:
-            raise JsonResponseWithError(payload={"error": data}) from exc
-        finally:
-            if not external_client:
-                await client.aclose()
+    # ------------------------------------------------------------------
+    # Lifecycle
+    # ------------------------------------------------------------------
 
     async def close(self) -> None:
-        """Clean up connection."""
-        if self._client:
-            await self._client.aclose()
+        """Clean up the connection."""
+        await self._transport.close()
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
@@ -243,125 +184,141 @@ class Paperless:
         Called automatically by :meth:`__aenter__`.  Required when **not**
         using the async context manager::
 
-            paperless = Paperless("localhost:8000", "your-token")
+            paperless = PaperlessClient("localhost:8000", "your-token")
             await paperless.initialize()
             # … use paperless …
             await paperless.close()
 
         """
-        res = await self.request("get", API_PATH["index"])
+        res = await self._transport.request("get", API_PATH["index"])
         try:
             res.raise_for_status()
-            self._api_version = self._request_api_version or int(
+            self._api_version = self._transport.request_api_version or int(
                 res.headers.get("x-api-version", API_VERSION)
             )
             self._version = res.headers.get("x-version", None)
             res.json()
-        except (httpx.HTTPStatusError, ValueError) as exc:
+        except Exception as exc:
             raise InitializationError from exc
 
         self._initialized = True
         self.logger.info("Initialized.")
 
-    async def request(
-        self,
-        method: str,
-        path: str,
-        json: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
-        form: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
-        **kwargs: Any,
-    ) -> httpx.Response:
-        """Send a request to the Paperless API and return the raw :class:`httpx.Response`.
+    # ------------------------------------------------------------------
+    # Lazy-cached service accessors
+    # ------------------------------------------------------------------
 
-        Args:
-            method: HTTP method string: ``"get"``, ``"post"``, ``"patch"``,
-                    ``"put"``, ``"delete"``, ``"head"``, or ``"options"``.
-            path:   API path relative to the base URL, or an absolute URL string.
-            json:   Dict to send as JSON request body.
-            data:   Dict to send as form-encoded body.
-            form:   Dict converted to multipart form data (overrides *data*).
-            params: Dict of query string parameters.
-            **kwargs: Forwarded to :meth:`httpx.AsyncClient.request`.
+    @cached_property
+    def bulk_edit_objects(self) -> services.BulkEditObjectsService:
+        """Return the :class:`~pypaperless.services.BulkEditObjectsService`."""
+        return services.BulkEditObjectsService(self._runtime)
 
-        """
-        if self._client is None:
-            self._client = httpx.AsyncClient()
+    @cached_property
+    def config(self) -> services.ConfigService:
+        """Return the :class:`~pypaperless.services.ConfigService`."""
+        return services.ConfigService(self._runtime)
 
-        # add headers
-        headers: dict[str, str] = {
-            "Accept": f"application/json; version={self._request_api_version}",
-        }
-        if self._token:
-            headers["Authorization"] = f"Token {self._token}"
+    @cached_property
+    def correspondents(self) -> services.CorrespondentService:
+        """Return the :class:`~pypaperless.services.CorrespondentService`."""
+        return services.CorrespondentService(self._runtime)
 
-        # Merge with any user-defined headers (optional)
-        if "headers" in kwargs:
-            kwargs["headers"].update(headers)
-        else:
-            kwargs["headers"] = headers
+    @cached_property
+    def custom_fields(self) -> services.CustomFieldService:
+        """Return the :class:`~pypaperless.services.CustomFieldService`."""
+        return services.CustomFieldService(self._runtime)
 
-        # overwrite data with form data when there is a form payload
-        files = None
-        if isinstance(form, dict):
-            data, files = process_form_data(form)
+    @cached_property
+    def documents(self) -> services.DocumentService:
+        """Return the :class:`~pypaperless.services.DocumentService`."""
+        return services.DocumentService(self._runtime)
 
-        # add base path
-        url = f"{self._base_url}{path}" if not path.startswith("http") else path
+    @cached_property
+    def document_types(self) -> services.DocumentTypeService:
+        """Return the :class:`~pypaperless.services.DocumentTypeService`."""
+        return services.DocumentTypeService(self._runtime)
 
-        try:
-            res = await self._client.request(
-                method=method.upper(),
-                url=url,
-                json=json,
-                data=data,
-                files=files,
-                params=params,
-                **kwargs,
-            )
-            self.logger.debug("%s (%d): %s", method.upper(), res.status_code, res.url)
-        except httpx.ConnectError as err:
-            raise PaperlessConnectionError from err
+    @cached_property
+    def groups(self) -> services.GroupService:
+        """Return the :class:`~pypaperless.services.GroupService`."""
+        return services.GroupService(self._runtime)
 
-        # error handling for 401 and 403 codes
-        if res.status_code == 401:
-            try:
-                error_data = res.json()
-                detail = error_data.get("detail", "")
-            except ValueError:
-                detail = ""
+    @cached_property
+    def mail_accounts(self) -> services.MailAccountService:
+        """Return the :class:`~pypaperless.services.MailAccountService`."""
+        return services.MailAccountService(self._runtime)
 
-            if "inactive" in detail.lower() or "deleted" in detail.lower():
-                raise InactiveOrDeletedError(res)
+    @cached_property
+    def mail_rules(self) -> services.MailRuleService:
+        """Return the :class:`~pypaperless.services.MailRuleService`."""
+        return services.MailRuleService(self._runtime)
 
-            raise InvalidTokenError(res)
+    @cached_property
+    def processed_mail(self) -> services.ProcessedMailService:
+        """Return the :class:`~pypaperless.services.ProcessedMailService`."""
+        return services.ProcessedMailService(self._runtime)
 
-        if res.status_code == 403:
-            raise ForbiddenError(res)
+    @cached_property
+    def profile(self) -> services.ProfileService:
+        """Return the :class:`~pypaperless.services.ProfileService`."""
+        return services.ProfileService(self._runtime)
 
-        return res
+    @cached_property
+    def saved_views(self) -> services.SavedViewService:
+        """Return the :class:`~pypaperless.services.SavedViewService`."""
+        return services.SavedViewService(self._runtime)
 
-    async def request_json(
-        self,
-        method: str,
-        endpoint: str,
-        **kwargs: Any,
-    ) -> Any:
-        """Make a request to the API and return the parsed JSON payload."""
-        res = await self.request(method, endpoint, **kwargs)
+    @cached_property
+    def search(self) -> services.SearchService:
+        """Return the :class:`~pypaperless.services.SearchService`."""
+        return services.SearchService(self._runtime)
 
-        if "application/json" not in res.headers.get("content-type", ""):
-            res.raise_for_status()
-            raise BadJsonResponseError(res)
+    @cached_property
+    def share_links(self) -> services.ShareLinkService:
+        """Return the :class:`~pypaperless.services.ShareLinkService`."""
+        return services.ShareLinkService(self._runtime)
 
-        try:
-            payload = res.json()
-        except ValueError:
-            raise BadJsonResponseError(res) from None
+    @cached_property
+    def statistics(self) -> services.StatisticService:
+        """Return the :class:`~pypaperless.services.StatisticService`."""
+        return services.StatisticService(self._runtime)
 
-        if res.status_code == 400:
-            raise JsonResponseWithError(payload)
+    @cached_property
+    def remote_version(self) -> services.RemoteVersionService:
+        """Return the :class:`~pypaperless.services.RemoteVersionService`."""
+        return services.RemoteVersionService(self._runtime)
 
-        res.raise_for_status()
-        return payload
+    @cached_property
+    def status(self) -> services.StatusService:
+        """Return the :class:`~pypaperless.services.StatusService`."""
+        return services.StatusService(self._runtime)
+
+    @cached_property
+    def storage_paths(self) -> services.StoragePathService:
+        """Return the :class:`~pypaperless.services.StoragePathService`."""
+        return services.StoragePathService(self._runtime)
+
+    @cached_property
+    def tags(self) -> services.TagService:
+        """Return the :class:`~pypaperless.services.TagService`."""
+        return services.TagService(self._runtime)
+
+    @cached_property
+    def tasks(self) -> services.TaskService:
+        """Return the :class:`~pypaperless.services.TaskService`."""
+        return services.TaskService(self._runtime)
+
+    @cached_property
+    def trash(self) -> services.TrashService:
+        """Return the :class:`~pypaperless.services.TrashService`."""
+        return services.TrashService(self._runtime)
+
+    @cached_property
+    def users(self) -> services.UserService:
+        """Return the :class:`~pypaperless.services.UserService`."""
+        return services.UserService(self._runtime)
+
+    @cached_property
+    def workflows(self) -> services.WorkflowService:
+        """Return the :class:`~pypaperless.services.WorkflowService`."""
+        return services.WorkflowService(self._runtime)

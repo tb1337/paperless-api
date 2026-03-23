@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Protocol
 from pypaperless.const import API_PATH, PaperlessResource
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class PaperlessService:
     """Base class for all services in PyPaperless."""
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, client: "PaperlessRuntime") -> None:
         """Initialize a `PaperlessService` instance."""
         self._client = client
 
@@ -19,7 +19,7 @@ class PaperlessService:
 class ResourceServiceProtocol[ResourceT](Protocol):
     """Protocol capturing the minimum interface required by all resource service mixins."""
 
-    _client: "Paperless"
+    _client: "PaperlessRuntime"
     _api_path: str
     _resource: PaperlessResource
     _resource_cls: type[ResourceT]

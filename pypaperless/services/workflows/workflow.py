@@ -11,7 +11,7 @@ from .actions import WorkflowActionService
 from .triggers import WorkflowTriggerService
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class WorkflowService(
@@ -26,7 +26,7 @@ class WorkflowService(
 
     _resource_cls = Workflow
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, client: "PaperlessRuntime") -> None:
         """Initialize a `WorkflowService` instance."""
         super().__init__(client)
 

@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.builders.custom_fields import (
     CustomFieldQuery,
     _CustomFieldQueryAnd,
@@ -37,7 +37,7 @@ from .data import DATA_CUSTOM_FIELDS
 # ---------------------------------------------------------------------------
 
 
-async def test_draft_value_without_cache(paperless: Paperless) -> None:
+async def test_draft_value_without_cache(paperless: PaperlessClient) -> None:
     """draft_value() returns a plain object when the custom field cache is empty."""
     custom_field = CustomField.from_data(
         paperless,
@@ -48,7 +48,7 @@ async def test_draft_value_without_cache(paperless: Paperless) -> None:
         assert not isinstance(field_value, value_type)
 
 
-async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """draft_value() returns a typed value when the custom field cache is populated."""
     httpx_mock.add_response(
         url=re.compile(
@@ -226,7 +226,7 @@ def test_date_value_accepts_date_object() -> None:
     assert field.value == d
 
 
-def test_tag_with_nested_children(api: Paperless) -> None:
+def test_tag_with_nested_children(api: PaperlessClient) -> None:
     """Tag._validate_children builds nested Tag instances from raw dict children."""
     tag_data = {
         "id": 1,
@@ -256,7 +256,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
             }
         ],
     }
-    tag = Tag.from_data(api, data=tag_data)
+    tag = Tag.from_data(api._runtime, data=tag_data)
     assert tag.name == "Parent Tag"
     assert isinstance(tag.children, list)
     child = tag.children[0]
@@ -269,7 +269,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
     assert child.children[0].matching_algorithm == MatchingAlgorithm.AUTO
 
 
-def test_tag_with_empty_children(api: Paperless) -> None:
+def test_tag_with_empty_children(api: PaperlessClient) -> None:
     """Tag._validate_children returns the falsy value unchanged (empty list / None)."""
     tag_empty = Tag.from_data(
         api,

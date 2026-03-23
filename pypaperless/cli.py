@@ -17,7 +17,7 @@ try:
 except ImportError:  # pragma: no cover
     _PYGMENTS = False
 
-from . import Paperless
+from . import PaperlessClient
 from .const import ENV_TOKEN, ENV_URL
 from .exceptions import (
     ForbiddenError,
@@ -59,14 +59,14 @@ def _render_compact_list(items: list[Any]) -> None:
 async def _with_client(
     url: str | None,
     token: str | None,
-    coro: Callable[[Paperless], Awaitable[None]],
+    coro: Callable[[PaperlessClient], Awaitable[None]],
 ) -> None:
-    """Build a ``Paperless`` client, initialize it, run ``coro(paperless)``, then close."""
+    """Build a ``PaperlessClient`` client, initialize it, run ``coro(paperless)``, then close."""
     if url is not None:
-        paperless = Paperless(url=url, token=token)
+        paperless = PaperlessClient(url=url, token=token)
     else:
         try:
-            paperless = Paperless()
+            paperless = PaperlessClient.from_env()
         except Exception as exc:
             msg = f"Configuration error: {exc}"
             raise click.ClickException(msg) from exc
@@ -122,7 +122,7 @@ def cli(ctx: click.Context, url: str | None, token: str | None) -> None:
 def cmd_status(ctx: click.Context) -> None:
     """Show host version, API version and system status."""
 
-    async def _fetch(p: Paperless) -> None:
+    async def _fetch(p: PaperlessClient) -> None:
         stat = await p.status()
         rv = await p.remote_version()
         _out(
@@ -142,7 +142,7 @@ def cmd_status(ctx: click.Context) -> None:
 def cmd_profile(ctx: click.Context) -> None:
     """Show the currently authenticated user's profile."""
 
-    async def _fetch(p: Paperless) -> None:
+    async def _fetch(p: PaperlessClient) -> None:
         item = await p.profile()
         _out(item.model_dump(mode="json"))
 
@@ -177,7 +177,7 @@ _SEARCH_RESULT_SECTIONS: tuple[tuple[str, str], ...] = (
 def cmd_search(ctx: click.Context, query: str, *, db_only: bool, as_json: bool) -> None:
     """Global search across all resource types. QUERY is a Whoosh string or builder expression."""
 
-    async def _fetch(p: Paperless) -> None:
+    async def _fetch(p: PaperlessClient) -> None:
         result = await p.search(query, db_only=db_only)
         if as_json:
             _out(result.model_dump(mode="json"))
@@ -203,7 +203,7 @@ def _resource_group(
     """Return a ``click.Group`` with ``list`` and/or ``get`` subcommands.
 
     `name`: CLI group name (e.g. ``"tags"``).
-    `service_attr`: attribute on the ``Paperless`` instance (e.g. ``"tags"``).
+    `service_attr`: attribute on the ``PaperlessClient`` instance (e.g. ``"tags"``).
     `supports_get`: add a ``get <id>`` subcommand.
     `supports_list`: add a ``list`` subcommand.
     `id_type`: click parameter type for the ``get`` argument (default: ``INT``).
@@ -228,7 +228,7 @@ def _resource_group(
             """List item IDs and names in a compact console format."""
             _attr = service_attr
 
-            async def _fetch(p: Paperless) -> None:
+            async def _fetch(p: PaperlessClient) -> None:
                 service = getattr(p, _attr)
                 results: list[Any] = []
                 count = 0
@@ -254,7 +254,7 @@ def _resource_group(
             """List full items as JSON objects."""
             _attr = service_attr
 
-            async def _fetch(p: Paperless) -> None:
+            async def _fetch(p: PaperlessClient) -> None:
                 service = getattr(p, _attr)
                 results: list[dict[str, Any]] = []
                 count = 0
@@ -276,7 +276,7 @@ def _resource_group(
             """Fetch a single item by ID."""
             _attr = service_attr
 
-            async def _fetch(p: Paperless) -> None:
+            async def _fetch(p: PaperlessClient) -> None:
                 service = getattr(p, _attr)
                 item = await service(item_id)
                 _out(item.model_dump(mode="json"))

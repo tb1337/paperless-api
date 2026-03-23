@@ -22,7 +22,9 @@ class _DocumentFileServiceBase(ResourceService):
             "original": "true" if original else "false",
         }
 
-        res = await self._client.request("get", self._api_path.format(pk=pk), params=params)
+        res = await self._client.transport.request(
+            "get", self._api_path.format(pk=pk), params=params
+        )
 
         data: dict[str, Any] = {
             "id": pk,
