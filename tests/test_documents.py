@@ -12,6 +12,7 @@ from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     AsnRequestError,
+    DeletionError,
     DraftFieldRequiredError,
     PrimaryKeyRequiredError,
     SendEmailError,
@@ -124,13 +125,7 @@ class TestDocuments:
             url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
             status_code=204,
         )
-        assert await paperless.documents.delete(to_delete)
-        httpx_mock.add_response(
-            method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
-            status_code=404,
-        )
-        assert not await paperless.documents.delete(to_delete)
+        await paperless.documents.delete(to_delete)
 
     async def test_shortcut_files(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Document.download/preview/thumbnail() shortcuts delegate to the service."""
@@ -475,7 +470,40 @@ class TestDocuments:
             ),
             status_code=204,
         )
-        assert await item.notes.delete(results.pop())
+        await item.notes.delete(results.pop())
+        # failed note deletion raises DeletionError
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes2 = await item.notes()
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=404,
+        )
+        with pytest.raises(DeletionError):
+            await item.notes.delete(notes2[0])
+        # silent_fail=True suppresses DeletionError
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes3 = await item.notes()
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=404,
+        )
+        await item.notes.delete(notes3[0], silent_fail=True)
 
     async def test_shortcut_note_delete(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
@@ -502,7 +530,40 @@ class TestDocuments:
             ),
             status_code=204,
         )
-        assert await notes[0].delete()
+        await notes[0].delete()
+        # DocumentNote.delete() raises DeletionError on failure
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes2 = await item.notes()
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=404,
+        )
+        with pytest.raises(DeletionError):
+            await notes2[0].delete()
+        # silent_fail=True suppresses DeletionError
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes3 = await item.notes()
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=404,
+        )
+        await notes3[0].delete(silent_fail=True)
 
     async def test_shortcut_note_draft_save(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient

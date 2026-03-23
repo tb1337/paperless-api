@@ -20,9 +20,9 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    async def delete(self) -> bool:
+    async def delete(self, *, silent_fail: bool = False) -> None:
         """Shortcut for ``paperless.documents.notes.delete(self)``."""
-        return cast("bool", await self._client.documents.notes.delete(self))
+        await self._client.documents.notes.delete(self, silent_fail=silent_fail)
 
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):

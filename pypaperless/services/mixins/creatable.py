@@ -62,7 +62,7 @@ class CreatableService(ResourceServiceProtocol[ResourceT]):
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.transport.request_json("post", draft.api_path, **kwdict)
+        res = await self._client.transport.post(draft.api_path, **kwdict)
 
         if isinstance(res, dict):
             return int(res["id"])

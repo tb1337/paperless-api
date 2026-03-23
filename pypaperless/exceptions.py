@@ -109,6 +109,10 @@ class ResourceError(PaperlessError):
     """Raised when a resource access or lookup operation fails."""
 
 
+class DeletionError(ResourceError):
+    """Raised when a delete operation fails (non-2xx HTTP response)."""
+
+
 class ItemNotFoundError(ResourceError):
     """Raised when trying to access non-existing items in PaperlessCustomDataModel classes."""
 

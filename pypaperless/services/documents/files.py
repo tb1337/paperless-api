@@ -22,7 +22,7 @@ class _DocumentFileServiceBase(ResourceService):
             "original": "true" if original else "false",
         }
 
-        res = await self._client.transport.request(
+        res = await self._client.transport.request_raw(
             "get", self._api_path.format(pk=pk), params=params
         )
 

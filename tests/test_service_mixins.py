@@ -9,7 +9,7 @@ from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
-from pypaperless.exceptions import DraftFieldRequiredError
+from pypaperless.exceptions import DeletionError, DraftFieldRequiredError
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.types import Permissions
@@ -275,14 +275,22 @@ class TestReadWrite(_SharedServiceTests):
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=204,
         )
-        assert await service.delete(to_delete)
-        # deletion failed (non-204)
+        await service.delete(to_delete)
+        # failed deletion raises DeletionError
         httpx_mock.add_response(
             method="DELETE",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=404,
         )
-        assert not await service.delete(to_delete)
+        with pytest.raises(DeletionError):
+            await service.delete(to_delete)
+        # silent_fail=True suppresses DeletionError
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=404,
+        )
+        await service.delete(to_delete, silent_fail=True)
 
 
 @pytest.mark.parametrize(
@@ -505,13 +513,22 @@ class TestActiveRecord:
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=204,
         )
-        assert await item.delete() is True
+        await item.delete()
+        # model.delete() raises DeletionError on failure
         httpx_mock.add_response(
             method="DELETE",
             url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
             status_code=404,
         )
-        assert await item.delete() is False
+        with pytest.raises(DeletionError):
+            await item.delete()
+        # model.delete(silent_fail=True) suppresses DeletionError
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            status_code=404,
+        )
+        await item.delete(silent_fail=True)
 
     async def test_draft_save(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping

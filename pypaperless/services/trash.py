@@ -50,8 +50,8 @@ class TrashService(
             await paperless.trash.restore([10, 11])
 
         """
-        await self._client.transport.request_json(
-            "post", self._api_path, json={"action": "restore", "documents": documents}
+        await self._client.transport.post(
+            self._api_path, json={"action": "restore", "documents": documents}
         )
 
     async def empty(self, documents: list[int] | None = None) -> None:
@@ -70,4 +70,4 @@ class TrashService(
         payload: dict = {"action": "empty"}
         if documents is not None:
             payload["documents"] = documents
-        await self._client.transport.request_json("post", self._api_path, json=payload)
+        await self._client.transport.post(self._api_path, json=payload)

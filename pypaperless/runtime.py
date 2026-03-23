@@ -25,7 +25,7 @@ class PaperlessRuntime:
     Example::
 
         runtime = PaperlessRuntime(transport, cache)
-        await runtime.transport.request_json("get", "/api/documents/")
+        await runtime.transport.get("/api/documents/")
 
     """
 

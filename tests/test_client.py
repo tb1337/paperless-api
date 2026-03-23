@@ -11,6 +11,7 @@ from pypaperless import PaperlessClient, PaperlessSettings, generate_api_token
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     BadJsonResponseError,
+    DeletionError,
     DraftNotSupportedError,
     ForbiddenError,
     InactiveOrDeletedError,
@@ -115,12 +116,12 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 
 
 async def test_request(httpx_mock: HTTPXMock) -> None:
-    """Test low-level request method, including form data encoding."""
+    """Test request_raw, including form data encoding."""
     # use uninitialised client to bypass session setup
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
 
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
-    res = await api._runtime.transport.request("get", PAPERLESS_TEST_URL)
+    res = await api._runtime.transport.request_raw("get", PAPERLESS_TEST_URL)
     assert res.status_code
 
     form_data = {
@@ -134,14 +135,14 @@ async def test_request(httpx_mock: HTTPXMock) -> None:
         "dict_field": {"dict_str_field": "str", "dict_int_field": 2},
     }
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="POST", status_code=200)
-    res = await api._runtime.transport.request("post", PAPERLESS_TEST_URL, form=form_data)
+    res = await api._runtime.transport.request_raw("post", PAPERLESS_TEST_URL, form=form_data)
     assert res.status_code
 
     await api.close()
 
 
 async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
-    """Test request_json raises on bad content-type or non-JSON body."""
+    """Test get() raises on bad content-type or non-JSON body."""
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/400-json-error-payload",
         method="GET",
@@ -151,7 +152,7 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
     )
     url_400 = f"{PAPERLESS_TEST_URL}/400-json-error-payload"
     with pytest.raises(JsonResponseWithError):
-        await api._runtime.transport.request_json("get", url_400)
+        await api._runtime.transport.get(url_400)
 
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/200-text-error-payload",
@@ -162,7 +163,7 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
     )
     url_200_text = f"{PAPERLESS_TEST_URL}/200-text-error-payload"
     with pytest.raises(BadJsonResponseError):
-        await api._runtime.transport.request_json("get", url_200_text)
+        await api._runtime.transport.get(url_200_text)
 
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/200-json-text-body",
@@ -173,7 +174,7 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
     )
     url_200_json = f"{PAPERLESS_TEST_URL}/200-json-text-body"
     with pytest.raises(BadJsonResponseError):
-        await api._runtime.transport.request_json("get", url_200_json)
+        await api._runtime.transport.get(url_200_json)
 
 
 @pytest.mark.parametrize(
@@ -354,17 +355,17 @@ async def test_object_to_dict_value() -> None:
 
 
 async def test_request_merges_custom_headers(httpx_mock: HTTPXMock) -> None:
-    """request() merges caller-supplied headers with the default auth headers."""
+    """request_raw() merges caller-supplied headers with the default auth headers."""
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
     transport = api._runtime.transport
-    res = await transport.request("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
+    res = await transport.request_raw("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
     assert res.status_code == 200
     await api.close()
 
 
 async def test_request_json_400_body_not_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
-    """request_json() raises BadJsonResponseError when a 400 body is not valid JSON."""
+    """get() raises BadJsonResponseError when a 400 body is not valid JSON."""
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/400-bad-json",
         method="GET",
@@ -373,7 +374,20 @@ async def test_request_json_400_body_not_json(httpx_mock: HTTPXMock, api: Paperl
         text="not valid json {{{}}}",
     )
     with pytest.raises(BadJsonResponseError):
-        await api._runtime.transport.request_json("get", f"{PAPERLESS_TEST_URL}/400-bad-json")
+        await api._runtime.transport.get(f"{PAPERLESS_TEST_URL}/400-bad-json")
+
+
+async def test_transport_delete_raises_deletion_error(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """transport.delete() raises DeletionError on non-2xx status."""
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/documents/42/",
+        method="DELETE",
+        status_code=404,
+    )
+    with pytest.raises(DeletionError):
+        await api._runtime.transport.delete(f"{PAPERLESS_TEST_URL}/api/documents/42/")
 
 
 async def test_service_base_api_path(api: PaperlessClient) -> None:

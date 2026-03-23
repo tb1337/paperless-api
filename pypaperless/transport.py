@@ -8,6 +8,7 @@ import httpx
 from .const import API_PATH, API_VERSION
 from .exceptions import (
     BadJsonResponseError,
+    DeletionError,
     ForbiddenError,
     InactiveOrDeletedError,
     InvalidTokenError,
@@ -39,7 +40,7 @@ class PaperlessTransport:
     Example::
 
         transport = PaperlessTransport("localhost:8000", "mytoken")
-        response = await transport.request("get", "/api/documents/")
+        data = await transport.get("/api/documents/")
 
     """
 
@@ -77,7 +78,7 @@ class PaperlessTransport:
             print(info.api_version, info.version)
 
         """
-        res = await self.request("get", API_PATH["index"])
+        res = await self.request_raw("get", API_PATH["index"])
         res.raise_for_status()
         res.json()
         return _HostInfo(
@@ -85,7 +86,7 @@ class PaperlessTransport:
             version=res.headers.get("x-version"),
         )
 
-    async def request(
+    async def _send(
         self,
         method: str,
         path: str,
@@ -95,23 +96,7 @@ class PaperlessTransport:
         params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Send a request to the Paperless API and return the raw :class:`httpx.Response`.
-
-        Args:
-            method: HTTP method string: ``"get"``, ``"post"``, ``"patch"``,
-                    ``"put"``, ``"delete"``, ``"head"``, or ``"options"``.
-            path:   API path relative to the base URL, or an absolute URL string.
-            json:   Dict to send as JSON request body.
-            data:   Dict to send as form-encoded body.
-            form:   Dict converted to multipart form data (overrides *data*).
-            params: Dict of query string parameters.
-            **kwargs: Forwarded to :meth:`httpx.AsyncClient.request`.
-
-        Example::
-
-            res = await transport.request("get", "/api/documents/", params={"page": 1})
-
-        """
+        """Send an authenticated HTTP request; handle auth, connection errors, and 401/403."""
         if self._httpx_client is None:
             self._httpx_client = httpx.AsyncClient()
 
@@ -162,33 +147,15 @@ class PaperlessTransport:
 
         return res
 
-    async def request_json(
-        self,
-        method: str,
-        endpoint: str,
-        **kwargs: Any,
-    ) -> Any:
-        """Make a request to the API and return the parsed JSON payload.
-
-        Args:
-            method:   HTTP method string.
-            endpoint: API path relative to the base URL.
-            **kwargs: Forwarded to :meth:`request`.
-
-        Example::
-
-            data = await transport.request_json("get", "/api/documents/42/")
-
-        """
-        res = await self.request(method, endpoint, **kwargs)
-
+    def _parse_json(self, res: httpx.Response) -> Any:
+        """Parse a JSON response; raise on non-JSON, bad JSON, HTTP 400, or other errors."""
         if "application/json" not in res.headers.get("content-type", ""):
             res.raise_for_status()
             raise BadJsonResponseError(res)
 
         try:
             payload = res.json()
-        except ValueError:
+        except (ValueError, JSONDecodeError):
             raise BadJsonResponseError(res) from None
 
         if res.status_code == 400:
@@ -196,6 +163,151 @@ class PaperlessTransport:
 
         res.raise_for_status()
         return payload
+
+    async def get(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a GET request and return the parsed JSON response.
+
+        Args:
+            path:   API path relative to the base URL, or an absolute URL.
+            params: Optional query string parameters.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            data = await transport.get("/api/documents/", params={"page": 1})
+
+        """
+        return self._parse_json(await self._send("get", path, params=params, **kwargs))
+
+    async def post(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        form: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a POST request and return the parsed JSON response.
+
+        Args:
+            path:   API path relative to the base URL, or an absolute URL.
+            json:   Dict to send as JSON request body.
+            data:   Dict to send as form-encoded body.
+            form:   Dict converted to multipart form data.
+            params: Optional query string parameters.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            data = await transport.post("/api/documents/", json={"title": "My Doc"})
+
+        """
+        return self._parse_json(
+            await self._send("post", path, json=json, data=data, form=form, params=params, **kwargs)
+        )
+
+    async def patch(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a PATCH request and return the parsed JSON response.
+
+        Args:
+            path:   API path relative to the base URL, or an absolute URL.
+            json:   Dict to send as JSON request body.
+            params: Optional query string parameters.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            data = await transport.patch("/api/documents/42/", json={"title": "Updated"})
+
+        """
+        return self._parse_json(await self._send("patch", path, json=json, params=params, **kwargs))
+
+    async def put(
+        self,
+        path: str,
+        *,
+        json: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Send a PUT request and return the parsed JSON response.
+
+        Args:
+            path:   API path relative to the base URL, or an absolute URL.
+            json:   Dict to send as JSON request body.
+            params: Optional query string parameters.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            data = await transport.put("/api/documents/42/", json={"title": "Replaced"})
+
+        """
+        return self._parse_json(await self._send("put", path, json=json, params=params, **kwargs))
+
+    async def delete(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a DELETE request and raise on any non-2xx response.
+
+        Args:
+            path:   API path relative to the base URL, or an absolute URL.
+            params: Optional query string parameters.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            await transport.delete("/api/documents/42/")
+
+        """
+        res = await self._send("delete", path, params=params, **kwargs)
+        try:
+            res.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise DeletionError(str(exc)) from exc
+
+    async def request_raw(
+        self,
+        method: str,
+        path: str,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        """Send a request and return the raw :class:`httpx.Response`.
+
+        Use for binary downloads, header-only checks, or other cases where
+        the caller needs access to the full response object.
+
+        Args:
+            method: HTTP method string.
+            path:   API path relative to the base URL, or an absolute URL.
+            **kwargs: Forwarded to :meth:`_send`.
+
+        Example::
+
+            res = await transport.request_raw("get", "/api/documents/42/download/")
+            content = res.content
+
+        """
+        return await self._send(method, path, **kwargs)
 
 
 async def generate_api_token(

@@ -41,7 +41,7 @@ class DocumentSuggestionsService(ResourceService):
     async def __call__(self, pk: int) -> DocumentSuggestions:
         """Request exactly one resource item."""
         api_path = self._resource_cls.format_api_path(pk=pk)
-        data = await self._client.transport.request_json("get", api_path)
+        data = await self._client.transport.get(api_path)
         data["id"] = pk
 
         return self._resource_cls.from_data(self._client, data)
@@ -233,7 +233,7 @@ class DocumentService(
             draft.archive_serial_number = asn
 
         """
-        res = await self._client.transport.request("get", API_PATH["documents_next_asn"])
+        res = await self._client.transport.request_raw("get", API_PATH["documents_next_asn"])
         try:
             res.raise_for_status()
             return int(res.text)
@@ -334,8 +334,6 @@ class DocumentService(
             "use_archive_version": use_archive_version,
         }
         try:
-            await self._client.transport.request_json(
-                "post", API_PATH["documents_email"], json=data
-            )
+            await self._client.transport.post(API_PATH["documents_email"], json=data)
         except Exception as exc:
             raise SendEmailError from exc

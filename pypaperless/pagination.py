@@ -143,7 +143,7 @@ class PageGenerator(AsyncIterator["Page"]):
         if self._page is not None and self._page.is_last_page:
             raise StopAsyncIteration
 
-        res = await self._runtime.transport.request_json("get", self._url, params=self.params)
+        res = await self._runtime.transport.get(self._url, params=self.params)
         data = {
             **res,
             "current_page": self.params["page"],

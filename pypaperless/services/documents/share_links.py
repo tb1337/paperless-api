@@ -30,5 +30,5 @@ class DocumentShareLinkService(DocumentScopedServiceBase):
 
         """
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.transport.request_json("get", self._api_path.format(pk=doc_pk))
+        res = await self._client.transport.get(self._api_path.format(pk=doc_pk))
         return [self._resource_cls.from_data(self._client, item) for item in res]

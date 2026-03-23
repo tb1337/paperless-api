@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.exceptions import DeletionError
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
 
 from .base import DocumentScopedServiceBase
@@ -35,7 +36,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
 
         """
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.transport.request_json("get", self._get_api_path(doc_pk))
+        res = await self._client.transport.get(self._get_api_path(doc_pk))
 
         # We have to transform data here slightly.
         # There are two major differences in the data depending on which endpoint is requested.
@@ -98,20 +99,23 @@ class DocumentNoteService(DocumentScopedServiceBase):
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.transport.request_json("post", draft.api_path, **kwdict)
+        res = await self._client.transport.post(draft.api_path, **kwdict)
         return (
             cast("int", max(item.get("id") for item in res)),
             cast("int", kwdict["json"]["document"]),
         )
 
-    async def delete(self, note: DocumentNote) -> bool:
+    async def delete(self, note: DocumentNote, *, silent_fail: bool = False) -> None:
         """Delete a document note.
 
-        Returns ``True`` when the deletion was successful, ``False`` otherwise.
+        Raises :exc:`~pypaperless.exceptions.DeletionError` on failure unless
+        *silent_fail* is ``True``.
 
         Args:
-            note: The :class:`~pypaperless.models.documents.notes.DocumentNote`
-                  instance to delete.
+            note:        The :class:`~pypaperless.models.documents.notes.DocumentNote`
+                         instance to delete.
+            silent_fail: When ``True``, swallow :exc:`~pypaperless.exceptions.DeletionError`
+                         instead of raising it.
 
         Example::
 
@@ -123,5 +127,8 @@ class DocumentNoteService(DocumentScopedServiceBase):
         params = {
             "id": note.id,
         }
-        res = await self._client.transport.request("delete", note.api_path, params=params)
-        return res.status_code in {200, 204}
+        try:
+            await self._client.transport.delete(note.api_path, params=params)
+        except DeletionError:
+            if not silent_fail:
+                raise

@@ -39,6 +39,6 @@ class CallableService(ResourceServiceProtocol[ResourceT]):
             params["full_perms"] = "true"
 
         api_path = self._resource_cls.format_api_path(pk=pk)
-        data = await self._client.transport.request_json("get", api_path, params=params or None)
+        data = await self._client.transport.get(api_path, params=params or None)
 
         return self._resource_cls.from_data(self._client, data)
