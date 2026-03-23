@@ -705,7 +705,7 @@ class TestDocuments:
             assert isinstance(field, CustomFieldValue)
 
         test_cf = CustomField.from_data(
-            client=paperless.runtime,
+            runtime=paperless.runtime,
             data=DATA_CUSTOM_FIELDS["results"][0],
         )
         assert test_cf in item.custom_fields

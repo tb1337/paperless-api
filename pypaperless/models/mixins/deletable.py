@@ -16,7 +16,7 @@ class DeletableModel:
     """
 
     _resource: ClassVar["PaperlessResource"]
-    _client: "PaperlessRuntime"
+    _runtime: "PaperlessRuntime"
 
     async def delete(self, *, silent_fail: bool = False) -> None:
         """Delete this model instance from Paperless.  This action cannot be undone.
@@ -38,4 +38,4 @@ class DeletableModel:
             await doc.delete(silent_fail=True)
 
         """
-        await getattr(self._client, self._resource).delete(self, silent_fail=silent_fail)
+        await getattr(self._runtime, self._resource).delete(self, silent_fail=silent_fail)

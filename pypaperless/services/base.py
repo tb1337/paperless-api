@@ -11,15 +11,15 @@ if TYPE_CHECKING:
 class PaperlessService:
     """Base class for all services in PyPaperless."""
 
-    def __init__(self, client: "PaperlessRuntime") -> None:
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
         """Initialize a `PaperlessService` instance."""
-        self._client = client
+        self._runtime = runtime
 
 
 class ResourceServiceProtocol[ResourceT](Protocol):
     """Protocol capturing the minimum interface required by all resource service mixins."""
 
-    _client: "PaperlessRuntime"
+    _runtime: "PaperlessRuntime"
     _api_path: str
     _resource: PaperlessResource
     _resource_cls: type[ResourceT]

@@ -14,7 +14,7 @@ class DocumentBulkEditService(PaperlessService):
 
     async def _post(self, path: str, *, json: dict) -> None:
         """POST to *path* and raise `BulkEditError` when the result is not ``"OK"``."""
-        data = await self._client.transport.post(path, json=json)
+        data = await self._runtime.transport.post(path, json=json)
         if data.get("result") != "OK":
             raise BulkEditError(str(data.get("result")))
 

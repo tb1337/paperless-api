@@ -27,4 +27,4 @@ class MailAccount(PaperlessModel, mixins.SecurableModel):
 
     async def process(self) -> None:
         """Shortcut for ``paperless.mail_accounts.process(self.id)``."""
-        await self._client.mail_accounts.process(cast("int", self.id))
+        await self._runtime.mail_accounts.process(cast("int", self.id))

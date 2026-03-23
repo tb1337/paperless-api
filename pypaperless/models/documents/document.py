@@ -61,7 +61,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
         super().model_post_init(__context)
         self._fields = []
 
-        cache = self._client.cache.custom_fields
+        cache = self._runtime.cache.custom_fields
 
         for item in self._data:
             if cache and (field := cache.get(item["field"], None)):
@@ -212,66 +212,66 @@ class Document(
     @classmethod
     def _coerce_custom_fields(cls, v: Any, info: ValidationInfo) -> Any:
         """Convert a raw list of custom field dicts into a ``DocumentCustomFieldList``."""
-        if isinstance(v, list) and isinstance(info.context, dict) and "client" in info.context:
-            return DocumentCustomFieldList.from_data(info.context["client"], v)
+        if isinstance(v, list) and isinstance(info.context, dict) and "runtime" in info.context:
+            return DocumentCustomFieldList.from_data(info.context["runtime"], v)
         return v
 
     @property
     def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
         if self._history is None:
-            self._history = DocumentHistoryService(self._client, cast("int", self.id))
+            self._history = DocumentHistoryService(self._runtime, cast("int", self.id))
         return self._history
 
     @property
     def notes(self) -> DocumentNoteService:
         """Return the notes service for this document."""
         if self._notes is None:
-            self._notes = DocumentNoteService(self._client, cast("int", self.id))
+            self._notes = DocumentNoteService(self._runtime, cast("int", self.id))
         return self._notes
 
     @property
     def share_links(self) -> DocumentShareLinkService:
         """Return the share links service for this document."""
         if self._share_links is None:
-            self._share_links = DocumentShareLinkService(self._client, cast("int", self.id))
+            self._share_links = DocumentShareLinkService(self._runtime, cast("int", self.id))
         return self._share_links
 
     async def download(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.download(self.id)``."""
         return cast(
             "DownloadedDocument",
-            await self._client.documents.download(cast("int", self.id), original=original),
+            await self._runtime.documents.download(cast("int", self.id), original=original),
         )
 
     async def preview(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.preview(self.id)``."""
         return cast(
             "DownloadedDocument",
-            await self._client.documents.preview(cast("int", self.id), original=original),
+            await self._runtime.documents.preview(cast("int", self.id), original=original),
         )
 
     async def thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
         """Shortcut for ``paperless.documents.thumbnail(self.id)``."""
         return cast(
             "DownloadedDocument",
-            await self._client.documents.thumbnail(cast("int", self.id), original=original),
+            await self._runtime.documents.thumbnail(cast("int", self.id), original=original),
         )
 
     async def metadata(self) -> "DocumentMeta":
         """Shortcut for ``paperless.documents.metadata(self.id)``."""
-        return cast("DocumentMeta", await self._client.documents.metadata(cast("int", self.id)))
+        return cast("DocumentMeta", await self._runtime.documents.metadata(cast("int", self.id)))
 
     async def suggestions(self) -> "DocumentSuggestions":
         """Shortcut for ``paperless.documents.suggestions(self.id)``."""
         return cast(
             "DocumentSuggestions",
-            await self._client.documents.suggestions(cast("int", self.id)),
+            await self._runtime.documents.suggestions(cast("int", self.id)),
         )
 
     async def more_like(self) -> AsyncGenerator["Document"]:
         """Shortcut for ``paperless.documents.more_like(self.id)``."""
-        async for doc in self._client.documents.more_like(cast("int", self.id)):
+        async for doc in self._runtime.documents.more_like(cast("int", self.id)):
             yield doc
 
     async def email(
@@ -283,7 +283,7 @@ class Document(
         use_archive_version: bool = True,
     ) -> None:
         """Shortcut for ``paperless.documents.email(self.id, ...)``."""
-        await self._client.documents.email(
+        await self._runtime.documents.email(
             cast("int", self.id),
             addresses=addresses,
             subject=subject,

@@ -43,5 +43,5 @@ class SearchService(ResourceService):
         params: dict[str, str | bool] = {"query": str(query)}
         if db_only is not None:
             params["db_only"] = db_only
-        res = await self._client.transport.get(self._api_path, params=params)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.get(self._api_path, params=params)
+        return self._resource_cls.from_data(self._runtime, res)

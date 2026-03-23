@@ -157,4 +157,4 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params.update({"full_perms": "true"})
 
-        return PageGenerator(self._client, self._api_path, self._resource_cls, params=params)
+        return PageGenerator(self._runtime, self._api_path, self._resource_cls, params=params)

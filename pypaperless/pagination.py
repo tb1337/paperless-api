@@ -31,7 +31,7 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     results: list[dict[str, Any]] = Field(default_factory=list)
 
     def model_post_init(self, __context: Any, /) -> None:
-        """Bind ``_client`` and ``_resource_cls`` from validation context."""
+        """Bind ``_runtime`` and ``_resource_cls`` from validation context."""
         super().model_post_init(__context)
         if isinstance(__context, dict) and "resource_cls" in __context:
             self._resource_cls = __context["resource_cls"]
@@ -70,7 +70,7 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
             if self._resource_cls is None:
                 msg = "Page was created without a resource_cls; pass resource_cls= to from_data()"
                 raise RuntimeError(msg)
-            return self._resource_cls.from_data(self._client, data)
+            return self._resource_cls.from_data(self._runtime, data)
 
         return list(map(mapper, self.results))
 

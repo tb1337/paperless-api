@@ -32,13 +32,13 @@ class CallableService(ResourceServiceProtocol[ResourceT]):
 
         """
         if lazy:
-            return self._resource_cls.from_data(self._client, {"id": pk})
+            return self._resource_cls.from_data(self._runtime, {"id": pk})
 
         params: dict[str, Any] = {}
         if getattr(self, "_request_full_perms", False):
             params["full_perms"] = "true"
 
         api_path = self._resource_cls.format_api_path(pk=pk)
-        data = await self._client.transport.get(api_path, params=params or None)
+        data = await self._runtime.transport.get(api_path, params=params or None)
 
-        return self._resource_cls.from_data(self._client, data)
+        return self._resource_cls.from_data(self._runtime, data)

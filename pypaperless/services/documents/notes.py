@@ -36,7 +36,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
 
         """
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.transport.get(self._get_api_path(doc_pk))
+        res = await self._runtime.transport.get(self._get_api_path(doc_pk))
 
         # We have to transform data here slightly.
         # There are two major differences in the data depending on which endpoint is requested.
@@ -48,12 +48,12 @@ class DocumentNoteService(DocumentScopedServiceBase):
         #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
         return [
             self._resource_cls.from_data(
-                self._client,
+                self._runtime,
                 {
                     **item,
                     "document": doc_pk,
                     "user": item["user"]["id"]
-                    if self._client.host_api_version >= 8
+                    if self._runtime.host_api_version >= 8
                     else item["user"],
                 },
             )
@@ -79,7 +79,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
         """
         kwargs.update({"document": self._get_document_pk(pk)})
         return DocumentNoteDraft.from_data(
-            self._client,
+            self._runtime,
             data=kwargs,
         )
 
@@ -99,7 +99,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.transport.post(draft.api_path, **kwdict)
+        res = await self._runtime.transport.post(draft.api_path, **kwdict)
         return (
             cast("int", max(item.get("id") for item in res)),
             cast("int", kwdict["json"]["document"]),
@@ -128,7 +128,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
             "id": note.id,
         }
         try:
-            await self._client.transport.delete(note.api_path, params=params)
+            await self._runtime.transport.delete(note.api_path, params=params)
         except DeletionError:
             if not silent_fail:
                 raise

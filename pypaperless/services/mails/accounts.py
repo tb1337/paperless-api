@@ -33,7 +33,7 @@ class MailAccountService(
         """
         return cast(
             "dict[str, object]",
-            await self._client.transport.post(API_PATH["mail_accounts_test"], json={}),
+            await self._runtime.transport.post(API_PATH["mail_accounts_test"], json={}),
         )
 
     async def process(self, pk: int) -> None:
@@ -47,7 +47,7 @@ class MailAccountService(
             await paperless.mail_accounts.process(1)
 
         """
-        res = await self._client.transport.request_raw(
+        res = await self._runtime.transport.request_raw(
             "post",
             API_PATH["mail_accounts_process"].format(pk=pk),
             json={},

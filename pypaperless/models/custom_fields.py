@@ -226,7 +226,7 @@ class CustomField(
         expected_type: type[CustomFieldValueT] | None = None,
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
-        cache = self._client.cache.custom_fields
+        cache = self._runtime.cache.custom_fields
 
         if cache and self.id in cache:
             klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(

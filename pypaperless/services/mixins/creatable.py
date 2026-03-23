@@ -40,7 +40,7 @@ class CreatableService(ResourceServiceProtocol[ResourceT]):
             raise DraftNotSupportedError(message)
         kwargs.update({"id": -1})
 
-        return self._draft_cls.from_data(self._client, data=kwargs)
+        return self._draft_cls.from_data(self._runtime, data=kwargs)
 
     async def save(self, draft: _DraftLike) -> int | str:
         """Persist a draft to Paperless and return the new resource identifier.
@@ -62,7 +62,7 @@ class CreatableService(ResourceServiceProtocol[ResourceT]):
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.transport.post(draft.api_path, **kwdict)
+        res = await self._runtime.transport.post(draft.api_path, **kwdict)
 
         if isinstance(res, dict):
             return int(res["id"])

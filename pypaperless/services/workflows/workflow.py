@@ -26,12 +26,12 @@ class WorkflowService(
 
     _resource_cls = Workflow
 
-    def __init__(self, client: "PaperlessRuntime") -> None:
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
         """Initialize a `WorkflowService` instance."""
-        super().__init__(client)
+        super().__init__(runtime)
 
-        self._actions = WorkflowActionService(client)
-        self._triggers = WorkflowTriggerService(client)
+        self._actions = WorkflowActionService(runtime)
+        self._triggers = WorkflowTriggerService(runtime)
 
     @property
     def actions(self) -> WorkflowActionService:

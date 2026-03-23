@@ -23,5 +23,5 @@ class StatisticService(ResourceService):
             print(f"{stats.documents_total} documents total")
 
         """
-        res = await self._client.transport.get(self._api_path)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.get(self._api_path)
+        return self._resource_cls.from_data(self._runtime, res)

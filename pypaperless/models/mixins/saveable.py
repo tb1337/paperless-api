@@ -15,7 +15,7 @@ class SaveableModel:
     """
 
     _resource: ClassVar["PaperlessResource"]
-    _client: "PaperlessRuntime"
+    _runtime: "PaperlessRuntime"
 
     async def save(self) -> int | str:
         """Persist this draft to Paperless and return the new resource identifier.
@@ -28,4 +28,4 @@ class SaveableModel:
             new_id = await draft.save()
 
         """
-        return cast("int | str", await getattr(self._client, self._resource).save(self))
+        return cast("int | str", await getattr(self._runtime, self._resource).save(self))

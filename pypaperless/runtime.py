@@ -10,8 +10,8 @@ class PaperlessRuntime:
     """Container that binds a transport and a cache for use by services.
 
     Constructed by :class:`~pypaperless.client.PaperlessClient` and passed to
-    every service instance.  Services access HTTP via ``self._client.transport``
-    and the in-memory cache via ``self._client.cache``.
+    every service instance.  Services access HTTP via ``self._runtime.transport``
+    and the in-memory cache via ``self._runtime.cache``.
 
     Unknown attribute lookups are transparently delegated to the
     :class:`~pypaperless.client.PaperlessClient` facade, which allows model

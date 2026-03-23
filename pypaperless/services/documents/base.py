@@ -16,9 +16,9 @@ class DocumentScopedServiceBase(ResourceService):
     `_get_document_pk` to resolve the effective pk at call time.
     """
 
-    def __init__(self, client: "PaperlessRuntime", attached_to: int | None = None) -> None:
+    def __init__(self, runtime: "PaperlessRuntime", attached_to: int | None = None) -> None:
         """Initialize with an optional attached document pk."""
-        super().__init__(client)
+        super().__init__(runtime)
 
         self._attached_to = attached_to
 

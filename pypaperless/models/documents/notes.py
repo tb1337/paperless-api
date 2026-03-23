@@ -22,7 +22,7 @@ class DocumentNote(PaperlessModel):
 
     async def delete(self, *, silent_fail: bool = False) -> None:
         """Shortcut for ``paperless.documents.notes.delete(self)``."""
-        await self._client.documents.notes.delete(self, silent_fail=silent_fail)
+        await self._runtime.documents.notes.delete(self, silent_fail=silent_fail)
 
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):
@@ -38,4 +38,4 @@ class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):
 
     async def save(self) -> tuple[int, int]:
         """Shortcut for ``paperless.documents.notes.save(self)``."""
-        return cast("tuple[int, int]", await self._client.documents.notes.save(self))
+        return cast("tuple[int, int]", await self._runtime.documents.notes.save(self))

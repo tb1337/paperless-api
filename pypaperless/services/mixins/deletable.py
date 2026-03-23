@@ -30,7 +30,7 @@ class DeletableService(ResourceServiceProtocol[ResourceT]):
 
         """
         try:
-            await self._client.transport.delete(model.api_path)
+            await self._runtime.transport.delete(model.api_path)
         except DeletionError:
             if not silent_fail:
                 raise

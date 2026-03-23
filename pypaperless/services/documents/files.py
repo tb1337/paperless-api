@@ -22,7 +22,7 @@ class _DocumentFileServiceBase(ResourceService):
             "original": "true" if original else "false",
         }
 
-        res = await self._client.transport.request_raw(
+        res = await self._runtime.transport.request_raw(
             "get", self._api_path.format(pk=pk), params=params
         )
 
@@ -43,7 +43,7 @@ class _DocumentFileServiceBase(ResourceService):
                 if stripped.startswith("filename="):
                     data["disposition_filename"] = stripped.split("=", 1)[1].strip('"')
 
-        return self._resource_cls.from_data(self._client, data)
+        return self._resource_cls.from_data(self._runtime, data)
 
 
 class DocumentFileDownloadService(_DocumentFileServiceBase):

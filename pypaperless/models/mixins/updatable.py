@@ -16,7 +16,7 @@ class UpdatableModel:
     """
 
     _resource: ClassVar["PaperlessResource"]
-    _client: "PaperlessRuntime"
+    _runtime: "PaperlessRuntime"
 
     async def update(self, *, only_changed: bool = True) -> bool:
         """Persist changes on this model to Paperless.
@@ -37,5 +37,5 @@ class UpdatableModel:
         """
         return cast(
             "bool",
-            await getattr(self._client, self._resource).update(self, only_changed=only_changed),
+            await getattr(self._runtime, self._resource).update(self, only_changed=only_changed),
         )

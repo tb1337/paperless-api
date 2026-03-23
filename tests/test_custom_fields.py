@@ -61,7 +61,7 @@ async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperles
     paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
     custom_field = CustomField.from_data(
-        client=paperless.runtime,
+        runtime=paperless.runtime,
         data=DATA_CUSTOM_FIELDS["results"][5],
     )
     field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)
