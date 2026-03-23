@@ -569,8 +569,8 @@ async def test_custom_fields(p: PaperlessClient) -> None:
 
     # Populate cache
     try:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
-        ok("custom_fields.as_dict() → cache", f"count={len(p.cache.custom_fields)}")
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
+        ok("custom_fields.as_dict() → cache", f"count={len(p.runtime.cache.custom_fields)}")
     except Exception as exc:
         fail("custom_fields.as_dict()", exc)
 
@@ -611,8 +611,8 @@ async def test_custom_field_values_on_document(p: PaperlessClient) -> None:
         CustomFieldURLValue,
     )
 
-    if not p.cache.custom_fields:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
+    if not p.runtime.cache.custom_fields:
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
 
     doc = await check(
         f"documents({TEST_DOCUMENT_ID}) fetch",
@@ -631,7 +631,9 @@ async def test_custom_field_values_on_document(p: PaperlessClient) -> None:
 
     # ── Helper: pick a different SELECT option from cache ─────────────────
     def _other_select_option(field_id: int, current: object) -> object:
-        cached_cf = p.cache.custom_fields.get(field_id) if p.cache.custom_fields else None
+        cached_cf = (
+            p.runtime.cache.custom_fields.get(field_id) if p.runtime.cache.custom_fields else None
+        )
         if cached_cf is None or cached_cf.extra_data is None:
             return current
         opts = [o for o in cached_cf.extra_data.select_options if o and o.id != current]
@@ -1313,9 +1315,9 @@ async def test_document_post_with_cf_mapping(p: PaperlessClient) -> None:
     _hdr("Document POST – upload with custom_fields object mapping")
 
     # Ensure custom field cache is populated
-    if not p.cache.custom_fields:
+    if not p.runtime.cache.custom_fields:
         try:
-            p.cache.custom_fields = await p.custom_fields.as_dict()
+            p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
         except Exception as exc:
             fail("custom_fields cache (pre-condition)", exc)
             return

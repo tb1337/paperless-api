@@ -196,16 +196,16 @@ async def test_status_has_errors(paperless: PaperlessClient) -> None:
             "classifier_status": "OK",
         },
     }
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is False
 
     data["database"]["status"] = "ERROR"
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is True
 
     # None values are treated as no errors
     del data["database"]["status"]
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is False
 
 

@@ -927,7 +927,7 @@ async def main() -> None:
     results: list[AuditResult] = []
 
     async with p:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
 
         for spec in ENDPOINTS:
             try:

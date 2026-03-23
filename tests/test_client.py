@@ -120,7 +120,7 @@ async def test_request(httpx_mock: HTTPXMock) -> None:
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
 
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
-    res = await api._transport.request("get", PAPERLESS_TEST_URL)
+    res = await api._runtime.transport.request("get", PAPERLESS_TEST_URL)
     assert res.status_code
 
     form_data = {
@@ -134,7 +134,7 @@ async def test_request(httpx_mock: HTTPXMock) -> None:
         "dict_field": {"dict_str_field": "str", "dict_int_field": 2},
     }
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="POST", status_code=200)
-    res = await api._transport.request("post", PAPERLESS_TEST_URL, form=form_data)
+    res = await api._runtime.transport.request("post", PAPERLESS_TEST_URL, form=form_data)
     assert res.status_code
 
     await api.close()
@@ -149,8 +149,9 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
         headers={"Content-Type": "application/json"},
         json={"error": "sample message"},
     )
+    url_400 = f"{PAPERLESS_TEST_URL}/400-json-error-payload"
     with pytest.raises(JsonResponseWithError):
-        await api._transport.request_json("get", f"{PAPERLESS_TEST_URL}/400-json-error-payload")
+        await api._runtime.transport.request_json("get", url_400)
 
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/200-text-error-payload",
@@ -159,8 +160,9 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
         headers={"Content-Type": "text/plain"},
         text='{"error": "sample message"}',
     )
+    url_200_text = f"{PAPERLESS_TEST_URL}/200-text-error-payload"
     with pytest.raises(BadJsonResponseError):
-        await api._transport.request_json("get", f"{PAPERLESS_TEST_URL}/200-text-error-payload")
+        await api._runtime.transport.request_json("get", url_200_text)
 
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}/200-json-text-body",
@@ -169,8 +171,9 @@ async def test_request_json(httpx_mock: HTTPXMock, api: PaperlessClient) -> None
         headers={"Content-Type": "application/json"},
         text="test 5 23 42 1337",
     )
+    url_200_json = f"{PAPERLESS_TEST_URL}/200-json-text-body"
     with pytest.raises(BadJsonResponseError):
-        await api._transport.request_json("get", f"{PAPERLESS_TEST_URL}/200-json-text-body")
+        await api._runtime.transport.request_json("get", url_200_json)
 
 
 @pytest.mark.parametrize(
@@ -354,7 +357,8 @@ async def test_request_merges_custom_headers(httpx_mock: HTTPXMock) -> None:
     """request() merges caller-supplied headers with the default auth headers."""
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
-    res = await api._transport.request("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
+    transport = api._runtime.transport
+    res = await transport.request("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
     assert res.status_code == 200
     await api.close()
 
@@ -369,7 +373,7 @@ async def test_request_json_400_body_not_json(httpx_mock: HTTPXMock, api: Paperl
         text="not valid json {{{}}}",
     )
     with pytest.raises(BadJsonResponseError):
-        await api._transport.request_json("get", f"{PAPERLESS_TEST_URL}/400-bad-json")
+        await api._runtime.transport.request_json("get", f"{PAPERLESS_TEST_URL}/400-bad-json")
 
 
 async def test_service_base_api_path(api: PaperlessClient) -> None:
@@ -413,7 +417,7 @@ def test_config_explicit_params() -> None:
     """PaperlessClient(url, token) — classic mode still works."""
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
     assert api.base_url == PAPERLESS_TEST_URL
-    assert api._transport._token == PAPERLESS_TEST_TOKEN
+    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
 
 
 def test_config_object() -> None:
@@ -421,7 +425,7 @@ def test_config_object() -> None:
     cfg = PaperlessConfig(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
     api = PaperlessClient.from_config(cfg)
     assert api.base_url == PAPERLESS_TEST_URL
-    assert api._transport._token == PAPERLESS_TEST_TOKEN
+    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
 
 
 def test_config_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -430,7 +434,7 @@ def test_config_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PYPAPERLESS_TOKEN", PAPERLESS_TEST_TOKEN)
     api = PaperlessClient.from_env()
     assert api.base_url == PAPERLESS_TEST_URL
-    assert api._transport._token == PAPERLESS_TEST_TOKEN
+    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
 
 
 def test_config_from_env_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -446,4 +450,4 @@ def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PYPAPERLESS_URL", PAPERLESS_TEST_URL)
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     api = PaperlessClient.from_env()
-    assert api._transport._token is None
+    assert api._runtime.transport._token is None

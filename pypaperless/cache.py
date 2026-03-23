@@ -15,7 +15,7 @@ class PaperlessCache:
     Example::
 
         async with PaperlessClient("localhost:8000", "token") as paperless:
-            fields = paperless.cache.custom_fields
+            fields = paperless.runtime.cache.custom_fields
 
     """
 

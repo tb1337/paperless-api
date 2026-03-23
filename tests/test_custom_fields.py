@@ -40,7 +40,7 @@ from .data import DATA_CUSTOM_FIELDS
 async def test_draft_value_without_cache(paperless: PaperlessClient) -> None:
     """draft_value() returns a plain object when the custom field cache is empty."""
     custom_field = CustomField.from_data(
-        paperless,
+        paperless.runtime,
         data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
     )
     field_value = custom_field.draft_value(1337)
@@ -58,10 +58,10 @@ async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperles
         status_code=200,
         json=DATA_CUSTOM_FIELDS,
     )
-    paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
+    paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
     custom_field = CustomField.from_data(
-        client=paperless,
+        client=paperless.runtime,
         data=DATA_CUSTOM_FIELDS["results"][5],
     )
     field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)

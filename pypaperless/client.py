@@ -64,9 +64,10 @@ class PaperlessClient:
             await paperless.close()
 
         """
-        self._transport = PaperlessTransport(url, token, client)
-        self._cache = PaperlessCache()
-        self._runtime = PaperlessRuntime(self._transport, self._cache)
+        transport = PaperlessTransport(url, token, client)
+        cache = PaperlessCache()
+
+        self._runtime = PaperlessRuntime(transport, cache)
         self._runtime.facade = self
 
         self._initialized = False
@@ -124,14 +125,10 @@ class PaperlessClient:
         """
         return cls.from_config(PaperlessConfig(), client=client)
 
-    # ------------------------------------------------------------------
-    # Properties
-    # ------------------------------------------------------------------
-
     @property
     def base_url(self) -> str:
         """Return the base URL of the Paperless API endpoint."""
-        return self._transport.base_url
+        return self._runtime.transport.base_url
 
     @property
     def is_initialized(self) -> bool:
@@ -149,27 +146,13 @@ class PaperlessClient:
         return self._version
 
     @property
-    def transport(self) -> PaperlessTransport:
-        """Return the underlying :class:`~pypaperless.transport.PaperlessTransport`."""
-        return self._transport
-
-    @property
     def runtime(self) -> PaperlessRuntime:
         """Return the :class:`~pypaperless.runtime.PaperlessRuntime` shared with services."""
         return self._runtime
 
-    @property
-    def cache(self) -> PaperlessCache:
-        """Return the :class:`~pypaperless.cache.PaperlessCache`."""
-        return self._runtime.cache
-
-    # ------------------------------------------------------------------
-    # Lifecycle
-    # ------------------------------------------------------------------
-
     async def close(self) -> None:
         """Clean up the connection."""
-        await self._transport.close()
+        await self._runtime.transport.close()
         self.logger.info("Closed.")
 
     async def initialize(self) -> None:
@@ -184,7 +167,7 @@ class PaperlessClient:
             await paperless.close()
 
         """
-        res = await self._transport.request("get", API_PATH["index"])
+        res = await self._runtime.transport.request("get", API_PATH["index"])
         try:
             res.raise_for_status()
             self._api_version = int(res.headers.get("x-api-version", API_VERSION))
@@ -195,10 +178,6 @@ class PaperlessClient:
 
         self._initialized = True
         self.logger.info("Initialized.")
-
-    # ------------------------------------------------------------------
-    # Lazy-cached service accessors
-    # ------------------------------------------------------------------
 
     @cached_property
     def bulk_edit_objects(self) -> services.BulkEditObjectsService:

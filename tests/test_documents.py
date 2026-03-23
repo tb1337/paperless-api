@@ -87,7 +87,7 @@ class TestDocuments:
 
     async def test_create_date_property(self, paperless: PaperlessClient) -> None:
         """created_date is an alias for the created field."""
-        document = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
+        document = Document.from_data(paperless.runtime, data={**DATA_DOCUMENTS["results"][0]})
         assert document.created_date == document.created
 
     async def test_update(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
@@ -630,7 +630,7 @@ class TestDocuments:
             status_code=200,
             json=DATA_CUSTOM_FIELDS,
         )
-        paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
+        paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
         httpx_mock.add_response(
             method="GET",
@@ -644,7 +644,7 @@ class TestDocuments:
             assert isinstance(field, CustomFieldValue)
 
         test_cf = CustomField.from_data(
-            client=paperless,
+            client=paperless.runtime,
             data=DATA_CUSTOM_FIELDS["results"][0],
         )
         assert test_cf in item.custom_fields
@@ -679,7 +679,7 @@ class TestDocuments:
 
     async def test_draft_custom_fields_as_object_mapping(self, paperless: PaperlessClient) -> None:
         """DocumentDraft serialises DocumentCustomFieldList as a JSON string."""
-        cf = DocumentCustomFieldList.from_data(paperless, [])
+        cf = DocumentCustomFieldList.from_data(paperless.runtime, [])
         cf += CustomFieldStringValue(field=6, value="hello")
         cf += CustomFieldIntegerValue(field=3, value=42)
 
@@ -698,7 +698,7 @@ class TestDocuments:
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """A draft with a DocumentCustomFieldList can be POSTed successfully."""
-        cf = DocumentCustomFieldList.from_data(paperless, [])
+        cf = DocumentCustomFieldList.from_data(paperless.runtime, [])
         cf += CustomFieldStringValue(field=6, value="smoke")
 
         draft = paperless.documents.create(document=b"%PDF-fake", title="CF Mapping Test")
@@ -751,11 +751,11 @@ class TestDocuments:
 
     async def test_is_deleted(self, paperless: PaperlessClient) -> None:
         """Document.is_deleted is True when deleted_at is set, False otherwise."""
-        doc_alive = Document.from_data(paperless, data={**DATA_DOCUMENTS["results"][0]})
+        doc_alive = Document.from_data(paperless.runtime, data={**DATA_DOCUMENTS["results"][0]})
         assert not doc_alive.is_deleted
 
         doc_trashed = Document.from_data(
-            paperless,
+            paperless.runtime,
             data={**DATA_DOCUMENTS["results"][0], "deleted_at": "2024-01-01T00:00:00Z"},
         )
         assert doc_trashed.is_deleted
@@ -763,7 +763,7 @@ class TestDocuments:
     async def test_custom_field_list_from_data(self, paperless: PaperlessClient) -> None:
         """DocumentCustomFieldList.from_data() constructs the list from raw API data."""
         raw = [{"field": 1, "value": "hello"}, {"field": 2, "value": 42}]
-        cf_list = DocumentCustomFieldList.from_data(paperless, raw)
+        cf_list = DocumentCustomFieldList.from_data(paperless.runtime, raw)
         assert isinstance(cf_list, DocumentCustomFieldList)
         assert len(list(cf_list)) == 2
 
