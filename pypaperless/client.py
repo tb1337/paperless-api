@@ -46,19 +46,15 @@ class PaperlessClient:
         url: str,
         token: str | None = None,
         *,
-        request_api_version: int = API_VERSION,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         """Initialize a :class:`PaperlessClient` instance.
 
         Args:
-            url:                  A hostname, IP-address, or full URL string.
-            token:                An API token from Paperless Django admin or via
-                                  :func:`~pypaperless.transport.generate_api_token`.
-            request_api_version:  Override the API version header sent with each
-                                  request.
-            client:               A custom :class:`httpx.AsyncClient` to use for
-                                  requests.
+            url:    A hostname, IP-address, or full URL string.
+            token:  An API token from Paperless Django admin or via
+                    :func:`~pypaperless.transport.generate_api_token`.
+            client: A custom :class:`httpx.AsyncClient` to use for requests.
 
         Example::
 
@@ -68,7 +64,7 @@ class PaperlessClient:
             await paperless.close()
 
         """
-        self._transport = PaperlessTransport(url, token, request_api_version, client)
+        self._transport = PaperlessTransport(url, token, client)
         self._cache = PaperlessCache()
         self._runtime = PaperlessRuntime(self._transport, self._cache)
         self._runtime.facade = self
@@ -102,7 +98,6 @@ class PaperlessClient:
         return cls(
             config.url,
             config.token,
-            request_api_version=config.request_api_version,
             client=client,
         )
 
@@ -114,8 +109,7 @@ class PaperlessClient:
     ) -> "PaperlessClient":
         """Create a :class:`PaperlessClient` from environment variables.
 
-        Reads ``PYPAPERLESS_URL``, ``PYPAPERLESS_TOKEN``, and optionally
-        ``PYPAPERLESS_REQUEST_API_VERSION`` from the environment.
+        Reads ``PYPAPERLESS_URL`` and ``PYPAPERLESS_TOKEN`` from the environment.
 
         Args:
             client: A custom :class:`httpx.AsyncClient` to use for requests.
@@ -193,9 +187,7 @@ class PaperlessClient:
         res = await self._transport.request("get", API_PATH["index"])
         try:
             res.raise_for_status()
-            self._api_version = self._transport.request_api_version or int(
-                res.headers.get("x-api-version", API_VERSION)
-            )
+            self._api_version = int(res.headers.get("x-api-version", API_VERSION))
             self._version = res.headers.get("x-version", None)
             res.json()
         except Exception as exc:

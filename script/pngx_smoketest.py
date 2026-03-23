@@ -1447,7 +1447,6 @@ async def main() -> int:
     paperless = PaperlessClient(
         PAPERLESS_URL,
         PAPERLESS_TOKEN,
-        request_api_version=9,
         client=httpx.AsyncClient(verify=False),
     )
 

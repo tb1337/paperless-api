@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient, PaperlessConfig, generate_api_token
-from pypaperless.const import API_PATH, API_VERSION
+from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     BadJsonResponseError,
     DraftNotSupportedError,
@@ -424,13 +424,6 @@ def test_config_object() -> None:
     assert api._transport._token == PAPERLESS_TEST_TOKEN
 
 
-def test_config_object_custom_api_version() -> None:
-    """PaperlessConfig.request_api_version is forwarded to the client."""
-    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN, request_api_version=7)
-    api = PaperlessClient.from_config(cfg)
-    assert api._transport._request_api_version == 7
-
-
 def test_config_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """PaperlessClient.from_env() reads PYPAPERLESS_URL / PYPAPERLESS_TOKEN from the environment."""
     monkeypatch.setenv("PYPAPERLESS_URL", PAPERLESS_TEST_URL)
@@ -454,9 +447,3 @@ def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     api = PaperlessClient.from_env()
     assert api._transport._token is None
-
-
-def test_config_default_api_version_from_const() -> None:
-    """PaperlessConfig uses API_VERSION as default for request_api_version."""
-    cfg = PaperlessConfig(url=PAPERLESS_TEST_URL)
-    assert cfg.request_api_version == API_VERSION

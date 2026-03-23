@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 
-from .const import API_PATH
+from .const import API_PATH, API_VERSION
 from .exceptions import (
     BadJsonResponseError,
     ForbiddenError,
@@ -25,10 +25,9 @@ class PaperlessTransport:
     instantiation by library consumers.
 
     Args:
-        base_url:            Hostname, IP-address, or full URL string.
-        token:               API token, or ``None`` for anonymous access.
-        request_api_version: API version header value sent with each request.
-        client:              Optional :class:`httpx.AsyncClient` to reuse.
+        base_url: Hostname, IP-address, or full URL string.
+        token:    API token, or ``None`` for anonymous access.
+        client:   Optional :class:`httpx.AsyncClient` to reuse.
 
     Example::
 
@@ -41,24 +40,17 @@ class PaperlessTransport:
         self,
         base_url: str,
         token: str | None,
-        request_api_version: int,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         """Initialize a :class:`PaperlessTransport` instance."""
         self._base_url = normalize_base_url(base_url)
         self._token = token
-        self._request_api_version = request_api_version
         self._httpx_client = client
 
     @property
     def base_url(self) -> str:
         """Return the base URL of the Paperless API endpoint."""
         return self._base_url
-
-    @property
-    def request_api_version(self) -> int:
-        """Return the API version sent with each request."""
-        return self._request_api_version
 
     async def close(self) -> None:
         """Close the underlying :class:`httpx.AsyncClient`, if open."""
@@ -96,7 +88,7 @@ class PaperlessTransport:
             self._httpx_client = httpx.AsyncClient()
 
         headers: dict[str, str] = {
-            "Accept": f"application/json; version={self._request_api_version}",
+            "Accept": f"application/json; version={API_VERSION}",
         }
         if self._token:
             headers["Authorization"] = f"Token {self._token}"
