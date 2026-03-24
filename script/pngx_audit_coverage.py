@@ -574,7 +574,7 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
 
 async def _fetch_item(p: PaperlessClient, spec: EndpointSpec) -> dict[str, Any] | None:
     """Return a representative raw JSON object for ``spec``, or None on error/no-data."""
-    raw = await p.request_json("get", spec.path)
+    raw = await p._runtime.transport.get(spec.path)
 
     if spec.unwrap == "paginated":
         results = raw.get("results", [])
@@ -920,7 +920,6 @@ async def main() -> None:
     p = PaperlessClient(
         PAPERLESS_URL,
         PAPERLESS_TOKEN,
-        request_api_version=9,
         client=httpx.AsyncClient(verify=False),
     )
 
