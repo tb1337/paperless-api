@@ -9,11 +9,12 @@ from pypaperless import PaperlessClient
 from pypaperless.const import API_PATH
 from pypaperless.dispatch import _MODEL_TO_PROP_NAME, dispatchable_cached_property
 from pypaperless.exceptions import DispatchError
-from pypaperless.models import Correspondent, CorrespondentDraft
+from pypaperless.models import Correspondent, CorrespondentDraft, DocumentNote, DocumentNoteDraft
 from pypaperless.models.tasks import Task
 from pypaperless.services import (
     CorrespondentService,
     CustomFieldService,
+    DocumentNoteService,
     DocumentService,
     DocumentTypeService,
     ShareLinkService,
@@ -45,20 +46,20 @@ class TestRegistry:
             ), f"{name!r} is not a dispatchable_cached_property"
 
     def test_resource_cls_registered(self) -> None:
-        """Each _resource_cls must map to the correct property name."""
-        expected: dict[type, str] = {
-            Correspondent: "correspondents",
+        """Each _resource_cls must map to the correct service path."""
+        expected: dict[type, tuple[str, ...]] = {
+            Correspondent: ("correspondents",),
         }
-        for model_cls, prop_name in expected.items():
-            assert _MODEL_TO_PROP_NAME.get(model_cls) == prop_name
+        for model_cls, path in expected.items():
+            assert _MODEL_TO_PROP_NAME.get(model_cls) == path
 
     def test_draft_cls_registered(self) -> None:
-        """Each _draft_cls must map to the correct property name."""
-        expected: dict[type, str] = {
-            CorrespondentDraft: "correspondents",
+        """Each _draft_cls must map to the correct service path."""
+        expected: dict[type, tuple[str, ...]] = {
+            CorrespondentDraft: ("correspondents",),
         }
-        for draft_cls, prop_name in expected.items():
-            assert _MODEL_TO_PROP_NAME.get(draft_cls) == prop_name
+        for draft_cls, path in expected.items():
+            assert _MODEL_TO_PROP_NAME.get(draft_cls) == path
 
     def test_all_crud_service_models_registered(self) -> None:
         """All seven service classes contribute their model types to the registry."""
@@ -89,6 +90,14 @@ class TestRegistry:
         svc2 = api.correspondents
         assert svc1 is svc2
 
+    def test_sub_service_resource_cls_registered(self) -> None:
+        """Sub-service _resource_cls must map to a 2-element path tuple."""
+        assert _MODEL_TO_PROP_NAME.get(DocumentNote) == ("documents", "notes")
+
+    def test_sub_service_draft_cls_registered(self) -> None:
+        """Sub-service _draft_cls must map to a 2-element path tuple."""
+        assert _MODEL_TO_PROP_NAME.get(DocumentNoteDraft) == ("documents", "notes")
+
 
 class TestDispatcherInit:
     """Verify ModelDispatcher construction and weakref behaviour."""
@@ -113,6 +122,11 @@ class TestDispatcherInit:
         task = Task.model_construct()
         with pytest.raises(DispatchError, match="No service registered"):
             api._dispatcher._get_service(type(task))
+
+    def test_get_service_sub_path(self, api: PaperlessClient) -> None:
+        """_get_service navigates a 2-element path to reach a sub-service."""
+        svc = api._dispatcher._get_service(DocumentNote)
+        assert isinstance(svc, DocumentNoteService)
 
 
 class TestDispatchUpdate:

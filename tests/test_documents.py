@@ -311,7 +311,7 @@ class TestDocuments:
             json=DATA_DOCUMENT_NOTES,
         )
         result = await item.notes.save(draft)
-        assert isinstance(result, tuple)
+        assert isinstance(result, int)
 
     async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Deleting a note returns True on 204."""

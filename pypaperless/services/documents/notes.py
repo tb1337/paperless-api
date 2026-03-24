@@ -4,17 +4,24 @@ from typing import Any, cast
 
 from pypaperless.const import API_PATH, PaperlessResource
 from pypaperless.exceptions import DeletionError
+from pypaperless.models.base import DraftLike
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
+from pypaperless.services.mixins import CreatableService, DeletableService
 
 from .base import DocumentScopedServiceBase
 
 
-class DocumentNoteService(DocumentScopedServiceBase):
+class DocumentNoteService(
+    DocumentScopedServiceBase,
+    DeletableService[DocumentNote],
+    CreatableService[DocumentNoteDraft],
+):
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = API_PATH["documents_notes"]
     _resource = PaperlessResource.DOCUMENTS
 
+    _draft_cls = DocumentNoteDraft
     _resource_cls = DocumentNote
 
     async def __call__(
@@ -72,7 +79,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
         Example::
 
             draft = paperless.documents.notes.create(42, note="Checked and approved.")
-            note_id, doc_id = await paperless.documents.notes.save(draft)
+            note_id = await paperless.documents.notes.save(draft)
 
         """
         kwargs.update({"document": self._get_document_pk(pk)})
@@ -81,10 +88,8 @@ class DocumentNoteService(DocumentScopedServiceBase):
             data=kwargs,
         )
 
-    async def save(self, draft: DocumentNoteDraft) -> tuple[int, int]:
-        """Persist a note draft to Paperless.
-
-        Returns a ``(note_id, document_id)`` tuple.
+    async def save(self, draft: DraftLike) -> int:
+        """Persist a note draft to Paperless and return the new note id.
 
         Args:
             draft: A draft instance created by :meth:`create`.
@@ -92,16 +97,13 @@ class DocumentNoteService(DocumentScopedServiceBase):
         Example::
 
             draft = paperless.documents.notes.create(42, note="Approved.")
-            note_id, doc_id = await paperless.documents.notes.save(draft)
+            note_id = await paperless.documents.notes.save(draft)
 
         """
         draft.validate_draft()
         kwdict = draft.serialize()
         res = await self._runtime.transport.post(draft.api_path, **kwdict)
-        return (
-            cast("int", max(item.get("id") for item in res)),
-            cast("int", kwdict["json"]["document"]),
-        )
+        return cast("int", max(item.get("id") for item in res))
 
     async def delete(self, note: DocumentNote, *, silent_fail: bool = False) -> None:
         """Delete a document note.

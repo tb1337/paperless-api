@@ -18,7 +18,12 @@ if TYPE_CHECKING:
 __all__ = ("ModelDispatcher", "dispatchable_cached_property")
 
 
-_MODEL_TO_PROP_NAME: dict[type[PaperlessModel], str] = {}
+_MODEL_TO_PROP_NAME: dict[type[PaperlessModel], tuple[str, ...]] = {}
+
+
+def _is_writable_service(cls: type[PaperlessService]) -> bool:
+    """Return True if *cls* implements any write operation (create, update, or delete)."""
+    return issubclass(cls, (CreatableService, DeletableService, UpdatableService))
 
 
 class DispatchableCachedProperty[ServiceT: PaperlessService]:
@@ -59,10 +64,26 @@ class DispatchableCachedProperty[ServiceT: PaperlessService]:
         service_cls = hints.get("return")
         if not (isinstance(service_cls, type) and issubclass(service_cls, PaperlessService)):
             return
-        for attr in ("_resource_cls", "_draft_cls"):
-            model_cls: type[PaperlessModel] | None = getattr(service_cls, attr, None)
+        for cls_attr in ("_resource_cls", "_draft_cls"):
+            model_cls: type[PaperlessModel] | None = getattr(service_cls, cls_attr, None)
             if model_cls is not None:
-                _MODEL_TO_PROP_NAME[model_cls] = name
+                _MODEL_TO_PROP_NAME[model_cls] = (name,)
+        for sub_name, attr_val in vars(service_cls).items():
+            if not isinstance(attr_val, property) or attr_val.fget is None:
+                continue
+            try:
+                sub_hints = get_type_hints(attr_val.fget)
+            except (NameError, AttributeError, TypeError):
+                continue
+            sub_cls = sub_hints.get("return")
+            if not (isinstance(sub_cls, type) and issubclass(sub_cls, PaperlessService)):
+                continue
+            if not _is_writable_service(sub_cls):
+                continue
+            for cls_attr in ("_resource_cls", "_draft_cls"):
+                sub_model_cls: type[PaperlessModel] | None = getattr(sub_cls, cls_attr, None)
+                if sub_model_cls is not None:
+                    _MODEL_TO_PROP_NAME[sub_model_cls] = (name, sub_name)
 
     @overload
     def __get__(self, obj: None, objtype: type[object]) -> DispatchableCachedProperty[ServiceT]: ...
@@ -127,14 +148,17 @@ class ModelDispatcher:
     def _get_service(self, model_type: type[PaperlessModel]) -> PaperlessService:
         """Return the service registered for *model_type*, or raise on unknown types."""
         client = self._resolve_client()
-        prop_name = _MODEL_TO_PROP_NAME.get(model_type)
-        if prop_name is None:
+        path = _MODEL_TO_PROP_NAME.get(model_type)
+        if path is None:
             msg = (
                 f"No service registered for {model_type.__name__!r}. "
                 "Only models managed by a CRUD service can be dispatched."
             )
             raise DispatchError(msg)
-        return cast("PaperlessService", getattr(client, prop_name))
+        obj: object = client
+        for attr in path:
+            obj = getattr(obj, attr)
+        return cast("PaperlessService", obj)
 
     async def update(self, model: PaperlessModel, *, only_changed: bool = True) -> bool:
         """Resolve the service for *model* and delegate to its ``update`` method."""

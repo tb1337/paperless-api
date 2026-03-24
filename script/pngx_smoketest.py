@@ -520,8 +520,8 @@ async def test_document_notes(p: PaperlessClient) -> None:
         draft: DocumentNoteDraft = p.documents.notes.create(
             TEST_DOCUMENT_ID, note="pypaperless smoke-test note"
         )
-        note_id, doc_id = await p.documents.notes.save(draft)
-        ok("documents.notes.save(draft)", f"note_id={note_id}, doc_id={doc_id}")
+        note_id = await p.documents.notes.save(draft)
+        ok("documents.notes.save(draft)", f"note_id={note_id}")
     except Exception as exc:
         fail("documents.notes.save()", exc)
 
