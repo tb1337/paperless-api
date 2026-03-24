@@ -12,8 +12,6 @@ class StoragePath(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `StoragePath`."""
 
@@ -32,7 +30,6 @@ class StoragePathDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `StoragePath`, which is not yet stored in Paperless."""
 

@@ -12,8 +12,6 @@ class DocumentType(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `DocumentType`."""
 
@@ -31,7 +29,6 @@ class DocumentTypeDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `DocumentType`, which is not yet stored in Paperless."""
 

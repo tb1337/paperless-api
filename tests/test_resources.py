@@ -13,7 +13,6 @@ from pypaperless.exceptions import BulkEditError, TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
-    MailAccount,
     Profile,
     SearchResult,
     Status,
@@ -33,7 +32,6 @@ from .data import (
     DATA_BULK_EDIT_OBJECTS,
     DATA_CONFIG,
     DATA_DOCUMENTS_BULK_EDIT,
-    DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_SEARCH,
@@ -310,50 +308,6 @@ class TestTasks:
         item = await paperless.tasks.run(DATA_TASKS[0]["task_id"])
         assert isinstance(item, Task)
 
-    async def test_model_acknowledge_shortcut(
-        self,
-        httpx_mock: HTTPXMock,
-        paperless: PaperlessClient,
-    ) -> None:
-        """Task.acknowledge() delegates to tasks.acknowledge([self.id])."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
-            status_code=200,
-            json={"result": 1},
-        )
-        task = await paperless.tasks(1)
-        assert isinstance(task, Task)
-        result = await task.acknowledge()
-        assert result == 1
-
-    async def test_model_run_shortcut(
-        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
-    ) -> None:
-        """Task.run() delegates to tasks.run(self.task_id)."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        task = await paperless.tasks(1)
-        assert isinstance(task, Task)
-        rerun = await task.run()
-        assert isinstance(rerun, Task)
-
 
 # ---------------------------------------------------------------------------
 # Mail Accounts
@@ -384,28 +338,6 @@ class TestMailAccounts:
             json={"result": "ok"},
         )
         await paperless.mail_accounts.process(1)
-
-    async def test_model_process_shortcut(
-        self,
-        httpx_mock: HTTPXMock,
-        paperless: PaperlessClient,
-    ) -> None:
-        """MailAccount.process() delegates to mail_accounts.process(self.id)."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_MAIL_ACCOUNTS["results"][0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
-            status_code=200,
-            json={"result": "ok"},
-        )
-        account = await paperless.mail_accounts(1)
-        assert isinstance(account, MailAccount)
-        await account.process()
 
 
 # ---------------------------------------------------------------------------

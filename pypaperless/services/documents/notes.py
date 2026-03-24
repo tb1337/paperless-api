@@ -52,9 +52,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
                 {
                     **item,
                     "document": doc_pk,
-                    "user": item["user"]["id"]
-                    if self._runtime.host_api_version >= 8
-                    else item["user"],
+                    "user": item["user"]["id"] if self._runtime.api_version >= 8 else item["user"],
                 },
             )
             for item in res

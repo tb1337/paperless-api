@@ -7,7 +7,6 @@ import httpx
 
 from . import services
 from .cache import PaperlessCache
-from .const import API_VERSION
 from .exceptions import InitializationError
 from .runtime import PaperlessRuntime
 from .settings import PaperlessSettings
@@ -68,10 +67,8 @@ class PaperlessClient:
         cache = PaperlessCache()
 
         self._runtime = PaperlessRuntime(transport, cache)
-        self._runtime.facade = self
 
         self._initialized = False
-        self._api_version = API_VERSION
         self._version: str | None = None
 
         self.logger = logging.getLogger(f"{__package__}")
@@ -138,7 +135,7 @@ class PaperlessClient:
     @property
     def host_api_version(self) -> int:
         """Return the API version reported by the Paperless host."""
-        return self._api_version
+        return self._runtime.api_version
 
     @property
     def host_version(self) -> str | None:
@@ -173,7 +170,7 @@ class PaperlessClient:
             raise
         except Exception as exc:
             raise InitializationError from exc
-        self._api_version = info.api_version
+        self._runtime.api_version = info.api_version
         self._version = info.version
 
         self._initialized = True

@@ -2,7 +2,7 @@
 
 import datetime
 import json
-from collections.abc import AsyncGenerator, Iterator
+from collections.abc import Iterator
 from enum import StrEnum
 from typing import Any, ClassVar, Self, cast, overload
 
@@ -176,8 +176,6 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 class Document(
     PaperlessModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `Document`."""
 
@@ -237,60 +235,6 @@ class Document(
             self._share_links = DocumentShareLinkService(self._runtime, cast("int", self.id))
         return self._share_links
 
-    async def download(self, *, original: bool = False) -> "DownloadedDocument":
-        """Shortcut for ``paperless.documents.download(self.id)``."""
-        return cast(
-            "DownloadedDocument",
-            await self._runtime.documents.download(cast("int", self.id), original=original),
-        )
-
-    async def preview(self, *, original: bool = False) -> "DownloadedDocument":
-        """Shortcut for ``paperless.documents.preview(self.id)``."""
-        return cast(
-            "DownloadedDocument",
-            await self._runtime.documents.preview(cast("int", self.id), original=original),
-        )
-
-    async def thumbnail(self, *, original: bool = False) -> "DownloadedDocument":
-        """Shortcut for ``paperless.documents.thumbnail(self.id)``."""
-        return cast(
-            "DownloadedDocument",
-            await self._runtime.documents.thumbnail(cast("int", self.id), original=original),
-        )
-
-    async def metadata(self) -> "DocumentMeta":
-        """Shortcut for ``paperless.documents.metadata(self.id)``."""
-        return cast("DocumentMeta", await self._runtime.documents.metadata(cast("int", self.id)))
-
-    async def suggestions(self) -> "DocumentSuggestions":
-        """Shortcut for ``paperless.documents.suggestions(self.id)``."""
-        return cast(
-            "DocumentSuggestions",
-            await self._runtime.documents.suggestions(cast("int", self.id)),
-        )
-
-    async def more_like(self) -> AsyncGenerator["Document"]:
-        """Shortcut for ``paperless.documents.more_like(self.id)``."""
-        async for doc in self._runtime.documents.more_like(cast("int", self.id)):
-            yield doc
-
-    async def email(
-        self,
-        *,
-        addresses: str,
-        subject: str,
-        message: str,
-        use_archive_version: bool = True,
-    ) -> None:
-        """Shortcut for ``paperless.documents.email(self.id, ...)``."""
-        await self._runtime.documents.email(
-            cast("int", self.id),
-            addresses=addresses,
-            subject=subject,
-            message=message,
-            use_archive_version=use_archive_version,
-        )
-
     @property
     def created_date(self) -> datetime.date | None:
         """Backward compatibility for the removed `created_date` field."""
@@ -312,7 +256,7 @@ class Document(
         return self.search_hit_
 
 
-class DocumentDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
+class DocumentDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["documents_post"]

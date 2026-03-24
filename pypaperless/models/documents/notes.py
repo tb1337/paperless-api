@@ -1,7 +1,7 @@
 """Provide `DocumentNote` related models."""
 
 import datetime
-from typing import ClassVar, cast
+from typing import ClassVar
 
 from pypaperless.const import API_PATH
 from pypaperless.models import mixins
@@ -20,10 +20,6 @@ class DocumentNote(PaperlessModel):
     document: int | None = None
     user: int | None = None
 
-    async def delete(self, *, silent_fail: bool = False) -> None:
-        """Shortcut for ``paperless.documents.notes.delete(self)``."""
-        await self._runtime.documents.notes.delete(self, silent_fail=silent_fail)
-
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `DocumentNote`, which is not stored in Paperless."""
@@ -35,7 +31,3 @@ class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):
 
     note: str | None = None
     document: int | None = None
-
-    async def save(self) -> tuple[int, int]:
-        """Shortcut for ``paperless.documents.notes.save(self)``."""
-        return cast("tuple[int, int]", await self._runtime.documents.notes.save(self))

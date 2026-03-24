@@ -25,8 +25,6 @@ class ShareLinkFileVersion(StrEnum):
 
 class ShareLink(
     PaperlessModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `ShareLink`."""
 
@@ -41,7 +39,7 @@ class ShareLink(
     file_version: ShareLinkFileVersion | None = None
 
 
-class ShareLinkDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
+class ShareLinkDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = API_PATH["share_links"]

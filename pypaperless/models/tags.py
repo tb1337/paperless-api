@@ -12,8 +12,6 @@ class Tag(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `Tag`."""
 
@@ -36,7 +34,6 @@ class TagDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 

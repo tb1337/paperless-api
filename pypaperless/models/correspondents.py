@@ -13,8 +13,6 @@ class Correspondent(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `Correspondent`."""
 
@@ -33,7 +31,6 @@ class CorrespondentDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `Correspondent`, which is not yet stored in Paperless."""
 
