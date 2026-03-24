@@ -697,3 +697,24 @@ def test_custom_data_model_base_methods(api: PaperlessClient) -> None:
 
     # serialize() over an empty model_fields dict → L150-153.
     assert instance.serialize() == {}
+
+
+def test_coerce_custom_fields_non_list_passthrough(api: PaperlessClient) -> None:
+    """_coerce_custom_fields must return v unchanged when v is not a list (L215)."""
+    # Pass custom_fields=None explicitly so the before-validator is triggered with a
+    # non-list value; it must return None unchanged (the field type accepts None).
+    doc = Document.from_data(api._runtime, {"id": 1, "custom_fields": None})
+    assert doc.id == 1
+    assert doc.custom_fields is None
+
+
+def test_document_sub_service_properties_cached(api: PaperlessClient) -> None:
+    """Accessing .history and .share_links twice returns the same object (L220->222, L234->236)."""
+    doc = Document.from_data(api._runtime, {"id": 7})
+    history1 = doc.history
+    history2 = doc.history
+    assert history1 is history2
+
+    sl1 = doc.share_links
+    sl2 = doc.share_links
+    assert sl1 is sl2

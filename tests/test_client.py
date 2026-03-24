@@ -24,6 +24,7 @@ from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.services import mixins as service_mixins
 from pypaperless.services.base import ResourceService
+from pypaperless.transport import PaperlessTransport
 from pypaperless.utils import normalize_base_url, object_to_dict_value, process_form_data
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
@@ -465,6 +466,29 @@ def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     api = PaperlessClient.from_env()
     assert api._runtime.transport._token is None
+
+
+async def test_transport_close_without_prior_request() -> None:
+    """transport.close() must be a no-op when no httpx client was ever created (L65->exit)."""
+    transport = PaperlessTransport(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
+    assert transport._httpx_client is None
+    await transport.close()  # must not raise
+
+
+async def test_request_without_token(httpx_mock: HTTPXMock) -> None:
+    """_send must omit the Authorization header when token is None (L106->109)."""
+    transport = PaperlessTransport(PAPERLESS_TEST_URL, token=None)
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/",
+        method="GET",
+        status_code=200,
+        json={"count": 0},
+    )
+    res = await transport.request_raw("get", "/api/")
+    request = httpx_mock.get_requests()[-1]
+    assert "Authorization" not in request.headers
+    assert res.status_code == 200
+    await transport.close()
 
 
 def test_page_items_raises_without_resource_cls(api: PaperlessClient) -> None:

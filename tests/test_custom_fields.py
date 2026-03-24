@@ -21,6 +21,7 @@ from pypaperless.models import CustomField, Tag
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomFieldBooleanValue,
     CustomFieldDateValue,
     CustomFieldExtraData,
     CustomFieldIntegerValue,
@@ -283,3 +284,16 @@ def test_tag_with_empty_children(api: PaperlessClient) -> None:
         data={"id": 6, "slug": "leaf2", "name": "Leaf Tag 2"},
     )
     assert tag_none.children is None
+
+
+def test_draft_value_raises_for_wrong_expected_type(api: PaperlessClient) -> None:
+    """draft_value() must raise TypeError when result type mismatches expected_type (L245-246)."""
+    # Build a CustomField with no cache so draft_value returns a plain CustomFieldValue.
+    cf = CustomField.from_data(api._runtime, {"id": 99, "name": "test", "data_type": "integer"})
+    # Without cache the result is CustomFieldValue, not CustomFieldBooleanValue.
+    with pytest.raises(TypeError, match="Expected CustomFieldBooleanValue"):
+        cf.draft_value(42, CustomFieldBooleanValue)
+
+    # Passing expected_type=None must not raise (the guard is skipped).
+    result = cf.draft_value(42)
+    assert result is not None

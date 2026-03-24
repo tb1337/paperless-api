@@ -20,6 +20,7 @@ from .data import (
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_SCHEMA,
+    DATA_SEARCH,
     DATA_STATUS,
     DATA_TAGS,
     DATA_TASKS,
@@ -407,3 +408,37 @@ def test_cli_resource_group_no_list() -> None:
     assert "list" not in commands
     assert "json" not in commands
     assert "get" in commands
+
+
+def test_cli_search_plain(httpx_mock: HTTPXMock) -> None:
+    """Search command outputs total and section headings for non-empty results (L180-192)."""
+    _mock_init(httpx_mock)
+    httpx_mock.add_response(
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['search']}") + r".*$"),
+        method="GET",
+        status_code=200,
+        json=DATA_SEARCH,
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [*_ARGS, "search", "invoice"])
+    assert result.exit_code == 0, result.output
+    assert "Total matches" in result.output
+    assert str(DATA_SEARCH["total"]) in result.output
+
+
+def test_cli_search_json(httpx_mock: HTTPXMock) -> None:
+    """Search --json outputs the full SearchResult as a JSON object (L183)."""
+    _mock_init(httpx_mock)
+    httpx_mock.add_response(
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['search']}") + r".*$"),
+        method="GET",
+        status_code=200,
+        json=DATA_SEARCH,
+    )
+
+    runner = CliRunner()
+    result = runner.invoke(cli, [*_ARGS, "search", "--json", "invoice"])
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert "total" in data

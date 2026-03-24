@@ -207,6 +207,16 @@ async def test_status_has_errors(paperless: PaperlessClient) -> None:
     assert status.has_errors is False
 
 
+def test_status_has_errors_no_tasks(paperless: PaperlessClient) -> None:
+    """has_errors must work when tasks is None (skips the tasks extend, L91->100)."""
+    status = Status.from_data(paperless.runtime, data={"database": {"status": "OK"}})
+    assert status.tasks is None
+    assert status.has_errors is False
+
+    status_err = Status.from_data(paperless.runtime, data={"database": {"status": "ERROR"}})
+    assert status_err.has_errors is True
+
+
 # ---------------------------------------------------------------------------
 # Tasks
 # ---------------------------------------------------------------------------
@@ -748,6 +758,37 @@ class TestDocumentsBulkEdit:
         assert body["documents"] == [5]
         assert body["password"] == "s3cr3t"
         assert body["source_mode"] == "latest_version"
+
+    async def test_set_permissions_no_owner_no_permissions(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """set_permissions() omits owner/set_permissions when not given (L235->237, L237->239)."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_permissions([1, 2], merge=False)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_permissions"
+        assert "owner" not in body["parameters"]
+        assert "set_permissions" not in body["parameters"]
+
+    async def test_merge_no_metadata_document_id(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """merge() must omit metadata_document_id when not provided (L336->338)."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_merge']}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.merge([1, 2])
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [1, 2]
+        assert "metadata_document_id" not in body
 
     async def test_error_result_raises(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
