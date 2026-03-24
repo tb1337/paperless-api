@@ -7,7 +7,9 @@ import httpx
 
 from . import services
 from .cache import PaperlessCache
+from .dispatch import ModelDispatcher, dispatchable_cached_property
 from .exceptions import InitializationError
+from .models.base import DraftLike, PaperlessModel
 from .runtime import PaperlessRuntime
 from .settings import PaperlessSettings
 from .transport import PaperlessTransport
@@ -70,6 +72,8 @@ class PaperlessClient:
 
         self._initialized = False
         self._version: str | None = None
+
+        self._dispatcher = ModelDispatcher(self)
 
         self.logger = logging.getLogger(f"{__package__}")
 
@@ -186,22 +190,22 @@ class PaperlessClient:
         """Return the :class:`~pypaperless.services.ConfigService`."""
         return services.ConfigService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def correspondents(self) -> services.CorrespondentService:
         """Return the :class:`~pypaperless.services.CorrespondentService`."""
         return services.CorrespondentService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def custom_fields(self) -> services.CustomFieldService:
         """Return the :class:`~pypaperless.services.CustomFieldService`."""
         return services.CustomFieldService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def documents(self) -> services.DocumentService:
         """Return the :class:`~pypaperless.services.DocumentService`."""
         return services.DocumentService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def document_types(self) -> services.DocumentTypeService:
         """Return the :class:`~pypaperless.services.DocumentTypeService`."""
         return services.DocumentTypeService(self._runtime)
@@ -241,7 +245,7 @@ class PaperlessClient:
         """Return the :class:`~pypaperless.services.SearchService`."""
         return services.SearchService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def share_links(self) -> services.ShareLinkService:
         """Return the :class:`~pypaperless.services.ShareLinkService`."""
         return services.ShareLinkService(self._runtime)
@@ -261,12 +265,12 @@ class PaperlessClient:
         """Return the :class:`~pypaperless.services.StatusService`."""
         return services.StatusService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def storage_paths(self) -> services.StoragePathService:
         """Return the :class:`~pypaperless.services.StoragePathService`."""
         return services.StoragePathService(self._runtime)
 
-    @cached_property
+    @dispatchable_cached_property
     def tags(self) -> services.TagService:
         """Return the :class:`~pypaperless.services.TagService`."""
         return services.TagService(self._runtime)
@@ -290,3 +294,61 @@ class PaperlessClient:
     def workflows(self) -> services.WorkflowService:
         """Return the :class:`~pypaperless.services.WorkflowService`."""
         return services.WorkflowService(self._runtime)
+
+    async def update(self, model: PaperlessModel, *, only_changed: bool = True) -> bool:
+        """Send changed model data to Paperless via the registered service.
+
+        Returns ``True`` when at least one attribute was updated, ``False`` when
+        nothing changed.  Dispatches to the service that manages *model*'s type.
+
+        Args:
+            model:        The model instance with modified attributes.
+            only_changed: When ``True`` (default), only modified fields are sent
+                          via ``PATCH``.  Set to ``False`` to replace the full
+                          resource via ``PUT``.
+
+        Example::
+
+            doc = await paperless.documents(42)
+            doc.title = "New Title"
+            if await paperless.update(doc):
+                print("Updated.")
+
+        """
+        return await self._dispatcher.update(model, only_changed=only_changed)
+
+    async def delete(self, model: PaperlessModel, *, silent_fail: bool = False) -> None:
+        """Delete a model from Paperless via the registered service.
+
+        Raises :exc:`~pypaperless.exceptions.DeletionError` on failure unless
+        *silent_fail* is ``True``.  This action cannot be undone.
+
+        Args:
+            model:       The model instance to delete.
+            silent_fail: When ``True``, swallow
+                         :exc:`~pypaperless.exceptions.DeletionError` instead of raising.
+
+        Example::
+
+            doc = await paperless.documents(42)
+            await paperless.delete(doc)
+
+        """
+        await self._dispatcher.delete(model, silent_fail=silent_fail)
+
+    async def save(self, draft: DraftLike) -> int | str:
+        """Persist a draft to Paperless via the registered service.
+
+        Returns the created item's ``id`` (``int``) for synchronous creation,
+        or a Celery task UUID (``str``) for asynchronous creation (e.g. documents).
+
+        Args:
+            draft: A draft model instance created by a service's ``create`` method.
+
+        Example::
+
+            draft = paperless.correspondents.create(name="ACME")
+            new_id = await paperless.save(draft)
+
+        """
+        return await self._dispatcher.save(draft)

@@ -353,30 +353,6 @@ async def test_documents(p: PaperlessClient) -> None:
         except Exception as exc:
             fail("doc properties", exc)
 
-        # shortcuts on Document instance
-        await check(
-            "doc.metadata() (shortcut)",
-            doc.metadata(),
-            detail_fn=lambda r: f"mime={r.original_mime_type}",
-        )
-        await check(
-            "doc.thumbnail() (shortcut)",
-            doc.thumbnail(),
-            detail_fn=lambda r: f"bytes={len(r.content or b'')}",
-        )
-        await check(
-            "doc.suggestions() (shortcut)",
-            doc.suggestions(),
-            detail_fn=lambda r: f"tags={r.tags}",
-        )
-        try:
-            similar = [d async for d in doc.more_like()]
-            ok("doc.more_like() (shortcut)", f"similar={len(similar)}")
-        except Exception as exc:
-            fail("doc.more_like() shortcut", exc)
-
-        ok("doc.email() (shortcut)", "skipped – email sending disabled in smoketest")
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_document_history(p: PaperlessClient) -> None:
@@ -872,24 +848,24 @@ async def test_correspondents(p: PaperlessClient) -> None:
                 detail_fn=lambda r: f"changed={r}",
             )
 
-        # model shortcuts – update() and draft.save()
+        # dispatcher – update() and save() via client
         try:
             ar_draft = p.correspondents.create(
-                name="pypaperless AR Shortcut Corp",
+                name="pypaperless Dispatcher Corp",
                 match="",
                 matching_algorithm=0,
                 is_insensitive=True,
             )
-            ar_id = int(await ar_draft.save())
-            ok("correspondent_draft.save()", f"id={ar_id}  (shortcut)")
+            ar_id = int(await p.save(ar_draft))
+            ok("p.save(correspondent_draft)", f"id={ar_id}  (dispatcher)")
             ar_corr = await p.correspondents(ar_id)
-            ar_corr.name = "pypaperless AR Shortcut Corp (updated)"
-            ar_changed = await ar_corr.update()
-            ok("correspondent.update()", f"changed={ar_changed}  (shortcut)")
-            ar_deleted = await ar_corr.delete()
-            ok("correspondent.delete()", f"deleted={ar_deleted}  (shortcut)")
+            ar_corr.name = "pypaperless Dispatcher Corp (updated)"
+            ar_changed = await p.update(ar_corr)
+            ok("p.update(correspondent)", f"changed={ar_changed}  (dispatcher)")
+            await p.delete(ar_corr)
+            ok("p.delete(correspondent)", "deleted  (dispatcher)")
         except Exception as exc:
-            fail("model shortcut (correspondent)", exc)
+            fail("dispatcher (correspondent)", exc)
 
         # permissions
         async with p.correspondents.with_permissions():
@@ -1342,7 +1318,7 @@ async def test_document_post_with_cf_mapping(p: PaperlessClient) -> None:
 
     # Variant B: DocumentCustomFieldList – object mapping with typed values
     token_b = str(uuid.uuid4())
-    cf = DocumentCustomFieldList.from_data(p, [])
+    cf = DocumentCustomFieldList.from_data(p.runtime, [])
     cf += CustomFieldStringValue(field=8, value="pypaperless-smoke")
     cf += CustomFieldIntegerValue(field=3, value=1)
 

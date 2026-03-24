@@ -1,21 +1,10 @@
 """CreatableService for PyPaperless services."""
 
-from typing import Any, Protocol
+from typing import Any
 
 from pypaperless.exceptions import DraftNotSupportedError
-from pypaperless.models.base import ResourceT
+from pypaperless.models.base import DraftLike, ResourceT
 from pypaperless.services.base import ResourceServiceProtocol
-
-
-class _DraftLike(Protocol):
-    """Protocol satisfied by all draft model classes (CreatableModel + PaperlessModel)."""
-
-    @property
-    def api_path(self) -> str: ...
-
-    def validate_draft(self) -> None: ...
-
-    def serialize(self) -> dict[str, Any]: ...
 
 
 class CreatableService(ResourceServiceProtocol[ResourceT]):
@@ -42,7 +31,7 @@ class CreatableService(ResourceServiceProtocol[ResourceT]):
 
         return self._draft_cls.from_data(self._runtime, data=kwargs)
 
-    async def save(self, draft: _DraftLike) -> int | str:
+    async def save(self, draft: DraftLike) -> int | str:
         """Persist a draft to Paperless and return the new resource identifier.
 
         Returns the created item ``id`` (``int``) for synchronous creation, or a

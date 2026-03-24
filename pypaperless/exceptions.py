@@ -102,6 +102,13 @@ class DraftNotSupportedError(DraftError):
     """Raised when trying to draft unsupported models."""
 
 
+# Dispatch
+
+
+class DispatchError(PaperlessError):
+    """Raised when a model dispatch operation cannot be completed."""
+
+
 # Resource access
 
 

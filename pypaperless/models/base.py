@@ -1,6 +1,6 @@
 """Provide base classes."""
 
-from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
 
@@ -12,6 +12,28 @@ if TYPE_CHECKING:
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
+
+
+class DraftLike(Protocol):
+    """Protocol satisfied by all draft model classes.
+
+    Any object that exposes :attr:`api_path`, :meth:`validate_draft`, and
+    :meth:`serialize` is a valid draft that can be passed to
+    :meth:`~pypaperless.client.PaperlessClient.save`.
+    """
+
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this draft."""
+        ...
+
+    def validate_draft(self) -> None:
+        """Raise if required fields are missing."""
+        ...
+
+    def serialize(self) -> dict[str, Any]:
+        """Return a serialized representation suitable for the API."""
+        ...
 
 
 class _PaperlessBase(BaseModel):
