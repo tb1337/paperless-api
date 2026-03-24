@@ -97,10 +97,9 @@ class DispatchableCachedProperty[ServiceT: PaperlessService]:
         """Return ``self`` on class access; return (and cache) the service on instance access."""
         if obj is None:
             return self
-        inst_dict = vars(obj)
-        if self._attr_name not in inst_dict:
-            inst_dict[self._attr_name] = self._func(obj)
-        return cast("ServiceT", inst_dict[self._attr_name])
+        result = self._func(obj)
+        vars(obj)[self._attr_name] = result
+        return result
 
 
 dispatchable_cached_property = DispatchableCachedProperty

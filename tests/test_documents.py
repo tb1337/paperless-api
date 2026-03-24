@@ -32,6 +32,7 @@ from pypaperless.models import (
     DownloadedDocument,
     ShareLink,
 )
+from pypaperless.models.base import PaperlessCustomDataModel
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
@@ -680,3 +681,19 @@ class TestDocuments:
         # permissions not in changed, so no set_permissions key added
         assert "set_permissions" not in changed
         assert "name" in changed
+
+
+def test_custom_data_model_base_methods(api: PaperlessClient) -> None:
+    """Cover PaperlessCustomDataModel.data getter/setter, serialize, and no-data context."""
+    # model_post_init with context that has runtime but no "data" key → L130->exit branch.
+    no_data = PaperlessCustomDataModel.model_validate({}, context={"runtime": api._runtime})
+    assert no_data._data is None
+
+    # from_data provides both runtime and data → L141 (getter) and L146 (setter).
+    instance = PaperlessCustomDataModel.from_data(api._runtime, [1, 2, 3])
+    assert instance.data == [1, 2, 3]
+    instance.data = "replaced"
+    assert instance.data == "replaced"
+
+    # serialize() over an empty model_fields dict → L150-153.
+    assert instance.serialize() == {}

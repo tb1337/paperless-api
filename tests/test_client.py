@@ -465,3 +465,15 @@ def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     api = PaperlessClient.from_env()
     assert api._runtime.transport._token is None
+
+
+def test_page_items_raises_without_resource_cls(api: PaperlessClient) -> None:
+    """Page.items raises RuntimeError when no resource_cls was supplied at construction."""
+    # from_data without resource_cls= → model_post_init skips L36 True-branch (L36->exit).
+    page = Page.from_data(
+        api._runtime,
+        {"count": 1, "next": None, "previous": None, "all": [1], "results": [{"id": 1}]},
+    )
+    # Accessing .items triggers mapper; _resource_cls is None → L71-72.
+    with pytest.raises(RuntimeError, match="resource_cls"):
+        _ = page.items
