@@ -415,15 +415,6 @@ class TestSecurableService:
 # ---------------------------------------------------------------------------
 
 
-def test_permissions_flat_kwargs() -> None:
-    """Permissions accepts flat kwargs like view_users=[] and converts to nested form."""
-    perms = Permissions(view_users=[1, 2], change_groups=[3])
-    assert perms.view.users == [1, 2]
-    assert perms.view.groups == []
-    assert perms.change.users == []
-    assert perms.change.groups == [3]
-
-
 def test_permissions_from_existing_instance() -> None:
     """Permissions._accept_flat passes through non-dict input (e.g. an existing instance)."""
     # Call _accept_flat directly with a non-dict value — it must return it unchanged

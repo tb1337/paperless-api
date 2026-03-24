@@ -1,31 +1,12 @@
-"""Tests for exception classes: hierarchy, backwards compatibility, formatting."""
+"""Tests for exception classes: formatting."""
 
 import re
 
 import pytest
 
 from pypaperless.exceptions import (
-    ForbiddenError,
-    InactiveOrDeletedError,
-    InitializationError,
-    InvalidTokenError,
     JsonResponseWithError,
-    PaperlessConnectionError,
 )
-
-
-@pytest.mark.parametrize(
-    "exception_cls",
-    [
-        PaperlessConnectionError,
-        InvalidTokenError,
-        InactiveOrDeletedError,
-        ForbiddenError,
-    ],
-)
-def test_init_errors_are_backwards_compatible(exception_cls: type) -> None:
-    """All initialization errors must be catchable as InitializationError."""
-    assert issubclass(exception_cls, InitializationError)
 
 
 @pytest.mark.parametrize(

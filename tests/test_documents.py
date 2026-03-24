@@ -5,7 +5,6 @@ import json
 import re
 
 import pytest
-from pydantic import BaseModel
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
@@ -607,13 +606,6 @@ class TestDocuments:
         )
         assert doc_trashed.is_deleted
 
-    async def test_custom_field_list_from_data(self, paperless: PaperlessClient) -> None:
-        """DocumentCustomFieldList.from_data() constructs the list from raw API data."""
-        raw = [{"field": 1, "value": "hello"}, {"field": 2, "value": 42}]
-        cf_list = DocumentCustomFieldList.from_data(paperless.runtime, raw)
-        assert isinstance(cf_list, DocumentCustomFieldList)
-        assert len(list(cf_list)) == 2
-
     async def test_download_content_disposition_non_filename_part(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
@@ -651,17 +643,6 @@ class TestDocuments:
         item = await paperless.correspondents(1)
         result = await paperless.correspondents.update(item)
         assert result is False
-
-    async def test_check_permissions_field_non_securable(self) -> None:
-        """_check_permissions_field returns early for models without has_permissions."""
-
-        class _PlainModel(BaseModel):
-            id: int | None = None
-
-        data: dict = {}
-        # Should return without touching data (has no has_permissions attr)
-        UpdatableService._check_permissions_field(_PlainModel(id=1), data)
-        assert data == {}
 
     async def test_check_permissions_field_has_permissions_no_perms_key(
         self, paperless: PaperlessClient

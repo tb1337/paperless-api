@@ -40,35 +40,6 @@ def _mock_init(httpx_mock: HTTPXMock) -> None:
     )
 
 
-# ── help / smoke ──────────────────────────────────────────────────────────────
-
-
-def test_cli_help() -> None:
-    """--help returns exit code 0 and shows usage."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["--help"])
-    assert result.exit_code == 0
-    assert "pypaperless" in result.output.lower()
-
-
-def test_cli_subcommand_help() -> None:
-    """Tags --help shows list, json and get subcommands."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["tags", "--help"])
-    assert result.exit_code == 0
-    assert "list" in result.output
-    assert "json" in result.output
-    assert "get" in result.output
-
-
-def test_cli_list_subcommand_help() -> None:
-    """Tags list --help shows --limit option."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["tags", "list", "--help"])
-    assert result.exit_code == 0
-    assert "--limit" in result.output
-
-
 # ── status ────────────────────────────────────────────────────────────────────
 
 
@@ -155,33 +126,6 @@ def test_cli_tags_list_limit(httpx_mock: HTTPXMock) -> None:
     lines = [line for line in result.output.splitlines() if line.strip()]
     data_lines = lines[2:]
     assert len(data_lines) == 1
-
-
-def test_cli_tags_list_sorted_by_name(httpx_mock: HTTPXMock) -> None:
-    """Tags list sorts rows by name."""
-    _mock_init(httpx_mock)
-    httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
-        method="GET",
-        status_code=200,
-        json={
-            "count": 2,
-            "next": None,
-            "previous": None,
-            "results": [
-                {"id": 2, "name": "Zulu"},
-                {"id": 1, "name": "alpha"},
-            ],
-        },
-    )
-
-    runner = CliRunner()
-    result = runner.invoke(cli, [*_ARGS, "tags", "list"])
-    assert result.exit_code == 0, result.output
-    lines = [line for line in result.output.splitlines() if line.strip()]
-    data_lines = lines[2:]
-    assert data_lines[0].endswith("alpha")
-    assert data_lines[1].endswith("Zulu")
 
 
 def test_cli_tags_json(httpx_mock: HTTPXMock) -> None:

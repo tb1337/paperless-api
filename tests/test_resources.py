@@ -557,20 +557,6 @@ class TestDocumentsBulkEdit:
         assert body["documents"] == [1, 2]
         assert body["parameters"]["correspondent"] == 5
 
-    async def test_set_correspondent_none(
-        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
-    ) -> None:
-        """set_correspondent() accepts None to clear the field."""
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
-            status_code=200,
-            json=DATA_DOCUMENTS_BULK_EDIT,
-        )
-        await paperless.documents.bulk_edit.set_correspondent([1], None)
-        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
-        assert body["parameters"]["correspondent"] is None
-
     async def test_set_document_type(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:

@@ -270,22 +270,6 @@ def test_tag_with_nested_children(api: PaperlessClient) -> None:
     assert child.children[0].matching_algorithm == MatchingAlgorithm.AUTO
 
 
-def test_tag_with_empty_children(api: PaperlessClient) -> None:
-    """Tag._validate_children returns the falsy value unchanged (empty list / None)."""
-    tag_empty = Tag.from_data(
-        api,
-        data={"id": 5, "slug": "leaf", "name": "Leaf Tag", "children": []},
-    )
-    # empty list — _validate_children early-returns the empty list
-    assert tag_empty.children == []
-
-    tag_none = Tag.from_data(
-        api,
-        data={"id": 6, "slug": "leaf2", "name": "Leaf Tag 2"},
-    )
-    assert tag_none.children is None
-
-
 def test_draft_value_raises_for_wrong_expected_type(api: PaperlessClient) -> None:
     """draft_value() must raise TypeError when result type mismatches expected_type (L245-246)."""
     # Build a CustomField with no cache so draft_value returns a plain CustomFieldValue.

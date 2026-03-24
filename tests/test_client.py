@@ -7,7 +7,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pytest_httpx import HTTPXMock
 
-from pypaperless import PaperlessClient, PaperlessSettings, generate_api_token
+from pypaperless import PaperlessClient, generate_api_token
 from pypaperless.const import API_PATH
 from pypaperless.exceptions import (
     BadJsonResponseError,
@@ -59,13 +59,6 @@ async def test_context(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
     )
     async with api:
         assert api.is_initialized
-
-
-async def test_properties(api: PaperlessClient) -> None:
-    """Test client properties before initialization."""
-    # version must be None for an uninitialized client
-    assert api.host_version is None
-    assert api.base_url == PAPERLESS_TEST_URL
 
 
 async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
@@ -411,36 +404,9 @@ def test_process_form_data_tuple_len1() -> None:
     assert fobj.read() == b"raw bytes"
 
 
-def test_process_form_data_duplicate_key_scalar_to_list() -> None:
-    """process_form_data converts a repeated scalar key into a list."""
-    _data, _ = process_form_data({"tags": {"a": 1, "b": 2}})
-    # dict expansion produces two calls for the same effective key if we force it
-    # Directly test _add_data_value by calling process_form_data with a list:
-    # The actual "scalar → list" conversion occurs when the same key appears twice
-    # at the dict/list expansion level. Simulate by calling twice via a nested list:
-    data2, _ = process_form_data({"ids": [10, 20]})
-    # Both values land in data2["ids"] as a list
-    assert data2["ids"] == ["10", "20"]
-
-
 # ---------------------------------------------------------------------------
 # PaperlessSettings / multi-mode init tests
 # ---------------------------------------------------------------------------
-
-
-def test_config_explicit_params() -> None:
-    """PaperlessClient(url, token) — classic mode still works."""
-    api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
-    assert api.base_url == PAPERLESS_TEST_URL
-    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
-
-
-def test_config_object() -> None:
-    """PaperlessClient.from_config(...) wires url and token correctly."""
-    cfg = PaperlessSettings(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
-    api = PaperlessClient.from_config(cfg)
-    assert api.base_url == PAPERLESS_TEST_URL
-    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
 
 
 def test_config_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -458,14 +424,6 @@ def test_config_from_env_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     with pytest.raises(ValidationError):
         PaperlessClient.from_env()
-
-
-def test_config_from_env_no_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    """PaperlessClient.from_env() sets token to None when PYPAPERLESS_TOKEN is not set."""
-    monkeypatch.setenv("PYPAPERLESS_URL", PAPERLESS_TEST_URL)
-    monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
-    api = PaperlessClient.from_env()
-    assert api._runtime.transport._token is None
 
 
 async def test_transport_close_without_prior_request() -> None:

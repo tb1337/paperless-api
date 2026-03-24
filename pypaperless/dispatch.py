@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import weakref
 from typing import TYPE_CHECKING, cast, get_type_hints, overload
 
 from pypaperless.exceptions import DispatchError
@@ -114,9 +113,6 @@ class ModelDispatcher:
     at import time) and delegates the call — without the caller needing to know which service
     to use.
 
-    The dispatcher holds only a :mod:`weakref` to the client, so it does not prevent the
-    client from being garbage-collected.
-
     Args:
         client: The :class:`~pypaperless.client.PaperlessClient` that owns this dispatcher.
 
@@ -133,20 +129,11 @@ class ModelDispatcher:
     """
 
     def __init__(self, client: PaperlessClient) -> None:
-        """Store a weak reference to the owning client."""
-        self._client_ref: weakref.ref[PaperlessClient] = weakref.ref(client)
-
-    def _resolve_client(self) -> PaperlessClient:
-        """Return the referenced client, or raise :exc:`~pypaperless.exceptions.DispatchError`."""
-        client = self._client_ref()
-        if client is None:
-            msg = "PaperlessClient has been garbage collected."
-            raise DispatchError(msg)
-        return client
+        """Store a reference to the owning client."""
+        self._client = client
 
     def _get_service(self, model_type: type[PaperlessModel]) -> PaperlessService:
         """Return the service registered for *model_type*, or raise on unknown types."""
-        client = self._resolve_client()
         path = _MODEL_TO_PROP_NAME.get(model_type)
         if path is None:
             msg = (
@@ -154,7 +141,7 @@ class ModelDispatcher:
                 "Only models managed by a CRUD service can be dispatched."
             )
             raise DispatchError(msg)
-        obj: object = client
+        obj: object = self._client
         for attr in path:
             obj = getattr(obj, attr)
         return cast("PaperlessService", obj)

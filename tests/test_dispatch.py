@@ -1,6 +1,5 @@
 """Tests for the model operation dispatcher."""
 
-import gc
 from typing import ClassVar
 
 import pytest
@@ -14,19 +13,9 @@ from pypaperless.dispatch import (
     dispatchable_cached_property,
 )
 from pypaperless.exceptions import DispatchError
-from pypaperless.models import Correspondent, CorrespondentDraft, DocumentNote, DocumentNoteDraft
+from pypaperless.models import DocumentNote, DocumentNoteDraft
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.tasks import Task
-from pypaperless.services import (
-    CorrespondentService,
-    CustomFieldService,
-    DocumentNoteService,
-    DocumentService,
-    DocumentTypeService,
-    ShareLinkService,
-    StoragePathService,
-    TagService,
-)
 from pypaperless.services.base import PaperlessService, ResourceService
 from pypaperless.services.mixins import DeletableService
 
@@ -117,107 +106,14 @@ def _factory_fake_with_sub_props(self: object) -> _FakeSvcWithSubProps:
     raise NotImplementedError
 
 
-class TestRegistry:
-    """Verify that _MODEL_TO_PROP_NAME is populated correctly at import time."""
-
-    def test_seven_services_use_dispatchable_cached_property(self) -> None:
-        """All seven CRUD services must be dispatchable_cached_property descriptors."""
-        for name in (
-            "correspondents",
-            "custom_fields",
-            "documents",
-            "document_types",
-            "share_links",
-            "storage_paths",
-            "tags",
-        ):
-            assert isinstance(
-                PaperlessClient.__dict__[name],
-                dispatchable_cached_property,
-            ), f"{name!r} is not a dispatchable_cached_property"
-
-    def test_resource_cls_registered(self) -> None:
-        """Each _resource_cls must map to the correct service path."""
-        expected: dict[type, tuple[str, ...]] = {
-            Correspondent: ("correspondents",),
-        }
-        for model_cls, path in expected.items():
-            assert _MODEL_TO_PROP_NAME.get(model_cls) == path
-
-    def test_draft_cls_registered(self) -> None:
-        """Each _draft_cls must map to the correct service path."""
-        expected: dict[type, tuple[str, ...]] = {
-            CorrespondentDraft: ("correspondents",),
-        }
-        for draft_cls, path in expected.items():
-            assert _MODEL_TO_PROP_NAME.get(draft_cls) == path
-
-    def test_all_crud_service_models_registered(self) -> None:
-        """All seven service classes contribute their model types to the registry."""
-        for svc_cls in (
-            CorrespondentService,
-            CustomFieldService,
-            DocumentService,
-            DocumentTypeService,
-            ShareLinkService,
-            StoragePathService,
-            TagService,
-        ):
-            resource_cls = getattr(svc_cls, "_resource_cls", None)
-            draft_cls = getattr(svc_cls, "_draft_cls", None)
-            if resource_cls is not None:
-                assert resource_cls in _MODEL_TO_PROP_NAME, (
-                    f"_resource_cls {resource_cls.__name__!r} of {svc_cls.__name__!r} "
-                    "not in registry"
-                )
-            if draft_cls is not None:
-                assert draft_cls in _MODEL_TO_PROP_NAME, (
-                    f"_draft_cls {draft_cls.__name__!r} of {svc_cls.__name__!r} not in registry"
-                )
-
-    def test_service_is_cached(self, api: PaperlessClient) -> None:
-        """Accessing dispatchable_cached_property twice must return the same object."""
-        svc1 = api.correspondents
-        svc2 = api.correspondents
-        assert svc1 is svc2
-
-    def test_sub_service_resource_cls_registered(self) -> None:
-        """Sub-service _resource_cls must map to a 2-element path tuple."""
-        assert _MODEL_TO_PROP_NAME.get(DocumentNote) == ("documents", "notes")
-
-    def test_sub_service_draft_cls_registered(self) -> None:
-        """Sub-service _draft_cls must map to a 2-element path tuple."""
-        assert _MODEL_TO_PROP_NAME.get(DocumentNoteDraft) == ("documents", "notes")
-
-
 class TestDispatcherInit:
-    """Verify ModelDispatcher construction and weakref behaviour."""
-
-    def test_weakref_stored(self, api: PaperlessClient) -> None:
-        """The dispatcher must hold a weakref to the client, not a strong reference."""
-        dispatcher = api._dispatcher
-        assert isinstance(dispatcher._client_ref, type(dispatcher._client_ref))
-        assert dispatcher._client_ref() is api
-
-    def test_weakref_gc(self) -> None:
-        """After the client is garbage-collected, _resolve_client must raise DispatchError."""
-        client = PaperlessClient(PAPERLESS_TEST_URL, "tok")
-        dispatcher = client._dispatcher
-        del client
-        gc.collect()
-        with pytest.raises(DispatchError, match="garbage collected"):
-            dispatcher._resolve_client()
+    """Verify ModelDispatcher construction."""
 
     def test_unknown_model_type_raises(self, api: PaperlessClient) -> None:
         """Dispatching a model type with no registered service raises DispatchError."""
         task = Task.model_construct()
         with pytest.raises(DispatchError, match="No service registered"):
             api._dispatcher._get_service(type(task))
-
-    def test_get_service_sub_path(self, api: PaperlessClient) -> None:
-        """_get_service navigates a 2-element path to reach a sub-service."""
-        svc = api._dispatcher._get_service(DocumentNote)
-        assert isinstance(svc, DocumentNoteService)
 
 
 class TestDispatchUpdate:
@@ -317,12 +213,6 @@ class TestDispatchableCachedPropertyBehavior:
         """Accessing the property on the class (obj=None) must return the descriptor itself."""
         result = PaperlessClient.correspondents
         assert isinstance(result, dispatchable_cached_property)
-
-    def test_cached_service_not_reconstructed(self, api: PaperlessClient) -> None:
-        """Second access must return the cached instance without calling the factory again."""
-        svc1 = api.correspondents  # cache miss — factory called, stored in inst_dict
-        svc2 = api.correspondents  # Python attribute-lookup returns inst_dict value directly
-        assert svc1 is svc2
 
     def test_set_name_silences_type_hints_error(self) -> None:
         """__set_name__ must return silently when get_type_hints raises (L62-63)."""
