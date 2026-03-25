@@ -7,29 +7,29 @@ Every Paperless-ngx entity is exposed through a **service** on the `PaperlessCli
 ## Capability matrix
 
 | Resource            | `call` | `iterate` | `create`/`save` | `update` | `delete` | `permissions` |
-| ------------------- | :----: | :-------: | :------------: | :------: | :------: | :-----------: |
-| `bulk_edit_objects` |        |           |                |          |          |               |
-| `config`            |   ✓    |           |                |          |          |               |
-| `correspondents`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `custom_fields`     |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
-| `documents`         |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `document_types`    |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `groups`            |   ✓    |     ✓     |                |          |          |               |
-| `mail_accounts`     |   ✓    |     ✓     |                |          |          |       ✓       |
-| `mail_rules`        |   ✓    |     ✓     |                |          |          |       ✓       |
-| `processed_mail`    |   ✓    |     ✓     |                |          |          |       ✓       |
-| `profile`           |   ✓    |           |                |    ✓     |          |               |
-| `saved_views`       |   ✓    |     ✓     |                |          |          |       ✓       |
-| `share_links`       |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |               |
-| `statistics`        |   ✓    |           |                |          |          |               |
-| `remote_version`    |   ✓    |           |                |          |          |               |
-| `status`            |   ✓    |           |                |          |          |               |
-| `storage_paths`     |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `tags`              |   ✓    |     ✓     |       ✓        |    ✓     |    ✓     |       ✓       |
-| `tasks`             |   ✓    |     ✓     |                |          |          |               |
-| `trash`             |        |     ✓     |                |          |          |               |
-| `users`             |   ✓    |     ✓     |                |          |          |               |
-| `workflows`         |   ✓    |     ✓     |                |          |          |               |
+| ------------------- | :----: | :-------: | :-------------: | :------: | :------: | :-----------: |
+| `bulk_edit_objects` |        |           |                 |          |          |               |
+| `config`            |   ✓    |           |                 |          |          |               |
+| `correspondents`    |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |       ✓       |
+| `custom_fields`     |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
+| `documents`         |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |       ✓       |
+| `document_types`    |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |       ✓       |
+| `groups`            |   ✓    |     ✓     |                 |          |          |               |
+| `mail_accounts`     |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `mail_rules`        |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `processed_mail`    |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `profile`           |   ✓    |           |                 |    ✓     |          |               |
+| `saved_views`       |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `share_links`       |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
+| `statistics`        |   ✓    |           |                 |          |          |               |
+| `remote_version`    |   ✓    |           |                 |          |          |               |
+| `status`            |   ✓    |           |                 |          |          |               |
+| `storage_paths`     |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |       ✓       |
+| `tags`              |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |       ✓       |
+| `tasks`             |   ✓    |     ✓     |                 |          |          |               |
+| `trash`             |        |     ✓     |                 |          |          |               |
+| `users`             |   ✓    |     ✓     |                 |          |          |               |
+| `workflows`         |   ✓    |     ✓     |                 |          |          |               |
 
 !!! note "Bulk-action services"
     `bulk_edit_objects` exposes bulk `set_permissions` and `delete` for tags,

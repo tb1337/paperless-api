@@ -80,10 +80,10 @@ PaperlessClient(
 For config-object or environment-variable based initialization use the factory
 class methods:
 
-| Factory method                              | Description                                           |
-| ------------------------------------------- | ----------------------------------------------------- |
-| `PaperlessClient.from_config(cfg)`          | Initialize from a `PaperlessSettings` instance        |
-| `PaperlessClient.from_env()`                | Initialize from `PYPAPERLESS_URL` / `PYPAPERLESS_TOKEN` env vars |
+| Factory method                     | Description                                                      |
+| ---------------------------------- | ---------------------------------------------------------------- |
+| `PaperlessClient.from_config(cfg)` | Initialize from a `PaperlessSettings` instance                   |
+| `PaperlessClient.from_env()`       | Initialize from `PYPAPERLESS_URL` / `PYPAPERLESS_TOKEN` env vars |
 
 ---
 
@@ -169,30 +169,30 @@ The library logs `INFO`-level messages for `initialize()` and `close()` events.
 
 After initialisation, the following services are available on the `PaperlessClient` instance:
 
-| Attribute                  | Resource                  |
-| -------------------------- | ------------------------- |
+| Attribute                     | Resource                         |
+| ----------------------------- | -------------------------------- |
 | `paperless.bulk_edit_objects` | Bulk edit (non-document objects) |
-| `paperless.config`         | Application configuration |
-| `paperless.correspondents` | Correspondents            |
-| `paperless.custom_fields`  | Custom fields             |
-| `paperless.documents`      | Documents                 |
-| `paperless.document_types` | Document types            |
-| `paperless.groups`         | User groups               |
-| `paperless.mail_accounts`  | Mail accounts             |
-| `paperless.mail_rules`     | Mail rules                |
-| `paperless.processed_mail` | Processed mail            |
-| `paperless.profile`        | User profile              |
-| `paperless.saved_views`    | Saved views               |
-| `paperless.search`         | Full-text search          |
-| `paperless.share_links`    | Share links               |
-| `paperless.statistics`     | Statistics                |
-| `paperless.remote_version` | Remote version info       |
-| `paperless.status`         | System status             |
-| `paperless.storage_paths`  | Storage paths             |
-| `paperless.tags`           | Tags                      |
-| `paperless.tasks`          | Background tasks          |
-| `paperless.trash`          | Trash (soft-deleted docs) |
-| `paperless.users`          | Users                     |
-| `paperless.workflows`      | Workflows                 |
+| `paperless.config`            | Application configuration        |
+| `paperless.correspondents`    | Correspondents                   |
+| `paperless.custom_fields`     | Custom fields                    |
+| `paperless.documents`         | Documents                        |
+| `paperless.document_types`    | Document types                   |
+| `paperless.groups`            | User groups                      |
+| `paperless.mail_accounts`     | Mail accounts                    |
+| `paperless.mail_rules`        | Mail rules                       |
+| `paperless.processed_mail`    | Processed mail                   |
+| `paperless.profile`           | User profile                     |
+| `paperless.saved_views`       | Saved views                      |
+| `paperless.search`            | Full-text search                 |
+| `paperless.share_links`       | Share links                      |
+| `paperless.statistics`        | Statistics                       |
+| `paperless.remote_version`    | Remote version info              |
+| `paperless.status`            | System status                    |
+| `paperless.storage_paths`     | Storage paths                    |
+| `paperless.tags`              | Tags                             |
+| `paperless.tasks`             | Background tasks                 |
+| `paperless.trash`             | Trash (soft-deleted docs)        |
+| `paperless.users`             | Users                            |
+| `paperless.workflows`         | Workflows                        |
 
 See [Resources](resources.md) for the full feature matrix.
