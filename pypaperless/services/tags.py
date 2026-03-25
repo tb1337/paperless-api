@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.filters import TagFilters
 from pypaperless.models.tags import Tag, TagDraft
 
@@ -23,7 +23,7 @@ class TagService(
 ):
     """Represent a factory for Paperless `Tag` models."""
 
-    _api_path = API_PATH["tags"]
+    _api_path = EndpointPath.TAGS
     _resource = PaperlessResource.TAGS
 
     _draft_cls = TagDraft

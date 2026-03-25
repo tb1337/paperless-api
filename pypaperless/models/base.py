@@ -1,35 +1,57 @@
 """Provide base classes."""
 
-from typing import TYPE_CHECKING, Any, ClassVar, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
+class DraftLike(Protocol):
+    """Protocol satisfied by all draft model classes.
+
+    Any object that exposes :attr:`api_path`, :meth:`validate_draft`, and
+    :meth:`serialize` is a valid draft that can be passed to
+    :meth:`~pypaperless.client.PaperlessClient.save`.
+    """
+
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this draft."""
+        ...
+
+    def validate_draft(self) -> None:
+        """Raise if required fields are missing."""
+        ...
+
+    def serialize(self) -> dict[str, Any]:
+        """Return a serialized representation suitable for the API."""
+        ...
+
+
 class _PaperlessBase(BaseModel):
-    """Internal base: binds ``_client`` from validation context and provides ``from_data``."""
+    """Internal base: binds ``_runtime`` from validation context and provides ``from_data``."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    _client: "Paperless" = PrivateAttr()
+    _runtime: "PaperlessRuntime" = PrivateAttr()
 
     def model_post_init(self, __context: Any, /) -> None:
-        """Bind ``_client`` from validation context."""
-        if isinstance(__context, dict) and "client" in __context:
-            self._client = __context["client"]
+        """Bind ``_runtime`` from validation context."""
+        if isinstance(__context, dict) and "runtime" in __context:
+            self._runtime = __context["runtime"]
 
     @classmethod
-    def from_data(cls, client: "Paperless", data: Any, **context: Any) -> Self:
+    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **context: Any) -> Self:
         """Return a new instance of ``cls`` from ``data``."""
-        return cls.model_validate(data, context={"client": client, **context})
+        return cls.model_validate(data, context={"runtime": runtime, **context})
 
 
 class PaperlessModel(_PaperlessBase):
@@ -41,13 +63,13 @@ class PaperlessModel(_PaperlessBase):
         use_enum_values=False,
     )
 
-    _api_path: ClassVar[str] = API_PATH["index"]
+    _api_path: ClassVar[str] = EndpointPath.INDEX
     _pk_field: ClassVar[str] = "id"
 
     _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
 
     def model_post_init(self, __context: Any, /) -> None:
-        """Bind `_client` from validation context and resolve the instance API path."""
+        """Bind `_runtime` from validation context and resolve the instance API path."""
         super().model_post_init(__context)
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
@@ -69,7 +91,7 @@ class PaperlessModel(_PaperlessBase):
     @classmethod
     def from_data(
         cls,
-        client: "Paperless",
+        runtime: "PaperlessRuntime",
         data: dict[str, Any],
         **_context: Any,
     ) -> Self:
@@ -77,7 +99,7 @@ class PaperlessModel(_PaperlessBase):
 
         Primarily used by service-level factory methods.
         """
-        return cls.model_validate(data, context={"client": client})
+        return cls.model_validate(data, context={"runtime": runtime})
 
     @property
     def api_path(self) -> str:
@@ -91,7 +113,7 @@ class PaperlessModel(_PaperlessBase):
 
     def refresh_from(self, data: dict[str, Any]) -> None:
         """Replace all field values and snapshot in-place from a fresh API response."""
-        fresh = type(self).from_data(self._client, data)
+        fresh = type(self).from_data(self._runtime, data)
         for name in self.__class__.model_fields:
             setattr(self, name, getattr(fresh, name))
         self._snapshot = self._build_snapshot()
@@ -103,15 +125,15 @@ class PaperlessCustomDataModel(_PaperlessBase):
     _data: Any = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any, /) -> None:
-        """Bind `_client` and `_data` from validation context."""
+        """Bind `_runtime` and `_data` from validation context."""
         super().model_post_init(__context)
         if isinstance(__context, dict) and "data" in __context:
             self._data = __context["data"]
 
     @classmethod
-    def from_data(cls, client: "Paperless", data: Any, **_context: Any) -> Self:
+    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **_context: Any) -> Self:
         """Return a new instance of ``cls`` from API data."""
-        return cls.model_validate({}, context={"client": client, "data": data})
+        return cls.model_validate({}, context={"runtime": runtime, "data": data})
 
     @property
     def data(self) -> Any:

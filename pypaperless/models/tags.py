@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -12,12 +12,10 @@ class Tag(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `Tag`."""
 
-    _api_path: ClassVar[str] = API_PATH["tags_single"]
+    _api_path: ClassVar[str] = EndpointPath.TAGS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     id: int | None = None
@@ -36,11 +34,10 @@ class TagDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["tags"]
+    _api_path: ClassVar[str] = EndpointPath.TAGS
     _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     _create_required_fields: ClassVar[set[str]] = {

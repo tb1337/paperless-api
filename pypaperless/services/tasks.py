@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterator
 from typing import Unpack, cast
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models.filters import TaskFilters
 from pypaperless.models.tasks import Task
@@ -14,7 +14,7 @@ from .base import ResourceService
 class TaskService(ResourceService):
     """Represent a factory for Paperless `Task` models."""
 
-    _api_path = API_PATH["tasks"]
+    _api_path = EndpointPath.TASKS
     _resource = PaperlessResource.TASKS
 
     _resource_cls = Task
@@ -43,9 +43,9 @@ class TaskService(ResourceService):
                 print(task.task_id)
 
         """
-        res = await self._client.request_json("get", self._api_path, params=dict(kwargs))
+        res = await self._runtime.transport.get(self._api_path, params=dict(kwargs))
         for data in res:
-            yield self._resource_cls.from_data(self._client, data)
+            yield self._resource_cls.from_data(self._runtime, data)
 
     async def __call__(self, task_id: int | str) -> Task:
         """Fetch a single task by primary key or Celery UUID.
@@ -63,15 +63,15 @@ class TaskService(ResourceService):
             params = {
                 "task_id": task_id,
             }
-            res = await self._client.request_json("get", self._api_path, params=params)
+            res = await self._runtime.transport.get(self._api_path, params=params)
             try:
-                return self._resource_cls.from_data(self._client, res.pop())
+                return self._resource_cls.from_data(self._runtime, res.pop())
             except IndexError as exc:
                 raise TaskNotFoundError(task_id) from exc
         else:
             api_path = self._resource_cls.format_api_path(pk=task_id)
-            data = await self._client.request_json("get", api_path)
-            return self._resource_cls.from_data(self._client, data)
+            data = await self._runtime.transport.get(api_path)
+            return self._resource_cls.from_data(self._runtime, data)
 
     async def acknowledge(self, tasks: list[int]) -> int:
         """Acknowledge a list of tasks by primary key.
@@ -88,9 +88,8 @@ class TaskService(ResourceService):
         """
         data = cast(
             "dict[str, object]",
-            await self._client.request_json(
-                "post",
-                API_PATH["tasks_acknowledge"],
+            await self._runtime.transport.post(
+                EndpointPath.TASKS_ACKNOWLEDGE,
                 json={"tasks": tasks},
             ),
         )
@@ -109,10 +108,9 @@ class TaskService(ResourceService):
         """
         data = cast(
             "dict[str, object]",
-            await self._client.request_json(
-                "post",
-                API_PATH["tasks_run"],
+            await self._runtime.transport.post(
+                EndpointPath.TASKS_RUN,
                 json={"task_id": task_id},
             ),
         )
-        return self._resource_cls.from_data(self._client, data)
+        return self._resource_cls.from_data(self._runtime, data)

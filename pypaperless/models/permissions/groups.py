@@ -2,14 +2,14 @@
 
 from typing import ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.base import PaperlessModel
 
 
 class Group(PaperlessModel):
     """Represent a Paperless `Group`."""
 
-    _api_path: ClassVar[str] = API_PATH["groups_single"]
+    _api_path: ClassVar[str] = EndpointPath.GROUPS_SINGLE
 
     id: int
     name: str | None = None

@@ -25,7 +25,7 @@ source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest
 - Existing service/model/mixin behaviour changed in a way that could break live API interaction
 - Changes to `client.py`, `const.py`, or `utils.py`
 
-For everything else (docs, CLI, tests, filters, pure refactors, docstrings) — run unit tests only and explicitly state that the smoketest was skipped and why.
+For everything else (docs, tests, filters, pure refactors, docstrings) — run unit tests only and explicitly state that the smoketest was skipped and why.
 
 Report both results (or the skip reason) before closing the task.
 

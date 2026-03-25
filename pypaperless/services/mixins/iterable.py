@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import ResourceT
+from pypaperless.pagination import PageGenerator
 from pypaperless.services.base import ResourceServiceProtocol
-from pypaperless.services.generators import PageGenerator
 
 if TYPE_CHECKING:
     from pypaperless.models import Page
@@ -25,7 +25,7 @@ class _BaseFilters(TypedDict, total=False):
 class IterableService(ResourceServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
-    _aiter_filters: dict[str, Any] | None
+    _aiter_filters: dict[str, Any] | None = None
 
     async def __aiter__(self) -> AsyncIterator[ResourceT]:
         """Iterate over all resource items, page by page.
@@ -157,4 +157,4 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         if getattr(self, "_request_full_perms", False):
             params.update({"full_perms": "true"})
 
-        return PageGenerator(self._client, self._api_path, self._resource_cls, params=params)
+        return PageGenerator(self._runtime, self._api_path, self._resource_cls, params=params)

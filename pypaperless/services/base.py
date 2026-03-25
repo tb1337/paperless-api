@@ -2,24 +2,24 @@
 
 from typing import TYPE_CHECKING, Protocol
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class PaperlessService:
     """Base class for all services in PyPaperless."""
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
         """Initialize a `PaperlessService` instance."""
-        self._client = client
+        self._runtime = runtime
 
 
 class ResourceServiceProtocol[ResourceT](Protocol):
     """Protocol capturing the minimum interface required by all resource service mixins."""
 
-    _client: "Paperless"
+    _runtime: "PaperlessRuntime"
     _api_path: str
     _resource: PaperlessResource
     _resource_cls: type[ResourceT]
@@ -28,7 +28,7 @@ class ResourceServiceProtocol[ResourceT](Protocol):
 class ResourceService(PaperlessService):
     """Base class for all resource services in PyPaperless."""
 
-    _api_path = API_PATH["index"]
+    _api_path = EndpointPath.INDEX
     _resource: PaperlessResource
 
     @property

@@ -4,7 +4,7 @@ import datetime
 from enum import StrEnum
 from typing import ClassVar, Self
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -25,12 +25,10 @@ class ShareLinkFileVersion(StrEnum):
 
 class ShareLink(
     PaperlessModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `ShareLink`."""
 
-    _api_path: ClassVar[str] = API_PATH["share_links_single"]
+    _api_path: ClassVar[str] = EndpointPath.SHARE_LINKS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINKS
 
     id: int
@@ -41,10 +39,10 @@ class ShareLink(
     file_version: ShareLinkFileVersion | None = None
 
 
-class ShareLinkDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
+class ShareLinkDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `ShareLink`, which is not stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["share_links"]
+    _api_path: ClassVar[str] = EndpointPath.SHARE_LINKS
     _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINKS
 
     _create_required_fields: ClassVar[set[str]] = {"document", "file_version"}

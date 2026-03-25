@@ -6,14 +6,13 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.builders import SearchQuery
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import BulkEditError, TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
-    MailAccount,
     Profile,
     SearchResult,
     Status,
@@ -33,7 +32,6 @@ from .data import (
     DATA_BULK_EDIT_OBJECTS,
     DATA_CONFIG,
     DATA_DOCUMENTS_BULK_EDIT,
-    DATA_MAIL_ACCOUNTS,
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_SEARCH,
@@ -48,11 +46,11 @@ from .data import (
 # ---------------------------------------------------------------------------
 
 
-async def test_config_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_config_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """config() fetches the singleton Config without requiring a pk."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.CONFIG_SINGLE}".format(pk=1),
         status_code=200,
         json=DATA_CONFIG[0],
     )
@@ -66,11 +64,11 @@ async def test_config_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def test_remote_version_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_remote_version_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """remote_version() returns version string and update_available flag."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.REMOTE_VERSION}",
         status_code=200,
         json=DATA_REMOTE_VERSION,
     )
@@ -85,11 +83,11 @@ async def test_remote_version_call(httpx_mock: HTTPXMock, paperless: Paperless) 
 # ---------------------------------------------------------------------------
 
 
-async def test_profile_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_profile_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """profile() returns a Profile with expected field types."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=DATA_PROFILE,
     )
@@ -103,12 +101,12 @@ async def test_profile_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None
     assert isinstance(profile.social_accounts, list)
 
 
-async def test_profile_update(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_profile_update(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """profile.update() PATCHes the profile and returns the updated model."""
     updated = {**DATA_PROFILE, "first_name": "Patched", "last_name": "User"}
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=updated,
     )
@@ -118,12 +116,12 @@ async def test_profile_update(httpx_mock: HTTPXMock, paperless: Paperless) -> No
     assert profile.last_name == "User"
 
 
-async def test_profile_update_email(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_profile_update_email(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """profile.update(email=) PATCHes only the email field."""
     updated = {**DATA_PROFILE, "email": "new@example.com"}
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=updated,
     )
@@ -132,11 +130,11 @@ async def test_profile_update_email(httpx_mock: HTTPXMock, paperless: Paperless)
     assert profile.email == "new@example.com"
 
 
-async def test_profile_update_password(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_profile_update_password(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """profile.update(password=) PATCHes only the password field."""
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=DATA_PROFILE,
     )
@@ -149,11 +147,11 @@ async def test_profile_update_password(httpx_mock: HTTPXMock, paperless: Paperle
 # ---------------------------------------------------------------------------
 
 
-async def test_statistics_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_statistics_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """statistics() returns typed statistics with document file type counts."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.STATISTICS}",
         status_code=200,
         json=DATA_STATISTICS,
     )
@@ -170,11 +168,11 @@ async def test_statistics_call(httpx_mock: HTTPXMock, paperless: Paperless) -> N
 # ---------------------------------------------------------------------------
 
 
-async def test_status_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_status_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """status() returns a Status with typed sub-objects."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.STATUS}",
         status_code=200,
         json=DATA_STATUS,
     )
@@ -186,7 +184,7 @@ async def test_status_call(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
     assert isinstance(status.tasks, StatusTasks)
 
 
-async def test_status_has_errors(paperless: Paperless) -> None:
+async def test_status_has_errors(paperless: PaperlessClient) -> None:
     """Status.has_errors is True when any component is in ERROR state."""
     data = {
         "database": {"status": "OK"},
@@ -196,17 +194,27 @@ async def test_status_has_errors(paperless: Paperless) -> None:
             "classifier_status": "OK",
         },
     }
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is False
 
     data["database"]["status"] = "ERROR"
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is True
 
     # None values are treated as no errors
     del data["database"]["status"]
-    status = Status.from_data(paperless, data=data)
+    status = Status.from_data(paperless.runtime, data=data)
     assert status.has_errors is False
+
+
+def test_status_has_errors_no_tasks(paperless: PaperlessClient) -> None:
+    """has_errors must work when tasks is None (skips the tasks extend, L91->100)."""
+    status = Status.from_data(paperless.runtime, data={"database": {"status": "OK"}})
+    assert status.tasks is None
+    assert status.has_errors is False
+
+    status_err = Status.from_data(paperless.runtime, data={"database": {"status": "ERROR"}})
+    assert status_err.has_errors is True
 
 
 # ---------------------------------------------------------------------------
@@ -217,33 +225,33 @@ async def test_status_has_errors(paperless: Paperless) -> None:
 class TestTasks:
     """Task service: iteration, filter, single fetch by pk and uuid."""
 
-    async def test_iter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_iter(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Iterating over tasks yields Task instances."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r".*$"),
             status_code=200,
             json=DATA_TASKS,
         )
         async for item in paperless.tasks:
             assert isinstance(item, Task)
 
-    async def test_filter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_filter(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks.filter() passes kwargs as query params."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?.*status.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?.*status.*$"),
             status_code=200,
             json=DATA_TASKS,
         )
         async for item in paperless.tasks.filter(status="SUCCESS"):
             assert isinstance(item, Task)
 
-    async def test_call_by_pk(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_by_pk(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks(pk) fetches by primary key."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_TASKS[0],
         )
@@ -251,11 +259,11 @@ class TestTasks:
         assert item
         assert isinstance(item, Task)
 
-    async def test_call_by_uuid(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_by_uuid(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks(uuid) fetches by task UUID."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
             status_code=200,
             json=DATA_TASKS,
         )
@@ -263,90 +271,52 @@ class TestTasks:
         assert item
         assert isinstance(item, Task)
 
-    async def test_call_pk_not_found(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_pk_not_found(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """tasks(unknown_pk) raises HTTPStatusError."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1337),
             status_code=404,
         )
         with pytest.raises(httpx.HTTPStatusError):
             await paperless.tasks(1337)
 
-    async def test_call_uuid_not_found(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_uuid_not_found(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """tasks(unknown_uuid) raises TaskNotFoundError."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
             status_code=200,
             json=[],
         )
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")
 
-    async def test_acknowledge(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_acknowledge(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks.acknowledge([...]) POSTs and returns acknowledged count."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_ACKNOWLEDGE}",
             status_code=200,
             json={"result": 1},
         )
         result = await paperless.tasks.acknowledge([1])
         assert result == 1
 
-    async def test_run(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_run(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks.run(task_id) POSTs and returns a Task."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_RUN}",
             status_code=200,
             json=DATA_TASKS[0],
         )
         item = await paperless.tasks.run(DATA_TASKS[0]["task_id"])
         assert isinstance(item, Task)
-
-    async def test_model_acknowledge_shortcut(
-        self,
-        httpx_mock: HTTPXMock,
-        paperless: Paperless,
-    ) -> None:
-        """Task.acknowledge() delegates to tasks.acknowledge([self.id])."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
-            status_code=200,
-            json={"result": 1},
-        )
-        task = await paperless.tasks(1)
-        assert isinstance(task, Task)
-        result = await task.acknowledge()
-        assert result == 1
-
-    async def test_model_run_shortcut(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
-        """Task.run() delegates to tasks.run(self.task_id)."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
-            status_code=200,
-            json=DATA_TASKS[0],
-        )
-        task = await paperless.tasks(1)
-        assert isinstance(task, Task)
-        rerun = await task.run()
-        assert isinstance(rerun, Task)
 
 
 # ---------------------------------------------------------------------------
@@ -357,49 +327,27 @@ class TestTasks:
 class TestMailAccounts:
     """Mail account service action endpoints."""
 
-    async def test_test(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_test(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """mail_accounts.test() POSTs to the endpoint and returns JSON."""
         payload = {"success": True}
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_test']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.MAIL_ACCOUNTS_TEST}",
             status_code=200,
             json=payload,
         )
         response = await paperless.mail_accounts.test()
         assert response == payload
 
-    async def test_process(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_process(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """mail_accounts.process(pk) POSTs to the account process endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.MAIL_ACCOUNTS_PROCESS}".format(pk=1),
             status_code=200,
             json={"result": "ok"},
         )
         await paperless.mail_accounts.process(1)
-
-    async def test_model_process_shortcut(
-        self,
-        httpx_mock: HTTPXMock,
-        paperless: Paperless,
-    ) -> None:
-        """MailAccount.process() delegates to mail_accounts.process(self.id)."""
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_single']}".format(pk=1),
-            status_code=200,
-            json=DATA_MAIL_ACCOUNTS["results"][0],
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
-            status_code=200,
-            json={"result": "ok"},
-        )
-        account = await paperless.mail_accounts(1)
-        assert isinstance(account, MailAccount)
-        await account.process()
 
 
 # ---------------------------------------------------------------------------
@@ -407,7 +355,7 @@ class TestMailAccounts:
 # ---------------------------------------------------------------------------
 
 
-async def test_workflow_sub_services(paperless: Paperless) -> None:
+async def test_workflow_sub_services(paperless: PaperlessClient) -> None:
     """workflows.actions and workflows.triggers are the expected service types."""
     assert isinstance(paperless.workflows.actions, WorkflowActionService)
     assert isinstance(paperless.workflows.triggers, WorkflowTriggerService)
@@ -421,11 +369,11 @@ async def test_workflow_sub_services(paperless: Paperless) -> None:
 class TestTrash:
     """Trash service: iteration, restore, and empty operations."""
 
-    async def test_iter(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_iter(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Iterating over trash yields Document instances with deleted_at set."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['trash']}" + r"\?.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}" + r"\?.*$"),
             status_code=200,
             json=DATA_TRASH,
         )
@@ -435,21 +383,21 @@ class TestTrash:
             assert isinstance(item, Document)
             assert item.deleted_at is not None
 
-    async def test_restore(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_restore(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """restore() POSTs to the trash endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "restored"},
         )
         await paperless.trash.restore([100, 101])
 
-    async def test_empty(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_empty(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """empty() empties all or specific documents from the trash."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "emptied"},
         )
@@ -457,7 +405,7 @@ class TestTrash:
 
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "emptied"},
         )
@@ -472,11 +420,11 @@ class TestTrash:
 class TestSearch:
     """Global search service: query and db_only flag."""
 
-    async def test_call(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """search('query') returns a SearchResult with documents."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -486,11 +434,13 @@ class TestSearch:
         assert result.documents is not None
         assert len(result.documents) == len(DATA_SEARCH["documents"])
 
-    async def test_call_with_db_only(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_with_db_only(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """search('query', db_only=True) passes db_only param and returns SearchResult."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*db_only.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*db_only.*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -498,11 +448,13 @@ class TestSearch:
         assert isinstance(result, SearchResult)
         assert result.total == DATA_SEARCH["total"]
 
-    async def test_call_with_builder(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_call_with_builder(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """search(SearchQuery(...)) converts the builder to a string automatically."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -520,11 +472,11 @@ class TestSearch:
 class TestBulkEditObjects:
     """BulkEditObjects service: set_permissions and delete operations."""
 
-    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """set_permissions() POSTs the correct payload and returns None."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -546,12 +498,12 @@ class TestBulkEditObjects:
         assert "permissions" in body
 
     async def test_set_permissions_no_optional_fields(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
         """set_permissions() without owner/permissions omits those keys."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -563,11 +515,11 @@ class TestBulkEditObjects:
         assert "permissions" not in body
         assert body["merge"] is False
 
-    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """delete() POSTs the correct payload and returns None."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -589,11 +541,13 @@ class TestBulkEditObjects:
 class TestDocumentsBulkEdit:
     """DocumentBulkEditService: all 14 bulk operations."""
 
-    async def test_set_correspondent(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_set_correspondent(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """set_correspondent() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -603,25 +557,13 @@ class TestDocumentsBulkEdit:
         assert body["documents"] == [1, 2]
         assert body["parameters"]["correspondent"] == 5
 
-    async def test_set_correspondent_none(
-        self, httpx_mock: HTTPXMock, paperless: Paperless
+    async def test_set_document_type(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
-        """set_correspondent() accepts None to clear the field."""
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
-            status_code=200,
-            json=DATA_DOCUMENTS_BULK_EDIT,
-        )
-        await paperless.documents.bulk_edit.set_correspondent([1], None)
-        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
-        assert body["parameters"]["correspondent"] is None
-
-    async def test_set_document_type(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
         """set_document_type() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -630,11 +572,13 @@ class TestDocumentsBulkEdit:
         assert body["method"] == "set_document_type"
         assert body["parameters"]["document_type"] == 7
 
-    async def test_set_storage_path(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_set_storage_path(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """set_storage_path() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -643,11 +587,11 @@ class TestDocumentsBulkEdit:
         assert body["method"] == "set_storage_path"
         assert body["parameters"]["storage_path"] == 2
 
-    async def test_add_tag(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_add_tag(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """add_tag() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -656,11 +600,11 @@ class TestDocumentsBulkEdit:
         assert body["method"] == "add_tag"
         assert body["parameters"]["tag"] == 10
 
-    async def test_remove_tag(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_remove_tag(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """remove_tag() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -669,11 +613,11 @@ class TestDocumentsBulkEdit:
         assert body["method"] == "remove_tag"
         assert body["parameters"]["tag"] == 10
 
-    async def test_modify_tags(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_modify_tags(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """modify_tags() POSTs both add/remove lists."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -683,11 +627,13 @@ class TestDocumentsBulkEdit:
         assert body["parameters"]["add_tags"] == [3, 4]
         assert body["parameters"]["remove_tags"] == [5]
 
-    async def test_modify_custom_fields(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_modify_custom_fields(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """modify_custom_fields() POSTs dict-style custom field input."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -699,11 +645,11 @@ class TestDocumentsBulkEdit:
         assert body["parameters"]["add_custom_fields"] == {"1": "value"}
         assert body["parameters"]["remove_custom_fields"] == [2]
 
-    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_set_permissions(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """set_permissions() includes owner and set_permissions key in parameters."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -717,11 +663,11 @@ class TestDocumentsBulkEdit:
         assert body["parameters"]["merge"] is True
         assert "set_permissions" in body["parameters"]
 
-    async def test_delete(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """delete() POSTs to the dedicated delete endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_delete']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_DELETE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -729,11 +675,11 @@ class TestDocumentsBulkEdit:
         body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
         assert body["documents"] == [1, 2]
 
-    async def test_reprocess(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_reprocess(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """reprocess() POSTs to the dedicated reprocess endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_reprocess']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_REPROCESS}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -741,11 +687,11 @@ class TestDocumentsBulkEdit:
         body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
         assert body["documents"] == [1]
 
-    async def test_rotate(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_rotate(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """rotate() POSTs degrees and source_mode."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_rotate']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_ROTATE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -754,11 +700,11 @@ class TestDocumentsBulkEdit:
         assert body["degrees"] == 90
         assert body["source_mode"] == "latest_version"
 
-    async def test_merge(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_merge(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """merge() POSTs optional metadata_document_id when provided."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_merge']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_MERGE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -770,11 +716,11 @@ class TestDocumentsBulkEdit:
         assert body["metadata_document_id"] == 1
         assert body["delete_originals"] is True
 
-    async def test_edit_pdf(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_edit_pdf(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """edit_pdf() wraps the single document in a list."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_edit_pdf']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_EDIT_PDF}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -785,11 +731,11 @@ class TestDocumentsBulkEdit:
         assert body["operations"] == ops
         assert body["include_metadata"] is True
 
-    async def test_remove_password(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_remove_password(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """remove_password() POSTs password and source flags."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_remove_password']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_REMOVE_PASSWORD}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -799,11 +745,44 @@ class TestDocumentsBulkEdit:
         assert body["password"] == "s3cr3t"
         assert body["source_mode"] == "latest_version"
 
-    async def test_error_result_raises(self, httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+    async def test_set_permissions_no_owner_no_permissions(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """set_permissions() omits owner/set_permissions when not given (L235->237, L237->239)."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.set_permissions([1, 2], merge=False)
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["method"] == "set_permissions"
+        assert "owner" not in body["parameters"]
+        assert "set_permissions" not in body["parameters"]
+
+    async def test_merge_no_metadata_document_id(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """merge() must omit metadata_document_id when not provided (L336->338)."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_MERGE}",
+            status_code=200,
+            json=DATA_DOCUMENTS_BULK_EDIT,
+        )
+        await paperless.documents.bulk_edit.merge([1, 2])
+        body = __import__("json").loads(httpx_mock.get_requests()[-1].content)
+        assert body["documents"] == [1, 2]
+        assert "metadata_document_id" not in body
+
+    async def test_error_result_raises(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
         """A non-OK result field (e.g. 'ERROR') raises BulkEditError on HTTP 200."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json={"result": "ERROR"},
         )

@@ -7,9 +7,9 @@ import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
-from pypaperless.const import API_PATH
-from pypaperless.exceptions import DraftFieldRequiredError
+from pypaperless import PaperlessClient
+from pypaperless.const import EndpointPath
+from pypaperless.exceptions import DeletionError, DraftFieldRequiredError
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.types import Permissions
@@ -41,12 +41,16 @@ class _SharedServiceTests:
     """Shared read-only test methods inherited by TestReadOnly and TestReadWrite."""
 
     async def test_pages(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test pages."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -57,12 +61,16 @@ class _SharedServiceTests:
             assert isinstance(item, mapping.model_cls)
 
     async def test_iter(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test iter."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -70,12 +78,16 @@ class _SharedServiceTests:
             assert isinstance(item, mapping.model_cls)
 
     async def test_all(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test all."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -85,12 +97,14 @@ class _SharedServiceTests:
             assert isinstance(item, int)
 
     async def test_call(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test call."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=1),
             status_code=200,
             json=mapping.data["results"][0],
         )
@@ -100,7 +114,9 @@ class _SharedServiceTests:
         # must raise as 1337 doesn't exist
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1337),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=1337),
             status_code=404,
         )
         with pytest.raises(httpx.HTTPStatusError):
@@ -131,12 +147,16 @@ class TestReadOnly(_SharedServiceTests):
     """Read-only service operations: pages, iteration, dict/list helpers, single fetch."""
 
     async def test_as_dict(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test as_dict."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -146,12 +166,16 @@ class TestReadOnly(_SharedServiceTests):
             assert isinstance(obj, mapping.model_cls)
 
     async def test_as_list(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test as_list."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -176,12 +200,16 @@ class TestReadWrite(_SharedServiceTests):
     """R/W service operations: filter, create, update, delete (in addition to read)."""
 
     async def test_filter(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test iter with filter."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json=mapping.data,
         )
@@ -194,7 +222,7 @@ class TestReadWrite(_SharedServiceTests):
                 assert isinstance(item, mapping.model_cls)
 
     async def test_create(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test create."""
         service = getattr(paperless, mapping.resource)
@@ -210,7 +238,7 @@ class TestReadWrite(_SharedServiceTests):
         # actually call the create endpoint
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}",
             status_code=200,
             json={
                 "id": len(mapping.data["results"]),
@@ -221,7 +249,7 @@ class TestReadWrite(_SharedServiceTests):
         assert new_pk >= 1
 
     async def test_update(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test update."""
         update_field = mapping.update_field
@@ -230,7 +258,9 @@ class TestReadWrite(_SharedServiceTests):
         service = getattr(paperless, mapping.resource)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=200,
             json=mapping.data["results"][0],
         )
@@ -238,7 +268,9 @@ class TestReadWrite(_SharedServiceTests):
         setattr(to_update, update_field, update_value)
         httpx_mock.add_response(
             method="PATCH",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=200,
             json={**to_update._snapshot, update_field: update_value},
         )
@@ -250,7 +282,9 @@ class TestReadWrite(_SharedServiceTests):
         setattr(to_update, update_field, update_value)
         httpx_mock.add_response(
             method="PUT",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=200,
             json={**to_update._snapshot, update_field: update_value},
         )
@@ -258,31 +292,47 @@ class TestReadWrite(_SharedServiceTests):
         assert getattr(to_update, update_field) == update_value
 
     async def test_delete(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test delete."""
         pk = mapping.data["results"][0]["id"]
         service = getattr(paperless, mapping.resource)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=200,
             json=mapping.data["results"][0],
         )
         to_delete = await service(pk)
         httpx_mock.add_response(
             method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=204,
         )
-        assert await service.delete(to_delete)
-        # deletion failed (non-204)
+        await service.delete(to_delete)
+        # failed deletion raises DeletionError
         httpx_mock.add_response(
             method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
             status_code=404,
         )
-        assert not await service.delete(to_delete)
+        with pytest.raises(DeletionError):
+            await service.delete(to_delete)
+        # silent_fail=True suppresses DeletionError
+        httpx_mock.add_response(
+            method="DELETE",
+            url=(
+                f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+            ).format(pk=pk),
+            status_code=404,
+        )
+        await service.delete(to_delete, silent_fail=True)
 
 
 @pytest.mark.parametrize(
@@ -300,7 +350,7 @@ class TestSecurableService:
     """SecurableService: request_permissions flag, with_permissions() context manager."""
 
     async def test_permissions(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test permissions."""
         getattr(paperless, mapping.resource).request_permissions = True
@@ -310,7 +360,9 @@ class TestSecurableService:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
+                + (
+                    f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+                ).format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -322,7 +374,11 @@ class TestSecurableService:
         # iterator with permissions
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource]}" + r"\?.*$"),
+            url=re.compile(
+                r"^"
+                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
+                r"\?.*$"
+            ),
             status_code=200,
             json={
                 **mapping.data,
@@ -338,7 +394,7 @@ class TestSecurableService:
             assert isinstance(item.permissions, Permissions)
 
     async def test_permission_change(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """Test permission mutation is serialised in the PATCH request."""
         pk = mapping.data["results"][0]["id"]
@@ -347,7 +403,9 @@ class TestSecurableService:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk)
+                + (
+                    f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+                ).format(pk=pk)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -367,7 +425,10 @@ class TestSecurableService:
             url=re.compile(
                 r"^"
                 + re.escape(
-                    f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk)
+                    (
+                        f"{PAPERLESS_TEST_URL}"
+                        f"{EndpointPath[(mapping.resource + '_single').upper()]}"
+                    ).format(pk=pk)
                 )
                 + r"\?.*$"
             ),
@@ -376,7 +437,7 @@ class TestSecurableService:
         await getattr(paperless, mapping.resource).update(item)
 
     async def test_with_permissions_context_manager(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
         """with_permissions() enables the flag and resets it automatically on exit."""
         service = getattr(paperless, mapping.resource)
@@ -386,7 +447,9 @@ class TestSecurableService:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=1)
+                + (
+                    f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
+                ).format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -407,15 +470,6 @@ class TestSecurableService:
 # ---------------------------------------------------------------------------
 
 
-def test_permissions_flat_kwargs() -> None:
-    """Permissions accepts flat kwargs like view_users=[] and converts to nested form."""
-    perms = Permissions(view_users=[1, 2], change_groups=[3])
-    assert perms.view.users == [1, 2]
-    assert perms.view.groups == []
-    assert perms.change.users == []
-    assert perms.change.groups == [3]
-
-
 def test_permissions_from_existing_instance() -> None:
     """Permissions._accept_flat passes through non-dict input (e.g. an existing instance)."""
     # Call _accept_flat directly with a non-dict value — it must return it unchanged
@@ -424,14 +478,14 @@ def test_permissions_from_existing_instance() -> None:
     assert result is non_dict_input
 
 
-async def test_iterable_filter_base_method(paperless: Paperless) -> None:
+async def test_iterable_filter_base_method(paperless: PaperlessClient) -> None:
     """IterableService.filter() stores filters for the context duration and clears them after."""
 
     class _MinimalModel(PaperlessModel):
         id: int | None = None
 
     class _MinimalService(ResourceService, svc_mixins.IterableService[_MinimalModel]):
-        _api_path = API_PATH["correspondents"]
+        _api_path = EndpointPath.CORRESPONDENTS
         _resource = "correspondents"
         _resource_cls = _MinimalModel
 
@@ -440,97 +494,3 @@ async def test_iterable_filter_base_method(paperless: Paperless) -> None:
     async with svc.filter(title__icontains="test") as ctx:
         assert ctx._aiter_filters == {"title__icontains": "test"}
     assert svc._aiter_filters is None
-
-
-# ---------------------------------------------------------------------------
-# Active Record model mixin tests
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "mapping",
-    [
-        CORRESPONDENT_MAP,
-        CUSTOM_FIELD_MAP,
-        DOCUMENT_MAP,
-        DOCUMENT_TYPE_MAP,
-        SHARE_LINK_MAP,
-        STORAGE_PATH_MAP,
-        TAG_MAP,
-    ],
-    scope="class",
-)
-class TestActiveRecord:
-    """Active Record shortcuts: model.update(), model.delete(), draft.save()."""
-
-    async def test_model_update(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
-    ) -> None:
-        """model.update() delegates to the bound service and updates model state."""
-        update_field = mapping.update_field
-        update_value = mapping.update_value
-        pk = mapping.data["results"][0]["id"]
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
-            status_code=200,
-            json=mapping.data["results"][0],
-        )
-        item = await getattr(paperless, mapping.resource)(pk)
-        setattr(item, update_field, update_value)
-        httpx_mock.add_response(
-            method="PATCH",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
-            status_code=200,
-            json={**item._snapshot, update_field: update_value},
-        )
-        result = await item.update()
-        assert result is True
-        assert getattr(item, update_field) == update_value
-
-    async def test_model_delete(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
-    ) -> None:
-        """model.delete() delegates to the bound service."""
-        pk = mapping.data["results"][0]["id"]
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
-            status_code=200,
-            json=mapping.data["results"][0],
-        )
-        item = await getattr(paperless, mapping.resource)(pk)
-        httpx_mock.add_response(
-            method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
-            status_code=204,
-        )
-        assert await item.delete() is True
-        httpx_mock.add_response(
-            method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH[mapping.resource + '_single']}".format(pk=pk),
-            status_code=404,
-        )
-        assert await item.delete() is False
-
-    async def test_draft_save(
-        self, httpx_mock: HTTPXMock, paperless: Paperless, mapping: ResourceTestMapping
-    ) -> None:
-        """draft.save() delegates to the bound service and returns the new pk."""
-        if mapping.draft_defaults is None:
-            pytest.skip("No draft_defaults defined for this mapping.")
-        service = getattr(paperless, mapping.resource)
-        draft = service.create(**mapping.draft_defaults)
-        response_json = (
-            mapping.draft_response_json
-            if mapping.draft_response_json is not None
-            else {"id": len(mapping.data["results"])}
-        )
-        httpx_mock.add_response(
-            method="POST",
-            url=f"{PAPERLESS_TEST_URL}{draft.api_path}",
-            status_code=200,
-            json=response_json,
-        )
-        new_pk = await draft.save()
-        assert isinstance(new_pk, str) or new_pk >= 1

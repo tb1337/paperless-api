@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .base import PaperlessModel
 
@@ -19,7 +19,7 @@ class StatisticDocumentFileTypeCount(BaseModel):
 class Statistic(PaperlessModel):
     """Represent Paperless `Statistic`."""
 
-    _api_path: ClassVar[str] = API_PATH["statistics"]
+    _api_path: ClassVar[str] = EndpointPath.STATISTICS
 
     documents_total: int | None = None
     documents_inbox: int | None = None

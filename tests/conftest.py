@@ -6,17 +6,17 @@ from typing import Any
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
-from pypaperless.const import API_PATH
+from pypaperless import PaperlessClient
+from pypaperless.const import EndpointPath
 
 from .const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from .data import DATA_SCHEMA
 
 
 @pytest.fixture(name="api")
-def api_obj_fixture() -> Paperless:
-    """Return Paperless."""
-    return Paperless(
+def api_obj_fixture() -> PaperlessClient:
+    """Return PaperlessClient."""
+    return PaperlessClient(
         PAPERLESS_TEST_URL,
         PAPERLESS_TEST_TOKEN,
     )
@@ -25,11 +25,11 @@ def api_obj_fixture() -> Paperless:
 @pytest.fixture(name="paperless")
 async def paperless_fixture(
     httpx_mock: HTTPXMock,
-    api: Paperless,
-) -> AsyncGenerator[Paperless, Any]:
-    """Return a Paperless object with given version."""
+    api: PaperlessClient,
+) -> AsyncGenerator[PaperlessClient, Any]:
+    """Return a PaperlessClient object with given version."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         json=DATA_SCHEMA,

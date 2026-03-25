@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.correspondents import Correspondent
 from pypaperless.models.custom_fields import CustomField
 from pypaperless.models.document_types import DocumentType
@@ -20,7 +20,7 @@ from .base import PaperlessModel
 class SearchResult(PaperlessModel):
     """Represent a Paperless global search result."""
 
-    _api_path: ClassVar[str] = API_PATH["search"]
+    _api_path: ClassVar[str] = EndpointPath.SEARCH
 
     total: int | None = None
     documents: list[Document] | None = None

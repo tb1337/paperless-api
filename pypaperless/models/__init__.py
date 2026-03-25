@@ -1,5 +1,7 @@
 """PyPaperless models."""
 
+from pypaperless.pagination import Page
+
 from .config import Config
 from .correspondents import Correspondent, CorrespondentDraft
 from .custom_fields import CustomField, CustomFieldDraft
@@ -17,7 +19,6 @@ from .documents import (
     DownloadedDocument,
 )
 from .mails import MailAccount, MailRule, ProcessedMail
-from .pages import Page
 from .permissions import Group, User
 from .profile import Profile, ProfileSocialAccount
 from .remote_version import RemoteVersion

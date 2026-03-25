@@ -3,14 +3,14 @@
 import datetime
 from typing import ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.base import PaperlessModel
 
 
 class ProcessedMail(PaperlessModel):
     """Represent a Paperless `ProcessedMail`."""
 
-    _api_path: ClassVar[str] = API_PATH["processed_mail_single"]
+    _api_path: ClassVar[str] = EndpointPath.PROCESSED_MAIL_SINGLE
 
     id: int | None = None
     owner: int | None = None

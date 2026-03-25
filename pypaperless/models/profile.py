@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .base import PaperlessModel
 
@@ -20,7 +20,7 @@ class ProfileSocialAccount(BaseModel):
 class Profile(PaperlessModel):
     """Represent the Paperless user `Profile`."""
 
-    _api_path: ClassVar[str] = API_PATH["profile"]
+    _api_path: ClassVar[str] = EndpointPath.PROFILE
 
     email: str | None = None
     # password: intentionally excluded

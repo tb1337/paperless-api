@@ -6,7 +6,7 @@ from typing import ClassVar, Self
 
 from pydantic import BaseModel, Field
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .base import PaperlessModel
 
@@ -72,7 +72,7 @@ class StatusTasks(BaseModel):
 class Status(PaperlessModel):
     """Represent a Paperless `Status`."""
 
-    _api_path: ClassVar[str] = API_PATH["status"]
+    _api_path: ClassVar[str] = EndpointPath.STATUS
 
     pngx_version: str | None = None
     server_os: str | None = None

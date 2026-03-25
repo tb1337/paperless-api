@@ -1,6 +1,6 @@
 """Comprehensive API smoke-test for pypaperless.
 
-Runs against the dev Paperless instance configured in debug.py.
+Runs against the dev PaperlessClient instance configured in debug.py.
 Document ID 1980 is used as the test document.
 
 Exit code 0  → all sections green
@@ -21,7 +21,7 @@ from typing import Any
 
 import httpx
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.builders import SearchQuery
 from pypaperless.models.correspondents import CorrespondentDraft
 from pypaperless.models.custom_fields import (
@@ -44,7 +44,7 @@ def _make_unique_pdf(token: str) -> bytes:
     Xref offsets are computed dynamically so the file is always valid —
     unlike a hardcoded template that breaks when any bytes are prepended.
     Each call with a different token produces a unique hash, which defeats
-    Paperless-ngx duplicate detection.
+    PaperlessClient-ngx duplicate detection.
     """
     token_bytes = token.encode()
     header = b"%PDF-1.4\n"
@@ -73,7 +73,7 @@ def _make_unique_pdf(token: str) -> bytes:
 
 
 async def _await_task_and_cleanup(
-    p: Paperless,
+    p: PaperlessClient,
     task_id: str,
     label: str,
     *,
@@ -183,7 +183,7 @@ async def check(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_system(p: Paperless) -> None:
+async def test_system(p: PaperlessClient) -> None:
     _hdr("System: status / statistics / remote_version")
 
     await check(
@@ -204,7 +204,7 @@ async def test_system(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_search(p: Paperless) -> None:
+async def test_search(p: PaperlessClient) -> None:
     _hdr("Search")
 
     await check(
@@ -224,14 +224,14 @@ async def test_search(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_config(p: Paperless) -> None:
+async def test_config(p: PaperlessClient) -> None:
     _hdr("Config")
 
     await check("config()", p.config(), detail_fn=lambda r: f"id={r.id}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_documents(p: Paperless) -> None:
+async def test_documents(p: PaperlessClient) -> None:
     _hdr("Documents – fetch, iterate, search, more_like, pages")
 
     # Fetch by pk
@@ -353,33 +353,9 @@ async def test_documents(p: Paperless) -> None:
         except Exception as exc:
             fail("doc properties", exc)
 
-        # shortcuts on Document instance
-        await check(
-            "doc.metadata() (shortcut)",
-            doc.metadata(),
-            detail_fn=lambda r: f"mime={r.original_mime_type}",
-        )
-        await check(
-            "doc.thumbnail() (shortcut)",
-            doc.thumbnail(),
-            detail_fn=lambda r: f"bytes={len(r.content or b'')}",
-        )
-        await check(
-            "doc.suggestions() (shortcut)",
-            doc.suggestions(),
-            detail_fn=lambda r: f"tags={r.tags}",
-        )
-        try:
-            similar = [d async for d in doc.more_like()]
-            ok("doc.more_like() (shortcut)", f"similar={len(similar)}")
-        except Exception as exc:
-            fail("doc.more_like() shortcut", exc)
-
-        ok("doc.email() (shortcut)", "skipped – email sending disabled in smoketest")
-
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_history(p: Paperless) -> None:
+async def test_document_history(p: PaperlessClient) -> None:
     _hdr("Document History – list via service and document property")
 
     entries = await check(
@@ -401,7 +377,7 @@ async def test_document_history(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_share_links(p: Paperless) -> None:
+async def test_document_share_links(p: PaperlessClient) -> None:
     _hdr("Document Share Links – list via service and document property")
 
     links = await check(
@@ -423,7 +399,7 @@ async def test_document_share_links(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_trash(p: Paperless) -> None:
+async def test_trash(p: PaperlessClient) -> None:
     _hdr("Trash – list deleted documents")
 
     await check(
@@ -434,7 +410,7 @@ async def test_trash(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_bulk_edit_objects(p: Paperless) -> None:
+async def test_bulk_edit_objects(p: PaperlessClient) -> None:
     _hdr("BulkEditObjects – set_permissions and delete")
 
     from pypaperless.models.types import BulkEditObjectType
@@ -483,7 +459,7 @@ async def test_bulk_edit_objects(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_documents_bulk_edit(p: Paperless) -> None:
+async def test_documents_bulk_edit(p: PaperlessClient) -> None:
     _hdr("DocumentsBulkEdit – set_permissions, reprocess, modify_tags")
 
     from pypaperless.models.mixins.securable import Permissions
@@ -512,7 +488,7 @@ async def test_documents_bulk_edit(p: Paperless) -> None:
         fail("documents.bulk_edit.modify_tags() empty", exc)
 
     # reprocess — queues document for OCR, harmless.
-    # NOTE: This is a Paperless-ngx v10+ dedicated endpoint; skip gracefully on older servers.
+    # NOTE: This is a PaperlessClient-ngx v10+ dedicated endpoint; skip gracefully on older servers.
     try:
         await p.documents.bulk_edit.reprocess([TEST_DOCUMENT_ID])
         ok("documents.bulk_edit.reprocess()", f"doc_id={TEST_DOCUMENT_ID}")
@@ -529,7 +505,7 @@ async def test_documents_bulk_edit(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_notes(p: Paperless) -> None:
+async def test_document_notes(p: PaperlessClient) -> None:
     _hdr("Document Notes – list, create, delete")
 
     notes = await check(
@@ -544,8 +520,8 @@ async def test_document_notes(p: Paperless) -> None:
         draft: DocumentNoteDraft = p.documents.notes.create(
             TEST_DOCUMENT_ID, note="pypaperless smoke-test note"
         )
-        note_id, doc_id = await p.documents.notes.save(draft)
-        ok("documents.notes.save(draft)", f"note_id={note_id}, doc_id={doc_id}")
+        note_id = await p.documents.notes.save(draft)
+        ok("documents.notes.save(draft)", f"note_id={note_id}")
     except Exception as exc:
         fail("documents.notes.save()", exc)
 
@@ -564,13 +540,13 @@ async def test_document_notes(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_custom_fields(p: Paperless) -> None:
+async def test_custom_fields(p: PaperlessClient) -> None:
     _hdr("Custom Fields – list, cache, access on document")
 
     # Populate cache
     try:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
-        ok("custom_fields.as_dict() → cache", f"count={len(p.cache.custom_fields)}")
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
+        ok("custom_fields.as_dict() → cache", f"count={len(p.runtime.cache.custom_fields)}")
     except Exception as exc:
         fail("custom_fields.as_dict()", exc)
 
@@ -594,7 +570,7 @@ async def test_custom_fields(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_custom_field_values_on_document(p: Paperless) -> None:
+async def test_custom_field_values_on_document(p: PaperlessClient) -> None:
     _hdr(f"Custom Field Values – all 9 types, modify & restore on doc {TEST_DOCUMENT_ID}")
 
     import datetime
@@ -611,8 +587,8 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
         CustomFieldURLValue,
     )
 
-    if not p.cache.custom_fields:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
+    if not p.runtime.cache.custom_fields:
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
 
     doc = await check(
         f"documents({TEST_DOCUMENT_ID}) fetch",
@@ -631,7 +607,9 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 
     # ── Helper: pick a different SELECT option from cache ─────────────────
     def _other_select_option(field_id: int, current: object) -> object:
-        cached_cf = p.cache.custom_fields.get(field_id) if p.cache.custom_fields else None
+        cached_cf = (
+            p.runtime.cache.custom_fields.get(field_id) if p.runtime.cache.custom_fields else None
+        )
         if cached_cf is None or cached_cf.extra_data is None:
             return current
         opts = [o for o in cached_cf.extra_data.select_options if o and o.id != current]
@@ -810,7 +788,7 @@ async def test_custom_field_values_on_document(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_custom_field_query(p: Paperless) -> None:
+async def test_custom_field_query(p: PaperlessClient) -> None:
     _hdr("CustomFieldQuery – live filter")
 
     try:
@@ -827,7 +805,7 @@ async def test_custom_field_query(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_correspondents(p: Paperless) -> None:
+async def test_correspondents(p: PaperlessClient) -> None:
     _hdr("Correspondents – list, create, update, permissions, delete")
 
     await check(
@@ -870,24 +848,24 @@ async def test_correspondents(p: Paperless) -> None:
                 detail_fn=lambda r: f"changed={r}",
             )
 
-        # model shortcuts – update() and draft.save()
+        # dispatcher – update() and save() via client
         try:
             ar_draft = p.correspondents.create(
-                name="pypaperless AR Shortcut Corp",
+                name="pypaperless Dispatcher Corp",
                 match="",
                 matching_algorithm=0,
                 is_insensitive=True,
             )
-            ar_id = int(await ar_draft.save())
-            ok("correspondent_draft.save()", f"id={ar_id}  (shortcut)")
+            ar_id = int(await p.save(ar_draft))
+            ok("p.save(correspondent_draft)", f"id={ar_id}  (dispatcher)")
             ar_corr = await p.correspondents(ar_id)
-            ar_corr.name = "pypaperless AR Shortcut Corp (updated)"
-            ar_changed = await ar_corr.update()
-            ok("correspondent.update()", f"changed={ar_changed}  (shortcut)")
-            ar_deleted = await ar_corr.delete()
-            ok("correspondent.delete()", f"deleted={ar_deleted}  (shortcut)")
+            ar_corr.name = "pypaperless Dispatcher Corp (updated)"
+            ar_changed = await p.update(ar_corr)
+            ok("p.update(correspondent)", f"changed={ar_changed}  (dispatcher)")
+            await p.delete(ar_corr)
+            ok("p.delete(correspondent)", "deleted  (dispatcher)")
         except Exception as exc:
-            fail("model shortcut (correspondent)", exc)
+            fail("dispatcher (correspondent)", exc)
 
         # permissions
         async with p.correspondents.with_permissions():
@@ -907,7 +885,7 @@ async def test_correspondents(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_tags(p: Paperless) -> None:
+async def test_tags(p: PaperlessClient) -> None:
     _hdr("Tags – list, create, update, delete")
 
     await check("tags.as_list()", p.tags.as_list(), detail_fn=lambda r: f"count={len(r)}")
@@ -1041,7 +1019,7 @@ async def test_tags(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_types(p: Paperless) -> None:
+async def test_document_types(p: PaperlessClient) -> None:
     _hdr("Document Types – list, create, update, delete")
 
     await check(
@@ -1085,7 +1063,7 @@ async def test_document_types(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_storage_paths(p: Paperless) -> None:
+async def test_storage_paths(p: PaperlessClient) -> None:
     _hdr("Storage Paths – list, create, update, delete")
 
     await check(
@@ -1130,7 +1108,7 @@ async def test_storage_paths(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_share_links(p: Paperless) -> None:
+async def test_share_links(p: PaperlessClient) -> None:
     _hdr("Share Links – list, create, delete")
 
     await check(
@@ -1169,7 +1147,7 @@ async def test_share_links(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_saved_views(p: Paperless) -> None:
+async def test_saved_views(p: PaperlessClient) -> None:
     _hdr("Saved Views – list, fetch")
 
     views = await check(
@@ -1186,7 +1164,7 @@ async def test_saved_views(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_users_groups(p: Paperless) -> None:
+async def test_users_groups(p: PaperlessClient) -> None:
     _hdr("Users & Groups – list, fetch")
 
     users = await check(
@@ -1215,7 +1193,7 @@ async def test_users_groups(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_tasks(p: Paperless) -> None:
+async def test_tasks(p: PaperlessClient) -> None:
     _hdr("Tasks – iterate, fetch by uuid")
 
     tasks = []
@@ -1243,7 +1221,7 @@ async def test_tasks(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_mail(p: Paperless) -> None:
+async def test_mail(p: PaperlessClient) -> None:
     _hdr("Mail Accounts / Mail Rules / Processed Mail")
 
     await check(
@@ -1264,7 +1242,7 @@ async def test_mail(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_workflows(p: Paperless) -> None:
+async def test_workflows(p: PaperlessClient) -> None:
     _hdr("Workflows / Actions / Triggers")
 
     await check(
@@ -1285,7 +1263,7 @@ async def test_workflows(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_post(p: Paperless) -> None:
+async def test_document_post(p: PaperlessClient) -> None:
     _hdr("Document POST – upload a minimal PDF")
 
     token = str(uuid.uuid4())
@@ -1309,13 +1287,13 @@ async def test_document_post(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_document_post_with_cf_mapping(p: Paperless) -> None:
+async def test_document_post_with_cf_mapping(p: PaperlessClient) -> None:
     _hdr("Document POST – upload with custom_fields object mapping")
 
     # Ensure custom field cache is populated
-    if not p.cache.custom_fields:
+    if not p.runtime.cache.custom_fields:
         try:
-            p.cache.custom_fields = await p.custom_fields.as_dict()
+            p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
         except Exception as exc:
             fail("custom_fields cache (pre-condition)", exc)
             return
@@ -1340,7 +1318,7 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
     # Variant B: DocumentCustomFieldList – object mapping with typed values
     token_b = str(uuid.uuid4())
-    cf = DocumentCustomFieldList.from_data(p, [])
+    cf = DocumentCustomFieldList.from_data(p.runtime, [])
     cf += CustomFieldStringValue(field=8, value="pypaperless-smoke")
     cf += CustomFieldIntegerValue(field=3, value=1)
 
@@ -1372,7 +1350,7 @@ async def test_document_post_with_cf_mapping(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_filter_context(p: Paperless) -> None:
+async def test_filter_context(p: PaperlessClient) -> None:
     _hdr("filter() context manager – filter & iterate")
 
     try:
@@ -1410,7 +1388,7 @@ async def test_filter_context(p: Paperless) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-async def test_profile(p: Paperless) -> None:
+async def test_profile(p: PaperlessClient) -> None:
     _hdr("Profile – fetch and update")
 
     profile = await check(
@@ -1431,7 +1409,7 @@ async def test_generate_api_token() -> None:
     _hdr("Static helper – generate_api_token (expected failure on bad creds)")
 
     try:
-        await Paperless.generate_api_token(
+        await PaperlessClient.generate_api_token(
             PAPERLESS_URL,
             "wrong_user",
             "wrong_password",
@@ -1444,10 +1422,9 @@ async def test_generate_api_token() -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def main() -> int:
-    paperless = Paperless(
+    paperless = PaperlessClient(
         PAPERLESS_URL,
         PAPERLESS_TOKEN,
-        request_api_version=9,
         client=httpx.AsyncClient(verify=False),
     )
 

@@ -1,6 +1,6 @@
 """Provide `DocumentBulkEdit` service."""
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import BulkEditError
 from pypaperless.models.bulk_edit import CustomFieldsInput, EditPdfOperation, SourceMode
 from pypaperless.models.mixins.securable import Permissions
@@ -10,11 +10,11 @@ from pypaperless.services.base import PaperlessService
 class DocumentBulkEditService(PaperlessService):
     """Perform bulk operations on a list of documents."""
 
-    _api_path = API_PATH["documents_bulk_edit"]
+    _api_path = EndpointPath.DOCUMENTS_BULK_EDIT
 
     async def _post(self, path: str, *, json: dict) -> None:
         """POST to *path* and raise `BulkEditError` when the result is not ``"OK"``."""
-        data = await self._client.request_json("post", path, json=json)
+        data = await self._runtime.transport.post(path, json=json)
         if data.get("result") != "OK":
             raise BulkEditError(str(data.get("result")))
 
@@ -254,7 +254,7 @@ class DocumentBulkEditService(PaperlessService):
             await paperless.documents.bulk_edit.delete([10, 11, 12])
 
         """
-        await self._post(API_PATH["documents_delete"], json={"documents": documents})
+        await self._post(EndpointPath.DOCUMENTS_DELETE, json={"documents": documents})
 
     async def reprocess(self, documents: list[int]) -> None:
         """Reprocess (re-run OCR) on a list of documents.
@@ -267,7 +267,7 @@ class DocumentBulkEditService(PaperlessService):
             await paperless.documents.bulk_edit.reprocess([1, 2, 3])
 
         """
-        await self._post(API_PATH["documents_reprocess"], json={"documents": documents})
+        await self._post(EndpointPath.DOCUMENTS_REPROCESS, json={"documents": documents})
 
     async def rotate(
         self,
@@ -293,7 +293,7 @@ class DocumentBulkEditService(PaperlessService):
             "degrees": degrees,
             "source_mode": source_mode,
         }
-        await self._post(API_PATH["documents_rotate"], json=payload)
+        await self._post(EndpointPath.DOCUMENTS_ROTATE, json=payload)
 
     async def merge(
         self,
@@ -335,7 +335,7 @@ class DocumentBulkEditService(PaperlessService):
         }
         if metadata_document_id is not None:
             payload["metadata_document_id"] = metadata_document_id
-        await self._post(API_PATH["documents_merge"], json=payload)
+        await self._post(EndpointPath.DOCUMENTS_MERGE, json=payload)
 
     async def edit_pdf(
         self,
@@ -382,7 +382,7 @@ class DocumentBulkEditService(PaperlessService):
             "include_metadata": include_metadata,
             "source_mode": source_mode,
         }
-        await self._post(API_PATH["documents_edit_pdf"], json=payload)
+        await self._post(EndpointPath.DOCUMENTS_EDIT_PDF, json=payload)
 
     async def remove_password(
         self,
@@ -423,4 +423,4 @@ class DocumentBulkEditService(PaperlessService):
             "include_metadata": include_metadata,
             "source_mode": source_mode,
         }
-        await self._post(API_PATH["documents_remove_password"], json=payload)
+        await self._post(EndpointPath.DOCUMENTS_REMOVE_PASSWORD, json=payload)

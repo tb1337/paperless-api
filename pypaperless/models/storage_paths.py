@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -12,12 +12,10 @@ class StoragePath(
     PaperlessModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `StoragePath`."""
 
-    _api_path: ClassVar[str] = API_PATH["storage_paths_single"]
+    _api_path: ClassVar[str] = EndpointPath.STORAGE_PATHS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.STORAGE_PATHS
 
     id: int | None = None
@@ -32,11 +30,10 @@ class StoragePathDraft(
     mixins.MatchingFieldsModel,
     mixins.SecurableDraftModel,
     mixins.CreatableModel,
-    mixins.SaveableModel,
 ):
     """Represent a new `StoragePath`, which is not yet stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["storage_paths"]
+    _api_path: ClassVar[str] = EndpointPath.STORAGE_PATHS
     _resource: ClassVar[PaperlessResource] = PaperlessResource.STORAGE_PATHS
 
     _create_required_fields: ClassVar[set[str]] = {

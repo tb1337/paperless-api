@@ -2,7 +2,7 @@
 
 from typing import Any, ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.documents.document import DownloadedDocument, FileRetrieveMode
 from pypaperless.services.base import ResourceService
 
@@ -10,7 +10,7 @@ from pypaperless.services.base import ResourceService
 class _DocumentFileServiceBase(ResourceService):
     """Base class for document file retrieval services (download, preview, thumbnail)."""
 
-    _api_path = API_PATH["documents_download"]
+    _api_path = EndpointPath.DOCUMENTS_DOWNLOAD
     _resource = PaperlessResource.DOCUMENTS
     _mode: ClassVar[FileRetrieveMode]
 
@@ -22,7 +22,9 @@ class _DocumentFileServiceBase(ResourceService):
             "original": "true" if original else "false",
         }
 
-        res = await self._client.request("get", self._api_path.format(pk=pk), params=params)
+        res = await self._runtime.transport.request_raw(
+            "get", self._api_path.format(pk=pk), params=params
+        )
 
         data: dict[str, Any] = {
             "id": pk,
@@ -41,25 +43,25 @@ class _DocumentFileServiceBase(ResourceService):
                 if stripped.startswith("filename="):
                     data["disposition_filename"] = stripped.split("=", 1)[1].strip('"')
 
-        return self._resource_cls.from_data(self._client, data)
+        return self._resource_cls.from_data(self._runtime, data)
 
 
 class DocumentFileDownloadService(_DocumentFileServiceBase):
     """Retrieve the archived file of a document for download."""
 
-    _api_path = API_PATH["documents_download"]
+    _api_path = EndpointPath.DOCUMENTS_DOWNLOAD
     _mode = FileRetrieveMode.DOWNLOAD
 
 
 class DocumentFilePreviewService(_DocumentFileServiceBase):
     """Retrieve the archived file of a document for inline preview."""
 
-    _api_path = API_PATH["documents_preview"]
+    _api_path = EndpointPath.DOCUMENTS_PREVIEW
     _mode = FileRetrieveMode.PREVIEW
 
 
 class DocumentFileThumbnailService(_DocumentFileServiceBase):
     """Retrieve the thumbnail image of a document."""
 
-    _api_path = API_PATH["documents_thumbnail"]
+    _api_path = EndpointPath.DOCUMENTS_THUMBNAIL
     _mode = FileRetrieveMode.THUMBNAIL

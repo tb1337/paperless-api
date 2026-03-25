@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.documents import Document
 from pypaperless.models.filters import DocumentFilters
 
@@ -18,7 +18,7 @@ class TrashService(
 ):
     """Represent a factory for Paperless trashed `Document` models."""
 
-    _api_path = API_PATH["trash"]
+    _api_path = EndpointPath.TRASH
     _resource = PaperlessResource.TRASH
 
     _resource_cls = Document
@@ -50,8 +50,8 @@ class TrashService(
             await paperless.trash.restore([10, 11])
 
         """
-        await self._client.request_json(
-            "post", self._api_path, json={"action": "restore", "documents": documents}
+        await self._runtime.transport.post(
+            self._api_path, json={"action": "restore", "documents": documents}
         )
 
     async def empty(self, documents: list[int] | None = None) -> None:
@@ -70,4 +70,4 @@ class TrashService(
         payload: dict = {"action": "empty"}
         if documents is not None:
             payload["documents"] = documents
-        await self._client.request_json("post", self._api_path, json=payload)
+        await self._runtime.transport.post(self._api_path, json=payload)

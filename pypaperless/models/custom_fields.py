@@ -8,7 +8,7 @@ from typing import Any, ClassVar, Self, TypeVar, overload
 
 from pydantic import BaseModel, Field, field_validator
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -198,12 +198,10 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
 
 class CustomField(
     PaperlessModel,
-    mixins.UpdatableModel,
-    mixins.DeletableModel,
 ):
     """Represent a Paperless `CustomField`."""
 
-    _api_path: ClassVar[str] = API_PATH["custom_fields_single"]
+    _api_path: ClassVar[str] = EndpointPath.CUSTOM_FIELDS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
     id: int
@@ -226,7 +224,7 @@ class CustomField(
         expected_type: type[CustomFieldValueT] | None = None,
     ) -> CustomFieldValue | CustomFieldValueT:
         """Draft a new `CustomFieldValue` instance."""
-        cache = self._client.cache.custom_fields
+        cache = self._runtime.cache.custom_fields
 
         if cache and self.id in cache:
             klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
@@ -250,10 +248,10 @@ class CustomField(
         return result
 
 
-class CustomFieldDraft(PaperlessModel, mixins.CreatableModel, mixins.SaveableModel):
+class CustomFieldDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `CustomField`, which is not stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["custom_fields"]
+    _api_path: ClassVar[str] = EndpointPath.CUSTOM_FIELDS
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
     _create_required_fields: ClassVar[set[str]] = {"name", "data_type"}

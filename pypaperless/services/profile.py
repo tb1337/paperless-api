@@ -1,6 +1,6 @@
 """Provide `Profile` service."""
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.profile import Profile
 
 from .base import ResourceService
@@ -9,7 +9,7 @@ from .base import ResourceService
 class ProfileService(ResourceService):
     """Represent a factory for the Paperless `Profile` model."""
 
-    _api_path = API_PATH["profile"]
+    _api_path = EndpointPath.PROFILE
     _resource = PaperlessResource.PROFILE
 
     _resource_cls = Profile
@@ -23,8 +23,8 @@ class ProfileService(ResourceService):
             print(profile.email, profile.first_name)
 
         """
-        res = await self._client.request_json("get", self._api_path)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.get(self._api_path)
+        return self._resource_cls.from_data(self._runtime, res)
 
     async def update(
         self,
@@ -62,5 +62,5 @@ class ProfileService(ResourceService):
             payload["first_name"] = first_name
         if last_name is not None:
             payload["last_name"] = last_name
-        res = await self._client.request_json("patch", self._api_path, json=payload)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.patch(self._api_path, json=payload)
+        return self._resource_cls.from_data(self._runtime, res)

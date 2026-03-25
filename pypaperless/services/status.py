@@ -1,6 +1,6 @@
 """Provide `Status` service."""
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.status import Status
 
 from .base import ResourceService
@@ -9,7 +9,7 @@ from .base import ResourceService
 class StatusService(ResourceService):
     """Represent a factory for the Paperless `Status` model."""
 
-    _api_path = API_PATH["status"]
+    _api_path = EndpointPath.STATUS
     _resource = PaperlessResource.STATUS
 
     _resource_cls = Status
@@ -23,5 +23,5 @@ class StatusService(ResourceService):
             print(status.storage_type)
 
         """
-        res = await self._client.request_json("get", self._api_path)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.get(self._api_path)
+        return self._resource_cls.from_data(self._runtime, res)

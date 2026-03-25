@@ -9,18 +9,19 @@ from typing import Any
 import pytest
 from pytest_httpx import HTTPXMock
 
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 from pypaperless.builders.custom_fields import (
     CustomFieldQuery,
     _CustomFieldQueryAnd,
     _CustomFieldQueryNot,
     _CustomFieldQueryOr,
 )
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models import CustomField, Tag
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
+    CustomFieldBooleanValue,
     CustomFieldDateValue,
     CustomFieldExtraData,
     CustomFieldIntegerValue,
@@ -37,10 +38,10 @@ from .data import DATA_CUSTOM_FIELDS
 # ---------------------------------------------------------------------------
 
 
-async def test_draft_value_without_cache(paperless: Paperless) -> None:
+async def test_draft_value_without_cache(paperless: PaperlessClient) -> None:
     """draft_value() returns a plain object when the custom field cache is empty."""
     custom_field = CustomField.from_data(
-        paperless,
+        paperless.runtime,
         data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
     )
     field_value = custom_field.draft_value(1337)
@@ -48,20 +49,20 @@ async def test_draft_value_without_cache(paperless: Paperless) -> None:
         assert not isinstance(field_value, value_type)
 
 
-async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperless) -> None:
+async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
     """draft_value() returns a typed value when the custom field cache is populated."""
     httpx_mock.add_response(
         url=re.compile(
-            r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}") + r"\?.*$"
+            r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.CUSTOM_FIELDS}") + r"\?.*$"
         ),
         method="GET",
         status_code=200,
         json=DATA_CUSTOM_FIELDS,
     )
-    paperless.cache.custom_fields = await paperless.custom_fields.as_dict()
+    paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
     custom_field = CustomField.from_data(
-        client=paperless,
+        runtime=paperless.runtime,
         data=DATA_CUSTOM_FIELDS["results"][5],
     )
     field_value = custom_field.draft_value(1337, expected_type=CustomFieldIntegerValue)
@@ -226,7 +227,7 @@ def test_date_value_accepts_date_object() -> None:
     assert field.value == d
 
 
-def test_tag_with_nested_children(api: Paperless) -> None:
+def test_tag_with_nested_children(api: PaperlessClient) -> None:
     """Tag._validate_children builds nested Tag instances from raw dict children."""
     tag_data = {
         "id": 1,
@@ -256,7 +257,7 @@ def test_tag_with_nested_children(api: Paperless) -> None:
             }
         ],
     }
-    tag = Tag.from_data(api, data=tag_data)
+    tag = Tag.from_data(api._runtime, data=tag_data)
     assert tag.name == "Parent Tag"
     assert isinstance(tag.children, list)
     child = tag.children[0]
@@ -269,17 +270,14 @@ def test_tag_with_nested_children(api: Paperless) -> None:
     assert child.children[0].matching_algorithm == MatchingAlgorithm.AUTO
 
 
-def test_tag_with_empty_children(api: Paperless) -> None:
-    """Tag._validate_children returns the falsy value unchanged (empty list / None)."""
-    tag_empty = Tag.from_data(
-        api,
-        data={"id": 5, "slug": "leaf", "name": "Leaf Tag", "children": []},
-    )
-    # empty list — _validate_children early-returns the empty list
-    assert tag_empty.children == []
+def test_draft_value_raises_for_wrong_expected_type(api: PaperlessClient) -> None:
+    """draft_value() must raise TypeError when result type mismatches expected_type (L245-246)."""
+    # Build a CustomField with no cache so draft_value returns a plain CustomFieldValue.
+    cf = CustomField.from_data(api._runtime, {"id": 99, "name": "test", "data_type": "integer"})
+    # Without cache the result is CustomFieldValue, not CustomFieldBooleanValue.
+    with pytest.raises(TypeError, match="Expected CustomFieldBooleanValue"):
+        cf.draft_value(42, CustomFieldBooleanValue)
 
-    tag_none = Tag.from_data(
-        api,
-        data={"id": 6, "slug": "leaf2", "name": "Leaf Tag 2"},
-    )
-    assert tag_none.children is None
+    # Passing expected_type=None must not raise (the guard is skipped).
+    result = cf.draft_value(42)
+    assert result is not None

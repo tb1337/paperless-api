@@ -1,6 +1,6 @@
 """API coverage audit for pypaperless.
 
-Connects to the live Paperless instance and:
+Connects to the live PaperlessClient instance and:
 
   1. Fetches the OpenAPI schema (/api/schema/?format=json) as the authoritative
      source of field definitions for every endpoint.
@@ -15,7 +15,7 @@ Status per model:
   FETCH ERROR   – HTTP / parse error
 
 The final summary also lists:
-  • Schema paths not covered by any entry in const.API_PATH (unimplemented)
+  • Schema paths not covered by any entry in const.EndpointPath (unimplemented)
 
 Usage
 -----
@@ -36,8 +36,8 @@ from typing import Any
 
 import httpx
 
-from pypaperless import Paperless
-from pypaperless.const import API_PATH
+from pypaperless import PaperlessClient
+from pypaperless.const import EndpointPath
 from pypaperless.models import (
     Config,
     Correspondent,
@@ -240,7 +240,7 @@ SUBMODEL_MAPPINGS: list[tuple[type, str, str]] = [
 SUBMODEL_KNOWN_EXTRAS: dict[str, dict[str, str]] = {
     "StatusTasks": {
         # Schema Tasks only documents 4 fields; live API returns all 15 flat fields.
-        # Paperless consolidates index/classifier/sanity_check into this object.
+        # PaperlessClient consolidates index/classifier/sanity_check into this object.
         "celery_url": "not in schema; live API returns it in tasks object",
         "celery_error": "not in schema; live API returns it in tasks object",
         "index_status": "schema has separate Index component but API flattens into tasks",
@@ -543,7 +543,7 @@ def _schema_keys(schema: dict[str, Any], component: str | None) -> set[str]:
 
 
 def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return (path, http_methods) for schema paths not in const.API_PATH.
+    """Return (path, http_methods) for schema paths not in const.EndpointPath.
 
     Normalises ``{id}`` placeholders to ``{pk}`` before comparing.
     Excludes utility/action paths from KNOWN_UTILITY_PATHS.
@@ -552,7 +552,7 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
     def _norm(p: str) -> str:
         return re.sub(r"\{[^}]+\}", "{pk}", p)
 
-    known_normalised = {_norm(v) for v in API_PATH.values()}
+    known_normalised = {_norm(v) for v in EndpointPath}
     result: list[tuple[str, str]] = []
     for path, path_item in sorted(schema["paths"].items()):
         if path in KNOWN_UTILITY_PATHS:
@@ -572,9 +572,9 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-async def _fetch_item(p: Paperless, spec: EndpointSpec) -> dict[str, Any] | None:
+async def _fetch_item(p: PaperlessClient, spec: EndpointSpec) -> dict[str, Any] | None:
     """Return a representative raw JSON object for ``spec``, or None on error/no-data."""
-    raw = await p.request_json("get", spec.path)
+    raw = await p._runtime.transport.get(spec.path)
 
     if spec.unwrap == "paginated":
         results = raw.get("results", [])
@@ -890,7 +890,7 @@ def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
     # ── Unimplemented schema paths ────────────────────────────────────────────
     unimplemented = _unimplemented_paths(schema)
     if unimplemented:
-        print(f"\n  {CYAN}{BOLD}Schema paths not covered by const.API_PATH:{RESET}")
+        print(f"\n  {CYAN}{BOLD}Schema paths not covered by const.EndpointPath:{RESET}")
         for path, methods in unimplemented:
             print(f"    {CYAN}·  {path:<55s} {DIM}[{methods}]{RESET}")
 
@@ -917,17 +917,16 @@ async def main() -> None:
         print(f"{RED}FAILED{RESET}: {exc}")
         oa_schema = {}
 
-    p = Paperless(
+    p = PaperlessClient(
         PAPERLESS_URL,
         PAPERLESS_TOKEN,
-        request_api_version=9,
         client=httpx.AsyncClient(verify=False),
     )
 
     results: list[AuditResult] = []
 
     async with p:
-        p.cache.custom_fields = await p.custom_fields.as_dict()
+        p.runtime.cache.custom_fields = await p.custom_fields.as_dict()
 
         for spec in ENDPOINTS:
             try:

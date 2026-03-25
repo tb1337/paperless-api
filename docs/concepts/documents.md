@@ -33,16 +33,6 @@ preview   = await paperless.documents.preview(42)
 thumbnail = await paperless.documents.thumbnail(42)
 ```
 
-Or using an already-fetched document:
-
-```python
-doc = await paperless.documents(42)
-
-download  = await doc.download()
-preview   = await doc.preview()
-thumbnail = await doc.thumbnail()
-```
-
 `DownloadedDocument` gives you the raw bytes plus everything from the response headers you'd need to save or serve the file:
 
 ```python
@@ -110,11 +100,6 @@ Find documents similar to a given document:
 ```python
 async for document in paperless.documents.more_like(42):
     print(document.title)
-
-# or via a fetched document
-doc = await paperless.documents(42)
-async for document in doc.more_like():
-    print(document.title)
 ```
 
 ---
@@ -123,10 +108,6 @@ async for document in doc.more_like():
 
 ```python
 meta = await paperless.documents.metadata(42)
-
-# or via a fetched document
-doc = await paperless.documents(42)
-meta = await doc.metadata()
 ```
 
 The returned `DocumentMeta` object includes embedded metadata from the file (e.g. EXIF or PDF metadata):
@@ -144,10 +125,6 @@ Paperless-ngx can suggest classifiers (correspondent, document type, tags) for a
 
 ```python
 suggestions = await paperless.documents.suggestions(42)
-
-# or via a fetched document
-doc = await paperless.documents(42)
-suggestions = await doc.suggestions()
 
 print(suggestions.correspondents)
 print(suggestions.document_types)
@@ -179,7 +156,7 @@ for note in notes:
 ```python
 # Pass the document pk as the first positional argument
 draft = paperless.documents.notes.create(42, note="This needs review")
-note_id, doc_id = await paperless.documents.notes.save(draft)
+note_id = await paperless.documents.notes.save(draft)
 ```
 
 Or via a fetched document (the document pk is bound automatically):
@@ -187,10 +164,7 @@ Or via a fetched document (the document pk is bound automatically):
 ```python
 doc = await paperless.documents(42)
 draft = doc.notes.create(note="This needs review")
-note_id, doc_id = await doc.notes.save(draft)
-
-# or use the shortcut directly on the draft
-note_id, doc_id = await draft.save()
+note_id = await doc.notes.save(draft)
 ```
 
 ### Deleting a note
@@ -198,9 +172,6 @@ note_id, doc_id = await draft.save()
 ```python
 note = notes[0]
 await paperless.documents.notes.delete(note)
-
-# or via the note instance directly
-await note.delete()
 ```
 
 ---
@@ -231,6 +202,28 @@ Request the next free archive serial number from Paperless-ngx:
 next_asn = await paperless.documents.get_next_asn()
 print(f"Next ASN: {next_asn}")
 ```
+
+---
+
+## Updating & deleting a document
+
+Modify fields on a fetched document and persist them with `update()`, or remove the document with `delete()`. Both can be called on the service directly or via the client-level dispatcher:
+
+```python
+doc = await paperless.documents(42)
+doc.title = "Invoice 2024-01"
+doc.correspondent = 3
+
+# service
+await paperless.documents.update(doc)
+await paperless.documents.delete(doc)
+
+# dispatcher — no need to reference the service explicitly
+await paperless.update(doc)
+await paperless.delete(doc)
+```
+
+See [Resources — Updating items](../resources.md#updating-items) and [Resources — Deleting items](../resources.md#deleting-items) for full options (`only_changed`, `silent_fail`).
 
 ---
 
@@ -328,7 +321,7 @@ await paperless.documents.email(
 )
 ```
 
-A single document can also be passed as an integer, or use the shortcut on a fetched `Document` instance:
+A single document can also be passed as an integer:
 
 ```python
 await paperless.documents.email(
@@ -337,15 +330,6 @@ await paperless.documents.email(
     subject="Invoice",
     message="See attachment.",
     use_archive_version=False,  # send original instead of archived version
-)
-
-# shortcut - document pk is bound automatically
-doc = await paperless.documents(42)
-await doc.email(
-    addresses="alice@example.com",
-    subject="Invoice",
-    message="See attachment.",
-    use_archive_version=False,
 )
 ```
 

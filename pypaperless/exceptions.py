@@ -102,11 +102,22 @@ class DraftNotSupportedError(DraftError):
     """Raised when trying to draft unsupported models."""
 
 
+# Dispatch
+
+
+class DispatchError(PaperlessError):
+    """Raised when a model dispatch operation cannot be completed."""
+
+
 # Resource access
 
 
 class ResourceError(PaperlessError):
     """Raised when a resource access or lookup operation fails."""
+
+
+class DeletionError(ResourceError):
+    """Raised when a delete operation fails (non-2xx HTTP response)."""
 
 
 class ItemNotFoundError(ResourceError):

@@ -47,23 +47,10 @@ changed = await paperless.storage_paths.update(sp)
 
 ```python
 sp = await paperless.storage_paths(2)
-deleted = await paperless.storage_paths.delete(sp)
+await paperless.storage_paths.delete(sp)
 ```
 
-## Shortcuts
-
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
-
-```python
-sp = await paperless.storage_paths(2)
-sp.path = "{created_year}/{correspondent}/{title}"
-changed = await sp.update()
-
-await sp.delete()
-
-draft = paperless.storage_paths.create(name="Archive", path="{created_year}/{title}")
-pk = await draft.save()
-```
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.
 
 ## Permissions
 

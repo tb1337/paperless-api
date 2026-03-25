@@ -72,20 +72,7 @@ changed = await paperless.custom_fields.update(field)
 
 ```python
 field = await paperless.custom_fields(3)
-deleted = await paperless.custom_fields.delete(field)
+await paperless.custom_fields.delete(field)
 ```
 
-## Shortcuts
-
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
-
-```python
-field = await paperless.custom_fields(3)
-field.name = "Invoice total"
-changed = await field.update()
-
-await field.delete()
-
-draft = paperless.custom_fields.create(name="Notes", data_type=CustomFieldType.STRING)
-pk = await draft.save()
-```
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.

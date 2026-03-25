@@ -55,60 +55,45 @@ changed = await paperless.documents.update(doc)
 
 ```python
 doc = await paperless.documents(42)
-deleted = await paperless.documents.delete(doc)
+await paperless.documents.delete(doc)
 ```
 
-## Shortcuts
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.
 
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
+## Document sub-service shortcuts
 
-```python
-doc = await paperless.documents(42)
-doc.title = "Updated title"
-changed = await doc.update()
-
-await doc.delete()
-
-# Draft.save() returns a task UUID, same as paperless.documents.save(draft)
-draft = paperless.documents.create()
-draft.title = "Invoice 2024"
-draft.document = raw_bytes
-task_id = await draft.save()
-```
-
-Document instances also expose shortcuts for the sub-resource operations:
+The `Document` model exposes three **bound sub-services** as properties. These are the
+same services as `paperless.documents.notes`, `.history` and `.share_links`, but
+with the document's primary key pre-filled:
 
 ```python
 doc = await paperless.documents(42)
 
-# file access
-downloaded = await doc.download()
-preview    = await doc.preview()
-thumb      = await doc.thumbnail()
-
-# metadata and suggestions
-meta        = await doc.metadata()
-suggestions = await doc.suggestions()
-
-# similar documents (async generator)
-async for similar in doc.more_like():
-    print(similar.title)
-
-# send by e-mail
-await doc.email(
-    addresses="alice@example.com",
-    subject="Invoice",
-    message="See attachment.",
-)
-
-# notes, history, and share links (bound sub-services)
-notes   = await doc.notes()           # list[DocumentNote]
-entries = await doc.history()         # list[DocumentHistory]
-links   = await doc.share_links()     # list[ShareLink]
+# notes (list, create, save, delete)
+notes      = await doc.notes()              # list[DocumentNote]
 note_draft = doc.notes.create(note="Checked.")
-await doc.notes.save(note_draft)
-await note_draft.save()               # same, as a draft shortcut
-await notes[0].delete()               # note instance shortcut
+note_id    = await doc.notes.save(note_draft)
+await doc.notes.delete(notes[0])
+
+# history (read-only)
+entries = await doc.history()              # list[DocumentHistory]
+
+# share links (read-only from here, use paperless.share_links to create/delete)
+links = await doc.share_links()            # list[ShareLink]
+```
+
+All other operations (download, preview, thumbnail, metadata, suggestions, more-like, email)
+are **service-only** — there are no model-level shortcuts for these:
+
+```python
+downloaded  = await paperless.documents.download(doc.id)
+preview     = await paperless.documents.preview(doc.id)
+thumbnail   = await paperless.documents.thumbnail(doc.id)
+meta        = await paperless.documents.metadata(doc.id)
+suggestions = await paperless.documents.suggestions(doc.id)
+async for similar in paperless.documents.more_like(doc.id):
+    print(similar.title)
+await paperless.documents.email(doc.id, addresses="alice@example.com", subject="Fwd", message="")
 ```
 
 ## Permissions

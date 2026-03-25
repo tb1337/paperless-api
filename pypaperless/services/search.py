@@ -1,7 +1,7 @@
 """Provide `Search` service."""
 
 from pypaperless.builders import SearchQuery
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.search import SearchResult
 
 from .base import ResourceService
@@ -10,7 +10,7 @@ from .base import ResourceService
 class SearchService(ResourceService):
     """Represent a factory for Paperless global search results."""
 
-    _api_path = API_PATH["search"]
+    _api_path = EndpointPath.SEARCH
     _resource = PaperlessResource.SEARCH
 
     _resource_cls = SearchResult
@@ -43,5 +43,5 @@ class SearchService(ResourceService):
         params: dict[str, str | bool] = {"query": str(query)}
         if db_only is not None:
             params["db_only"] = db_only
-        res = await self._client.request_json("get", self._api_path, params=params)
-        return self._resource_cls.from_data(self._client, res)
+        res = await self._runtime.transport.get(self._api_path, params=params)
+        return self._resource_cls.from_data(self._runtime, res)

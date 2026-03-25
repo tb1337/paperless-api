@@ -6,7 +6,7 @@ from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.base import PaperlessModel
 
 
@@ -27,7 +27,7 @@ class DocumentHistoryActor(BaseModel):
 class DocumentHistory(PaperlessModel):
     """Represent a single Paperless document history (audit-log) entry."""
 
-    _api_path: ClassVar[str] = API_PATH["documents_history"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_HISTORY
 
     id: int | None = None
     document: int | None = None

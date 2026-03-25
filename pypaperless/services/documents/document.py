@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, SendEmailError
 from pypaperless.models.documents.document import (
     Document,
@@ -27,13 +27,13 @@ from .notes import DocumentNoteService
 from .share_links import DocumentShareLinkService
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class DocumentSuggestionsService(ResourceService):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
-    _api_path = API_PATH["documents_suggestions"]
+    _api_path = EndpointPath.DOCUMENTS_SUGGESTIONS
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentSuggestions
@@ -41,16 +41,16 @@ class DocumentSuggestionsService(ResourceService):
     async def __call__(self, pk: int) -> DocumentSuggestions:
         """Request exactly one resource item."""
         api_path = self._resource_cls.format_api_path(pk=pk)
-        data = await self._client.request_json("get", api_path)
+        data = await self._runtime.transport.get(api_path)
         data["id"] = pk
 
-        return self._resource_cls.from_data(self._client, data)
+        return self._resource_cls.from_data(self._runtime, data)
 
 
 class DocumentMetaService(ResourceService, mixins.CallableService[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
-    _api_path = API_PATH["documents_meta"]
+    _api_path = EndpointPath.DOCUMENTS_META
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentMeta
@@ -67,7 +67,7 @@ class DocumentService(
 ):
     """Represent a factory for Paperless `Document` models."""
 
-    _api_path = API_PATH["documents"]
+    _api_path = EndpointPath.DOCUMENTS
     _resource = PaperlessResource.DOCUMENTS
 
     _draft_cls = DocumentDraft
@@ -92,19 +92,19 @@ class DocumentService(
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
         """Initialize a `DocumentService` instance."""
-        super().__init__(client)
+        super().__init__(runtime)
 
-        self._bulk_edit = DocumentBulkEditService(client)
-        self._download = DocumentFileDownloadService(client)
-        self._history = DocumentHistoryService(client)
-        self._meta = DocumentMetaService(client)
-        self._notes = DocumentNoteService(client)
-        self._preview = DocumentFilePreviewService(client)
-        self._share_links = DocumentShareLinkService(client)
-        self._suggestions = DocumentSuggestionsService(client)
-        self._thumbnail = DocumentFileThumbnailService(client)
+        self._bulk_edit = DocumentBulkEditService(runtime)
+        self._download = DocumentFileDownloadService(runtime)
+        self._history = DocumentHistoryService(runtime)
+        self._meta = DocumentMetaService(runtime)
+        self._notes = DocumentNoteService(runtime)
+        self._preview = DocumentFilePreviewService(runtime)
+        self._share_links = DocumentShareLinkService(runtime)
+        self._suggestions = DocumentSuggestionsService(runtime)
+        self._thumbnail = DocumentFileThumbnailService(runtime)
 
     @property
     def bulk_edit(self) -> DocumentBulkEditService:
@@ -233,7 +233,7 @@ class DocumentService(
             draft.archive_serial_number = asn
 
         """
-        res = await self._client.request("get", API_PATH["documents_next_asn"])
+        res = await self._runtime.transport.request_raw("get", EndpointPath.DOCUMENTS_NEXT_ASN)
         try:
             res.raise_for_status()
             return int(res.text)
@@ -334,6 +334,6 @@ class DocumentService(
             "use_archive_version": use_archive_version,
         }
         try:
-            await self._client.request_json("post", API_PATH["documents_email"], json=data)
+            await self._runtime.transport.post(EndpointPath.DOCUMENTS_EMAIL, json=data)
         except Exception as exc:
             raise SendEmailError from exc

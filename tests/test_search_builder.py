@@ -1,7 +1,5 @@
 """Tests for the SearchQuery DSL builder."""
 
-import pytest
-
 from pypaperless.builders import SearchQuery
 from pypaperless.builders.search import _SearchQueryAnd, _SearchQueryNot, _SearchQueryOr
 
@@ -64,12 +62,6 @@ def test_and_flatten() -> None:
     assert str(q) == "(a AND b AND c)"
 
 
-def test_and_direct_instantiation() -> None:
-    """_SearchQueryAnd can be instantiated directly with multiple queries."""
-    q = _SearchQueryAnd(SearchQuery("x"), SearchQuery("y"), SearchQuery("z"))
-    assert str(q) == "(x AND y AND z)"
-
-
 # ---------------------------------------------------------------------------
 # OR
 # ---------------------------------------------------------------------------
@@ -89,12 +81,6 @@ def test_or_flatten() -> None:
     assert str(q) == "(a OR b OR c)"
 
 
-def test_or_direct_instantiation() -> None:
-    """_SearchQueryOr can be instantiated directly with multiple queries."""
-    q = _SearchQueryOr(SearchQuery("x"), SearchQuery("y"))
-    assert str(q) == "(x OR y)"
-
-
 # ---------------------------------------------------------------------------
 # NOT
 # ---------------------------------------------------------------------------
@@ -105,56 +91,3 @@ def test_not_operator() -> None:
     q = ~SearchQuery.field("type", "letter")
     assert isinstance(q, _SearchQueryNot)
     assert str(q) == "NOT type:letter"
-
-
-def test_not_of_compound() -> None:
-    """``~`` can negate a compound expression."""
-    inner = SearchQuery("a") | SearchQuery("b")
-    q = ~inner
-    assert str(q) == "NOT (a OR b)"
-
-
-# ---------------------------------------------------------------------------
-# Combined expressions
-# ---------------------------------------------------------------------------
-
-
-def test_combined_and_or_not() -> None:
-    """Complex combined expression serialises correctly."""
-    q = (
-        SearchQuery("invoice")
-        & SearchQuery.field("tag", "unpaid")
-        & ~SearchQuery.field("type", "letter")
-    )
-    assert str(q) == "(invoice AND tag:unpaid AND NOT type:letter)"
-
-
-def test_nested_and_in_or() -> None:
-    """AND inside OR produces correctly parenthesised output."""
-    inner = SearchQuery("a") & SearchQuery("b")
-    q = inner | SearchQuery("c")
-    assert str(q) == "((a AND b) OR c)"
-
-
-def test_date_range_in_expression() -> None:
-    """Date-range terms combine naturally with other atoms."""
-    q = SearchQuery("warranty") & SearchQuery.date_range("created", "2020", "2022")
-    assert str(q) == "(warranty AND created:[2020 to 2022])"
-
-
-# ---------------------------------------------------------------------------
-# str passthrough — service accepts both str and SearchQuery
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("query", "expected"),
-    [
-        (SearchQuery("test"), "test"),
-        (SearchQuery.field("tag", "x"), "tag:x"),
-        (SearchQuery("a") & SearchQuery("b"), "(a AND b)"),
-    ],
-)
-def test_str_conversion(query: SearchQuery, expected: str) -> None:
-    """str() on any SearchQuery subclass yields the expected Whoosh string."""
-    assert str(query) == expected

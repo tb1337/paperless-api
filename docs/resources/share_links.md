@@ -60,20 +60,7 @@ changed = await paperless.share_links.update(link)
 
 ```python
 link = await paperless.share_links(8)
-deleted = await paperless.share_links.delete(link)
+await paperless.share_links.delete(link)
 ```
 
-## Shortcuts
-
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
-
-```python
-link = await paperless.share_links(8)
-link.expiration = datetime.datetime(2027, 1, 1, tzinfo=datetime.timezone.utc)
-changed = await link.update()
-
-await link.delete()
-
-draft = paperless.share_links.create(document=42, file_version=ShareLinkFileVersion.ARCHIVE)
-slug = await draft.save()
-```
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.

@@ -2,18 +2,26 @@
 
 from typing import Any, cast
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.exceptions import DeletionError
+from pypaperless.models.base import DraftLike
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
+from pypaperless.services.mixins import CreatableService, DeletableService
 
 from .base import DocumentScopedServiceBase
 
 
-class DocumentNoteService(DocumentScopedServiceBase):
+class DocumentNoteService(
+    DocumentScopedServiceBase,
+    DeletableService[DocumentNote],
+    CreatableService[DocumentNoteDraft],
+):
     """Represent a factory for Paperless `DocumentNote` models."""
 
-    _api_path = API_PATH["documents_notes"]
+    _api_path = EndpointPath.DOCUMENTS_NOTES
     _resource = PaperlessResource.DOCUMENTS
 
+    _draft_cls = DocumentNoteDraft
     _resource_cls = DocumentNote
 
     async def __call__(
@@ -35,7 +43,7 @@ class DocumentNoteService(DocumentScopedServiceBase):
 
         """
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.request_json("get", self._get_api_path(doc_pk))
+        res = await self._runtime.transport.get(self._get_api_path(doc_pk))
 
         # We have to transform data here slightly.
         # There are two major differences in the data depending on which endpoint is requested.
@@ -47,13 +55,11 @@ class DocumentNoteService(DocumentScopedServiceBase):
         #       .user -> dict(id=int, username=str, first_name=str, last_name=str)
         return [
             self._resource_cls.from_data(
-                self._client,
+                self._runtime,
                 {
                     **item,
                     "document": doc_pk,
-                    "user": item["user"]["id"]
-                    if self._client.host_api_version >= 8
-                    else item["user"],
+                    "user": item["user"]["id"] if self._runtime.api_version >= 8 else item["user"],
                 },
             )
             for item in res
@@ -73,19 +79,17 @@ class DocumentNoteService(DocumentScopedServiceBase):
         Example::
 
             draft = paperless.documents.notes.create(42, note="Checked and approved.")
-            note_id, doc_id = await paperless.documents.notes.save(draft)
+            note_id = await paperless.documents.notes.save(draft)
 
         """
         kwargs.update({"document": self._get_document_pk(pk)})
         return DocumentNoteDraft.from_data(
-            self._client,
+            self._runtime,
             data=kwargs,
         )
 
-    async def save(self, draft: DocumentNoteDraft) -> tuple[int, int]:
-        """Persist a note draft to Paperless.
-
-        Returns a ``(note_id, document_id)`` tuple.
+    async def save(self, draft: DraftLike) -> int:
+        """Persist a note draft to Paperless and return the new note id.
 
         Args:
             draft: A draft instance created by :meth:`create`.
@@ -93,25 +97,25 @@ class DocumentNoteService(DocumentScopedServiceBase):
         Example::
 
             draft = paperless.documents.notes.create(42, note="Approved.")
-            note_id, doc_id = await paperless.documents.notes.save(draft)
+            note_id = await paperless.documents.notes.save(draft)
 
         """
         draft.validate_draft()
         kwdict = draft.serialize()
-        res = await self._client.request_json("post", draft.api_path, **kwdict)
-        return (
-            cast("int", max(item.get("id") for item in res)),
-            cast("int", kwdict["json"]["document"]),
-        )
+        res = await self._runtime.transport.post(draft.api_path, **kwdict)
+        return cast("int", max(item.get("id") for item in res))
 
-    async def delete(self, note: DocumentNote) -> bool:
+    async def delete(self, note: DocumentNote, *, silent_fail: bool = False) -> None:
         """Delete a document note.
 
-        Returns ``True`` when the deletion was successful, ``False`` otherwise.
+        Raises :exc:`~pypaperless.exceptions.DeletionError` on failure unless
+        *silent_fail* is ``True``.
 
         Args:
-            note: The :class:`~pypaperless.models.documents.notes.DocumentNote`
-                  instance to delete.
+            note:        The :class:`~pypaperless.models.documents.notes.DocumentNote`
+                         instance to delete.
+            silent_fail: When ``True``, swallow :exc:`~pypaperless.exceptions.DeletionError`
+                         instead of raising it.
 
         Example::
 
@@ -123,5 +127,8 @@ class DocumentNoteService(DocumentScopedServiceBase):
         params = {
             "id": note.id,
         }
-        res = await self._client.request("delete", note.api_path, params=params)
-        return res.status_code in {200, 204}
+        try:
+            await self._runtime.transport.delete(note.api_path, params=params)
+        except DeletionError:
+            if not silent_fail:
+                raise

@@ -1,6 +1,6 @@
 """Provide document-scoped `ShareLink` services."""
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.share_links import ShareLink
 
 from .base import DocumentScopedServiceBase
@@ -9,7 +9,7 @@ from .base import DocumentScopedServiceBase
 class DocumentShareLinkService(DocumentScopedServiceBase):
     """Represent a factory for document-scoped Paperless `ShareLink` models."""
 
-    _api_path = API_PATH["documents_share_links"]
+    _api_path = EndpointPath.DOCUMENTS_SHARE_LINKS
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = ShareLink
@@ -30,5 +30,5 @@ class DocumentShareLinkService(DocumentScopedServiceBase):
 
         """
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
-        return [self._resource_cls.from_data(self._client, item) for item in res]
+        res = await self._runtime.transport.get(self._api_path.format(pk=doc_pk))
+        return [self._resource_cls.from_data(self._runtime, item) for item in res]

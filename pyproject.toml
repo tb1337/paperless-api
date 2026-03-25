@@ -23,14 +23,10 @@ classifiers = [
 ]
 requires-python = ">=3.13, <3.15"
 dependencies = [
-    "click>=8.0",
     "httpx>=0.28.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
 ]
-
-[project.scripts]
-pypaperless = "pypaperless.cli:cli"
 
 [dependency-groups]
 dev = [
@@ -113,6 +109,10 @@ ignore = [
   "ISC001",
 ]
 select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+# S105: false positive – StrEnum members named TOKEN/REMOVE_PASSWORD hold URL paths, not passwords
+"pypaperless/const.py" = ["S105"]
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false

@@ -1,6 +1,6 @@
 """Provide `BulkEditObjects` service."""
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.bulk_edit import BulkEditObjectType
 from pypaperless.models.mixins.securable import Permissions
 
@@ -10,7 +10,7 @@ from .base import PaperlessService
 class BulkEditObjectsService(PaperlessService):
     """Perform bulk operations on non-document objects (tags, correspondents, etc.)."""
 
-    _api_path = API_PATH["bulk_edit_objects"]
+    _api_path = EndpointPath.BULK_EDIT_OBJECTS
 
     async def set_permissions(
         self,
@@ -56,7 +56,7 @@ class BulkEditObjectsService(PaperlessService):
             payload["owner"] = owner
         if permissions is not None:
             payload["permissions"] = permissions.model_dump()
-        await self._client.request_json("post", self._api_path, json=payload)
+        await self._runtime.transport.post(self._api_path, json=payload)
 
     async def delete(
         self,
@@ -80,4 +80,4 @@ class BulkEditObjectsService(PaperlessService):
             "object_type": object_type,
             "operation": "delete",
         }
-        await self._client.request_json("post", self._api_path, json=payload)
+        await self._runtime.transport.post(self._api_path, json=payload)

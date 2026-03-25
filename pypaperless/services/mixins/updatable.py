@@ -79,8 +79,7 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
 
         return cast(
             "dict[str, Any]",
-            await self._client.request_json(
-                "patch",
+            await self._runtime.transport.patch(
                 model.api_path,
                 json=changed,
                 params=params or None,
@@ -98,8 +97,7 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
 
         return cast(
             "dict[str, Any]",
-            await self._client.request_json(
-                "put",
+            await self._runtime.transport.put(
                 model.api_path,
                 json=data,
                 params=params or None,

@@ -20,10 +20,10 @@ Requires **Python 3.13+**.
 
 ```python
 import asyncio
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 
 async def main():
-    async with Paperless("localhost:8000", "your-api-token") as paperless:
+    async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
         async for document in paperless.documents:
             print(document.id, document.title)
 

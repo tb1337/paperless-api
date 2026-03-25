@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.workflows.workflow import Workflow
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
@@ -11,7 +11,7 @@ from .actions import WorkflowActionService
 from .triggers import WorkflowTriggerService
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 class WorkflowService(
@@ -21,17 +21,17 @@ class WorkflowService(
 ):
     """Represent a factory for Paperless `Workflow` models."""
 
-    _api_path = API_PATH["workflows"]
+    _api_path = EndpointPath.WORKFLOWS
     _resource = PaperlessResource.WORKFLOWS
 
     _resource_cls = Workflow
 
-    def __init__(self, client: "Paperless") -> None:
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
         """Initialize a `WorkflowService` instance."""
-        super().__init__(client)
+        super().__init__(runtime)
 
-        self._actions = WorkflowActionService(client)
-        self._triggers = WorkflowTriggerService(client)
+        self._actions = WorkflowActionService(runtime)
+        self._triggers = WorkflowTriggerService(runtime)
 
     @property
     def actions(self) -> WorkflowActionService:

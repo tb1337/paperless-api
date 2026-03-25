@@ -11,6 +11,7 @@ from pypaperless.builders import (
     SearchQuery,
 )
 
+from .base import DraftLike
 from .bulk_edit import BulkEditObjectType, CustomFieldsInput, EditPdfOperation, SourceMode
 from .custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
@@ -93,6 +94,7 @@ __all__ = (
     "DocumentMetaEntry",
     "DocumentSearchHit",
     "DocumentTypeFilters",
+    "DraftLike",
     "EditPdfOperation",
     "FileRetrieveMode",
     "GroupFilters",
