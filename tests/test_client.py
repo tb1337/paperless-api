@@ -264,8 +264,6 @@ async def test_pages_object(api: PaperlessClient) -> None:
 
     data: dict = {
         "count": 0,
-        "current_page": 1,
-        "page_size": 25,
         "next": "any.url",
         "previous": None,
         "all": [],
@@ -276,7 +274,9 @@ async def test_pages_object(api: PaperlessClient) -> None:
         data["all"].append(i)
         data["results"].append({"id": i})
 
-    page = Page.from_data(api._runtime, data, resource_cls=TestResource)
+    page = Page.from_data(
+        api._runtime, data, resource_cls=TestResource, current_page=1, page_size=25
+    )
 
     assert isinstance(page, Page)
     assert page.current_count == 100
@@ -293,14 +293,14 @@ async def test_pages_object(api: PaperlessClient) -> None:
 
     # inner page
     page.previous = "any.url"
-    page.current_page = 3
+    page._current_page = 3
     assert page.previous_page is not None
     assert page.next_page is not None
     assert not page.is_last_page
 
     # last page
     page.next = None
-    page.current_page = 4
+    page._current_page = 4
     assert page.next_page is None
     assert page.is_last_page
 

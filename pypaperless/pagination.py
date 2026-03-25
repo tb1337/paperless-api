@@ -18,12 +18,9 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     """Represent a single paginated response page from the Paperless API."""
 
     _resource_cls: type[ResourceT] | None = PrivateAttr(default=None)
+    _current_page: int = PrivateAttr(default=0)
+    _page_size: int = PrivateAttr(default=0)
 
-    # our fields
-    current_page: int = 0
-    page_size: int = 0
-
-    # DRF fields
     count: int = 0
     next: str | None = None
     previous: str | None = None
@@ -31,10 +28,25 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     results: list[dict[str, Any]] = Field(default_factory=list)
 
     def model_post_init(self, __context: Any, /) -> None:
-        """Bind ``_runtime`` and ``_resource_cls`` from validation context."""
+        """Bind ``_runtime``, ``_resource_cls``, and pagination state from context."""
         super().model_post_init(__context)
-        if isinstance(__context, dict) and "resource_cls" in __context:
-            self._resource_cls = __context["resource_cls"]
+        if isinstance(__context, dict):
+            if "resource_cls" in __context:
+                self._resource_cls = __context["resource_cls"]
+            if "current_page" in __context:
+                self._current_page = __context["current_page"]
+            if "page_size" in __context:
+                self._page_size = __context["page_size"]
+
+    @property
+    def current_page(self) -> int:
+        """Return the current page number."""
+        return self._current_page
+
+    @property
+    def page_size(self) -> int:
+        """Return the page size used for this request."""
+        return self._page_size
 
     @property
     def current_count(self) -> int:
@@ -144,12 +156,13 @@ class PageGenerator(AsyncIterator["Page"]):
             raise StopAsyncIteration
 
         res = await self._runtime.transport.get(self._url, params=self.params)
-        data = {
-            **res,
-            "current_page": self.params["page"],
-            "page_size": self.params["page_size"],
-        }
-        self._page = Page.from_data(self._runtime, data, resource_cls=self._resource_cls)
+        self._page = Page.from_data(
+            self._runtime,
+            res,
+            resource_cls=self._resource_cls,
+            current_page=self.params["page"],
+            page_size=self.params["page_size"],
+        )
 
         self.params["page"] += 1
 
