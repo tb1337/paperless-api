@@ -32,7 +32,9 @@ To get typed `CustomFieldValue` instances (instead of plain `CustomFieldValue`),
 Call `update_cache()` before working with documents that have custom fields:
 
 ```python
-async with Paperless("localhost:8000", "your-api-token") as paperless:
+from pypaperless import PaperlessClient
+
+async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
     await paperless.cache.update_custom_fields()
 
     doc = await paperless.documents(42)

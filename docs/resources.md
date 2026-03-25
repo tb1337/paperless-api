@@ -1,12 +1,12 @@
 # Resources
 
-Every Paperless-ngx entity is exposed through a **service** on the `Paperless` instance. Each service supports a consistent set of operations - fetch, iterate, create, update or delete.
+Every Paperless-ngx entity is exposed through a **service** on the `PaperlessClient` instance. Each service supports a consistent set of operations - fetch, iterate, create, update or delete.
 
 ---
 
 ## Capability matrix
 
-| Resource            | `call` | `iterate` | `draft`/`save` | `update` | `delete` | `permissions` |
+| Resource            | `call` | `iterate` | `create`/`save` | `update` | `delete` | `permissions` |
 | ------------------- | :----: | :-------: | :------------: | :------: | :------: | :-----------: |
 | `bulk_edit_objects` |        |           |                |          |          |               |
 | `config`            |   ✓    |           |                |          |          |               |
@@ -84,19 +84,19 @@ all_ids: list[int] = await paperless.documents.all()
 
 ### Pagination
 
-You can iterate page-by-page instead of item-by-item:
+You can iterate page-by-page instead of item-by-item. `Page` objects provide metadata about the current page:
 
 ```python
 async for page in paperless.documents.pages():
-    print(f"Page has {len(page)} documents")
+    print(f"Page {page.current_page} of {page.last_page} ({page.count} total)")
     for doc in page:
         print(doc.title)
 ```
 
-Control the starting page:
+Control the starting page and page size:
 
 ```python
-async for page in paperless.documents.pages(page=3):
+async for page in paperless.documents.pages(page=3, page_size=25):
     ...
 ```
 
@@ -119,16 +119,16 @@ filters: DocumentFilters = {
     "title__icontains": "invoice",
 }
 
-async with paperless.documents.filter(**filters):
-    async for document in paperless.documents:
+async with paperless.documents.filter(**filters) as ctx:
+    async for document in ctx:
         ...
 ```
 
 You can also pass filters directly as keyword arguments:
 
 ```python
-async with paperless.documents.filter(title__icontains="invoice"):
-    async for document in paperless.documents:
+async with paperless.documents.filter(title__icontains="invoice") as ctx:
+    async for document in ctx:
         print(document.title)
 ```
 
@@ -151,6 +151,12 @@ print(f"Created tag with id {new_id}")
 # Create a new correspondent
 draft = paperless.correspondents.create(name="ACME Corp")
 new_id = await paperless.correspondents.save(draft)
+```
+
+You can also save via the client-level dispatcher — no need to know which service owns the draft:
+
+```python
+new_id = await paperless.save(draft)
 ```
 
 !!! note
@@ -181,18 +187,33 @@ By default, only changed fields are sent via `PATCH`. Pass `only_changed=False` 
 await paperless.tags.update(tag, only_changed=False)
 ```
 
+You can also update via the client-level dispatcher:
+
+```python
+await paperless.update(tag)
+```
+
 ---
 
 ## Deleting items
 
 ```python
 tag = await paperless.tags(3)
-
-if await paperless.tags.delete(tag):
-    print("Tag deleted successfully.")
+await paperless.tags.delete(tag)
 ```
 
-`delete()` returns `True` when the deletion was successful (HTTP 204), `False` otherwise.
+`delete()` raises `DeletionError` when the deletion fails. To silently ignore a
+failed deletion, pass `silent_fail=True`:
+
+```python
+await paperless.tags.delete(tag, silent_fail=True)
+```
+
+You can also delete via the client-level dispatcher:
+
+```python
+await paperless.delete(tag)
+```
 
 ---
 

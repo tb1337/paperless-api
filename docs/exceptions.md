@@ -23,7 +23,9 @@ PaperlessError
 ├── DraftError
 │   ├── DraftFieldRequiredError
 │   └── DraftNotSupportedError
+├── DispatchError
 ├── ResourceError
+│   ├── DeletionError
 │   ├── ItemNotFoundError
 │   ├── PrimaryKeyRequiredError
 │   └── TaskNotFoundError
@@ -44,13 +46,14 @@ Base class for all pypaperless exceptions. Catch this to handle any pypaperless 
 
 ### `InitializationError`
 
-Raised when `Paperless.initialize()` fails for any reason - connectivity, authentication or authorisation.
+Raised when `PaperlessClient.initialize()` fails for any reason - connectivity, authentication or authorisation.
 
 ```python
 from pypaperless.exceptions import InitializationError
+from pypaperless import PaperlessClient
 
 try:
-    async with Paperless("localhost:8000", "bad-token") as p:
+    async with PaperlessClient("localhost:8000", "bad-token") as p:
         pass
 except InitializationError as exc:
     print("Could not initialise:", exc)
@@ -136,9 +139,31 @@ Raised when calling `draft()` on a service that does not have a `_draft_cls` def
 
 ---
 
+### `DispatchError`
+
+Raised when `paperless.update()`, `paperless.delete()`, or `paperless.save()` is called with a model type that has no registered service. Only models managed by a CRUD service can be dispatched.
+
+---
+
 ### `ResourceError`
 
 Base class for exceptions raised during resource access or lookup operations. Catch this to handle all resource-level failures in one place.
+
+#### `DeletionError`
+
+Raised by `delete()` when the API returns a non-2xx response. To suppress this exception, pass `silent_fail=True` to the service `delete()` method.
+
+```python
+from pypaperless.exceptions import DeletionError
+
+try:
+    await paperless.tags.delete(tag)
+except DeletionError as exc:
+    print("Deletion failed:", exc)
+
+# or suppress silently:
+await paperless.tags.delete(tag, silent_fail=True)
+```
 
 #### `ItemNotFoundError`
 
@@ -197,9 +222,10 @@ from pypaperless.exceptions import (
     ForbiddenError,
     PaperlessError,
 )
+from pypaperless import PaperlessClient
 
 try:
-    async with Paperless("localhost:8000", "your-token") as paperless:
+    async with PaperlessClient("localhost:8000", "your-token") as paperless:
         doc = await paperless.documents(42)
 except PaperlessConnectionError:
     print("Cannot reach the Paperless server.")

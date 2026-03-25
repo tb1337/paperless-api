@@ -52,23 +52,10 @@ changed = await paperless.tags.update(tag)
 
 ```python
 tag = await paperless.tags(5)
-deleted = await paperless.tags.delete(tag)
+await paperless.tags.delete(tag)
 ```
 
-## Shortcuts
-
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
-
-```python
-tag = await paperless.tags(5)
-tag.color = "#ff0000"
-changed = await tag.update()
-
-await tag.delete()
-
-draft = paperless.tags.create(name="urgent")
-pk = await draft.save()
-```
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.
 
 ## Permissions
 

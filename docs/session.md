@@ -1,6 +1,6 @@
 # Session management
 
-This page covers all configuration modes, custom HTTP clients, API version pinning and connection lifecycle details.
+This page covers all configuration modes, custom HTTP clients and connection lifecycle details.
 
 ---
 
@@ -13,72 +13,77 @@ This page covers all configuration modes, custom HTTP clients, API version pinni
 Pass `url` and `token` directly to the constructor:
 
 ```python
-paperless = Paperless("localhost:8000", "your-api-token")
+from pypaperless import PaperlessClient
+
+paperless = PaperlessClient("localhost:8000", "your-api-token")
 ```
 
 ### 2. `PaperlessSettings` object
 
-Build a `PaperlessSettings` instance and pass it via the `config` keyword. Useful when you want to construct or validate settings separately:
+Build a `PaperlessSettings` instance and pass it to `PaperlessClient.from_config()`. Useful when you want to construct or validate settings separately:
 
 ```python
-from pypaperless import Paperless, PaperlessSettings
+from pypaperless import PaperlessClient, PaperlessSettings
 
 cfg = PaperlessSettings(
     url="https://paperless.example.com",
     token="your-api-token",
-    request_api_version=9,  # optional - defaults to the built-in value
 )
 
-async with Paperless(config=cfg) as paperless:
+async with PaperlessClient.from_config(cfg) as paperless:
     ...
 ```
 
 ### 3. Environment variables
 
-Set the `PYPAPERLESS_*` environment variables and call `Paperless()` with no arguments. Ideal for containers, CI pipelines and twelve-factor apps:
+Set the `PYPAPERLESS_*` environment variables and call `PaperlessClient.from_env()`. Ideal for containers, CI pipelines and twelve-factor apps:
 
-| Environment variable              | Field                | Required |
-| --------------------------------- | -------------------- | :------: |
-| `PYPAPERLESS_URL`                 | Base URL             |    ✓     |
-| `PYPAPERLESS_TOKEN`               | API token            |          |
-| `PYPAPERLESS_REQUEST_API_VERSION` | API version override |          |
+| Environment variable | Field     | Required |
+| -------------------- | --------- | :------: |
+| `PYPAPERLESS_URL`    | Base URL  |    ✓     |
+| `PYPAPERLESS_TOKEN`  | API token |          |
 
 ```bash
 export PYPAPERLESS_URL=https://paperless.example.com
 export PYPAPERLESS_TOKEN=your-api-token
-export PYPAPERLESS_REQUEST_API_VERSION=9
 ```
 
 ```python
-async with Paperless() as paperless:
+from pypaperless import PaperlessClient
+
+async with PaperlessClient.from_env() as paperless:
     ...
 ```
 
 !!! note
-    `PYPAPERLESS_URL` is required. If it is not set and no `url` argument is provided, a `ValidationError` is raised immediately.
+    `PYPAPERLESS_URL` is required. If it is not set, a `ValidationError` is raised immediately.
 
 ---
 
-## The `Paperless` constructor reference
+## The `PaperlessClient` constructor reference
 
 ```python
-Paperless(
-    url: str | None = None,
+PaperlessClient(
+    url: str,
     token: str | None = None,
     *,
-    config: PaperlessSettings | None = None,
     client: httpx.AsyncClient | None = None,
-    request_api_version: int | None = None,
 )
 ```
 
-| Parameter             | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `url`                 | Hostname, IP address or full URL of your Paperless-ngx instance         |
-| `token`               | API token obtained from Paperless-ngx settings                          |
-| `config`              | A `PaperlessSettings` instance (alternative to `url` / `token`)         |
-| `client`              | Optional custom HTTP client (see below)                                 |
-| `request_api_version` | Pin a specific Paperless API version (defaults to the latest supported) |
+| Parameter | Description                                                     |
+| --------- | --------------------------------------------------------------- |
+| `url`     | Hostname, IP address or full URL of your Paperless-ngx instance |
+| `token`   | API token obtained from Paperless-ngx settings                  |
+| `client`  | Optional custom HTTP client (see below)                         |
+
+For config-object or environment-variable based initialization use the factory
+class methods:
+
+| Factory method                              | Description                                           |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `PaperlessClient.from_config(cfg)`          | Initialize from a `PaperlessSettings` instance        |
+| `PaperlessClient.from_env()`                | Initialize from `PYPAPERLESS_URL` / `PYPAPERLESS_TOKEN` env vars |
 
 ---
 
@@ -89,7 +94,9 @@ Paperless(
 The recommended approach - `initialize()` and `close()` are called automatically:
 
 ```python
-async with Paperless("localhost:8000", "your-api-token") as paperless:
+from pypaperless import PaperlessClient
+
+async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
     # fully initialised here
     ...
 # connection closed here
@@ -98,7 +105,7 @@ async with Paperless("localhost:8000", "your-api-token") as paperless:
 ### Manual
 
 ```python
-paperless = Paperless("localhost:8000", "your-api-token")
+paperless = PaperlessClient("localhost:8000", "your-api-token")
 await paperless.initialize()
 
 try:
@@ -128,7 +135,7 @@ You can supply your own `httpx.AsyncClient`. This is useful when you need to:
 
 ```python
 import httpx
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 
 custom_client = httpx.AsyncClient(
     timeout=httpx.Timeout(30.0),
@@ -136,24 +143,12 @@ custom_client = httpx.AsyncClient(
     headers={"X-Custom-Header": "value"},
 )
 
-async with Paperless("localhost:8000", "your-api-token", client=custom_client) as paperless:
+async with PaperlessClient("localhost:8000", "your-api-token", client=custom_client) as paperless:
     ...
 ```
 
 !!! note
     When you provide a `client`, pypaperless does **not** close it automatically when `close()` is called. You are responsible for managing its lifecycle.
-
----
-
-## Pinning the API version
-
-By default, pypaperless negotiates the API version from the `x-api-version` response header (currently targeting version **9**). You can override this:
-
-```python
-paperless = Paperless("localhost:8000", "your-api-token", request_api_version=8)
-```
-
-This can be useful when connecting to an older Paperless-ngx release that does not yet support the latest API version.
 
 ---
 
@@ -172,29 +167,32 @@ The library logs `INFO`-level messages for `initialize()` and `close()` events.
 
 ## Available resources
 
-After initialisation, the following services are available on the `Paperless` instance:
+After initialisation, the following services are available on the `PaperlessClient` instance:
 
-| Attribute                  | Resource                    |
-| -------------------------- | --------------------------- |
-| `paperless.config`         | Application configuration   |
-| `paperless.correspondents` | Correspondents              |
-| `paperless.custom_fields`  | Custom fields               |
-| `paperless.documents`      | Documents                   |
-| `paperless.document_types` | Document types              |
-| `paperless.groups`         | User groups                 |
-| `paperless.mail_accounts`  | Mail accounts               |
-| `paperless.mail_rules`     | Mail rules                  |
-| `paperless.processed_mail` | Processed mail              |
-| `paperless.saved_views`    | Saved views                 |
-| `paperless.share_links`    | Share links                 |
-| `paperless.statistics`     | Statistics                  |
-| `paperless.remote_version` | Remote version info         |
-| `paperless.status`         | System status               |
-| `paperless.storage_paths`  | Storage paths               |
-| `paperless.tags`           | Tags                        |
-| `paperless.tasks`          | Background tasks            |
-| `paperless.users`          | Users                       |
-| `paperless.workflows`      | Workflows                   |
-| `paperless.cache`          | Local cache (custom fields) |
+| Attribute                  | Resource                  |
+| -------------------------- | ------------------------- |
+| `paperless.bulk_edit_objects` | Bulk edit (non-document objects) |
+| `paperless.config`         | Application configuration |
+| `paperless.correspondents` | Correspondents            |
+| `paperless.custom_fields`  | Custom fields             |
+| `paperless.documents`      | Documents                 |
+| `paperless.document_types` | Document types            |
+| `paperless.groups`         | User groups               |
+| `paperless.mail_accounts`  | Mail accounts             |
+| `paperless.mail_rules`     | Mail rules                |
+| `paperless.processed_mail` | Processed mail            |
+| `paperless.profile`        | User profile              |
+| `paperless.saved_views`    | Saved views               |
+| `paperless.search`         | Full-text search          |
+| `paperless.share_links`    | Share links               |
+| `paperless.statistics`     | Statistics                |
+| `paperless.remote_version` | Remote version info       |
+| `paperless.status`         | System status             |
+| `paperless.storage_paths`  | Storage paths             |
+| `paperless.tags`           | Tags                      |
+| `paperless.tasks`          | Background tasks          |
+| `paperless.trash`          | Trash (soft-deleted docs) |
+| `paperless.users`          | Users                     |
+| `paperless.workflows`      | Workflows                 |
 
 See [Resources](resources.md) for the full feature matrix.

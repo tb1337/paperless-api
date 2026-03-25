@@ -66,7 +66,7 @@ result = await paperless.search("old project")
 
 # Delete all matched documents
 for doc in result.documents or []:
-    await doc.delete()
+    await paperless.documents.delete(doc)
 
 # The correspondents list works the same way
 for corr in result.correspondents or []:

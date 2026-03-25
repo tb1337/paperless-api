@@ -61,23 +61,10 @@ await paperless.correspondents.update(c, only_changed=False)
 
 ```python
 c = await paperless.correspondents(7)
-deleted = await paperless.correspondents.delete(c)  # True on success
+await paperless.correspondents.delete(c)
 ```
 
-## Shortcuts
-
-Model instances expose `update()` and `delete()` directly; draft instances expose `save()`:
-
-```python
-c = await paperless.correspondents(7)
-c.name = "ACME Corp (renamed)"
-changed = await c.update()
-
-await c.delete()
-
-draft = paperless.correspondents.create(name="New Corp")
-pk = await draft.save()
-```
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.
 
 ## Permissions
 

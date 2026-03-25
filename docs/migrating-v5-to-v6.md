@@ -13,23 +13,26 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 - **Models were too tightly coupled to the HTTP layer.** In v5, every model instance carried a reference to the client and called it directly. That made testing awkward and sharing models between contexts impossible. v6 models are plain data - all I/O goes through services.
 - **No runtime type safety.** v5 used dataclasses with manual dict conversion, so bad API responses would silently produce wrong values. v6 uses Pydantic v2, which validates every response at parse time.
 - **`aiohttp` got removed.** `httpx` is modern, has a cleaner sync/async API and a built-in mock transport that makes testing easier.
+- **Model-level CRUD shortcuts removed — replaced by a dispatcher.** `doc.update()`, `doc.delete()`, and `draft.save()` are gone. Instead, call the operations directly on the `PaperlessClient`; the dispatcher routes to the correct service automatically: `await paperless.update(model)`, `await paperless.delete(model)`, `await paperless.save(draft)`. See [CRUD](#crud).
 
 ---
 
 ## Quick checklist
 
-| #   | What to change                                                                                                  | Section                                                                       |
-| --- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| 1   | Replace `aiohttp` / `yarl` with `httpx`                                                                         | [Dependencies](#dependencies)                                                 |
-| 2   | Update `Paperless(...)` constructor arguments; new: `PaperlessSettings` and env vars                            | [Initializing the client](#initializing-the-client)                           |
-| 3   | Replace `reduce()` with `filter()` - different call pattern                                                     | [Iteration and filtering](#iteration-and-filtering)                           |
-| 4   | `draft()` renamed to `create()`; `update()`, `delete()`, `save()` moved to services - shortcuts still on models | [CRUD](#crud)                                                                 |
-| 5   | Replace `request_permissions = True` with `with_permissions()`                                                  | [Permissions](#permissions)                                                   |
-| 6   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. - shortcuts are back                                    | [Document convenience methods renamed](#document-convenience-methods-renamed) |
-| 7   | Note deletion: `note.delete()` → service call                                                                   | [Document notes](#document-notes)                                             |
-| 8   | `generate_api_token()` custom-client argument renamed                                                           | [Token generation](#token-generation)                                         |
-| 9   | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`         | [New resources](#new-resources)                                               |
-| 10  | Rename four `Paperless`-prefixed exception classes                                                              | [Error handling](#error-handling)                                             |
+| #   | What to change                                                                                                        | Section                                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 1   | Replace `aiohttp` / `yarl` with `httpx`                                                                               | [Dependencies](#dependencies)                                                 |
+| 2   | Rename class `Paperless` → `PaperlessClient`; `PaperlessConfig` → `PaperlessSettings`                                 | [Initializing the client](#initializing-the-client)                           |
+| 3   | Constructor changed: env-var mode → `PaperlessClient.from_env()`; config mode → `PaperlessClient.from_config(cfg)`    | [Initializing the client](#initializing-the-client)                           |
+| 4   | `request_api_version` removed from constructor and `PaperlessSettings`                                                | [Initializing the client](#initializing-the-client)                           |
+| 5   | Replace `reduce()` with `filter()` - different call pattern                                                           | [Iteration and filtering](#iteration-and-filtering)                           |
+| 6   | `draft()` renamed to `create()`; model shortcuts `update()`, `delete()`, `save()` removed - use service or dispatcher | [CRUD](#crud)                                                                 |
+| 7   | Replace `request_permissions = True` with `with_permissions()`                                                        | [Permissions](#permissions)                                                   |
+| 8   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. - shortcuts are back                                          | [Document convenience methods renamed](#document-convenience-methods-renamed) |
+| 9   | Note deletion: `note.delete()` → service call                                                                         | [Document notes](#document-notes)                                             |
+| 10  | `generate_api_token()` is now a module-level function, no longer a static class method                                | [Token generation](#token-generation)                                         |
+| 11  | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`               | [New resources](#new-resources)                                               |
+| 12  | Rename four `Paperless`-prefixed exception classes; new `DeletionError`, `DispatchError`                              | [Error handling](#error-handling)                                             |
 
 ---
 
@@ -51,7 +54,20 @@ Replace `aiohttp` and `yarl` with `httpx`:
 
 ## Initializing the client
 
-The constructor signature changed. `session` was renamed to `client`, and `request_args` was removed.
+### Class renamed
+
+The client class and settings class were renamed:
+
+| v5                | v6                  |
+| ----------------- | ------------------- |
+| `Paperless`       | `PaperlessClient`   |
+| `PaperlessConfig` | `PaperlessSettings` |
+
+Update all imports and type annotations accordingly.
+
+### Constructor signature changed
+
+In v5, the constructor accepted `url`, `token`, and `request_api_version`. In v6 the constructor only accepts `url`, `token`, and `client`. Environment-variable and config-object modes are now explicit factory class methods.
 
 === "v5"
     ```python
@@ -64,49 +80,69 @@ The constructor signature changed. `session` was renamed to `client`, and `reque
 === "v6"
     ```python
     import httpx
-    paperless = Paperless("http://localhost:8000", "mytoken")
-    paperless = Paperless("http://localhost:8000", "mytoken", client=my_httpx_client)
+    from pypaperless import PaperlessClient
+
+    paperless = PaperlessClient("http://localhost:8000", "mytoken")
+    paperless = PaperlessClient("http://localhost:8000", "mytoken", client=my_httpx_client)
     ```
 
 !!! tip "SSL / TLS customization"
     Pass a pre-configured `httpx.AsyncClient` to control TLS behaviour:
     ```python
     client = httpx.AsyncClient(verify=False)  # or verify="/path/to/cert.pem"
-    paperless = Paperless("http://localhost:8000", "mytoken", client=client)
+    paperless = PaperlessClient("http://localhost:8000", "mytoken", client=client)
     ```
 
 The `url` parameter no longer accepts `yarl.URL` objects - pass a plain string.
 
-### New: `PaperlessSettings` and environment variables
+### `PaperlessSettings` and factory class methods
 
-v6 adds two additional initialization modes via the new `PaperlessSettings` class (backed by `pydantic-settings`):
+v6 exposes `PaperlessSettings` (backed by `pydantic-settings`) and two factory class methods.
 
 **Config object** - useful when you want to construct or validate settings in one place:
 
-```python
-from pypaperless import Paperless, PaperlessSettings
+=== "v5"
+    ```python
+    from pypaperless import Paperless, PaperlessConfig
 
-cfg = PaperlessSettings(url="http://localhost:8000", token="mytoken")
-paperless = Paperless(config=cfg)
-```
+    cfg = PaperlessConfig(url="http://localhost:8000", token="mytoken")
+    paperless = Paperless(config=cfg)
+    ```
 
-**Environment variables** - pass no arguments at all; `PaperlessSettings` reads the values automatically:
+=== "v6"
+    ```python
+    from pypaperless import PaperlessClient, PaperlessSettings
 
-```python
-paperless = Paperless()
-```
+    cfg = PaperlessSettings(url="http://localhost:8000", token="mytoken")
+    paperless = PaperlessClient.from_config(cfg)
+    ```
 
-| Environment variable              | Maps to                           |
-| --------------------------------- | --------------------------------- |
-| `PYPAPERLESS_URL`                 | URL of the Paperless-ngx instance |
-| `PYPAPERLESS_TOKEN`               | API token                         |
-| `PYPAPERLESS_REQUEST_API_VERSION` | API version header (optional)     |
+**Environment variables** - use the `from_env()` factory; `PaperlessSettings` reads the values automatically:
+
+=== "v5"
+    ```python
+    paperless = Paperless()  # zero-arg constructor read env vars
+    ```
+
+=== "v6"
+    ```python
+    paperless = PaperlessClient.from_env()
+    ```
+
+| Environment variable | Maps to                           |
+| -------------------- | --------------------------------- |
+| `PYPAPERLESS_URL`    | URL of the Paperless-ngx instance |
+| `PYPAPERLESS_TOKEN`  | API token                         |
+
+!!! note
+    `PYPAPERLESS_REQUEST_API_VERSION` was removed. API version is now negotiated
+    automatically from the server's `x-api-version` response header.
 
 ---
 
 ## Token generation
 
-`generate_api_token()` is a static method on `Paperless`. The optional custom-client argument was renamed from `session` to `client`:
+`generate_api_token()` is now a **module-level function** importable from `pypaperless`, no longer a static method on `PaperlessClient`. The optional custom-client argument was also renamed from `session` to `client`.
 
 === "v5"
     ```python
@@ -115,7 +151,9 @@ paperless = Paperless()
 
 === "v6"
     ```python
-    token = await Paperless.generate_api_token(url, username, password, client=my_client)
+    from pypaperless import generate_api_token
+
+    token = await generate_api_token(url, username, password, client=my_client)
     ```
 
 ---
@@ -138,7 +176,7 @@ paperless = Paperless()
             print(doc.title)
     ```
 
-The `pages()` method was removed. Use `as_list()` or iterate directly.
+`pages()` is available and returns enhanced `Page` objects with `.items`, `.current_page`, `.last_page`, and more.
 
 === "v5"
     ```python
@@ -149,30 +187,56 @@ The `pages()` method was removed. Use `as_list()` or iterate directly.
 
 === "v6"
     ```python
-    docs = await paperless.documents.as_list()
-
-    async for doc in paperless.documents:
-        print(doc.title)
+    async for page in paperless.documents.pages(page_size=25):
+        print(f"Page {page.current_page} of {page.last_page}")
+        for doc in page:
+            print(doc.title)
     ```
+
+You can also use the convenience helpers:
+
+```python
+docs = await paperless.documents.as_list()
+ids  = await paperless.documents.all()       # list of primary keys only
+dmap = await paperless.documents.as_dict()   # {pk: Document}
+```
 
 ---
 
 ## CRUD
 
 In v5, CRUD operations lived on model instances. v6 moves the canonical API to
-the **service** level, but also re-adds **shortcuts** on the model
-instances themselves for convenience (see below).
+the **service** level. Model-level shortcuts (`doc.update()`, `doc.delete()`, `draft.save()`) have been removed.
+
+!!! tip "New in v6: client-level dispatcher"
+    Instead of calling the operation on a specific service, you can call it directly on
+    the `PaperlessClient` instance. The **dispatcher** automatically routes to the correct
+    service based on the model type — no need to know which service owns the model:
+
+    ```python
+    doc = await paperless.documents(42)
+    doc.title = "New Title"
+    await paperless.update(doc)   # routes to DocumentService.update()
+
+    await paperless.delete(doc)   # routes to DocumentService.delete()
+
+    draft = paperless.tags.create(name="urgent")
+    pk = await paperless.save(draft)  # routes to TagService.save()
+    ```
+
+    This works for all dispatchable resources: documents, correspondents, document types,
+    storage paths, tags, share links, and custom fields.
+
+v6 provides two equivalent ways to perform CRUD:
+
+- **Service-level** — call the operation on the service that owns the model type.
+- **Client-level dispatcher** — call `await paperless.update(model)` /
+  `await paperless.delete(model)` / `await paperless.save(draft)` directly on
+  the client; the dispatcher resolves the responsible service automatically.
 
 ### update()
 
 === "v5"
-    ```python
-    doc = await paperless.documents(42)
-    doc.title = "New Title"
-    await doc.update()
-    ```
-
-=== "v6"
     ```python
     doc = await paperless.documents(42)
     doc.title = "New Title"
@@ -186,15 +250,19 @@ instances themselves for convenience (see below).
     await paperless.documents.update(doc)
     ```
 
-### delete()
-
-=== "v5"
+=== "v6 (dispatcher)"
     ```python
     doc = await paperless.documents(42)
-    await doc.delete()
+    doc.title = "New Title"
+    await paperless.update(doc)  # resolves to DocumentService automatically
     ```
 
-=== "v6"
+### delete()
+
+`delete()` no longer returns a boolean. It raises `DeletionError` on failure
+(or swallows it when `silent_fail=True`).
+
+=== "v5"
     ```python
     doc = await paperless.documents(42)
     await doc.delete()
@@ -204,13 +272,21 @@ instances themselves for convenience (see below).
     ```python
     doc = await paperless.documents(42)
     await paperless.documents.delete(doc)
+    # raises DeletionError on failure
+    ```
+
+=== "v6 (dispatcher)"
+    ```python
+    doc = await paperless.documents(42)
+    await paperless.delete(doc)
     ```
 
 This applies to every resource - correspondents, tags, custom fields, etc.
 
-### save()
+### save() / create()
 
-`draft()` was renamed to `create()`. The call signature is otherwise identical.
+`draft()` was renamed to `create()`. The model-level `draft.save()` shortcut was
+removed; use the service or the dispatcher instead.
 
 === "v5"
     ```python
@@ -218,16 +294,16 @@ This applies to every resource - correspondents, tags, custom fields, etc.
     task_id = await draft.save()
     ```
 
-=== "v6"
-    ```python
-    draft = paperless.documents.create(document=raw_bytes, title="Invoice")
-    task_id = await draft.save()
-    ```
-
 === "v6 (service)"
     ```python
     draft = paperless.documents.create(document=raw_bytes, title="Invoice")
     task_id = await paperless.documents.save(draft)
+    ```
+
+=== "v6 (dispatcher)"
+    ```python
+    draft = paperless.documents.create(document=raw_bytes, title="Invoice")
+    task_id = await paperless.save(draft)
     ```
 
 For all other resources (correspondents, tags, …):
@@ -238,16 +314,16 @@ For all other resources (correspondents, tags, …):
     pk = await draft.save()
     ```
 
-=== "v6"
-    ```python
-    draft = paperless.tags.create(name="urgent")
-    pk = await draft.save()
-    ```
-
 === "v6 (service)"
     ```python
     draft = paperless.tags.create(name="urgent")
     pk = await paperless.tags.save(draft)
+    ```
+
+=== "v6 (dispatcher)"
+    ```python
+    draft = paperless.tags.create(name="urgent")
+    pk = await paperless.save(draft)
     ```
 
 ---
@@ -280,27 +356,34 @@ The mutable `request_permissions` setter was replaced by a `with_permissions()` 
 
 ## Document convenience methods renamed
 
-The `get_*` shortcut methods on `Document` instances were renamed. The canonical API lives on the service, but the model shortcuts are still available:
+The `get_*` shortcut methods that existed in v5 on `Document` instances are **fully removed** in v6.
+All file and metadata access now goes through the service:
 
-| v5 (on model instance)                  | v6 shortcut                         | v6                                                          |
-| --------------------------------------- | ----------------------------------- | ----------------------------------------------------------- |
-| `await doc.get_download()`              | `await doc.download()`              | `await paperless.documents.download(doc.id)`                |
-| `await doc.get_download(original=True)` | `await doc.download(original=True)` | `await paperless.documents.download(doc.id, original=True)` |
-| `await doc.get_preview()`               | `await doc.preview()`               | `await paperless.documents.preview(doc.id)`                 |
-| `await doc.get_thumbnail()`             | `await doc.thumbnail()`             | `await paperless.documents.thumbnail(doc.id)`               |
-| `await doc.get_metadata()`              | `await doc.metadata()`              | `await paperless.documents.metadata(doc.id)`                |
-| `await doc.get_suggestions()`           | `await doc.suggestions()`           | `await paperless.documents.suggestions(doc.id)`             |
-| *(not available)*                       | `async for d in doc.more_like()`    | `async for d in paperless.documents.more_like(doc.id)`      |
-| *(not available)*                       | `await doc.email(...)`              | `await paperless.documents.email(doc.id, ...)`              |
-| *(not available)*                       | `notes = await doc.notes()`         | `notes = await paperless.documents.notes(doc.id)`           |
-| *(not available)*                       | `entries = await doc.history()`     | `entries = await paperless.documents.history(doc.id)`       |
-| *(not available)*                       | `links = await doc.share_links()`   | `links = await paperless.documents.share_links(doc.id)`     |
+| v5 (on model instance)                  | v6                                                          |
+| --------------------------------------- | ----------------------------------------------------------- |
+| `await doc.get_download()`              | `await paperless.documents.download(doc.id)`                |
+| `await doc.get_download(original=True)` | `await paperless.documents.download(doc.id, original=True)` |
+| `await doc.get_preview()`               | `await paperless.documents.preview(doc.id)`                 |
+| `await doc.get_thumbnail()`             | `await paperless.documents.thumbnail(doc.id)`               |
+| `await doc.get_metadata()`              | `await paperless.documents.metadata(doc.id)`                |
+| `await doc.get_suggestions()`           | `await paperless.documents.suggestions(doc.id)`             |
+| *(not available)*                       | `async for d in paperless.documents.more_like(doc.id):`     |
+| *(not available)*                       | `await paperless.documents.email(doc.id, ...)`              |
+
+**Sub-service shortcuts** for notes, history and share links remain available via bound
+sub-service properties on the `Document` instance:
+
+| Access                    | Equivalent                                      |
+| ------------------------- | ----------------------------------------------- |
+| `await doc.notes()`       | `await paperless.documents.notes(doc.id)`       |
+| `await doc.history()`     | `await paperless.documents.history(doc.id)`     |
+| `await doc.share_links()` | `await paperless.documents.share_links(doc.id)` |
 
 ---
 
 ## Document notes
 
-Note deletion moved from the model to the service, consistent with the general CRUD pattern.
+Note deletion moved from the model to the service, consistent with the general CRUD pattern. The model-level `note.delete()` shortcut was removed.
 
 === "v5"
     ```python
@@ -311,18 +394,12 @@ Note deletion moved from the model to the service, consistent with the general C
 
 === "v6"
     ```python
-    doc = await paperless.documents(42)
-    notes = await doc.notes()
-    for note in notes:
-        await note.delete()
-    ```
-
-=== "v6 (service)"
-    ```python
     notes = await paperless.documents.notes(42)
     for note in notes:
         await paperless.documents.notes.delete(note)
     ```
+
+The `doc.notes` property on `Document` instances still exposes a bound `DocumentNoteService`:
 
 Creating a new note:
 
@@ -336,7 +413,7 @@ Creating a new note:
     ```python
     doc = await paperless.documents(42)
     draft = doc.notes.create(note="Checked.")
-    note_id, doc_id = await draft.save()
+    note_id = await doc.notes.save(draft)
     ```
 
 !!! note
@@ -345,8 +422,11 @@ Creating a new note:
 === "v6 (service)"
     ```python
     draft = paperless.documents.notes.create(42, note="Checked.")
-    note_id, doc_id = await paperless.documents.notes.save(draft)
+    note_id = await paperless.documents.notes.save(draft)
     ```
+
+!!! note
+    `save()` now returns only the new note `id` as `int`. In v5 it returned a `(note_id, doc_id)` tuple.
 
 ---
 
@@ -544,10 +624,17 @@ Four exception classes lost their `Paperless` prefix to follow standard Python n
 
 v6 introduces intermediate base classes that you can use to catch whole groups of related errors:
 
-| Class                 | Catches                                                             |
-| --------------------- | ------------------------------------------------------------------- |
-| `InitializationError` | All session/transport errors (unchanged from v5)                    |
-| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `BulkEditError`    |
-| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                 |
-| `ResourceError`       | `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
-| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                 |
+| Class                 | Catches                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `InitializationError` | All session/transport errors (unchanged from v5)                                     |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `BulkEditError`                     |
+| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                  |
+| `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
+| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                  |
+
+### New exceptions
+
+| Exception       | When raised                                                             |
+| --------------- | ----------------------------------------------------------------------- |
+| `DeletionError` | `delete()` call receives a non-2xx HTTP response                        |
+| `DispatchError` | `update()` / `delete()` / `save()` called on an unregistered model type |

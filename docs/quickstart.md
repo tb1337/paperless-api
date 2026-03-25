@@ -28,10 +28,10 @@ The cleanest way to use pypaperless is as an async context manager. It calls `in
 
 ```python
 import asyncio
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 
 async def main():
-    async with Paperless("localhost:8000", "your-api-token") as paperless:
+    async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
         # paperless is now ready to use
         async for document in paperless.documents:
             print(document.id, document.title)
@@ -45,7 +45,7 @@ You can also manage the lifecycle manually by calling `initialize()` and `close(
 
 ```python
 async def main():
-    paperless = Paperless("localhost:8000", "your-api-token")
+    paperless = PaperlessClient("localhost:8000", "your-api-token")
     await paperless.initialize()
 
     # do something...
@@ -55,16 +55,17 @@ async def main():
 
 ### Configuration via environment variables
 
-Instead of hard-coding credentials you can set environment variables and call `Paperless()` without any arguments:
+Instead of hard-coding credentials you can set environment variables and call `PaperlessClient.from_env()`:
 
 ```bash
 export PYPAPERLESS_URL=https://paperless.example.com
 export PYPAPERLESS_TOKEN=your-api-token
-export PYPAPERLESS_REQUEST_API_VERSION=9
 ```
 
 ```python
-async with Paperless() as paperless:
+from pypaperless import PaperlessClient
+
+async with PaperlessClient.from_env() as paperless:
     ...
 ```
 
@@ -89,16 +90,18 @@ The `url` parameter accepts a variety of formats. pypaperless normalises the URL
 
 ## Generating an API token
 
-If you don't have a token yet, you can generate one from a username and password using the static helper method:
+If you don't have a token yet, you can generate one from a username and password using the `generate_api_token` helper function:
 
 ```python
-token = await Paperless.generate_api_token(
+from pypaperless import generate_api_token, PaperlessClient
+
+token = await generate_api_token(
     "localhost:8000",
     username="admin",
     password="secret",
 )
 
-paperless = Paperless("localhost:8000", token)
+paperless = PaperlessClient("localhost:8000", token)
 ```
 
 !!! warning
@@ -111,7 +114,9 @@ paperless = Paperless("localhost:8000", token)
 After `initialize()`, you can inspect the host:
 
 ```python
-async with Paperless("localhost:8000", "your-api-token") as paperless:
+from pypaperless import PaperlessClient
+
+async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
     print(paperless.is_initialized)   # True
     print(paperless.host_version)     # e.g. "2.15.0"
     print(paperless.host_api_version) # e.g. 9
