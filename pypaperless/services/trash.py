@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.documents import Document
 from pypaperless.models.filters import DocumentFilters
 
@@ -18,7 +18,7 @@ class TrashService(
 ):
     """Represent a factory for Paperless trashed `Document` models."""
 
-    _api_path = API_PATH["trash"]
+    _api_path = EndpointPath.TRASH
     _resource = PaperlessResource.TRASH
 
     _resource_cls = Document

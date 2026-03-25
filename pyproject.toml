@@ -114,6 +114,10 @@ ignore = [
 ]
 select = ["ALL"]
 
+[tool.ruff.lint.per-file-ignores]
+# S105: false positive – StrEnum members named TOKEN/REMOVE_PASSWORD hold URL paths, not passwords
+"pypaperless/const.py" = ["S105"]
+
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 mark-parentheses = false

@@ -7,7 +7,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from .data import DATA_SCHEMA
@@ -29,7 +29,7 @@ async def paperless_fixture(
 ) -> AsyncGenerator[PaperlessClient, Any]:
     """Return a PaperlessClient object with given version."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         json=DATA_SCHEMA,

@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .base import PaperlessModel
 
@@ -10,7 +10,7 @@ from .base import PaperlessModel
 class Config(PaperlessModel):
     """Represent a Paperless `Config`."""
 
-    _api_path: ClassVar[str] = API_PATH["config_single"]
+    _api_path: ClassVar[str] = EndpointPath.CONFIG_SINGLE
 
     id: int | None = None
     user_args: str | None = None

@@ -8,7 +8,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import (
     AsnRequestError,
     DeletionError,
@@ -80,7 +80,7 @@ class TestDocuments:
         draft.document = backup
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_POST}",
             status_code=200,
             json="11112222-3333-4444-5555-666677778888",
         )
@@ -95,7 +95,7 @@ class TestDocuments:
         """Updating a document PATCHes the changed field."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
@@ -104,7 +104,7 @@ class TestDocuments:
         to_update.title = new_title
         httpx_mock.add_response(
             method="PATCH",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json={**to_update._snapshot, "title": new_title},
         )
@@ -115,14 +115,14 @@ class TestDocuments:
         """Deleting a document returns True on 204 and False on any other status."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
         to_delete = await paperless.documents(1)
         httpx_mock.add_response(
             method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=204,
         )
         await paperless.documents.delete(to_delete)
@@ -131,7 +131,7 @@ class TestDocuments:
         """get_metadata() returns a DocumentMeta with original and archive metadata lists."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_meta']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_META}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_METADATA,
         )
@@ -150,7 +150,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_download']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_DOWNLOAD}".format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -168,7 +168,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_preview']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_PREVIEW}".format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -183,7 +183,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_thumbnail']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_THUMBNAIL}".format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -197,7 +197,7 @@ class TestDocuments:
         """get_suggestions() returns a DocumentSuggestions instance."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_suggestions']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SUGGESTIONS}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_SUGGESTIONS,
         )
@@ -207,14 +207,14 @@ class TestDocuments:
         """get_next_asn() returns an int on success and raises AsnRequestError on failure."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NEXT_ASN}",
             status_code=200,
             json=1337,
         )
         assert isinstance(await paperless.documents.get_next_asn(), int)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_next_asn']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NEXT_ASN}",
             status_code=500,
         )
         with pytest.raises(AsnRequestError):
@@ -224,7 +224,9 @@ class TestDocuments:
         """search(), search(custom_field_query=), and more_like() return typed items."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents']}" + r"\?.*query.*$"),
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}" + r"\?.*query.*$"
+            ),
             status_code=200,
             json=DATA_DOCUMENTS_SEARCH,
         )
@@ -237,7 +239,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                f"{PAPERLESS_TEST_URL}{API_PATH['documents']}"
+                f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}"
                 r"\?.*custom_field_query.*$"
             ),
             status_code=200,
@@ -252,7 +254,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                f"{PAPERLESS_TEST_URL}{API_PATH['documents']}"
+                f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}"
                 r"\?.*more_like_id.*$"
             ),
             status_code=200,
@@ -267,7 +269,7 @@ class TestDocuments:
         """Notes list returns DocumentNote instances; missing pk raises PrimaryKeyRequiredError."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
@@ -275,7 +277,7 @@ class TestDocuments:
         assert isinstance(item, Document)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
@@ -292,7 +294,7 @@ class TestDocuments:
         """Note draft validates required fields and POSTs to the notes endpoint."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
@@ -306,7 +308,7 @@ class TestDocuments:
         draft.note = backup
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
@@ -317,14 +319,14 @@ class TestDocuments:
         """Deleting a note returns True on 204."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
@@ -332,7 +334,7 @@ class TestDocuments:
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
-                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
             ),
             status_code=204,
         )
@@ -340,7 +342,7 @@ class TestDocuments:
         # failed note deletion raises DeletionError
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
@@ -348,7 +350,7 @@ class TestDocuments:
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
-                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
             ),
             status_code=404,
         )
@@ -357,7 +359,7 @@ class TestDocuments:
         # silent_fail=True suppresses DeletionError
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
@@ -365,7 +367,7 @@ class TestDocuments:
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
-                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_notes']}".format(pk=1) + r"\?.*$"
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
             ),
             status_code=404,
         )
@@ -375,7 +377,7 @@ class TestDocuments:
         """History returns typed entries; direct service call and missing pk error both work."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
@@ -383,7 +385,7 @@ class TestDocuments:
         httpx_mock.add_response(
             method="GET",
             url=re.compile(
-                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_history']}".format(pk=1) + r".*$"
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_HISTORY}".format(pk=1) + r".*$"
             ),
             status_code=200,
             json=DATA_DOCUMENT_HISTORY,
@@ -401,7 +403,7 @@ class TestDocuments:
         httpx_mock.add_response(
             method="GET",
             url=re.compile(
-                r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['documents_history']}".format(pk=1) + r".*$"
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_HISTORY}".format(pk=1) + r".*$"
             ),
             status_code=200,
             json=DATA_DOCUMENT_HISTORY,
@@ -419,14 +421,14 @@ class TestDocuments:
         """Share links returns ShareLink instances; missing pk raises PrimaryKeyRequiredError."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENTS["results"][0],
         )
         item = await paperless.documents(1)
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_share_links']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SHARE_LINKS}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_SHARE_LINKS,
         )
@@ -438,7 +440,7 @@ class TestDocuments:
 
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_share_links']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SHARE_LINKS}".format(pk=1),
             status_code=200,
             json=DATA_DOCUMENT_SHARE_LINKS,
         )
@@ -455,7 +457,7 @@ class TestDocuments:
         """Without cache, custom fields are plain CustomFieldValue instances."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=2),
             status_code=200,
             json=DATA_DOCUMENTS["results"][1],
         )
@@ -472,7 +474,7 @@ class TestDocuments:
         """With cache, custom fields are typed; operators += and -= update the list."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}" + r"\?.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.CUSTOM_FIELDS}" + r"\?.*$"),
             status_code=200,
             json=DATA_CUSTOM_FIELDS,
         )
@@ -480,7 +482,7 @@ class TestDocuments:
 
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_single']}".format(pk=2),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=2),
             status_code=200,
             json=DATA_DOCUMENTS["results"][1],
         )
@@ -552,7 +554,7 @@ class TestDocuments:
 
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_post']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_POST}",
             status_code=200,
             json="aaaabbbb-cccc-dddd-eeee-ffffffffffff",
         )
@@ -571,7 +573,7 @@ class TestDocuments:
         """Email dispatch succeeds on 200 and raises SendEmailError on 400."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_EMAIL}",
             status_code=200,
             json={"message": "Email sent"},
         )
@@ -584,7 +586,7 @@ class TestDocuments:
 
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_email']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_EMAIL}",
             status_code=400,
         )
         with pytest.raises(SendEmailError):
@@ -615,7 +617,7 @@ class TestDocuments:
             method="GET",
             url=re.compile(
                 r"^"
-                + f"{PAPERLESS_TEST_URL}{API_PATH['documents_download']}".format(pk=1)
+                + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_DOWNLOAD}".format(pk=1)
                 + r"\?.*$"
             ),
             status_code=200,
@@ -636,7 +638,7 @@ class TestDocuments:
         # Use Correspondent which has only simple string/int fields that won't mismatch
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=1),
             status_code=200,
             json={"id": 1, "name": "ACME", "slug": "acme"},
         )

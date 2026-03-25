@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
@@ -63,7 +63,7 @@ class PaperlessModel(_PaperlessBase):
         use_enum_values=False,
     )
 
-    _api_path: ClassVar[str] = API_PATH["index"]
+    _api_path: ClassVar[str] = EndpointPath.INDEX
     _pk_field: ClassVar[str] = "id"
 
     _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)

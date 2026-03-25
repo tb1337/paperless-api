@@ -3,7 +3,7 @@
 import datetime
 from typing import ClassVar
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
 from .base import PaperlessModel
@@ -16,7 +16,7 @@ class Correspondent(
 ):
     """Represent a Paperless `Correspondent`."""
 
-    _api_path: ClassVar[str] = API_PATH["correspondents_single"]
+    _api_path: ClassVar[str] = EndpointPath.CORRESPONDENTS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CORRESPONDENTS
 
     id: int | None = None
@@ -34,7 +34,7 @@ class CorrespondentDraft(
 ):
     """Represent a new `Correspondent`, which is not yet stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["correspondents"]
+    _api_path: ClassVar[str] = EndpointPath.CORRESPONDENTS
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CORRESPONDENTS
 
     _create_required_fields: ClassVar[set[str]] = {

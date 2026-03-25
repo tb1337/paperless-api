@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.correspondents import Correspondent, CorrespondentDraft
 from pypaperless.models.filters import CorrespondentFilters
 
@@ -23,7 +23,7 @@ class CorrespondentService(
 ):
     """Represent a factory for Paperless `Correspondent` models."""
 
-    _api_path = API_PATH["correspondents"]
+    _api_path = EndpointPath.CORRESPONDENTS
     _resource = PaperlessResource.CORRESPONDENTS
 
     _draft_cls = CorrespondentDraft

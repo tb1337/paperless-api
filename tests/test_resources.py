@@ -8,7 +8,7 @@ from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
 from pypaperless.builders import SearchQuery
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import BulkEditError, TaskNotFoundError
 from pypaperless.models import (
     Config,
@@ -50,7 +50,7 @@ async def test_config_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) ->
     """config() fetches the singleton Config without requiring a pk."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['config_single']}".format(pk=1),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.CONFIG_SINGLE}".format(pk=1),
         status_code=200,
         json=DATA_CONFIG[0],
     )
@@ -68,7 +68,7 @@ async def test_remote_version_call(httpx_mock: HTTPXMock, paperless: PaperlessCl
     """remote_version() returns version string and update_available flag."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.REMOTE_VERSION}",
         status_code=200,
         json=DATA_REMOTE_VERSION,
     )
@@ -87,7 +87,7 @@ async def test_profile_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) -
     """profile() returns a Profile with expected field types."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=DATA_PROFILE,
     )
@@ -106,7 +106,7 @@ async def test_profile_update(httpx_mock: HTTPXMock, paperless: PaperlessClient)
     updated = {**DATA_PROFILE, "first_name": "Patched", "last_name": "User"}
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=updated,
     )
@@ -121,7 +121,7 @@ async def test_profile_update_email(httpx_mock: HTTPXMock, paperless: PaperlessC
     updated = {**DATA_PROFILE, "email": "new@example.com"}
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=updated,
     )
@@ -134,7 +134,7 @@ async def test_profile_update_password(httpx_mock: HTTPXMock, paperless: Paperle
     """profile.update(password=) PATCHes only the password field."""
     httpx_mock.add_response(
         method="PATCH",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         status_code=200,
         json=DATA_PROFILE,
     )
@@ -151,7 +151,7 @@ async def test_statistics_call(httpx_mock: HTTPXMock, paperless: PaperlessClient
     """statistics() returns typed statistics with document file type counts."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['statistics']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.STATISTICS}",
         status_code=200,
         json=DATA_STATISTICS,
     )
@@ -172,7 +172,7 @@ async def test_status_call(httpx_mock: HTTPXMock, paperless: PaperlessClient) ->
     """status() returns a Status with typed sub-objects."""
     httpx_mock.add_response(
         method="GET",
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.STATUS}",
         status_code=200,
         json=DATA_STATUS,
     )
@@ -229,7 +229,7 @@ class TestTasks:
         """Iterating over tasks yields Task instances."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r".*$"),
             status_code=200,
             json=DATA_TASKS,
         )
@@ -240,7 +240,7 @@ class TestTasks:
         """tasks.filter() passes kwargs as query params."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?.*status.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?.*status.*$"),
             status_code=200,
             json=DATA_TASKS,
         )
@@ -251,7 +251,7 @@ class TestTasks:
         """tasks(pk) fetches by primary key."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1),
             status_code=200,
             json=DATA_TASKS[0],
         )
@@ -263,7 +263,7 @@ class TestTasks:
         """tasks(uuid) fetches by task UUID."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
             status_code=200,
             json=DATA_TASKS,
         )
@@ -277,7 +277,7 @@ class TestTasks:
         """tasks(unknown_pk) raises HTTPStatusError."""
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_single']}".format(pk=1337),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1337),
             status_code=404,
         )
         with pytest.raises(httpx.HTTPStatusError):
@@ -289,7 +289,7 @@ class TestTasks:
         """tasks(unknown_uuid) raises TaskNotFoundError."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}" + r"\?task_id.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
             status_code=200,
             json=[],
         )
@@ -300,7 +300,7 @@ class TestTasks:
         """tasks.acknowledge([...]) POSTs and returns acknowledged count."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_acknowledge']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_ACKNOWLEDGE}",
             status_code=200,
             json={"result": 1},
         )
@@ -311,7 +311,7 @@ class TestTasks:
         """tasks.run(task_id) POSTs and returns a Task."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks_run']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_RUN}",
             status_code=200,
             json=DATA_TASKS[0],
         )
@@ -332,7 +332,7 @@ class TestMailAccounts:
         payload = {"success": True}
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_test']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.MAIL_ACCOUNTS_TEST}",
             status_code=200,
             json=payload,
         )
@@ -343,7 +343,7 @@ class TestMailAccounts:
         """mail_accounts.process(pk) POSTs to the account process endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['mail_accounts_process']}".format(pk=1),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.MAIL_ACCOUNTS_PROCESS}".format(pk=1),
             status_code=200,
             json={"result": "ok"},
         )
@@ -373,7 +373,7 @@ class TestTrash:
         """Iterating over trash yields Document instances with deleted_at set."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['trash']}" + r"\?.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}" + r"\?.*$"),
             status_code=200,
             json=DATA_TRASH,
         )
@@ -387,7 +387,7 @@ class TestTrash:
         """restore() POSTs to the trash endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "restored"},
         )
@@ -397,7 +397,7 @@ class TestTrash:
         """empty() empties all or specific documents from the trash."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "emptied"},
         )
@@ -405,7 +405,7 @@ class TestTrash:
 
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",
             status_code=200,
             json={"result": "emptied"},
         )
@@ -424,7 +424,7 @@ class TestSearch:
         """search('query') returns a SearchResult with documents."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -440,7 +440,7 @@ class TestSearch:
         """search('query', db_only=True) passes db_only param and returns SearchResult."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*db_only.*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*db_only.*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -454,7 +454,7 @@ class TestSearch:
         """search(SearchQuery(...)) converts the builder to a string automatically."""
         httpx_mock.add_response(
             method="GET",
-            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH['search']}" + r".*$"),
+            url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}" + r".*$"),
             status_code=200,
             json=DATA_SEARCH,
         )
@@ -476,7 +476,7 @@ class TestBulkEditObjects:
         """set_permissions() POSTs the correct payload and returns None."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -503,7 +503,7 @@ class TestBulkEditObjects:
         """set_permissions() without owner/permissions omits those keys."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -519,7 +519,7 @@ class TestBulkEditObjects:
         """delete() POSTs the correct payload and returns None."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['bulk_edit_objects']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.BULK_EDIT_OBJECTS}",
             status_code=200,
             json=DATA_BULK_EDIT_OBJECTS,
         )
@@ -547,7 +547,7 @@ class TestDocumentsBulkEdit:
         """set_correspondent() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -563,7 +563,7 @@ class TestDocumentsBulkEdit:
         """set_document_type() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -578,7 +578,7 @@ class TestDocumentsBulkEdit:
         """set_storage_path() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -591,7 +591,7 @@ class TestDocumentsBulkEdit:
         """add_tag() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -604,7 +604,7 @@ class TestDocumentsBulkEdit:
         """remove_tag() POSTs the correct payload."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -617,7 +617,7 @@ class TestDocumentsBulkEdit:
         """modify_tags() POSTs both add/remove lists."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -633,7 +633,7 @@ class TestDocumentsBulkEdit:
         """modify_custom_fields() POSTs dict-style custom field input."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -649,7 +649,7 @@ class TestDocumentsBulkEdit:
         """set_permissions() includes owner and set_permissions key in parameters."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -667,7 +667,7 @@ class TestDocumentsBulkEdit:
         """delete() POSTs to the dedicated delete endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_delete']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_DELETE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -679,7 +679,7 @@ class TestDocumentsBulkEdit:
         """reprocess() POSTs to the dedicated reprocess endpoint."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_reprocess']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_REPROCESS}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -691,7 +691,7 @@ class TestDocumentsBulkEdit:
         """rotate() POSTs degrees and source_mode."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_rotate']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_ROTATE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -704,7 +704,7 @@ class TestDocumentsBulkEdit:
         """merge() POSTs optional metadata_document_id when provided."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_merge']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_MERGE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -720,7 +720,7 @@ class TestDocumentsBulkEdit:
         """edit_pdf() wraps the single document in a list."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_edit_pdf']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_EDIT_PDF}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -735,7 +735,7 @@ class TestDocumentsBulkEdit:
         """remove_password() POSTs password and source flags."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_remove_password']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_REMOVE_PASSWORD}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -751,7 +751,7 @@ class TestDocumentsBulkEdit:
         """set_permissions() omits owner/set_permissions when not given (L235->237, L237->239)."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -767,7 +767,7 @@ class TestDocumentsBulkEdit:
         """merge() must omit metadata_document_id when not provided (L336->338)."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_merge']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_MERGE}",
             status_code=200,
             json=DATA_DOCUMENTS_BULK_EDIT,
         )
@@ -782,7 +782,7 @@ class TestDocumentsBulkEdit:
         """A non-OK result field (e.g. 'ERROR') raises BulkEditError on HTTP 200."""
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['documents_bulk_edit']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_BULK_EDIT}",
             status_code=200,
             json={"result": "ERROR"},
         )

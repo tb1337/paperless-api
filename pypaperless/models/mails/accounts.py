@@ -3,7 +3,7 @@
 import datetime
 from typing import ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
 
@@ -11,7 +11,7 @@ from pypaperless.models.base import PaperlessModel
 class MailAccount(PaperlessModel, mixins.SecurableModel):
     """Represent a Paperless `MailAccount`."""
 
-    _api_path: ClassVar[str] = API_PATH["mail_accounts_single"]
+    _api_path: ClassVar[str] = EndpointPath.MAIL_ACCOUNTS_SINGLE
 
     id: int | None = None
     name: str | None = None

@@ -6,7 +6,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .const import PAPERLESS_TEST_URL
 from .data import (
@@ -53,7 +53,7 @@ async def test_service_filter_accepts_typed_kwargs(
     """service.filter() accepts typed filter kwargs and iterates results without error."""
     httpx_mock.add_response(
         method="GET",
-        url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{API_PATH[api_key]}" + r"\?.*$"),
+        url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath[api_key.upper()]}" + r"\?.*$"),
         status_code=200,
         json=mock_data,
     )

@@ -2,7 +2,7 @@
 
 from typing import cast
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.mails.accounts import MailAccount
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
@@ -16,7 +16,7 @@ class MailAccountService(
 ):
     """Represent a factory for Paperless `MailAccount` models."""
 
-    _api_path = API_PATH["mail_accounts"]
+    _api_path = EndpointPath.MAIL_ACCOUNTS
     _resource = PaperlessResource.MAIL_ACCOUNTS
 
     _resource_cls = MailAccount
@@ -33,7 +33,7 @@ class MailAccountService(
         """
         return cast(
             "dict[str, object]",
-            await self._runtime.transport.post(API_PATH["mail_accounts_test"], json={}),
+            await self._runtime.transport.post(EndpointPath.MAIL_ACCOUNTS_TEST, json={}),
         )
 
     async def process(self, pk: int) -> None:
@@ -49,7 +49,7 @@ class MailAccountService(
         """
         res = await self._runtime.transport.request_raw(
             "post",
-            API_PATH["mail_accounts_process"].format(pk=pk),
+            EndpointPath.MAIL_ACCOUNTS_PROCESS.format(pk=pk),
             json={},
         )
         res.raise_for_status()

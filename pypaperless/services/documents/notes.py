@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import DeletionError
 from pypaperless.models.base import DraftLike
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
@@ -18,7 +18,7 @@ class DocumentNoteService(
 ):
     """Represent a factory for Paperless `DocumentNote` models."""
 
-    _api_path = API_PATH["documents_notes"]
+    _api_path = EndpointPath.DOCUMENTS_NOTES
     _resource = PaperlessResource.DOCUMENTS
 
     _draft_cls = DocumentNoteDraft

@@ -6,7 +6,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.dispatch import (
     _MODEL_TO_PROP_NAME,
     DispatchableCachedProperty,
@@ -127,7 +127,7 @@ class TestDispatchUpdate:
         # fetch the model via the service
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=pk),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=200,
             json=DATA_CORRESPONDENTS["results"][0],
         )
@@ -137,7 +137,7 @@ class TestDispatchUpdate:
         corr.name = "Dispatcher Updated"
         httpx_mock.add_response(
             method="PATCH",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=pk),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=200,
             json={**corr._snapshot, "name": "Dispatcher Updated"},
         )
@@ -152,7 +152,7 @@ class TestDispatchUpdate:
         pk = DATA_CORRESPONDENTS["results"][0]["id"]
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=pk),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=200,
             json=DATA_CORRESPONDENTS["results"][0],
         )
@@ -171,7 +171,7 @@ class TestDispatchDelete:
         pk = DATA_CORRESPONDENTS["results"][0]["id"]
         httpx_mock.add_response(
             method="GET",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=pk),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=200,
             json=DATA_CORRESPONDENTS["results"][0],
         )
@@ -179,7 +179,7 @@ class TestDispatchDelete:
 
         httpx_mock.add_response(
             method="DELETE",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents_single']}".format(pk=pk),
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=204,
         )
         await paperless.delete(corr)  # must not raise
@@ -198,7 +198,7 @@ class TestDispatchSave:
         )
         httpx_mock.add_response(
             method="POST",
-            url=f"{PAPERLESS_TEST_URL}{API_PATH['correspondents']}",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS}",
             status_code=200,
             json={"id": 99, "name": "New via Dispatcher"},
         )

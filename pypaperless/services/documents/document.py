@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import AsnRequestError, SendEmailError
 from pypaperless.models.documents.document import (
     Document,
@@ -33,7 +33,7 @@ from .share_links import DocumentShareLinkService
 class DocumentSuggestionsService(ResourceService):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
-    _api_path = API_PATH["documents_suggestions"]
+    _api_path = EndpointPath.DOCUMENTS_SUGGESTIONS
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentSuggestions
@@ -50,7 +50,7 @@ class DocumentSuggestionsService(ResourceService):
 class DocumentMetaService(ResourceService, mixins.CallableService[DocumentMeta]):
     """Represent a factory for Paperless `DocumentMeta` models."""
 
-    _api_path = API_PATH["documents_meta"]
+    _api_path = EndpointPath.DOCUMENTS_META
     _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentMeta
@@ -67,7 +67,7 @@ class DocumentService(
 ):
     """Represent a factory for Paperless `Document` models."""
 
-    _api_path = API_PATH["documents"]
+    _api_path = EndpointPath.DOCUMENTS
     _resource = PaperlessResource.DOCUMENTS
 
     _draft_cls = DocumentDraft
@@ -233,7 +233,7 @@ class DocumentService(
             draft.archive_serial_number = asn
 
         """
-        res = await self._runtime.transport.request_raw("get", API_PATH["documents_next_asn"])
+        res = await self._runtime.transport.request_raw("get", EndpointPath.DOCUMENTS_NEXT_ASN)
         try:
             res.raise_for_status()
             return int(res.text)
@@ -334,6 +334,6 @@ class DocumentService(
             "use_archive_version": use_archive_version,
         }
         try:
-            await self._runtime.transport.post(API_PATH["documents_email"], json=data)
+            await self._runtime.transport.post(EndpointPath.DOCUMENTS_EMAIL, json=data)
         except Exception as exc:
             raise SendEmailError from exc

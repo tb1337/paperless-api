@@ -4,7 +4,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from . import mixins
 from .base import PaperlessModel
@@ -20,7 +20,7 @@ class SavedViewFilterRule(BaseModel):
 class SavedView(PaperlessModel, mixins.SecurableModel):
     """Represent a Paperless `SavedView`."""
 
-    _api_path: ClassVar[str] = API_PATH["saved_views_single"]
+    _api_path: ClassVar[str] = EndpointPath.SAVED_VIEWS_SINGLE
 
     id: int | None = None
     name: str | None = None

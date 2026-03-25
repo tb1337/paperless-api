@@ -15,7 +15,7 @@ Status per model:
   FETCH ERROR   – HTTP / parse error
 
 The final summary also lists:
-  • Schema paths not covered by any entry in const.API_PATH (unimplemented)
+  • Schema paths not covered by any entry in const.EndpointPath (unimplemented)
 
 Usage
 -----
@@ -37,7 +37,7 @@ from typing import Any
 import httpx
 
 from pypaperless import PaperlessClient
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models import (
     Config,
     Correspondent,
@@ -543,7 +543,7 @@ def _schema_keys(schema: dict[str, Any], component: str | None) -> set[str]:
 
 
 def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
-    """Return (path, http_methods) for schema paths not in const.API_PATH.
+    """Return (path, http_methods) for schema paths not in const.EndpointPath.
 
     Normalises ``{id}`` placeholders to ``{pk}`` before comparing.
     Excludes utility/action paths from KNOWN_UTILITY_PATHS.
@@ -552,7 +552,7 @@ def _unimplemented_paths(schema: dict[str, Any]) -> list[tuple[str, str]]:
     def _norm(p: str) -> str:
         return re.sub(r"\{[^}]+\}", "{pk}", p)
 
-    known_normalised = {_norm(v) for v in API_PATH.values()}
+    known_normalised = {_norm(v) for v in EndpointPath}
     result: list[tuple[str, str]] = []
     for path, path_item in sorted(schema["paths"].items()):
         if path in KNOWN_UTILITY_PATHS:
@@ -890,7 +890,7 @@ def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
     # ── Unimplemented schema paths ────────────────────────────────────────────
     unimplemented = _unimplemented_paths(schema)
     if unimplemented:
-        print(f"\n  {CYAN}{BOLD}Schema paths not covered by const.API_PATH:{RESET}")
+        print(f"\n  {CYAN}{BOLD}Schema paths not covered by const.EndpointPath:{RESET}")
         for path, methods in unimplemented:
             print(f"    {CYAN}·  {path:<55s} {DIM}[{methods}]{RESET}")
 

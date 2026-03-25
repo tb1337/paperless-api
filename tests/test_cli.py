@@ -13,7 +13,7 @@ from pytest_httpx import HTTPXMock
 
 import pypaperless.cli as cli_module
 from pypaperless.cli import _out, _render_compact_list, _resource_group, cli
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 
 from .const import PAPERLESS_TEST_TOKEN, PAPERLESS_TEST_URL
 from .data import (
@@ -33,7 +33,7 @@ _ARGS = ["--url", PAPERLESS_TEST_URL, "--token", PAPERLESS_TEST_TOKEN]
 def _mock_init(httpx_mock: HTTPXMock) -> None:
     """Add a successful initialization response."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         json=DATA_SCHEMA,
@@ -47,13 +47,13 @@ def test_cli_status(httpx_mock: HTTPXMock) -> None:
     """Status outputs host_version, api_version, status and remote_version keys."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['status']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.STATUS}",
         method="GET",
         status_code=200,
         json=DATA_STATUS,
     )
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['remote_version']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.REMOTE_VERSION}",
         method="GET",
         status_code=200,
         json=DATA_REMOTE_VERSION,
@@ -76,7 +76,7 @@ def test_cli_profile(httpx_mock: HTTPXMock) -> None:
     """Profile outputs user profile as JSON."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['profile']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.PROFILE}",
         method="GET",
         status_code=200,
         json=DATA_PROFILE,
@@ -96,7 +96,7 @@ def test_cli_tags_list(httpx_mock: HTTPXMock) -> None:
     """Tags list returns a structured ID/name console table."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS}") + r"(\?.*)?$"),
         method="GET",
         status_code=200,
         json=DATA_TAGS,
@@ -114,7 +114,7 @@ def test_cli_tags_list_limit(httpx_mock: HTTPXMock) -> None:
     """Tags list --limit 1 prints exactly one data row."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS}") + r"(\?.*)?$"),
         method="GET",
         status_code=200,
         json=DATA_TAGS,
@@ -132,7 +132,7 @@ def test_cli_tags_json(httpx_mock: HTTPXMock) -> None:
     """Tags json returns a JSON array of all tag items."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS}") + r"(\?.*)?$"),
         method="GET",
         status_code=200,
         json=DATA_TAGS,
@@ -155,7 +155,7 @@ def test_cli_tags_get(httpx_mock: HTTPXMock) -> None:
     tag_data = DATA_TAGS["results"][0]
     tag_id = tag_data["id"]
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['tags_single']}".format(pk=tag_id),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS_SINGLE}".format(pk=tag_id),
         method="GET",
         status_code=200,
         json=tag_data,
@@ -175,7 +175,7 @@ def test_cli_tasks_get_by_string_id(httpx_mock: HTTPXMock) -> None:
     task_data = DATA_TASKS[0]
     task_uuid = task_data["task_id"]
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['tasks']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}",
         method="GET",
         match_params={"task_id": task_uuid},
         status_code=200,
@@ -198,7 +198,7 @@ def test_cli_env_credentials(httpx_mock: HTTPXMock, monkeypatch: pytest.MonkeyPa
     monkeypatch.setenv("PYPAPERLESS_TOKEN", PAPERLESS_TEST_TOKEN)
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS}") + r"(\?.*)?$"),
         method="GET",
         status_code=200,
         json=DATA_TAGS,
@@ -218,7 +218,7 @@ def test_cli_connection_error(httpx_mock: HTTPXMock) -> None:
     """CLI reports a clean error on connection failure."""
     httpx_mock.add_exception(
         _httpx.ConnectError("refused"),
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
     )
 
     runner = CliRunner()
@@ -230,7 +230,7 @@ def test_cli_connection_error(httpx_mock: HTTPXMock) -> None:
 def test_cli_invalid_token(httpx_mock: HTTPXMock) -> None:
     """CLI reports a clean error on 401 Unauthorized."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=401,
         text="Unauthorized",
@@ -256,7 +256,7 @@ def test_cli_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_cli_forbidden_error(httpx_mock: HTTPXMock) -> None:
     """CLI reports 'Access denied' when the server returns 403."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=403,
         text="Forbidden",
@@ -271,7 +271,7 @@ def test_cli_forbidden_error(httpx_mock: HTTPXMock) -> None:
 def test_cli_initialization_error(httpx_mock: HTTPXMock) -> None:
     """CLI reports 'Initialization failed' when the server returns 500 during init."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=500,
         text="Internal Server Error",
@@ -290,7 +290,7 @@ def test_cli_tags_json_limit(httpx_mock: HTTPXMock) -> None:
     """Tags json --limit 1 returns exactly one item."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['tags']}") + r"(\?.*)?$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.TAGS}") + r"(\?.*)?$"),
         method="GET",
         status_code=200,
         json=DATA_TAGS,
@@ -358,7 +358,7 @@ def test_cli_search_plain(httpx_mock: HTTPXMock) -> None:
     """Search command outputs total and section headings for non-empty results (L180-192)."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['search']}") + r".*$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}") + r".*$"),
         method="GET",
         status_code=200,
         json=DATA_SEARCH,
@@ -375,7 +375,7 @@ def test_cli_search_json(httpx_mock: HTTPXMock) -> None:
     """Search --json outputs the full SearchResult as a JSON object (L183)."""
     _mock_init(httpx_mock)
     httpx_mock.add_response(
-        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['search']}") + r".*$"),
+        url=re.compile(r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.SEARCH}") + r".*$"),
         method="GET",
         status_code=200,
         json=DATA_SEARCH,

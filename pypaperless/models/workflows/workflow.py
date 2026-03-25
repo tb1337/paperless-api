@@ -2,14 +2,14 @@
 
 from typing import Any, ClassVar
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models.base import PaperlessModel
 
 
 class Workflow(PaperlessModel):
     """Represent a Paperless `Workflow`."""
 
-    _api_path: ClassVar[str] = API_PATH["workflows_single"]
+    _api_path: ClassVar[str] = EndpointPath.WORKFLOWS_SINGLE
 
     id: int | None = None
     name: str | None = None

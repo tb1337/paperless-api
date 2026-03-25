@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.document_types import DocumentType, DocumentTypeDraft
 from pypaperless.models.filters import DocumentTypeFilters
 
@@ -23,7 +23,7 @@ class DocumentTypeService(
 ):
     """Represent a factory for Paperless `DocumentType` models."""
 
-    _api_path = API_PATH["document_types"]
+    _api_path = EndpointPath.DOCUMENT_TYPES
     _resource = PaperlessResource.DOCUMENT_TYPES
 
     _draft_cls = DocumentTypeDraft

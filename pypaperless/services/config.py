@@ -1,6 +1,6 @@
 """Provide `Config` service."""
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.config import Config
 
 from .base import ResourceService
@@ -9,7 +9,7 @@ from .base import ResourceService
 class ConfigService(ResourceService):
     """Represent a factory for Paperless `Config` models."""
 
-    _api_path = API_PATH["config"]
+    _api_path = EndpointPath.CONFIG
     _resource = PaperlessResource.CONFIG
 
     _resource_cls = Config

@@ -8,7 +8,7 @@ from typing import Any, ClassVar, Self, cast, overload
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessCustomDataModel, PaperlessModel
@@ -179,7 +179,7 @@ class Document(
 ):
     """Represent a Paperless `Document`."""
 
-    _api_path: ClassVar[str] = API_PATH["documents_single"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _history: DocumentHistoryService | None = PrivateAttr(default=None)
@@ -259,7 +259,7 @@ class Document(
 class DocumentDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless `Document`, which is not stored in Paperless."""
 
-    _api_path: ClassVar[str] = API_PATH["documents_post"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_POST
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _create_required_fields: ClassVar[set[str]] = {"document"}
@@ -307,7 +307,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableModel):
 class DocumentMeta(PaperlessModel):
     """Represent a Paperless `Document`'s metadata."""
 
-    _api_path: ClassVar[str] = API_PATH["documents_meta"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_META
 
     id: int | None = None
     original_checksum: str | None = None
@@ -327,7 +327,7 @@ class DocumentMeta(PaperlessModel):
 class DownloadedDocument(PaperlessModel):
     """Represent a Paperless `Document`'s downloaded file."""
 
-    _api_path: ClassVar[str] = API_PATH["documents"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS
 
     id: int | None = None
     mode: FileRetrieveMode | None = None
@@ -341,7 +341,7 @@ class DownloadedDocument(PaperlessModel):
 class DocumentSuggestions(PaperlessModel):
     """Represent a Paperless `Document`'s suggestions."""
 
-    _api_path: ClassVar[str] = API_PATH["documents_suggestions"]
+    _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_SUGGESTIONS
 
     id: int | None = None
     correspondents: list[int] | None = None

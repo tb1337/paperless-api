@@ -5,7 +5,7 @@ from typing import Any, NamedTuple
 
 import httpx
 
-from .const import API_PATH, API_VERSION
+from .const import API_VERSION, EndpointPath
 from .exceptions import (
     BadJsonResponseError,
     DeletionError,
@@ -78,7 +78,7 @@ class PaperlessTransport:
             print(info.api_version, info.version)
 
         """
-        res = await self.request_raw("get", API_PATH["index"])
+        res = await self.request_raw("get", EndpointPath.INDEX)
         res.raise_for_status()
         res.json()
         return _HostInfo(
@@ -345,7 +345,7 @@ async def generate_api_token(
             "username": username,
             "password": password,
         }
-        res = await client.post(f"{url}{API_PATH['token']}", json=json_data)
+        res = await client.post(f"{url}{EndpointPath.TOKEN}", json=json_data)
         data = res.json()
         res.raise_for_status()
         return str(data["token"])

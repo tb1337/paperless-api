@@ -16,7 +16,7 @@ from pypaperless.builders.custom_fields import (
     _CustomFieldQueryNot,
     _CustomFieldQueryOr,
 )
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models import CustomField, Tag
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
@@ -53,7 +53,7 @@ async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: Paperles
     """draft_value() returns a typed value when the custom field cache is populated."""
     httpx_mock.add_response(
         url=re.compile(
-            r"^" + re.escape(f"{PAPERLESS_TEST_URL}{API_PATH['custom_fields']}") + r"\?.*$"
+            r"^" + re.escape(f"{PAPERLESS_TEST_URL}{EndpointPath.CUSTOM_FIELDS}") + r"\?.*$"
         ),
         method="GET",
         status_code=200,

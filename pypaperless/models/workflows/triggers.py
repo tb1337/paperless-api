@@ -3,7 +3,7 @@
 from enum import Enum, StrEnum
 from typing import ClassVar, Self
 
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
 
@@ -56,7 +56,7 @@ class WorkflowTriggerSource(Enum):
 class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsModel):
     """Represent a Paperless `WorkflowTrigger`."""
 
-    _api_path: ClassVar[str] = API_PATH["workflow_triggers_single"]
+    _api_path: ClassVar[str] = EndpointPath.WORKFLOW_TRIGGERS_SINGLE
 
     id: int | None = None
     sources: list[WorkflowTriggerSource] | None = None

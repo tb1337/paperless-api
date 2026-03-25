@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient, generate_api_token
-from pypaperless.const import API_PATH
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import (
     BadJsonResponseError,
     DeletionError,
@@ -39,7 +39,7 @@ from .data import DATA_PATHS, DATA_TOKEN
 async def test_init(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
     """Test initialization."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         json=DATA_PATHS,
@@ -52,7 +52,7 @@ async def test_init(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 async def test_context(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
     """Test async context manager initializes the client."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         json=DATA_PATHS,
@@ -70,7 +70,7 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 
     # HTTP 401 - wrong token
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=401,
         text="any html",
@@ -80,7 +80,7 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 
     # HTTP 401 - inactive / deleted user
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=401,
         json={"detail": "User is inactive"},
@@ -90,7 +90,7 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 
     # HTTP 403 - forbidden
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=403,
         text="any html",
@@ -100,7 +100,7 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
 
     # HTTP 200 with non-JSON body
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['index']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
         method="GET",
         status_code=200,
         text="any html",
@@ -190,7 +190,7 @@ def test_create_url(input_url: str, expected: str) -> None:
 async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
     """Test token generation success and failure modes."""
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
         status_code=200,
         json=DATA_TOKEN,
@@ -203,7 +203,7 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
     assert token == PAPERLESS_TEST_TOKEN
 
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
         status_code=200,
         json={"blah": "any string"},
@@ -216,7 +216,7 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
         )
 
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
         status_code=400,
         json={"non_field_errors": ["Unable to log in."]},
@@ -230,7 +230,7 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
 
     httpx_mock.add_exception(
         ValueError(),
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
     )
     with pytest.raises(ValueError):  # noqa: PT011
@@ -242,7 +242,7 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
 
     # passing an explicit httpx client still returns the correct token
     httpx_mock.add_response(
-        url=f"{PAPERLESS_TEST_URL}{API_PATH['token']}",
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
         status_code=200,
         json=DATA_TOKEN,

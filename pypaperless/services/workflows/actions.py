@@ -1,6 +1,6 @@
 """Provide `WorkflowAction` related services."""
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.workflows.actions import WorkflowAction
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
@@ -13,7 +13,7 @@ class WorkflowActionService(
 ):
     """Represent a factory for Paperless `WorkflowAction` models."""
 
-    _api_path = API_PATH["workflow_actions"]
+    _api_path = EndpointPath.WORKFLOW_ACTIONS
     _resource = PaperlessResource.WORKFLOW_ACTIONS
 
     _resource_cls = WorkflowAction

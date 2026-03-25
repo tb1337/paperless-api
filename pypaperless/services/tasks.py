@@ -3,7 +3,7 @@
 from collections.abc import AsyncIterator
 from typing import Unpack, cast
 
-from pypaperless.const import API_PATH, PaperlessResource
+from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models.filters import TaskFilters
 from pypaperless.models.tasks import Task
@@ -14,7 +14,7 @@ from .base import ResourceService
 class TaskService(ResourceService):
     """Represent a factory for Paperless `Task` models."""
 
-    _api_path = API_PATH["tasks"]
+    _api_path = EndpointPath.TASKS
     _resource = PaperlessResource.TASKS
 
     _resource_cls = Task
@@ -89,7 +89,7 @@ class TaskService(ResourceService):
         data = cast(
             "dict[str, object]",
             await self._runtime.transport.post(
-                API_PATH["tasks_acknowledge"],
+                EndpointPath.TASKS_ACKNOWLEDGE,
                 json={"tasks": tasks},
             ),
         )
@@ -109,7 +109,7 @@ class TaskService(ResourceService):
         data = cast(
             "dict[str, object]",
             await self._runtime.transport.post(
-                API_PATH["tasks_run"],
+                EndpointPath.TASKS_RUN,
                 json={"task_id": task_id},
             ),
         )
