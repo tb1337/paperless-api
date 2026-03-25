@@ -89,12 +89,10 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
         This intentionally behaves like a container iterator (yielding
         ``CustomFieldValue`` items) instead of Pydantic's field-pair iterator.
 
-        Example:
-        -------
-        ```python
-        for item in document.custom_fields:
-            # do something
-        ```
+        Example::
+
+            for item in document.custom_fields:
+                print(item.field, item.value)
 
         """
         yield from self._fields

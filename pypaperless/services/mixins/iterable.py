@@ -25,7 +25,7 @@ class _BaseFilters(TypedDict, total=False):
 class IterableService(ResourceServiceProtocol[ResourceT]):
     """Provide methods for iterating over resource items."""
 
-    _aiter_filters: dict[str, Any] | None
+    _aiter_filters: dict[str, Any] | None = None
 
     async def __aiter__(self) -> AsyncIterator[ResourceT]:
         """Iterate over all resource items, page by page.

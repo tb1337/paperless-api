@@ -23,11 +23,11 @@ from .files import (
     DocumentFileThumbnailService,
 )
 from .history import DocumentHistoryService
+from .notes import DocumentNoteService
+from .share_links import DocumentShareLinkService
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
-from .notes import DocumentNoteService
-from .share_links import DocumentShareLinkService
 
 
 class DocumentSuggestionsService(ResourceService):
