@@ -43,6 +43,7 @@ from pypaperless.models.types import (
     DocumentSearchHit,
     FileRetrieveMode,
 )
+from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.mixins.updatable import UpdatableService
 
 from .const import PAPERLESS_TEST_URL
@@ -281,7 +282,7 @@ class TestDocuments:
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
-        results = await item.notes()
+        results = await item.notes(force_request=True)
         assert isinstance(results, list)
         assert len(results) > 0
         for note in results:
@@ -314,9 +315,15 @@ class TestDocuments:
         )
         result = await item.notes.save(draft)
         assert isinstance(result, int)
+        # cache is updated from the POST response — no extra request needed
+        assert item.notes_ is not None
+        assert len(item.notes_) == len(DATA_DOCUMENT_NOTES)
 
     async def test_note_delete(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
-        """Deleting a note returns True on 204."""
+        """Deleting a note removes it from the embedded cache.
+
+        DeletionError propagates correctly.
+        """
         httpx_mock.add_response(
             method="GET",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
@@ -330,7 +337,8 @@ class TestDocuments:
             status_code=200,
             json=DATA_DOCUMENT_NOTES,
         )
-        results = await item.notes()
+        results = await item.notes(force_request=True)
+        assert len(results) == len(DATA_DOCUMENT_NOTES)
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
@@ -338,15 +346,13 @@ class TestDocuments:
             ),
             status_code=204,
         )
-        await item.notes.delete(results.pop())
+        deleted = results[0]
+        await item.notes.delete(deleted)
+        # cache is updated in-place — no API request needed
+        cached = await item.notes()
+        assert len(cached) == len(DATA_DOCUMENT_NOTES) - 1
+        assert all(n.id != deleted.id for n in cached)
         # failed note deletion raises DeletionError
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENT_NOTES,
-        )
-        notes2 = await item.notes()
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
@@ -355,15 +361,8 @@ class TestDocuments:
             status_code=404,
         )
         with pytest.raises(DeletionError):
-            await item.notes.delete(notes2[0])
+            await item.notes.delete(cached[0])
         # silent_fail=True suppresses DeletionError
-        httpx_mock.add_response(
-            method="GET",
-            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
-            status_code=200,
-            json=DATA_DOCUMENT_NOTES,
-        )
-        notes3 = await item.notes()
         httpx_mock.add_response(
             method="DELETE",
             url=re.compile(
@@ -371,7 +370,88 @@ class TestDocuments:
             ),
             status_code=404,
         )
-        await item.notes.delete(notes3[0], silent_fail=True)
+        await item.notes.delete(cached[0], silent_fail=True)
+
+    async def test_notes_embedded(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """Embedded notes are parsed into notes_ without a second API call."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=2),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][1],
+        )
+        item = await paperless.documents(2)
+        assert isinstance(item, Document)
+        # notes_ is populated directly from the API payload
+        assert isinstance(item.notes_, list)
+        assert len(item.notes_) == len(DATA_DOCUMENTS["results"][1]["notes"])
+        for note in item.notes_:
+            assert isinstance(note, DocumentNote)
+            assert isinstance(note.user, int)
+            assert note.document == item.id
+        # document.notes still returns the service (no regression)
+        assert isinstance(item.notes, DocumentNoteService)
+        # calling notes() returns embedded data without an API request
+        cached = await item.notes()
+        assert cached == item.notes_
+
+    async def test_notes_embedded_document_backfill(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """note.document is backfilled from document.id when the API omits it."""
+        payload = {
+            **DATA_DOCUMENTS["results"][1],
+            "notes": [
+                {k: v for k, v in n.items() if k != "document"}
+                for n in DATA_DOCUMENTS["results"][1]["notes"]
+            ],
+        }
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=2),
+            status_code=200,
+            json=payload,
+        )
+        item = await paperless.documents(2)
+        assert item.notes_ is not None
+        for note in item.notes_:
+            assert note.document == item.id
+
+    async def test_notes_embedded_empty(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """notes_ is an empty list when the document has no notes."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        item = await paperless.documents(1)
+        assert item.notes_ == []
+
+    async def test_notes_force_request(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """force_request=True bypasses the embedded cache and fetches from the API."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=2),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][1],
+        )
+        item = await paperless.documents(2)
+        assert item.notes_ is not None  # populated from embedded payload
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=2),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        results = await item.notes(force_request=True)
+        assert isinstance(results, list)
+        for note in results:
+            assert isinstance(note, DocumentNote)
 
     async def test_history_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """History returns typed entries; direct service call and missing pk error both work."""

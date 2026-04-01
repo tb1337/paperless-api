@@ -1,7 +1,9 @@
 """Provide `DocumentNote` related models."""
 
 import datetime
-from typing import ClassVar
+from typing import Any, ClassVar
+
+from pydantic import field_validator
 
 from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
@@ -19,6 +21,14 @@ class DocumentNote(PaperlessModel):
     created: datetime.datetime | None = None
     document: int | None = None
     user: int | None = None
+
+    @field_validator("user", mode="before")
+    @classmethod
+    def _coerce_user(cls, v: Any) -> Any:
+        """Normalize a user dict from the API to its id."""
+        if isinstance(v, dict):
+            return v["id"]
+        return v
 
 
 class DocumentNoteDraft(PaperlessModel, mixins.CreatableModel):

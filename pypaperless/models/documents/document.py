@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from enum import StrEnum
 from typing import Any, ClassVar, Self, cast, overload
 
-from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator, model_validator
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
@@ -19,6 +19,7 @@ from pypaperless.models.custom_fields import (
     CustomFieldValue,
     CustomFieldValueT,
 )
+from pypaperless.models.documents.notes import DocumentNote
 from pypaperless.services.documents.history import DocumentHistoryService
 from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.documents.share_links import DocumentShareLinkService
@@ -200,6 +201,7 @@ class Document(
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: DocumentCustomFieldList | list | None = None
+    notes_: list[DocumentNote] | None = Field(default=None, alias="notes")
     page_count: int | None = None
     mime_type: str | None = None
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
@@ -212,6 +214,15 @@ class Document(
             return DocumentCustomFieldList.from_data(info.context["runtime"], v)
         return v
 
+    @model_validator(mode="after")
+    def _backfill_note_document_id(self) -> "Document":
+        """Set note.document from self.id when the API omits it in the embedded payload."""
+        if self.notes_ and self.id is not None:
+            for note in self.notes_:
+                if note.document is None:
+                    note.document = self.id
+        return self
+
     @property
     def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
@@ -223,7 +234,7 @@ class Document(
     def notes(self) -> DocumentNoteService:
         """Return the notes service for this document."""
         if self._notes is None:
-            self._notes = DocumentNoteService(self._runtime, cast("int", self.id))
+            self._notes = DocumentNoteService(self._runtime, document=self)
         return self._notes
 
     @property
