@@ -1,139 +1,158 @@
 """Provide base classes."""
 
-from abc import ABC, abstractmethod
-from dataclasses import Field, dataclass, fields
-from typing import TYPE_CHECKING, Any, Protocol, Self, TypeVar, final
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
-from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.utils import dict_value_to_object
+from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
+
+from pypaperless.const import EndpointPath
+from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
-    from pypaperless import Paperless
+    from pypaperless.runtime import PaperlessRuntime
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
 
 
-class PaperlessBase:
-    """Superclass for all classes in PyPaperless."""
+class DraftLike(Protocol):
+    """Protocol satisfied by all draft model classes.
 
-    _api_path = API_PATH["index"]
+    Any object that exposes :attr:`api_path`, :meth:`validate_draft`, and
+    :meth:`serialize` is a valid draft that can be passed to
+    :meth:`~pypaperless.client.PaperlessClient.save`.
+    """
 
-    def __init__(self, api: "Paperless") -> None:
-        """Initialize a `PaperlessBase` instance."""
-        self._api = api
+    @property
+    def api_path(self) -> str:
+        """Return the API path for this draft."""
+        ...
 
+    def validate_draft(self) -> None:
+        """Raise if required fields are missing."""
+        ...
 
-class HelperProtocol[ResourceT](Protocol):
-    """Protocol for any `HelperBase` instances and its ancestors."""
-
-    _api: "Paperless"
-    _api_path: str
-    _resource: PaperlessResource
-    _resource_cls: type[ResourceT]
-
-
-class HelperBase(PaperlessBase):
-    """Base class for all helpers in PyPaperless."""
-
-    _resource: PaperlessResource
+    def serialize(self) -> dict[str, Any]:
+        """Return a serialized representation suitable for the API."""
+        ...
 
 
-@dataclass(init=False)
-class PaperlessModelProtocol(Protocol):
-    """Protocol for any `PaperlessBase` instances and its ancestors."""
+class _PaperlessBase(BaseModel):
+    """Internal base: binds ``_runtime`` from validation context and provides ``from_data``."""
 
-    _api: "Paperless"
-    _api_path: str
-    _data: dict[str, Any]
-    _fetched: bool
-    _params: dict[str, Any]
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    # fmt: off
-    def _get_dataclass_fields(self) -> list[Field]: ...
-    def _set_dataclass_fields(self) -> None: ...
-    # fmt: on
+    _runtime: "PaperlessRuntime" = PrivateAttr()
+
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind ``_runtime`` from validation context."""
+        if isinstance(__context, dict) and "runtime" in __context:
+            self._runtime = __context["runtime"]
+
+    @classmethod
+    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **context: Any) -> Self:
+        """Return a new instance of ``cls`` from ``data``."""
+        return cls.model_validate(data, context={"runtime": runtime, **context})
 
 
-@dataclass(init=False)
-class PaperlessModel(PaperlessBase):
+class PaperlessModel(_PaperlessBase):
     """Base class for all models in PyPaperless."""
 
-    def __init__(self, api: "Paperless", data: dict[str, Any]) -> None:
-        """Initialize a `PaperlessModel` instance."""
-        super().__init__(api)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+        use_enum_values=False,
+    )
 
-        self._data = {}
-        self._data.update(data)
-        self._fetched = False
-        self._params: dict[str, Any] = {}
+    _api_path: ClassVar[str] = EndpointPath.INDEX
+    _pk_field: ClassVar[str] = "id"
+
+    _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
+
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind `_runtime` from validation context and resolve the instance API path."""
+        super().model_post_init(__context)
+        pk = getattr(self, self._pk_field, None)
+        if pk is not None:
+            object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
+        self._snapshot = self._build_snapshot()
+
+    def _build_snapshot(self) -> dict[str, Any]:
+        """Return the current field values as a serialized dict."""
+        return {
+            name: object_to_dict_value(getattr(self, name)) for name in self.__class__.model_fields
+        }
+
+    @classmethod
+    def format_api_path(cls, **kwargs: Any) -> str:
+        """Return the formatted API path for this model class."""
+        return cls._api_path.format(**kwargs)
 
     @final
     @classmethod
-    def create_with_data(
+    def from_data(
         cls,
-        api: "Paperless",
+        runtime: "PaperlessRuntime",
         data: dict[str, Any],
-        *,
-        fetched: bool = False,
+        **_context: Any,
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
-        Primarily used by class factories to create new model instances.
-
-        Example: `document = Document.create_with_data(...)`
+        Primarily used by service-level factory methods.
         """
-        item = cls(api, data=data)
-
-        item._fetched = fetched
-        if fetched:
-            item._set_dataclass_fields()
-        return item
-
-    @final
-    def _get_dataclass_fields(self) -> list[Field]:
-        """Get the dataclass fields."""
-        return [
-            field
-            for field in fields(self)
-            if (not field.name.startswith("_") or field.name == "__search_hit__")
-        ]
-
-    @final
-    def _set_dataclass_fields(self) -> None:
-        """Set the dataclass fields from `self._data`."""
-        for field in self._get_dataclass_fields():
-            value = dict_value_to_object(
-                f"{self.__class__.__name__}.{field.name}",
-                self._data.get(field.name),
-                field.type,
-                field.default,
-                self._api,
-            )
-            setattr(self, field.name, value)
+        return cls.model_validate(data, context={"runtime": runtime})
 
     @property
-    def is_fetched(self) -> bool:
-        """Return whether the `model data` is fetched or not."""
-        return self._fetched
+    def api_path(self) -> str:
+        """Return the API path for this model instance."""
+        return self._api_path
 
-    async def load(self) -> None:
-        """Get `model data` from DRF."""
-        data = await self._api.request_json("get", self._api_path, params=self._params)
+    @property
+    def snapshot(self) -> dict[str, Any]:
+        """Return the serialized field state as of the last API sync."""
+        return self._snapshot
 
-        self._data.update(data)
-        self._set_dataclass_fields()
-        self._fetched = True
+    def refresh_from(self, data: dict[str, Any]) -> None:
+        """Replace all field values and snapshot in-place from a fresh API response."""
+        fresh = type(self).from_data(self._runtime, data)
+        for name in self.__class__.model_fields:
+            setattr(self, name, getattr(fresh, name))
+        self._snapshot = self._build_snapshot()
 
 
-class PaperlessModelData(ABC):
+class PaperlessCustomDataModel(_PaperlessBase):
     """Base class for all custom data types in PyPaperless."""
 
-    @classmethod
-    @abstractmethod
-    def unserialize(cls, api: "Paperless", data: Any) -> Self:
-        """Return a new instance of `cls` from `data`."""
+    _data: Any = PrivateAttr(default=None)
 
-    @abstractmethod
+    def model_post_init(self, __context: Any, /) -> None:
+        """Bind `_runtime` and `_data` from validation context."""
+        super().model_post_init(__context)
+        if isinstance(__context, dict) and "data" in __context:
+            self._data = __context["data"]
+
+    @classmethod
+    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **_context: Any) -> Self:
+        """Return a new instance of ``cls`` from API data."""
+        return cls.model_validate({}, context={"runtime": runtime, "data": data})
+
+    @property
+    def data(self) -> Any:
+        """Return the internal custom-model data payload."""
+        return self._data
+
+    @data.setter
+    def data(self, value: Any) -> None:
+        """Set the internal custom-model data payload."""
+        self._data = value
+
     def serialize(self) -> Any:
-        """Serialize the class data."""
+        """Return the JSON-compatible payload for this model."""
+        payload = {
+            field_name: getattr(self, field_name) for field_name in self.__class__.model_fields
+        }
+        return object_to_dict_value(payload)
+
+    @model_serializer(mode="plain")
+    def _model_serializer(self) -> Any:
+        """Delegate Pydantic serialization to the custom ``serialize`` method."""
+        return self.serialize()

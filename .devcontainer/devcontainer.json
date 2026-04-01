@@ -18,10 +18,8 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
-        "ms-python.pylint",
         "ms-python.vscode-pylance",
         "redhat.vscode-yaml",
-        "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
         "ryanluker.vscode-coverage-gutters",
         "yzhang.markdown-all-in-one"
@@ -36,22 +34,16 @@
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
         "files.trimTrailingWhitespace": true,
-        "markdown.extension.toc.levels": "2..6",
-        "markdown.extension.toc.omittedFromToc": {
-          "docs/1_basic_usage.md": ["## Documentation"],
-          "docs/2_documents.md": ["## Documentation"],
-          "docs/3_custom_fields.md": ["## Documentation"],
-          "docs/4_permissions.md": ["## Documentation"]
-        },
         "python.defaultInterpreterPath": "/home/vscode/.local/dev-venv/bin/python",
-        "python.pythonPath": "/home/vscode/.local/dev-venv/bin/python",
         "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
         "python.testing.pytestArgs": [
+          "tests",
           "--no-cov",
           "--cov-report=term",
           "--cov-report=xml"
         ],
-        "pylint.importStrategy": "fromEnvironment",
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
         },

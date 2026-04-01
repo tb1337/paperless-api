@@ -1,5 +1,7 @@
 """PyPaperless."""
 
-from .api import Paperless
+from .client import PaperlessClient
+from .settings import PaperlessSettings
+from .transport import generate_api_token
 
-__all__ = ("Paperless",)
+__all__ = ("PaperlessClient", "PaperlessSettings", "generate_api_token")

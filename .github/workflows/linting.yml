@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tool: [codespell, ruff, pre-commit-hooks, pylint, yamllint]
+        tool: [codespell, ruff, prek-hooks, yamllint]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v6.0.1
@@ -39,24 +39,22 @@ jobs:
       - name: 🚀 Execute checks
         run: |
           if [ "${{ matrix.tool }}" = "codespell" ]; then
-            uv run pre-commit run codespell --all-files
+            uv run prek run codespell --all-files
           elif [ "${{ matrix.tool }}" = "ruff" ]; then
             uv run ruff check --output-format=github .
             uv run ruff format --check .
-          elif [ "${{ matrix.tool }}" = "pre-commit-hooks" ]; then
-            uv run pre-commit run check-ast --all-files
-            uv run pre-commit run check-case-conflict --all-files
-            uv run pre-commit run check-docstring-first --all-files
-            uv run pre-commit run check-json --all-files
-            uv run pre-commit run check-merge-conflict --all-files
-            uv run pre-commit run check-symlinks --all-files
-            uv run pre-commit run check-toml --all-files
-            uv run pre-commit run check-yaml --all-files
-            uv run pre-commit run detect-private-key --all-files
-            uv run pre-commit run end-of-file-fixer --all-files
-            uv run pre-commit run trailing-whitespace --all-files
-          elif [ "${{ matrix.tool }}" = "pylint" ]; then
-            uv run pre-commit run pylint --all-files
+          elif [ "${{ matrix.tool }}" = "prek-hooks" ]; then
+            uv run prek run check-ast --all-files
+            uv run prek run check-case-conflict --all-files
+            uv run prek run check-docstring-first --all-files
+            uv run prek run check-json --all-files
+            uv run prek run check-merge-conflict --all-files
+            uv run prek run check-symlinks --all-files
+            uv run prek run check-toml --all-files
+            uv run prek run check-yaml --all-files
+            uv run prek run detect-private-key --all-files
+            uv run prek run end-of-file-fixer --all-files
+            uv run prek run trailing-whitespace --all-files
           elif [ "${{ matrix.tool }}" = "yamllint" ]; then
             uv run yamllint .
           fi

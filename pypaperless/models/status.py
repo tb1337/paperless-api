@@ -1,60 +1,100 @@
-"""Provide `Status` related models and helpers."""
+"""Provide `Status` related models."""
 
-from dataclasses import dataclass
-from typing import cast
+import datetime
+from enum import StrEnum
+from typing import ClassVar, Self
 
-from pypaperless.const import API_PATH, PaperlessResource
-from pypaperless.models.common import (
-    StatusDatabaseType,
-    StatusStorageType,
-    StatusTasksType,
-    StatusType,
-)
+from pydantic import BaseModel, Field
 
-from .base import HelperBase, PaperlessModel
+from pypaperless.const import EndpointPath
+
+from .base import PaperlessModel
 
 
-@dataclass(init=False)
+class StatusType(StrEnum):
+    """Represent a subtype of `Status`."""
+
+    OK = "OK"
+    ERROR = "ERROR"
+    WARNING = "WARNING"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
+
+
+class StatusDatabaseMigration(BaseModel):
+    """Represent a subtype of `StatusDatabase`."""
+
+    latest_migration: str | None = None
+    unapplied_migrations: list[str] = Field(default_factory=list)
+
+
+class StatusDatabase(BaseModel):
+    """Represent a subtype of `Status`."""
+
+    type: str | None = None
+    url: str | None = None
+    status: StatusType | None = None
+    error: str | None = None
+    migration_status: StatusDatabaseMigration | None = None
+
+
+class StatusStorage(BaseModel):
+    """Represent a subtype of `Status`."""
+
+    total: int | None = None
+    available: int | None = None
+
+
+class StatusTasks(BaseModel):
+    """Represent a subtype of `Status`."""
+
+    redis_url: str | None = None
+    redis_status: StatusType | None = None
+    redis_error: str | None = None
+    celery_status: StatusType | None = None
+    celery_url: str | None = None
+    celery_error: str | None = None
+    index_status: StatusType | None = None
+    index_last_modified: datetime.datetime | None = None
+    index_error: str | None = None
+    classifier_status: StatusType | None = None
+    classifier_last_trained: datetime.datetime | None = None
+    classifier_error: str | None = None
+    sanity_check_status: StatusType | None = None
+    sanity_check_last_run: datetime.datetime | None = None
+    sanity_check_error: str | None = None
+
+
 class Status(PaperlessModel):
     """Represent a Paperless `Status`."""
 
-    _api_path = API_PATH["status"]
+    _api_path: ClassVar[str] = EndpointPath.STATUS
 
     pngx_version: str | None = None
     server_os: str | None = None
     install_type: str | None = None
-    storage: StatusStorageType | None = None
-    database: StatusDatabaseType | None = None
-    tasks: StatusTasksType | None = None
+    storage: StatusStorage | None = None
+    database: StatusDatabase | None = None
+    tasks: StatusTasks | None = None
 
     @property
     def has_errors(self) -> bool:
         """Return whether any status flag is `ERROR`."""
         statuses: list[StatusType] = [
             self.database.status if self.database and self.database.status else StatusType.OK,
-            *[
-                cast("StatusType", getattr(self.tasks, status, StatusType.OK))
-                for status in (
-                    "redis_status",
-                    "celery_status",
-                    "classifier_status",
-                )
-                if self.tasks
-            ],
         ]
 
-        return any(st == StatusType.ERROR for st in statuses)
+        if self.tasks:
+            statuses.extend(
+                [
+                    self.tasks.redis_status or StatusType.OK,
+                    self.tasks.celery_status or StatusType.OK,
+                    self.tasks.classifier_status or StatusType.OK,
+                ]
+            )
 
-
-class StatusHelper(HelperBase):
-    """Represent a factory for the Paperless `Status` model."""
-
-    _api_path = API_PATH["status"]
-    _resource = PaperlessResource.STATUS
-
-    _resource_cls = Status
-
-    async def __call__(self) -> Status:
-        """Request the `Status` model data."""
-        res = await self._api.request_json("get", self._api_path)
-        return self._resource_cls.create_with_data(self._api, res, fetched=True)
+        return StatusType.ERROR in statuses

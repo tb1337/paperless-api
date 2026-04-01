@@ -1,0 +1,74 @@
+# Search
+
+The `search` resource exposes the Paperless-ngx global search endpoint (`/api/search/`). It searches across documents, tags, correspondents, document types, and other resource types simultaneously and returns a scored, ranked result.
+
+## Model
+
+See [`pypaperless/models/search.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/search.py) and [`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py) for all types. The upstream schema component is `SearchResult`.
+
+### `SearchResult`
+
+| Field            | Type                  | Description                                       |
+| ---------------- | --------------------- | ------------------------------------------------- |
+| `total`          | `int`                 | Total number of matching objects across all types |
+| `documents`      | `list[Document]`      | Matching documents (full `Document` objects)      |
+| `saved_views`    | `list[SavedView]`     | Matching saved views                              |
+| `tags`           | `list[Tag]`           | Matching tags                                     |
+| `correspondents` | `list[Correspondent]` | Matching correspondents                           |
+| `document_types` | `list[DocumentType]`  | Matching document types                           |
+| `storage_paths`  | `list[StoragePath]`   | Matching storage paths                            |
+| `users`          | `list[User]`          | Matching users                                    |
+| `groups`         | `list[Group]`         | Matching groups                                   |
+| `mail_rules`     | `list[MailRule]`      | Matching mail rules                               |
+| `mail_accounts`  | `list[MailAccount]`   | Matching mail accounts                            |
+| `workflows`      | `list[Workflow]`      | Matching workflows                                |
+| `custom_fields`  | `list[CustomField]`   | Matching custom fields                            |
+
+All fields are `None`-able. Nested objects are full model instances - you can call service shortcuts like `.update()` or `.delete()` directly on them.
+
+## Search
+
+### Plain string query
+
+```python
+result = await paperless.search("invoice")
+
+print(result.total)                    # total matches across all types
+for doc in result.documents or []:
+    print(doc.title, doc.id)
+```
+
+### Using the SearchQuery builder
+
+For complex queries, use the `SearchQuery` builder (see [Search Query Builder](../concepts/search_query.md)):
+
+```python
+from pypaperless.models.types import SearchQuery
+
+q = SearchQuery("invoice") & SearchQuery.field("tag", "unpaid")
+result = await paperless.search(q)
+```
+
+### Database-only search
+
+Pass `db_only=True` to skip the full-text index and search only the database fields:
+
+```python
+result = await paperless.search("contract", db_only=True)
+```
+
+### Working with results
+
+All nested objects in `SearchResult` are `PaperlessModel` instances, so you can act on them immediately:
+
+```python
+result = await paperless.search("old project")
+
+# Delete all matched documents
+for doc in result.documents or []:
+    await paperless.documents.delete(doc)
+
+# The correspondents list works the same way
+for corr in result.correspondents or []:
+    print(corr.name)
+```
