@@ -69,8 +69,9 @@ with the document's primary key pre-filled:
 ```python
 doc = await paperless.documents(42)
 
-# notes (list, create, save, delete)
-notes      = await doc.notes()              # list[DocumentNote]
+# notes: cache-first by default, force_request=True to re-fetch from API
+notes      = await doc.notes()                    # from cache (no HTTP request)
+notes      = await doc.notes(force_request=True)  # fresh from API
 note_draft = doc.notes.create(note="Checked.")
 note_id    = await doc.notes.save(note_draft)
 await doc.notes.delete(notes[0])

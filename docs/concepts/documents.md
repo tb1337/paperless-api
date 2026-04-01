@@ -137,18 +137,28 @@ print(suggestions.dates)
 
 ## Notes
 
-Every document can have a list of notes attached to it.
+Every document can have a list of notes attached to it. When a document is fetched
+from the API the notes are already embedded in the response - calling `doc.notes()`
+returns them immediately from an in-memory cache without a second HTTP request.
 
 ```python
-# Fetch notes for a document
-notes = await paperless.documents.notes(42)
-
-# or via a fetched document
 doc = await paperless.documents(42)
-notes = await doc.notes()
 
+notes = await doc.notes()  # served from cache, no HTTP request
 for note in notes:
-    print(note.note, note.created)
+    print(note.id, note.note, note.created)
+```
+
+To force a fresh fetch from the API and refresh the cache, pass `force_request=True`:
+
+```python
+notes = await doc.notes(force_request=True)
+```
+
+The standalone service always requests the API:
+
+```python
+notes = await paperless.documents.notes(42)
 ```
 
 ### Adding a note
@@ -167,12 +177,17 @@ draft = doc.notes.create(note="This needs review")
 note_id = await doc.notes.save(draft)
 ```
 
+After `save()` the cache is updated automatically - the next `doc.notes()` call
+returns the latest state without an extra request.
+
 ### Deleting a note
 
 ```python
-note = notes[0]
-await paperless.documents.notes.delete(note)
+notes = await doc.notes()
+await doc.notes.delete(notes[0])
 ```
+
+After a successful delete the cache is updated in-place.
 
 ---
 
