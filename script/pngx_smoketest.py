@@ -528,7 +528,8 @@ async def test_document_notes(p: PaperlessClient) -> None:
     # delete the created note
     if note_id is not None:
         try:
-            all_notes = await p.documents.notes(TEST_DOCUMENT_ID)
+            # force_request=True to bypass the cache and get the freshly created note
+            all_notes = await p.documents.notes(TEST_DOCUMENT_ID, force_request=True)
             created = next((n for n in all_notes if n.id == note_id), None)
             if created is not None:
                 deleted = await p.documents.notes.delete(created)

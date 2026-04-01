@@ -201,7 +201,7 @@ class Document(
     archived_file_name: str | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: DocumentCustomFieldList | list | None = None
-    notes_: list[DocumentNote] | None = Field(default=None, alias="notes")
+    notes_: list[DocumentNote] | None = Field(default=None, alias="notes", exclude=True, repr=False)
     page_count: int | None = None
     mime_type: str | None = None
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
@@ -215,9 +215,9 @@ class Document(
         return v
 
     @model_validator(mode="after")
-    def _backfill_note_document_id(self) -> "Document":
-        """Set note.document from self.id when the API omits it in the embedded payload."""
-        if self.notes_ and self.id is not None:
+    def _init_notes_cache(self) -> "Document":
+        """Backfill note.document from self.id when the API omits it in the embedded payload."""
+        if self.notes_ is not None and self.id is not None:
             for note in self.notes_:
                 if note.document is None:
                     note.document = self.id

@@ -382,7 +382,6 @@ class TestDocuments:
         )
         item = await paperless.documents(2)
         assert isinstance(item, Document)
-        # notes_ is populated directly from the API payload
         assert isinstance(item.notes_, list)
         assert len(item.notes_) == len(DATA_DOCUMENTS["results"][1]["notes"])
         for note in item.notes_:
@@ -391,7 +390,7 @@ class TestDocuments:
             assert note.document == item.id
         # document.notes still returns the service (no regression)
         assert isinstance(item.notes, DocumentNoteService)
-        # calling notes() returns embedded data without an API request
+        # calling notes() returns cached data without an API request
         cached = await item.notes()
         assert cached == item.notes_
 
