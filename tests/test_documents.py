@@ -452,6 +452,65 @@ class TestDocuments:
         for note in results:
             assert isinstance(note, DocumentNote)
 
+    async def test_note_user_int_passthrough(self, paperless: PaperlessClient) -> None:
+        """_coerce_user returns the value unchanged when user is already an int."""
+        note = DocumentNote.from_data(
+            paperless._runtime,
+            {"id": 1, "note": "x", "user": 42, "document": 1},
+        )
+        assert note.user == 42
+
+    async def test_note_standalone_call(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Standalone notes service (no document instance) fetches from API without caching."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        results = await paperless.documents.notes(1)
+        assert isinstance(results, list)
+        assert len(results) == len(DATA_DOCUMENT_NOTES)
+        for note in results:
+            assert isinstance(note, DocumentNote)
+
+    async def test_note_standalone_save(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Standalone save() posts the note and returns the new id without updating any cache."""
+        draft = paperless.documents.notes.create(1, note="Standalone note.")
+        assert isinstance(draft, DocumentNoteDraft)
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        result = await paperless.documents.notes.save(draft)
+        assert isinstance(result, int)
+
+    async def test_note_standalone_delete(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Standalone delete() removes the note without touching any cache."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_NOTES,
+        )
+        notes = await paperless.documents.notes(1)
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=204,
+        )
+        await paperless.documents.notes.delete(notes[0])
+
     async def test_history_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """History returns typed entries; direct service call and missing pk error both work."""
         httpx_mock.add_response(
