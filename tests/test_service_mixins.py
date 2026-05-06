@@ -77,25 +77,6 @@ class _SharedServiceTests:
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
-    async def test_all(
-        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
-    ) -> None:
-        """Test all."""
-        httpx_mock.add_response(
-            method="GET",
-            url=re.compile(
-                r"^"
-                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
-                r"\?.*$"
-            ),
-            status_code=200,
-            json=mapping.data,
-        )
-        items = await getattr(paperless, mapping.resource).all()
-        assert isinstance(items, list)
-        for item in items:
-            assert isinstance(item, int)
-
     async def test_call(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:

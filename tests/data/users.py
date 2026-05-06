@@ -4,7 +4,6 @@ DATA_USERS = {
     "count": 4,
     "next": None,
     "previous": None,
-    "all": [1, 2, 3, 4],
     "results": [
         {
             "id": 1,

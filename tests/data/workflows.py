@@ -4,7 +4,6 @@ DATA_WORKFLOWS = {
     "count": 3,
     "next": None,
     "previous": None,
-    "all": [1, 2, 3],
     "results": [
         {
             "id": 1,
@@ -130,24 +129,20 @@ DATA_WORKFLOW_ACTIONS = {
     "count": 0,
     "next": None,
     "previous": None,
-    "all": [],
     "results": [],
 }
 for wf in DATA_WORKFLOWS["results"]:
     DATA_WORKFLOW_ACTIONS["count"] += 1
     for act in wf["actions"]:
-        DATA_WORKFLOW_ACTIONS["all"].append(act["id"])
         DATA_WORKFLOW_ACTIONS["results"].append(act)
 
 DATA_WORKFLOW_TRIGGERS = {
     "count": 0,
     "next": None,
     "previous": None,
-    "all": [],
     "results": [],
 }
 for wf in DATA_WORKFLOWS["results"]:
     DATA_WORKFLOW_TRIGGERS["count"] += 1
     for act in wf["triggers"]:
-        DATA_WORKFLOW_TRIGGERS["all"].append(act["id"])
         DATA_WORKFLOW_TRIGGERS["results"].append(act)

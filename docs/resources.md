@@ -74,14 +74,6 @@ async for tag in paperless.tags:
     print(tag.name, tag.color)
 ```
 
-### Getting all primary keys
-
-To retrieve a flat list of all primary keys without fetching full model data:
-
-```python
-all_ids: list[int] = await paperless.documents.all()
-```
-
 ### Pagination
 
 You can iterate page-by-page instead of item-by-item. `Page` objects provide metadata about the current page:

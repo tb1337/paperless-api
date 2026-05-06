@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Self
 
-API_VERSION = 9
+API_VERSION = 10
 
 ENV_PREFIX = "PYPAPERLESS_"
 ENV_URL = f"{ENV_PREFIX}URL"

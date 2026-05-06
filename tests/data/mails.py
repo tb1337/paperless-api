@@ -4,7 +4,6 @@ DATA_MAIL_ACCOUNTS = {
     "count": 1,
     "next": None,
     "previous": None,
-    "all": [1],
     "results": [
         {
             "id": 1,
@@ -26,7 +25,6 @@ DATA_MAIL_RULES = {
     "count": 1,
     "next": None,
     "previous": None,
-    "all": [1],
     "results": [
         {
             "id": 1,
@@ -61,7 +59,6 @@ DATA_PROCESSED_MAIL = {
     "count": 3,
     "next": None,
     "previous": None,
-    "all": [1, 2, 3],
     "results": [
         {
             "id": 1,

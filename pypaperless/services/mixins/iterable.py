@@ -81,21 +81,6 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
 
-    async def all(self) -> list[int]:
-        """Return a list of all resource item primary keys.
-
-        When used within a :meth:`filter` context, returns only the filtered
-        primary keys.
-
-        Example::
-
-            pks = await paperless.documents.all()
-            # [1, 2, 3, …]
-
-        """
-        page = await anext(self.pages(page=1))
-        return page.all
-
     async def as_dict(self) -> dict[int, ResourceT]:
         """Return a ``{pk: model}`` mapping of all resource items.
 

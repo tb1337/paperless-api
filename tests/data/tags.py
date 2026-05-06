@@ -4,13 +4,6 @@ DATA_TAGS = {
     "count": 2,
     "next": None,
     "previous": None,
-    "all": [
-        1,
-        2,
-        3,
-        4,
-        5,
-    ],
     "results": [
         {
             "id": 1,

@@ -197,9 +197,17 @@ You can also use the convenience helpers:
 
 ```python
 docs = await paperless.documents.as_list()
-ids  = await paperless.documents.all()       # list of primary keys only
 dmap = await paperless.documents.as_dict()   # {pk: Document}
 ```
+
+!!! note "Removed in API v10"
+    `all()` — which returned a flat list of primary keys — was removed together with
+    the `all` field in paginated API responses (Paperless-ngx API v10+).
+    To get a list of primary keys, use `as_list()` and extract `.id`:
+
+    ```python
+    ids = [doc.id for doc in await paperless.documents.as_list()]
+    ```
 
 ---
 

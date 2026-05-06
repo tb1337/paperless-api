@@ -24,7 +24,6 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     count: int = 0
     next: str | None = None
     previous: str | None = None
-    all: list[int] = Field(default_factory=list)
     results: list[dict[str, Any]] = Field(default_factory=list)
 
     def model_post_init(self, __context: Any, /) -> None:

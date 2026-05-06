@@ -282,14 +282,6 @@ async def test_documents(p: PaperlessClient) -> None:
     except Exception as exc:
         fail("documents.as_dict()", exc)
 
-    # all() – returns list of PKs from first page
-    try:
-        async with p.documents.filter(page_size=PAGE_SIZE):
-            pks = await p.documents.all()
-        ok(f"documents.all() [page_size={PAGE_SIZE}]", f"pks={pks[:3]}…")
-    except Exception as exc:
-        fail("documents.all()", exc)
-
     # search
     try:
         results = [d async for d in p.documents.search("invoice")]
