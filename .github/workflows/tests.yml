@@ -36,7 +36,7 @@ jobs:
       - name: 🚀 Run pytest
         run: uv run pytest -v --cov-report xml:coverage.xml --cov pypaperless tests
       - name: ⬆️ Upload coverage artifact
-        uses: actions/upload-artifact@v6.0.0
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: coverage-${{ matrix.python }}
           path: coverage.xml
