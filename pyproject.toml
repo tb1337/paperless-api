@@ -40,7 +40,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "pytest-httpx>=0.35.0",
     "ruff>=0.14.10",
-    "yamllint>=1.37.1",
+    "yamllint>=1.38.0",
 ]
 docs = [
     "zensical>=0.0.40",
