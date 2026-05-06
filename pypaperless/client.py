@@ -2,6 +2,7 @@
 
 import logging
 from functools import cached_property
+from typing import Self
 
 import httpx
 
@@ -33,7 +34,7 @@ class PaperlessClient:
 
     """
 
-    async def __aenter__(self) -> "PaperlessClient":
+    async def __aenter__(self) -> Self:
         """Return context manager."""
         await self.initialize()
         return self
