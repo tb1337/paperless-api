@@ -91,7 +91,7 @@ from pypaperless.models.workflows import (
 )
 
 # ── credentials ───────────────────────────────────────────────────────────────
-PAPERLESS_URL = "http://172.17.0.1:8000"
+PAPERLESS_URL = "http://host.docker.internal:8000"
 PAPERLESS_TOKEN = "3e9505078d32d8ad4ecea00fa0eec8e426622b52"
 TEST_DOC_ID = 1980
 
@@ -128,6 +128,7 @@ KNOWN_EXTRAS: dict[str, dict[str, str]] = {
     "Document": {
         "search_hit_": "synthesised from __search_hit__ alias only present in search results",
         "permissions": "only returned with ?full_perms=true; accessed via SecurableMixin",
+        "notes_": "injected by service from separate notes endpoint; not in standard Document response",
     },
     "Correspondent": {
         "permissions": "only returned with ?full_perms=true; accessed via SecurableMixin",
@@ -153,6 +154,9 @@ KNOWN_EXTRAS: dict[str, dict[str, str]] = {
     },
     "DocumentSuggestions": {
         "id": "injected by service from path parameter; not in API response",
+    },
+    "SavedView": {
+        "permissions": "only returned with ?full_perms=true",
     },
 }
 
@@ -720,7 +724,9 @@ def _print_result(r: AuditResult) -> None:
                 print(f"    {DIM}model has {k!r} but schema doesn't (extension or stale){RESET}")
 
 
-def _audit_submodels(oa_schema: dict[str, Any]) -> None:
+def _audit_submodels(
+    oa_schema: dict[str, Any],
+) -> list[tuple[str, str, list[str], list[str]]]:
     """Compare pypaperless sub-model classes against OpenAPI schema component fields."""
     schemas = oa_schema.get("components", {}).get("schemas", {})
 
@@ -729,6 +735,7 @@ def _audit_submodels(oa_schema: dict[str, Any]) -> None:
     print(f"{'─' * 70}")
 
     all_ok = True
+    gaps: list[tuple[str, str, list[str], list[str]]] = []
     for cls, schema_name, usage in SUBMODEL_MAPPINGS:
         schema_component = schemas.get(schema_name, {})
         if not schema_component:
@@ -752,6 +759,7 @@ def _audit_submodels(oa_schema: dict[str, Any]) -> None:
 
         if missing or extra:
             all_ok = False
+            gaps.append((cls.__name__, schema_name, missing, extra))
             print(
                 f"\n  {RED}GAPS{RESET}   {cls.__name__}  ↔  {DIM}{schema_name}{RESET}  ({DIM}{usage}{RESET})"
             )
@@ -783,8 +791,10 @@ def _audit_submodels(oa_schema: dict[str, Any]) -> None:
     if all_ok:
         print(f"\n  {GREEN}{BOLD}All mappable sub-models match schema fields.{RESET}")
 
+    return gaps
 
-def _audit_enums(oa_schema: dict[str, Any]) -> None:
+
+def _audit_enums(oa_schema: dict[str, Any]) -> list[tuple[str, str, list, list]]:
     """Compare pypaperless typed enum classes against OpenAPI schema enum values."""
     schemas = oa_schema.get("components", {}).get("schemas", {})
 
@@ -793,6 +803,7 @@ def _audit_enums(oa_schema: dict[str, Any]) -> None:
     print(f"{'─' * 70}")
 
     all_ok = True
+    gaps: list[tuple[str, str, list, list]] = []
     for cls, schema_name, usage in ENUM_MAPPINGS:
         schema_component = schemas.get(schema_name, {})
         if not schema_component:
@@ -800,6 +811,7 @@ def _audit_enums(oa_schema: dict[str, Any]) -> None:
                 f"  {YELLOW}MISSING{RESET}  {cls.__name__}  ↔  {DIM}{schema_name}{RESET}  ({DIM}schema component not found{RESET})"
             )
             all_ok = False
+            gaps.append((cls.__name__, schema_name, ["<schema component not found>"], []))
             continue
 
         schema_vals: set = set(schema_component.get("enum", []))
@@ -810,6 +822,7 @@ def _audit_enums(oa_schema: dict[str, Any]) -> None:
 
         if missing or extra:
             all_ok = False
+            gaps.append((cls.__name__, schema_name, missing, extra))
             print(
                 f"\n  {RED}GAPS{RESET}   {cls.__name__}  ↔  {DIM}{schema_name}{RESET}  ({DIM}{usage}{RESET})"
             )
@@ -831,8 +844,15 @@ def _audit_enums(oa_schema: dict[str, Any]) -> None:
     if all_ok:
         print(f"\n  {GREEN}{BOLD}All typed enums match schema values.{RESET}")
 
+    return gaps
 
-def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
+
+def _print_summary(
+    results: list[AuditResult],
+    schema: dict[str, Any],
+    submodel_gaps: list[tuple[str, str, list[str], list[str]]],
+    enum_gaps: list[tuple[str, str, list, list]],
+) -> None:
     total = len(results)
     live_ok = sum(
         1
@@ -863,6 +883,10 @@ def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
         print(f"  {YELLOW}Unverifiable (no data)   : {no_data_count}{RESET}")
     if error_count:
         print(f"  {RED}Fetch errors             : {error_count}{RESET}")
+    if submodel_gaps:
+        print(f"  {RED}Sub-model gaps           : {len(submodel_gaps)}{RESET}")
+    if enum_gaps:
+        print(f"  {RED}Enum gaps                : {len(enum_gaps)}{RESET}")
 
     # Collect all gaps
     all_missing: list[tuple[str, str, bool]] = []
@@ -872,6 +896,26 @@ def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
             all_missing.append((r.label, k, r.schema_only))
         for k in r.extra_in_model:
             all_extra.append((r.label, k, r.schema_only))
+
+    # ── Schema-only endpoints ─────────────────────────────────────────────────
+    schema_only_list = [
+        r for r in results if r.schema_only and not r.missing_in_model and not r.extra_in_model
+    ]
+    if schema_only_list:
+        print(f"\n  {CYAN}{BOLD}Verified via schema only (no live data available):{RESET}")
+        for r in schema_only_list:
+            print(
+                f"    {CYAN}·  {r.label:<30s}  {DIM}({r.model_name}  ·  {len(r.schema_keys)} schema fields){RESET}"
+            )
+
+    # ── No-data endpoints ─────────────────────────────────────────────────────
+    no_data_list = [r for r in results if r.no_data]
+    if no_data_list:
+        print(
+            f"\n  {YELLOW}{BOLD}Unverifiable — endpoint empty and no typed schema component:{RESET}"
+        )
+        for r in no_data_list:
+            print(f"    {YELLOW}·  {r.label:<30s}  {DIM}({r.model_name}){RESET}")
 
     if all_missing:
         print(f"\n  {RED}{BOLD}Fields missing in model (not captured by any field):{RESET}")
@@ -886,6 +930,26 @@ def _print_summary(results: list[AuditResult], schema: dict[str, Any]) -> None:
         for label, k, via_schema in all_extra:
             badge = f" {DIM}(schema){RESET}" if via_schema else ""
             print(f"    {YELLOW}⚠  {label}.{k}{badge}{RESET}")
+
+    # ── Sub-model gaps ────────────────────────────────────────────────────────
+    if submodel_gaps:
+        print(f"\n  {RED}{BOLD}Sub-model field gaps:{RESET}")
+        for cls_name, schema_name, missing, extra in submodel_gaps:
+            print(f"    {RED}↔  {cls_name}  ↔  {DIM}{schema_name}{RESET}")
+            for k in missing:
+                print(f"      {RED}✗  schema has {k!r} — missing in model{RESET}")
+            for k in extra:
+                print(f"      {YELLOW}⚠  model has {k!r} — not in schema{RESET}")
+
+    # ── Enum gaps ─────────────────────────────────────────────────────────────
+    if enum_gaps:
+        print(f"\n  {RED}{BOLD}Enum value gaps:{RESET}")
+        for cls_name, schema_name, missing, extra in enum_gaps:
+            print(f"    {RED}↔  {cls_name}  ↔  {DIM}{schema_name}{RESET}")
+            for v in missing:
+                print(f"      {RED}✗  schema has {v!r} — missing in enum{RESET}")
+            for v in extra:
+                print(f"      {YELLOW}⚠  enum has {v!r} — not in schema{RESET}")
 
     # ── Unimplemented schema paths ────────────────────────────────────────────
     unimplemented = _unimplemented_paths(schema)
@@ -940,9 +1004,9 @@ async def main() -> None:
             _print_result(result)
             results.append(result)
 
-    _audit_submodels(oa_schema)
-    _audit_enums(oa_schema)
-    _print_summary(results, oa_schema)
+    submodel_gaps = _audit_submodels(oa_schema)
+    enum_gaps = _audit_enums(oa_schema)
+    _print_summary(results, oa_schema, submodel_gaps, enum_gaps)
 
 
 if __name__ == "__main__":

@@ -49,7 +49,12 @@ from .filters import (
 )
 from .mixins.data_fields import MatchingAlgorithm
 from .mixins.securable import Permissions
-from .saved_views import SavedViewFilterRule
+from .saved_views import (
+    SavedViewCustomFieldDisplay,
+    SavedViewDisplayField,
+    SavedViewDisplayMode,
+    SavedViewFilterRule,
+)
 from .share_links import ShareLinkFileVersion
 from .statistics import StatisticDocumentFileTypeCount
 from .status import (
@@ -100,6 +105,9 @@ __all__ = (
     "GroupFilters",
     "MatchingAlgorithm",
     "Permissions",
+    "SavedViewCustomFieldDisplay",
+    "SavedViewDisplayField",
+    "SavedViewDisplayMode",
     "SavedViewFilterRule",
     "SearchQuery",
     "ShareLinkFileVersion",

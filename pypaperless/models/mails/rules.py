@@ -36,3 +36,4 @@ class MailRule(PaperlessModel, mixins.SecurableModel):
     attachment_type: int | None = None
     consumption_scope: int | None = None
     pdf_layout: int | None = None
+    stop_processing: bool | None = None

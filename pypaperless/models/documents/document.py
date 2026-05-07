@@ -44,6 +44,24 @@ class DocumentSearchHit(BaseModel):
     rank: int | None = None
 
 
+class DocumentVersionInfo(BaseModel):
+    """Represent a subtype of `Document`."""
+
+    id: int | None = None
+    added: datetime.datetime | None = None
+    version_label: str | None = None
+    checksum: str | None = None
+    is_root: bool | None = None
+
+
+class DuplicateDocumentSummary(BaseModel):
+    """Represent a subtype of `Document`."""
+
+    id: int | None = None
+    title: str | None = None
+    deleted_at: datetime.datetime | None = None
+
+
 class FileRetrieveMode(StrEnum):
     """Represent a subtype of `DownloadedDocument`."""
 
@@ -199,11 +217,14 @@ class Document(
     archive_serial_number: int | None = None
     original_file_name: str | None = None
     archived_file_name: str | None = None
+    duplicate_documents: list[DuplicateDocumentSummary] | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: DocumentCustomFieldList | list | None = None
     notes_: list[DocumentNote] | None = Field(default=None, alias="notes", exclude=True, repr=False)
     page_count: int | None = None
     mime_type: str | None = None
+    root_document: int | None = None
+    versions: list[DocumentVersionInfo] | None = None
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
     @field_validator("custom_fields", mode="before")

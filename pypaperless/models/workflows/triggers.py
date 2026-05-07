@@ -68,6 +68,9 @@ class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsModel):
     filter_has_all_tags: list[int] | None = None
     filter_has_not_tags: list[int] | None = None
     filter_custom_field_query: str | None = None
+    filter_has_any_correspondents: list[int] | None = None
+    filter_has_any_document_types: list[int] | None = None
+    filter_has_any_storage_paths: list[int] | None = None
     filter_has_not_correspondents: list[int] | None = None
     filter_has_not_document_types: list[int] | None = None
     filter_has_not_storage_paths: list[int] | None = None
