@@ -70,7 +70,7 @@ class SavedViewCustomFieldDisplay(str):
 
     def __repr__(self) -> str:
         """Return repr(self)."""
-        return f"CustomFieldDisplay({super().__repr__()})"
+        return f"SavedViewCustomFieldDisplay({super().__repr__()})"
 
     @property
     def pk(self) -> int:
