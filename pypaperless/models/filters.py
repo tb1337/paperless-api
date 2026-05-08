@@ -188,6 +188,24 @@ class ShareLinkFilters(_CreatedFilters, total=False):
     expiration__year: int
 
 
+class ShareLinkBundleFilters(_CreatedFilters, total=False):
+    """Filters for :attr:`Paperless.share_link_bundles`."""
+
+    documents: int
+    expiration__date__gt: str
+    expiration__date__gte: str
+    expiration__date__lt: str
+    expiration__date__lte: str
+    expiration__day: int
+    expiration__gt: str
+    expiration__gte: str
+    expiration__lt: str
+    expiration__lte: str
+    expiration__month: int
+    expiration__year: int
+    status: str
+
+
 class StoragePathFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.storage_paths`."""
 

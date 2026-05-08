@@ -24,7 +24,7 @@ from .profile import Profile, ProfileSocialAccount
 from .remote_version import RemoteVersion
 from .saved_views import SavedView
 from .search import SearchResult
-from .share_links import ShareLink, ShareLinkDraft
+from .share_links import ShareLink, ShareLinkBundle, ShareLinkBundleDraft, ShareLinkDraft
 from .statistics import Statistic
 from .status import Status
 from .storage_paths import StoragePath, StoragePathDraft
@@ -61,6 +61,8 @@ __all__ = (
     "SavedView",
     "SearchResult",
     "ShareLink",
+    "ShareLinkBundle",
+    "ShareLinkBundleDraft",
     "ShareLinkDraft",
     "Statistic",
     "Status",

@@ -247,6 +247,11 @@ class PaperlessClient:
         return services.SearchService(self._runtime)
 
     @dispatchable_cached_property
+    def share_link_bundles(self) -> services.ShareLinkBundleService:
+        """Return the :class:`~pypaperless.services.ShareLinkBundleService`."""
+        return services.ShareLinkBundleService(self._runtime)
+
+    @dispatchable_cached_property
     def share_links(self) -> services.ShareLinkService:
         """Return the :class:`~pypaperless.services.ShareLinkService`."""
         return services.ShareLinkService(self._runtime)

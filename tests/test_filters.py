@@ -13,6 +13,7 @@ from .data import (
     DATA_CORRESPONDENTS,
     DATA_DOCUMENTS,
     DATA_GROUPS,
+    DATA_SHARE_LINK_BUNDLES,
     DATA_STORAGE_PATHS,
     DATA_TAGS,
     DATA_TRASH,
@@ -39,8 +40,23 @@ from .data import (
         ("trash", "trash", {"title__icontains": "old"}, DATA_TRASH),
         ("groups", "groups", {"name__icontains": "admin"}, DATA_GROUPS),
         ("users", "users", {"username__icontains": "admin"}, DATA_USERS),
+        (
+            "share_link_bundles",
+            "share_link_bundles",
+            {"status": "ready", "documents": 1},
+            DATA_SHARE_LINK_BUNDLES,
+        ),
     ],
-    ids=["documents", "correspondents", "tags", "storage_paths", "trash", "groups", "users"],
+    ids=[
+        "documents",
+        "correspondents",
+        "tags",
+        "storage_paths",
+        "trash",
+        "groups",
+        "users",
+        "share_link_bundles",
+    ],
 )
 async def test_service_filter_accepts_typed_kwargs(
     httpx_mock: HTTPXMock,

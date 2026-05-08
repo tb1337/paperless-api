@@ -15,6 +15,7 @@ from pypaperless.models import (
     Document,
     Profile,
     SearchResult,
+    ShareLinkBundle,
     Status,
     Task,
 )
@@ -36,6 +37,7 @@ from .data import (
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_SEARCH,
+    DATA_SHARE_LINK_BUNDLES,
     DATA_STATISTICS,
     DATA_STATUS,
     DATA_TASKS,
@@ -821,3 +823,27 @@ class TestDocumentsBulkEdit:
         )
         with pytest.raises(BulkEditError):
             await paperless.documents.bulk_edit.modify_tags([1], add_tags=[3], remove_tags=[])
+
+
+# ---------------------------------------------------------------------------
+# ShareLinkBundles
+# ---------------------------------------------------------------------------
+
+
+class TestShareLinkBundleRebuild:
+    """ShareLinkBundleService.rebuild() triggers a rebuild and returns a bundle."""
+
+    async def test_rebuild(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """rebuild() POSTs to the rebuild endpoint and returns a ShareLinkBundle."""
+        bundle_data = DATA_SHARE_LINK_BUNDLES["results"][0]
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.SHARE_LINK_BUNDLES_REBUILD}".format(
+                pk=bundle_data["id"]
+            ),
+            status_code=200,
+            json={**bundle_data, "status": "pending"},
+        )
+        result = await paperless.share_link_bundles.rebuild(bundle_data["id"])
+        assert isinstance(result, ShareLinkBundle)
+        assert result.id == bundle_data["id"]

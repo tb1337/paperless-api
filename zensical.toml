@@ -44,6 +44,7 @@ nav = [
     { "Saved Views" = "resources/saved_views.md" },
     { "Search" = "resources/search.md" },
     { "Share Links" = "resources/share_links.md" },
+    { "Share Link Bundles" = "resources/share_link_bundles.md" },
     { "Statistics" = "resources/statistics.md" },
     { "Status" = "resources/status.md" },
     { "Storage Paths" = "resources/storage_paths.md" },

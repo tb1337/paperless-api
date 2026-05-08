@@ -41,6 +41,7 @@ from .filters import (
     DocumentFilters,
     DocumentTypeFilters,
     GroupFilters,
+    ShareLinkBundleFilters,
     ShareLinkFilters,
     StoragePathFilters,
     TagFilters,
@@ -56,7 +57,7 @@ from .saved_views import (
     SavedViewDisplayMode,
     SavedViewFilterRule,
 )
-from .share_links import ShareLinkFileVersion
+from .share_links import ShareLinkBundleStatus, ShareLinkFileVersion
 from .statistics import StatisticDocumentFileTypeCount
 from .status import (
     StatusDatabase,
@@ -111,6 +112,8 @@ __all__ = (
     "SavedViewDisplayMode",
     "SavedViewFilterRule",
     "SearchQuery",
+    "ShareLinkBundleFilters",
+    "ShareLinkBundleStatus",
     "ShareLinkFileVersion",
     "ShareLinkFilters",
     "SourceMode",

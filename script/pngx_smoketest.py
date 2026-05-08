@@ -30,7 +30,11 @@ from pypaperless.models.custom_fields import (
 )
 from pypaperless.models.document_types import DocumentTypeDraft
 from pypaperless.models.documents import DocumentCustomFieldList, DocumentDraft, DocumentNoteDraft
-from pypaperless.models.share_links import ShareLinkDraft, ShareLinkFileVersion
+from pypaperless.models.share_links import (
+    ShareLinkBundleDraft,
+    ShareLinkDraft,
+    ShareLinkFileVersion,
+)
 from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
 from pypaperless.builders.custom_fields import CustomFieldQuery
@@ -1139,6 +1143,53 @@ async def test_share_links(p: PaperlessClient) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_share_link_bundles(p: PaperlessClient) -> None:
+    _hdr("Share Link Bundles – list, create, rebuild, delete")
+
+    await check(
+        "share_link_bundles.as_list()",
+        p.share_link_bundles.as_list(),
+        detail_fn=lambda r: f"count={len(r)}",
+    )
+
+    draft = ShareLinkBundleDraft.from_data(
+        p,
+        {
+            "document_ids": [TEST_DOCUMENT_ID],
+            "file_version": ShareLinkFileVersion.ARCHIVE,
+        },
+    )
+    bundle_id: int | None = None
+    try:
+        bundle_id = int(await p.share_link_bundles.save(draft))
+        ok("share_link_bundles.save(draft)", f"id={bundle_id}")
+    except Exception as exc:
+        fail("share_link_bundles.save(draft)", exc)
+
+    if bundle_id is not None:
+        bundle = await check(
+            f"share_link_bundles({bundle_id})",
+            p.share_link_bundles(bundle_id),
+            detail_fn=lambda r: f"status={r.status}, documents={r.documents}",
+        )
+
+        # rebuild
+        await check(
+            f"share_link_bundles.rebuild({bundle_id})",
+            p.share_link_bundles.rebuild(bundle_id),
+            detail_fn=lambda r: f"status={r.status}",
+        )
+
+        # delete
+        if bundle is not None:
+            await check(
+                f"share_link_bundles.delete({bundle_id})",
+                p.share_link_bundles.delete(bundle),
+                detail_fn=lambda r: f"deleted={r}",
+            )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_saved_views(p: PaperlessClient) -> None:
     _hdr("Saved Views – list, fetch")
 
@@ -1457,6 +1508,7 @@ async def main() -> int:
         await test_document_types(paperless)
         await test_storage_paths(paperless)
         await test_share_links(paperless)
+        await test_share_link_bundles(paperless)
         await test_saved_views(paperless)
         await test_users_groups(paperless)
         await test_tasks(paperless)

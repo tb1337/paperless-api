@@ -85,6 +85,10 @@ class EndpointPath(StrEnum):
     SHARE_LINKS = "/api/share_links/"
     SHARE_LINKS_SINGLE = "/api/share_links/{pk}/"
 
+    SHARE_LINK_BUNDLES = "/api/share_link_bundles/"
+    SHARE_LINK_BUNDLES_REBUILD = "/api/share_link_bundles/{pk}/rebuild/"
+    SHARE_LINK_BUNDLES_SINGLE = "/api/share_link_bundles/{pk}/"
+
     STATISTICS = "/api/statistics/"
 
     STATUS = "/api/status/"
@@ -133,6 +137,7 @@ class PaperlessResource(StrEnum):
     PROFILE = "profile"
     SAVED_VIEWS = "saved_views"
     SEARCH = "search"
+    SHARE_LINK_BUNDLES = "share_link_bundles"
     SHARE_LINKS = "share_links"
     STATISTICS = "statistics"
     REMOTE_VERSION = "remote_version"

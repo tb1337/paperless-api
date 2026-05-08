@@ -6,10 +6,9 @@ from typing import Self, Unpack
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models.filters import ShareLinkFilters
-from pypaperless.models.share_links import ShareLink, ShareLinkDraft
-
-from . import mixins
-from .base import ResourceService
+from pypaperless.models.share_links.share_link import ShareLink, ShareLinkDraft
+from pypaperless.services import mixins
+from pypaperless.services.base import ResourceService
 
 
 class ShareLinkService(

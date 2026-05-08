@@ -56,6 +56,7 @@ from pypaperless.models import (
     SavedView,
     SearchResult,
     ShareLink,
+    ShareLinkBundle,
     Statistic,
     Status,
     StoragePath,
@@ -91,7 +92,7 @@ from pypaperless.models.workflows import (
 )
 
 # ── credentials ───────────────────────────────────────────────────────────────
-PAPERLESS_URL = "http://host.docker.internal:8000"
+PAPERLESS_URL = "http://172.17.0.1:8000"
 PAPERLESS_TOKEN = "3e9505078d32d8ad4ecea00fa0eec8e426622b52"
 TEST_DOC_ID = 1980
 
@@ -116,6 +117,9 @@ KNOWN_OMISSIONS: dict[str, dict[str, str]] = {
         "password": "write-only credential; intentionally excluded from model",
     },
     "Profile": {
+        "password": "write-only credential; intentionally excluded from model",
+    },
+    "MailAccount": {
         "password": "write-only credential; intentionally excluded from model",
     },
 }
@@ -156,6 +160,12 @@ KNOWN_EXTRAS: dict[str, dict[str, str]] = {
         "id": "injected by service from path parameter; not in API response",
     },
     "SavedView": {
+        "permissions": "only returned with ?full_perms=true",
+    },
+    "MailAccount": {
+        "permissions": "only returned with ?full_perms=true",
+    },
+    "MailRule": {
         "permissions": "only returned with ?full_perms=true",
     },
 }
@@ -492,6 +502,13 @@ ENDPOINTS: list[EndpointSpec] = [
         "SearchResult", "/api/search/?query=invoice", SearchResult, "direct", "SearchResult"
     ),
     EndpointSpec("ShareLink", "/api/share_links/?page_size=1", ShareLink, "paginated", "ShareLink"),
+    EndpointSpec(
+        "ShareLinkBundle",
+        "/api/share_link_bundles/?page_size=1",
+        ShareLinkBundle,
+        "paginated",
+        "ShareLinkBundle",
+    ),
     EndpointSpec("Statistic", "/api/statistics/", Statistic, "direct", None),  # untyped in schema
     EndpointSpec("Status", "/api/status/", Status, "direct", "SystemStatus"),
     EndpointSpec(
