@@ -31,8 +31,9 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 | 8   | Rename `doc.get_download()`, `doc.get_metadata()`, etc. - shortcuts are back                                          | [Document convenience methods renamed](#document-convenience-methods-renamed) |
 | 9   | Note deletion: `note.delete()` → service call                                                                         | [Document notes](#document-notes)                                             |
 | 10  | `generate_api_token()` is now a module-level function, no longer a static class method                                | [Token generation](#token-generation)                                         |
-| 11  | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`               | [New resources](#new-resources)                                               |
-| 12  | Rename four `Paperless`-prefixed exception classes; new `DeletionError`, `DispatchError`                              | [Error handling](#error-handling)                                             |
+| 11  | `Task` fields and enum values overhauled; `run()` signature changed; new `active()` and `summary()` methods           | [Changed resources](#changed-resources)                                       |
+| 12  | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`               | [New resources](#new-resources)                                               |
+| 13  | Rename four `Paperless`-prefixed exception classes; new `DeletionError`, `DispatchError`                              | [Error handling](#error-handling)                                             |
 
 ---
 
@@ -435,6 +436,67 @@ Creating a new note:
 
 !!! note
     `save()` now returns only the new note `id` as `int`. In v5 it returned a `(note_id, doc_id)` tuple.
+
+---
+
+## Changed resources
+
+### `paperless.tasks`
+
+The `Task` model was significantly overhauled for Paperless-ngx API v10. The `type` field was renamed to `task_type`, and `task_name`, `task_file_name`, and `result` were removed. The single `related_document` integer was replaced by `related_document_ids` (a list of integers). New fields include `task_type_display`, `trigger_source`, `trigger_source_display`, `status_display`, `date_started`, `duration_seconds`, `wait_time_seconds`, `input_data`, and `result_data`.
+
+The `TaskType` enum values changed entirely — the old high-level categories (`AUTO`, `SCHEDULED`, `MANUAL`) are gone and replaced with specific task-type names such as `CONSUME_FILE`, `SANITY_CHECK`, `MAIL_FETCH`, and others. The `TaskStatus` values changed from uppercase strings to lowercase; the `RECEIVED` and `RETRY` statuses were removed. A new `TaskTriggerSource` enum was introduced to express how a task was initiated (e.g. `API_UPLOAD`, `FOLDER_CONSUME`, `EMAIL_CONSUME`).
+
+#### `filter()` is now a context manager
+
+Consistent with the general `filter()` change [described above](#iteration-and-filtering), `tasks.filter()` now returns a context manager:
+
+=== "v5"
+    ```python
+    async for task in paperless.tasks.filter(status="SUCCESS", acknowledged=False):
+        print(task.task_id)
+    ```
+
+=== "v6"
+    ```python
+    async with paperless.tasks.filter(status=["success"], acknowledged=False) as ctx:
+        async for task in ctx:
+            print(task.task_id)
+    ```
+
+#### `run()` changed signature and return type
+
+In v5, `run()` accepted a Celery UUID and returned a `Task`. In v6 it accepts a `TaskType` (or plain string) and schedules a fresh background task, returning the new Celery UUID as a string:
+
+=== "v5"
+    ```python
+    rerun = await paperless.tasks.run("a1b2c3d4-...")
+    print(rerun.status)  # returned a Task
+    ```
+
+=== "v6"
+    ```python
+    from pypaperless.models.tasks import TaskType
+
+    task_uuid = await paperless.tasks.run(TaskType.SANITY_CHECK)  # returns str UUID
+    task = await paperless.tasks(task_uuid)
+    ```
+
+#### New methods
+
+Two new service methods were added:
+
+- `active()` — iterates over currently pending and running tasks (capped at 50 server-side).
+- `summary()` — returns a list of `TaskSummary` objects with aggregated statistics (counts, durations, last run) per task type, optionally scoped to a rolling time window via the `days` parameter.
+
+```python
+async for task in paperless.tasks.active():
+    print(task.task_id, task.status)
+
+summaries = await paperless.tasks.summary(days=7)
+for s in summaries:
+    print(s.task_type, s.success_count, s.failure_count)
+```
 
 ---
 

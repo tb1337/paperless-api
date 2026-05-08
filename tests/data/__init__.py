@@ -29,7 +29,7 @@ from .statistics import DATA_STATISTICS
 from .status import DATA_STATUS
 from .storage_paths import DATA_STORAGE_PATHS
 from .tags import DATA_TAGS
-from .tasks import DATA_TASKS
+from .tasks import DATA_TASKS, DATA_TASKS_ACTIVE, DATA_TASKS_SUMMARY
 from .token import DATA_TOKEN
 from .trash import DATA_TRASH
 from .users import DATA_USERS
@@ -76,6 +76,8 @@ __all__ = (
     "DATA_STORAGE_PATHS",
     "DATA_TAGS",
     "DATA_TASKS",
+    "DATA_TASKS_ACTIVE",
+    "DATA_TASKS_SUMMARY",
     "DATA_TOKEN",
     "DATA_TRASH",
     "DATA_USERS",

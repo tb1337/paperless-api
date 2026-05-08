@@ -80,7 +80,7 @@ from pypaperless.models.status import (
     StatusStorage,
     StatusTasks,
 )
-from pypaperless.models.tasks import TaskStatus, TaskType
+from pypaperless.models.tasks import TaskStatus, TaskTriggerSource, TaskType
 from pypaperless.models.workflows import (
     WorkflowActionEmail,
     WorkflowActionType,
@@ -313,8 +313,9 @@ ENUM_MAPPINGS: list[tuple[type[Enum], str, str]] = [
     (MatchingAlgorithm, "MatchingAlgorithm", "Correspondent / DocumentType / StoragePath / Tag"),
     (CustomFieldType, "DataTypeEnum", "CustomField.data_type"),
     (ShareLinkFileVersion, "FileVersionEnum", "ShareLink.file_version"),
-    (TaskType, "TasksViewTypeEnum", "Task.type"),
-    (TaskStatus, "StatusEnum", "Task.status"),
+    (TaskType, "TaskTypeEnum", "Task.task_type"),
+    (TaskStatus, "TaskSerializerV10StatusEnum", "Task.status"),
+    (TaskTriggerSource, "TriggerSourceEnum", "Task.trigger_source"),
     (WorkflowActionType, "WorkflowActionTypeEnum", "WorkflowAction.type"),
     (WorkflowTriggerType, "WorkflowTriggerTypeEnum", "WorkflowTrigger.type"),
     (
@@ -342,7 +343,6 @@ UNTYPED_ENUM_FIELDS: list[tuple[str, str, str]] = [
     ("MailRule", "consumption_scope", "ConsumptionScopeEnum"),
     ("MailRule", "pdf_layout", "PdfLayoutEnum"),
     ("SavedView", "display_mode", "DisplayModeEnum"),
-    ("Task", "task_name", "TaskNameEnum"),
 ]
 
 # ── Schema paths that are action/utility endpoints (no resource model needed) ─
@@ -376,7 +376,9 @@ KNOWN_UTILITY_PATHS: set[str] = {
     "/api/profile/totp/",
     "/api/storage_paths/test/",
     "/api/tasks/acknowledge/",
+    "/api/tasks/active/",
     "/api/tasks/run/",
+    "/api/tasks/summary/",
     "/api/users/{id}/deactivate_totp/",
 }
 
@@ -496,7 +498,7 @@ ENDPOINTS: list[EndpointSpec] = [
         "StoragePath", "/api/storage_paths/?page_size=1", StoragePath, "paginated", "StoragePath"
     ),
     EndpointSpec("Tag", "/api/tags/?page_size=1", Tag, "paginated", "Tag"),
-    EndpointSpec("Task", "/api/tasks/", Task, "list_index0", "TasksView"),
+    EndpointSpec("Task", "/api/tasks/?page_size=1", Task, "paginated", "TaskSerializerV10"),
     EndpointSpec("Trash", "/api/trash/?page_size=1", Document, "paginated", "Document"),
     EndpointSpec("User", "/api/users/?page_size=1", User, "paginated", "User"),
     EndpointSpec("Workflow", "/api/workflows/?page_size=1", Workflow, "paginated", "Workflow"),

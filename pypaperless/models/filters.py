@@ -20,6 +20,8 @@ All fields are optional (``total=False``).  Pagination parameters (``page``,
 
 from typing import TypedDict
 
+from pypaperless.models.tasks import TaskStatus, TaskTriggerSource, TaskType
+
 
 class _CreatedFilters(TypedDict, total=False):
     """Common created-date filter fields."""
@@ -202,12 +204,24 @@ class TagFilters(_NameFilters, total=False):
 
 
 class TaskFilters(TypedDict, total=False):
-    """Filters for :attr:`Paperless.tasks`."""
+    """Filters for :attr:`Paperless.tasks` and :meth:`TaskService.active`."""
 
     acknowledged: bool
-    status: str
-    task_name: str
-    type: str
+    date_created_after: str
+    date_created_before: str
+    is_complete: bool
+    ordering: str
+    owner: int
+    status: TaskStatus | str | list[TaskStatus | str]
+    task_id: str
+    task_type: TaskType | str | list[TaskType | str]
+    trigger_source: TaskTriggerSource | str | list[TaskTriggerSource | str]
+
+
+class TaskSummaryFilters(TaskFilters, total=False):
+    """Additional filters for :meth:`~pypaperless.services.tasks.TaskService.summary`."""
+
+    days: int
 
 
 class UserFilters(TypedDict, total=False):

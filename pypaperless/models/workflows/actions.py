@@ -87,4 +87,4 @@ class WorkflowAction(PaperlessModel):
     remove_change_groups: list[int] | None = None
     email: WorkflowActionEmail | None = None
     webhook: WorkflowActionWebhook | None = None
-    passwords: str | None = None
+    passwords: list[str] | None = None

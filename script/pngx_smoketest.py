@@ -81,8 +81,7 @@ async def _await_task_and_cleanup(
 ) -> None:
     """Poll *task_id* until it finishes, then delete the resulting document.
 
-    Uses ``Task.related_document`` to obtain the created doc ID without
-    fragile result-string parsing.
+    Uses ``Task.related_document_ids`` to obtain the created doc ID.
     """
     from pypaperless.models.tasks import TaskStatus
 
@@ -98,16 +97,16 @@ async def _await_task_and_cleanup(
             TaskStatus.FAILURE,
             TaskStatus.REVOKED,
         ):
-            if task.related_document is not None:
-                try:
-                    doc_id = int(task.related_document)
-                except (ValueError, TypeError):
-                    pass
+            if task.related_document_ids:
+                doc_id = task.related_document_ids[0]
             break
         await asyncio.sleep(1)
 
     if task is not None and task.status == TaskStatus.FAILURE:
-        ok(f"cleanup [{label}]: task failed – nothing to delete", f"result={task.result!r}")
+        ok(
+            f"cleanup [{label}]: task failed – nothing to delete",
+            f"result_data={task.result_data!r}",
+        )
         return
 
     if doc_id is not None:
@@ -1187,7 +1186,7 @@ async def test_users_groups(p: PaperlessClient) -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_tasks(p: PaperlessClient) -> None:
-    _hdr("Tasks – iterate, fetch by uuid")
+    _hdr("Tasks – iterate, fetch by uuid, active, summary")
 
     tasks = []
     try:
@@ -1211,6 +1210,20 @@ async def test_tasks(p: PaperlessClient) -> None:
                 p.tasks(first.id),
                 detail_fn=lambda r: f"status={r.status}",
             )
+
+    active_tasks = []
+    try:
+        async for task in p.tasks.active():
+            active_tasks.append(task)
+        ok("tasks.active()", f"count={len(active_tasks)}")
+    except Exception as exc:
+        fail("tasks.active()", exc)
+
+    await check(
+        "tasks.summary(days=7)",
+        p.tasks.summary(days=7),
+        detail_fn=lambda r: f"types={len(r)}",
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────────

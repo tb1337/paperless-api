@@ -45,6 +45,7 @@ from .filters import (
     StoragePathFilters,
     TagFilters,
     TaskFilters,
+    TaskSummaryFilters,
     UserFilters,
 )
 from .mixins.data_fields import MatchingAlgorithm
@@ -64,7 +65,7 @@ from .status import (
     StatusTasks,
     StatusType,
 )
-from .tasks import TaskStatus, TaskType
+from .tasks import TaskStatus, TaskSummary, TaskTriggerSource, TaskType
 from .workflows import (
     WorkflowActionEmail,
     WorkflowActionType,
@@ -123,6 +124,9 @@ __all__ = (
     "TagFilters",
     "TaskFilters",
     "TaskStatus",
+    "TaskSummary",
+    "TaskSummaryFilters",
+    "TaskTriggerSource",
     "TaskType",
     "UserFilters",
     "WorkflowActionEmail",
