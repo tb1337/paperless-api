@@ -27,6 +27,7 @@ from .files import (
 from .history import DocumentHistoryService
 from .notes import DocumentNoteService
 from .share_links import DocumentShareLinkService
+from .versions import DocumentRootService, DocumentVersionService
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
@@ -109,6 +110,8 @@ class DocumentService(
         self._share_links = DocumentShareLinkService(runtime)
         self._suggestions = DocumentSuggestionsService(runtime)
         self._thumbnail = DocumentFileThumbnailService(runtime)
+        self._root = DocumentRootService(runtime)
+        self._versions = DocumentVersionService(runtime)
 
     @property
     def ai_suggestions(self) -> DocumentAISuggestionsService:
@@ -251,6 +254,31 @@ class DocumentService(
 
         """
         return self._thumbnail
+
+    @property
+    def root(self) -> DocumentRootService:
+        """Return the ``DocumentRootService`` sub-service.
+
+        Example::
+
+            result = await paperless.documents.root(42)
+            print(result.root_id)
+
+        """
+        return self._root
+
+    @property
+    def versions(self) -> DocumentVersionService:
+        """Return the ``DocumentVersionService`` sub-service.
+
+        Example::
+
+            await paperless.documents.versions.upload(file, pk=42)
+            result = await paperless.documents.versions.update(1, version_label="v2", pk=42)
+            await paperless.documents.versions.delete(1, pk=42)
+
+        """
+        return self._versions
 
     async def get_next_asn(self) -> int:
         """Request the next available archive serial number from Paperless.

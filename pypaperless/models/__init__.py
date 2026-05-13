@@ -17,7 +17,9 @@ from .documents import (
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentRoot,
     DocumentSuggestions,
+    DocumentVersionInfo,
     DownloadedDocument,
 )
 from .mails import MailAccount, MailRule, ProcessedMail
@@ -50,9 +52,11 @@ __all__ = (
     "DocumentMeta",
     "DocumentNote",
     "DocumentNoteDraft",
+    "DocumentRoot",
     "DocumentSuggestions",
     "DocumentType",
     "DocumentTypeDraft",
+    "DocumentVersionInfo",
     "DownloadedDocument",
     "Group",
     "MailAccount",

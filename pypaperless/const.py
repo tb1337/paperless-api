@@ -56,10 +56,13 @@ class EndpointPath(StrEnum):
     DOCUMENTS_REMOVE_PASSWORD = "/api/documents/remove_password/"
     DOCUMENTS_REPROCESS = "/api/documents/reprocess/"
     DOCUMENTS_ROTATE = "/api/documents/rotate/"
+    DOCUMENTS_ROOT = "/api/documents/{pk}/root/"
     DOCUMENTS_SHARE_LINKS = "/api/documents/{pk}/share_links/"
     DOCUMENTS_SINGLE = "/api/documents/{pk}/"
     DOCUMENTS_SUGGESTIONS = "/api/documents/{pk}/suggestions/"
     DOCUMENTS_THUMBNAIL = "/api/documents/{pk}/thumb/"
+    DOCUMENTS_UPDATE_VERSION = "/api/documents/{pk}/update_version/"
+    DOCUMENTS_VERSION = "/api/documents/{pk}/versions/{version_id}/"
 
     GROUPS = "/api/groups/"
     GROUPS_SINGLE = "/api/groups/{pk}/"

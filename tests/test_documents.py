@@ -1,6 +1,7 @@
 """Tests for the Document service: CRUD, lazy fetch, files, notes, history, custom fields."""
 
 import datetime
+import io
 import json
 import re
 
@@ -29,7 +30,9 @@ from pypaperless.models import (
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentRoot,
     DocumentSuggestions,
+    DocumentVersionInfo,
     DownloadedDocument,
     ShareLink,
 )
@@ -56,8 +59,10 @@ from .data import (
     DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
     DATA_DOCUMENT_NOTES,
+    DATA_DOCUMENT_ROOT,
     DATA_DOCUMENT_SHARE_LINKS,
     DATA_DOCUMENT_SUGGESTIONS,
+    DATA_DOCUMENT_VERSION_INFO,
     DATA_DOCUMENTS,
     DATA_DOCUMENTS_SEARCH,
 )
@@ -928,3 +933,196 @@ class TestDocumentChat:
         assert isinstance(result, DocumentChat)
         assert result.q == "General question"
         assert result.document_id is None
+
+
+class TestDocumentVersionService:
+    """DocumentVersionService: upload / update / delete per-document sub-service."""
+
+    async def test_upload_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """upload() POSTs multipart data and returns None."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_UPDATE_VERSION}".format(pk=1),
+            status_code=200,
+            text="OK",
+        )
+
+        result = await paperless.documents.versions.upload(io.BytesIO(b"data"), pk=1)
+        assert result is None
+
+    async def test_upload_with_label_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """upload() includes version_label in multipart when provided."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_UPDATE_VERSION}".format(pk=1),
+            status_code=200,
+            text="OK",
+        )
+
+        result = await paperless.documents.versions.upload(
+            io.BytesIO(b"data"), version_label="v2", pk=1
+        )
+        assert result is None
+
+    async def test_update_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """update() PATCHes the version label and returns a DocumentVersionInfo."""
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_VERSION}".format(pk=1, version_id=1),
+            status_code=200,
+            json=DATA_DOCUMENT_VERSION_INFO,
+        )
+        result = await paperless.documents.versions.update(1, version_label="v2", pk=1)
+        assert isinstance(result, DocumentVersionInfo)
+        assert result.version_label == DATA_DOCUMENT_VERSION_INFO["version_label"]
+        assert result.is_root == DATA_DOCUMENT_VERSION_INFO["is_root"]
+
+    async def test_delete_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """delete() sends DELETE and returns None."""
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_VERSION}".format(pk=1, version_id=1),
+            status_code=204,
+        )
+        result = await paperless.documents.versions.delete(1, pk=1)
+        assert result is None
+
+    async def test_upload_via_document_property(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """upload() works when called via a Document instance (uses attached pk)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_UPDATE_VERSION}".format(pk=1),
+            status_code=200,
+            text="OK",
+        )
+
+        doc = await paperless.documents(1)
+        result = await doc.versions.upload(io.BytesIO(b"data"))
+        assert result is None
+
+    async def test_update_via_document_property(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """update() works when called via a Document instance (uses attached pk)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="PATCH",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_VERSION}".format(pk=1, version_id=1),
+            status_code=200,
+            json=DATA_DOCUMENT_VERSION_INFO,
+        )
+        doc = await paperless.documents(1)
+        result = await doc.versions.update(1, version_label="v2")
+        assert isinstance(result, DocumentVersionInfo)
+
+    async def test_delete_via_document_property(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """delete() works when called via a Document instance (uses attached pk)."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="DELETE",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_VERSION}".format(pk=1, version_id=1),
+            status_code=204,
+        )
+        doc = await paperless.documents(1)
+        result = await doc.versions.delete(1)
+        assert result is None
+
+    async def test_upload_no_pk_raises(self, paperless: PaperlessClient) -> None:
+        """upload() without pk and without attached doc raises PrimaryKeyRequiredError."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.versions.upload(io.BytesIO(b"data"))
+
+    async def test_update_no_pk_raises(self, paperless: PaperlessClient) -> None:
+        """update() without pk and without attached doc raises PrimaryKeyRequiredError."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.versions.update(1, version_label="v2")
+
+    async def test_delete_no_pk_raises(self, paperless: PaperlessClient) -> None:
+        """delete() without pk and without attached doc raises PrimaryKeyRequiredError."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.versions.delete(1)
+
+    def test_property_cached(self, api: PaperlessClient) -> None:
+        """Accessing .versions twice returns the same service instance."""
+        doc = Document.from_data(api._runtime, {"id": 5})
+        svc1 = doc.versions
+        svc2 = doc.versions
+        assert svc1 is svc2
+
+
+class TestDocumentRootService:
+    """DocumentRootService: GET per-document sub-service."""
+
+    async def test_call_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Calling the service with a pk returns a DocumentRoot instance."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_ROOT}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_ROOT,
+        )
+        result = await paperless.documents.root(1)
+        assert isinstance(result, DocumentRoot)
+        assert result.root_id == DATA_DOCUMENT_ROOT["root_id"]
+
+    async def test_call_via_document_property(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Accessing root via a Document instance uses the attached pk."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_ROOT}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_ROOT,
+        )
+        doc = await paperless.documents(1)
+        result = await doc.root()
+        assert isinstance(result, DocumentRoot)
+
+    async def test_no_pk_raises(self, paperless: PaperlessClient) -> None:
+        """Calling the service without a pk raises PrimaryKeyRequiredError."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.root()
+
+    def test_property_cached(self, api: PaperlessClient) -> None:
+        """Accessing .root twice returns the same service instance."""
+        doc = Document.from_data(api._runtime, {"id": 5})
+        svc1 = doc.root
+        svc2 = doc.root
+        assert svc1 is svc2

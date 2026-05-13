@@ -12,9 +12,11 @@ from .document_chat import DATA_DOCUMENT_CHAT
 from .document_history import DATA_DOCUMENT_HISTORY
 from .document_metadata import DATA_DOCUMENT_METADATA
 from .document_notes import DATA_DOCUMENT_NOTES
+from .document_root import DATA_DOCUMENT_ROOT
 from .document_share_links import DATA_DOCUMENT_SHARE_LINKS
 from .document_suggestions import DATA_DOCUMENT_SUGGESTIONS
 from .document_types import DATA_DOCUMENT_TYPES
+from .document_version_info import DATA_DOCUMENT_VERSION_INFO
 from .documents import DATA_DOCUMENTS
 from .documents_bulk_edit import DATA_DOCUMENTS_BULK_EDIT
 from .documents_search import DATA_DOCUMENTS_SEARCH
@@ -61,9 +63,11 @@ __all__ = (
     "DATA_DOCUMENT_HISTORY",
     "DATA_DOCUMENT_METADATA",
     "DATA_DOCUMENT_NOTES",
+    "DATA_DOCUMENT_ROOT",
     "DATA_DOCUMENT_SHARE_LINKS",
     "DATA_DOCUMENT_SUGGESTIONS",
     "DATA_DOCUMENT_TYPES",
+    "DATA_DOCUMENT_VERSION_INFO",
     "DATA_GROUPS",
     "DATA_MAIL_ACCOUNTS",
     "DATA_MAIL_RULES",
