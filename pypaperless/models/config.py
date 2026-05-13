@@ -129,6 +129,7 @@ class Config(PaperlessModel):
     ai_enabled: bool | None = None
     llm_embedding_backend: LLMEmbeddingBackend | None = None
     llm_embedding_model: str | None = None
+    llm_embedding_endpoint: str | None = None
     llm_endpoint: str | None = None
     llm_model: str | None = None
     llm_api_key: str | None = None
