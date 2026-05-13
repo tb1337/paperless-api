@@ -43,6 +43,7 @@ from pypaperless.models import (
     Correspondent,
     CustomField,
     Document,
+    DocumentAISuggestions,
     DocumentHistory,
     DocumentMeta,
     DocumentNote,
@@ -159,6 +160,9 @@ KNOWN_EXTRAS: dict[str, dict[str, str]] = {
     "DocumentSuggestions": {
         "id": "injected by service from path parameter; not in API response",
     },
+    "DocumentAISuggestions": {
+        "id": "injected by service from path parameter; not in API response",
+    },
     "SavedView": {
         "permissions": "only returned with ?full_perms=true",
     },
@@ -213,6 +217,9 @@ KNOWN_SCHEMA_EXTRAS: dict[str, dict[str, str]] = {
     },
     "DocumentSuggestions": {
         "id": "injected by service from path parameter; Suggestions schema has no 'id'",
+    },
+    "DocumentAISuggestions": {
+        "id": "injected by service from path parameter; AISuggestions schema has no 'id'",
     },
 }
 
@@ -473,6 +480,13 @@ ENDPOINTS: list[EndpointSpec] = [
         DocumentSuggestions,
         "direct",
         "Suggestions",
+    ),
+    EndpointSpec(
+        "DocumentAISuggestions",
+        f"/api/documents/{TEST_DOC_ID}/ai_suggestions/",
+        DocumentAISuggestions,
+        "direct",
+        "AISuggestions",
     ),
     EndpointSpec(
         "DocumentType",
@@ -935,6 +949,13 @@ def _print_summary(
         )
         for r in no_data_list:
             print(f"    {YELLOW}·  {r.label:<30s}  {DIM}({r.model_name}){RESET}")
+
+    # ── Fetch errors ──────────────────────────────────────────────────────────
+    error_list = [r for r in results if r.fetch_error]
+    if error_list:
+        print(f"\n  {RED}{BOLD}Fetch errors:{RESET}")
+        for r in error_list:
+            print(f"    {RED}✗  {r.label:<30s}  {DIM}{r.fetch_error}{RESET}")
 
     if all_missing:
         print(f"\n  {RED}{BOLD}Fields missing in model (not captured by any field):{RESET}")

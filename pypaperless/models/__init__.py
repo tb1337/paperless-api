@@ -8,6 +8,8 @@ from .custom_fields import CustomField, CustomFieldDraft
 from .document_types import DocumentType, DocumentTypeDraft
 from .documents import (
     Document,
+    DocumentAISuggestions,
+    DocumentChat,
     DocumentCustomFieldList,
     DocumentDraft,
     DocumentHistory,
@@ -39,6 +41,8 @@ __all__ = (
     "CustomField",
     "CustomFieldDraft",
     "Document",
+    "DocumentAISuggestions",
+    "DocumentChat",
     "DocumentCustomFieldList",
     "DocumentDraft",
     "DocumentHistory",

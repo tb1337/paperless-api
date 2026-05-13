@@ -20,6 +20,8 @@ from pypaperless.models import (
     Correspondent,
     CustomField,
     Document,
+    DocumentAISuggestions,
+    DocumentChat,
     DocumentCustomFieldList,
     DocumentDraft,
     DocumentHistory,
@@ -49,6 +51,8 @@ from pypaperless.services.mixins.updatable import UpdatableService
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CUSTOM_FIELDS,
+    DATA_DOCUMENT_AI_SUGGESTIONS,
+    DATA_DOCUMENT_CHAT,
     DATA_DOCUMENT_HISTORY,
     DATA_DOCUMENT_METADATA,
     DATA_DOCUMENT_NOTES,
@@ -839,3 +843,88 @@ def test_document_sub_service_properties_cached(api: PaperlessClient) -> None:
     sl1 = doc.share_links
     sl2 = doc.share_links
     assert sl1 is sl2
+
+
+class TestDocumentAISuggestions:
+    """DocumentAISuggestionsService: GET per-document sub-service."""
+
+    async def test_call_via_service(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Calling the service with a pk returns a DocumentAISuggestions instance."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_AI_SUGGESTIONS}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_AI_SUGGESTIONS,
+        )
+        result = await paperless.documents.ai_suggestions(1)
+        assert isinstance(result, DocumentAISuggestions)
+        assert result.id == 1
+        assert result.title == DATA_DOCUMENT_AI_SUGGESTIONS["title"]
+        assert result.correspondents == DATA_DOCUMENT_AI_SUGGESTIONS["correspondents"]
+        assert result.suggested_tags == DATA_DOCUMENT_AI_SUGGESTIONS["suggested_tags"]
+
+    async def test_call_via_document_property(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """Accessing ai_suggestions via a Document instance uses the attached pk."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENTS["results"][0],
+        )
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_AI_SUGGESTIONS}".format(pk=1),
+            status_code=200,
+            json=DATA_DOCUMENT_AI_SUGGESTIONS,
+        )
+        doc = await paperless.documents(1)
+        result = await doc.ai_suggestions(1)
+        assert isinstance(result, DocumentAISuggestions)
+
+    async def test_no_pk_raises(self, paperless: PaperlessClient) -> None:
+        """Calling the service without a pk and without an attached document raises."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.ai_suggestions()
+
+    def test_property_cached(self, api: PaperlessClient) -> None:
+        """Accessing .ai_suggestions twice returns the same service instance."""
+        doc = Document.from_data(api._runtime, {"id": 5})
+        svc1 = doc.ai_suggestions
+        svc2 = doc.ai_suggestions
+        assert svc1 is svc2
+
+
+class TestDocumentChat:
+    """DocumentChatService: POST collection-level service."""
+
+    async def test_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """Calling the service POSTs the payload and returns a DocumentChat instance."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_CHAT}",
+            status_code=200,
+            json=DATA_DOCUMENT_CHAT,
+        )
+        result = await paperless.documents.chat("What is this document about?", 1)
+        assert isinstance(result, DocumentChat)
+        assert result.q == DATA_DOCUMENT_CHAT["q"]
+        assert result.document_id == DATA_DOCUMENT_CHAT["document_id"]
+
+    async def test_call_without_document_id(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """document_id is optional; omitting it sends only `q` in the payload."""
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_CHAT}",
+            status_code=200,
+            json={"q": "General question", "document_id": None},
+        )
+        result = await paperless.documents.chat("General question")
+        assert isinstance(result, DocumentChat)
+        assert result.q == "General question"
+        assert result.document_id is None

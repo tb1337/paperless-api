@@ -20,6 +20,7 @@ from pypaperless.models.custom_fields import (
     CustomFieldValueT,
 )
 from pypaperless.models.documents.notes import DocumentNote
+from pypaperless.services.documents.ai_suggestions import DocumentAISuggestionsService
 from pypaperless.services.documents.history import DocumentHistoryService
 from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.documents.share_links import DocumentShareLinkService
@@ -200,6 +201,7 @@ class Document(
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _history: DocumentHistoryService | None = PrivateAttr(default=None)
+    _ai_suggestions: DocumentAISuggestionsService | None = PrivateAttr(default=None)
     _notes: DocumentNoteService | None = PrivateAttr(default=None)
     _share_links: DocumentShareLinkService | None = PrivateAttr(default=None)
 
@@ -243,6 +245,13 @@ class Document(
                 if note.document is None:
                     note.document = self.id
         return self
+
+    @property
+    def ai_suggestions(self) -> DocumentAISuggestionsService:
+        """Return the AI suggestions service for this document."""
+        if self._ai_suggestions is None:
+            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, cast("int", self.id))
+        return self._ai_suggestions
 
     @property
     def history(self) -> DocumentHistoryService:

@@ -39,7 +39,9 @@ class EndpointPath(StrEnum):
     DOCUMENT_TYPES_SINGLE = "/api/document_types/{pk}/"
 
     DOCUMENTS = "/api/documents/"
+    DOCUMENTS_AI_SUGGESTIONS = "/api/documents/{pk}/ai_suggestions/"
     DOCUMENTS_BULK_EDIT = "/api/documents/bulk_edit/"
+    DOCUMENTS_CHAT = "/api/documents/chat/"
     DOCUMENTS_DELETE = "/api/documents/delete/"
     DOCUMENTS_DOWNLOAD = "/api/documents/{pk}/download/"
     DOCUMENTS_EDIT_PDF = "/api/documents/edit_pdf/"

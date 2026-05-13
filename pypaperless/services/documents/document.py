@@ -16,7 +16,9 @@ from pypaperless.models.filters import DocumentFilters
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
 
+from .ai_suggestions import DocumentAISuggestionsService
 from .bulk_edit import DocumentBulkEditService
+from .chat import DocumentChatService
 from .files import (
     DocumentFileDownloadService,
     DocumentFilePreviewService,
@@ -96,7 +98,9 @@ class DocumentService(
         """Initialize a `DocumentService` instance."""
         super().__init__(runtime)
 
+        self._ai_suggestions = DocumentAISuggestionsService(runtime)
         self._bulk_edit = DocumentBulkEditService(runtime)
+        self._chat = DocumentChatService(runtime)
         self._download = DocumentFileDownloadService(runtime)
         self._history = DocumentHistoryService(runtime)
         self._meta = DocumentMetaService(runtime)
@@ -105,6 +109,18 @@ class DocumentService(
         self._share_links = DocumentShareLinkService(runtime)
         self._suggestions = DocumentSuggestionsService(runtime)
         self._thumbnail = DocumentFileThumbnailService(runtime)
+
+    @property
+    def ai_suggestions(self) -> DocumentAISuggestionsService:
+        """Return the ``DocumentAISuggestionsService`` sub-service.
+
+        Example::
+
+            result = await paperless.documents.ai_suggestions(42)
+            print(result.title, result.suggested_tags)
+
+        """
+        return self._ai_suggestions
 
     @property
     def bulk_edit(self) -> DocumentBulkEditService:
@@ -116,6 +132,18 @@ class DocumentService(
 
         """
         return self._bulk_edit
+
+    @property
+    def chat(self) -> DocumentChatService:
+        """Return the ``DocumentChatService`` sub-service.
+
+        Example::
+
+            response = await paperless.documents.chat("What is this invoice about?", 42)
+            print(response.q)
+
+        """
+        return self._chat
 
     @property
     def download(self) -> DocumentFileDownloadService:

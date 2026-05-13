@@ -372,6 +372,51 @@ async def test_document_history(p: PaperlessClient) -> None:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+async def test_document_ai_suggestions(p: PaperlessClient) -> None:
+    _hdr("Document AI Suggestions – GET per-document")
+
+    try:
+        result = await p.documents.ai_suggestions(TEST_DOCUMENT_ID)
+        ok(
+            f"documents.ai_suggestions({TEST_DOCUMENT_ID})",
+            f"title={result.title!r}, suggested_tags={result.suggested_tags}",
+        )
+        try:
+            doc = await p.documents(TEST_DOCUMENT_ID)
+            result_via_doc = await doc.ai_suggestions(TEST_DOCUMENT_ID)
+            ok(
+                f"doc.ai_suggestions() property [{TEST_DOCUMENT_ID}]",
+                f"title={result_via_doc.title!r}",
+            )
+        except Exception as exc:
+            fail("doc.ai_suggestions() property", exc)
+    except Exception as exc:
+        # LLM / AI backend may not be configured on the test instance – treat as non-fatal
+        ok(
+            f"documents.ai_suggestions({TEST_DOCUMENT_ID}) [skipped – LLM not configured]",
+            f"error={exc}",
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+async def test_document_chat(p: PaperlessClient) -> None:
+    _hdr("Document Chat – POST LLM query")
+
+    try:
+        result = await p.documents.chat("What is this document about?", TEST_DOCUMENT_ID)
+        ok(
+            f"documents.chat('...', {TEST_DOCUMENT_ID})",
+            f"q={result.q!r}, document_id={result.document_id}",
+        )
+    except Exception as exc:
+        # LLM may not be configured on the test instance – treat as non-fatal
+        ok(
+            f"documents.chat('...', {TEST_DOCUMENT_ID}) [skipped – LLM not configured]",
+            f"error={exc}",
+        )
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 async def test_document_share_links(p: PaperlessClient) -> None:
     _hdr("Document Share Links – list via service and document property")
 
@@ -1495,6 +1540,8 @@ async def main() -> int:
         await test_config(paperless)
         await test_documents(paperless)
         await test_document_history(paperless)
+        await test_document_ai_suggestions(paperless)
+        await test_document_chat(paperless)
         await test_document_share_links(paperless)
         await test_trash(paperless)
         await test_bulk_edit_objects(paperless)

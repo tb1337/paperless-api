@@ -7,6 +7,8 @@ from .bulk_edit_objects import DATA_BULK_EDIT_OBJECTS
 from .config import DATA_CONFIG
 from .correspondents import DATA_CORRESPONDENTS
 from .custom_fields import DATA_CUSTOM_FIELDS
+from .document_ai_suggestions import DATA_DOCUMENT_AI_SUGGESTIONS
+from .document_chat import DATA_DOCUMENT_CHAT
 from .document_history import DATA_DOCUMENT_HISTORY
 from .document_metadata import DATA_DOCUMENT_METADATA
 from .document_notes import DATA_DOCUMENT_NOTES
@@ -54,6 +56,8 @@ __all__ = (
     "DATA_DOCUMENTS",
     "DATA_DOCUMENTS_BULK_EDIT",
     "DATA_DOCUMENTS_SEARCH",
+    "DATA_DOCUMENT_AI_SUGGESTIONS",
+    "DATA_DOCUMENT_CHAT",
     "DATA_DOCUMENT_HISTORY",
     "DATA_DOCUMENT_METADATA",
     "DATA_DOCUMENT_NOTES",
