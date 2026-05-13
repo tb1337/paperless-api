@@ -114,6 +114,7 @@ KNOWN_OMISSIONS: dict[str, dict[str, str]] = {
     "Document": {
         "created_date": "legacy alias for `created`; model exposes a `created_date` property instead",
         "notes": "note IDs returned in list view; use document.notes service for full objects",
+        "versions": "version IDs returned in list view; use document.versions service for full objects",
     },
     "User": {
         "password": "write-only credential; intentionally excluded from model",
@@ -135,6 +136,7 @@ KNOWN_EXTRAS: dict[str, dict[str, str]] = {
         "search_hit_": "synthesised from __search_hit__ alias only present in search results",
         "permissions": "only returned with ?full_perms=true; accessed via SecurableMixin",
         "notes_": "injected by service from separate notes endpoint; not in standard Document response",
+        "versions_": "injected by service from separate versions endpoint; not in standard Document response",
     },
     "Correspondent": {
         "permissions": "only returned with ?full_perms=true; accessed via SecurableMixin",
@@ -181,6 +183,7 @@ KNOWN_SCHEMA_EXTRAS: dict[str, dict[str, str]] = {
     "Document": {
         "search_hit_": "synthesised from __search_hit__ alias; not in OpenAPI schema",
         "permissions": "only returned with full_perms=true; not in standard Document schema",
+        "versions_": "injected by service from separate versions endpoint; not in OpenAPI Document schema",
     },
     "Correspondent": {
         "permissions": "only returned with full_perms=true; not in standard Correspondent schema",
@@ -236,6 +239,7 @@ KNOWN_SCHEMA_OMISSIONS: dict[str, dict[str, str]] = {
     "Document": {
         "created_date": "legacy alias for `created`; model uses `created` with a property alias",
         "notes": "inline note IDs only; full objects accessed via the document.notes service",
+        "versions": "inline version IDs only; full objects accessed via the document.versions service",
     },
     "Status": {
         "index": "SystemStatus.index sub-object not yet modelled",
