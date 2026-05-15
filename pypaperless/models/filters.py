@@ -20,6 +20,7 @@ All fields are optional (``total=False``).  Pagination parameters (``page``,
 
 from typing import TypedDict
 
+from pypaperless.builders import CustomFieldQuery, SearchQuery
 from pypaperless.models.share_links import ShareLinkBundleStatus
 from pypaperless.models.tasks import TaskStatus, TaskTriggerSource, TaskType
 
@@ -119,7 +120,7 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     correspondent__name__iendswith: str
     correspondent__name__iexact: str
     correspondent__name__istartswith: str
-    custom_field_query: str  # JSON expression — build with CustomFieldQuery
+    custom_field_query: str | CustomFieldQuery
     custom_fields__icontains: str
     custom_fields__id__all: str
     custom_fields__id__in: str
@@ -156,7 +157,7 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     owner__id__in: str
     owner__id__none: str
     owner__isnull: bool
-    query: str  # full-text search query
+    query: str | SearchQuery
     search: str
     shared_by__id: int
     storage_path__id: int
