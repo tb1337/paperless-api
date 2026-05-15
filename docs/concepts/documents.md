@@ -184,7 +184,11 @@ returns the latest state without an extra request.
 
 ```python
 notes = await doc.notes()
-await doc.notes.delete(notes[0])
+await doc.notes.delete(notes[0])        # model instance
+await doc.notes.delete(notes[0].id)     # integer shorthand (document pk implicit)
+
+# standalone — supply the document pk explicitly
+await paperless.documents.notes.delete(notes[0].id, pk=42)
 ```
 
 After a successful delete the cache is updated in-place.

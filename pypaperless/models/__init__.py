@@ -8,6 +8,8 @@ from .custom_fields import CustomField, CustomFieldDraft
 from .document_types import DocumentType, DocumentTypeDraft
 from .documents import (
     Document,
+    DocumentAISuggestions,
+    DocumentChat,
     DocumentCustomFieldList,
     DocumentDraft,
     DocumentHistory,
@@ -15,7 +17,9 @@ from .documents import (
     DocumentMeta,
     DocumentNote,
     DocumentNoteDraft,
+    DocumentRoot,
     DocumentSuggestions,
+    DocumentVersionInfo,
     DownloadedDocument,
 )
 from .mails import MailAccount, MailRule, ProcessedMail
@@ -24,7 +28,7 @@ from .profile import Profile, ProfileSocialAccount
 from .remote_version import RemoteVersion
 from .saved_views import SavedView
 from .search import SearchResult
-from .share_links import ShareLink, ShareLinkDraft
+from .share_links import ShareLink, ShareLinkBundle, ShareLinkBundleDraft, ShareLinkDraft
 from .statistics import Statistic
 from .status import Status
 from .storage_paths import StoragePath, StoragePathDraft
@@ -39,6 +43,8 @@ __all__ = (
     "CustomField",
     "CustomFieldDraft",
     "Document",
+    "DocumentAISuggestions",
+    "DocumentChat",
     "DocumentCustomFieldList",
     "DocumentDraft",
     "DocumentHistory",
@@ -46,9 +52,11 @@ __all__ = (
     "DocumentMeta",
     "DocumentNote",
     "DocumentNoteDraft",
+    "DocumentRoot",
     "DocumentSuggestions",
     "DocumentType",
     "DocumentTypeDraft",
+    "DocumentVersionInfo",
     "DownloadedDocument",
     "Group",
     "MailAccount",
@@ -61,6 +69,8 @@ __all__ = (
     "SavedView",
     "SearchResult",
     "ShareLink",
+    "ShareLinkBundle",
+    "ShareLinkBundleDraft",
     "ShareLinkDraft",
     "Statistic",
     "Status",

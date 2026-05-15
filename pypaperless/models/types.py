@@ -41,16 +41,23 @@ from .filters import (
     DocumentFilters,
     DocumentTypeFilters,
     GroupFilters,
+    ShareLinkBundleFilters,
     ShareLinkFilters,
     StoragePathFilters,
     TagFilters,
     TaskFilters,
+    TaskSummaryFilters,
     UserFilters,
 )
 from .mixins.data_fields import MatchingAlgorithm
 from .mixins.securable import Permissions
-from .saved_views import SavedViewFilterRule
-from .share_links import ShareLinkFileVersion
+from .saved_views import (
+    SavedViewCustomFieldDisplay,
+    SavedViewDisplayField,
+    SavedViewDisplayMode,
+    SavedViewFilterRule,
+)
+from .share_links import ShareLinkBundleStatus, ShareLinkFileVersion
 from .statistics import StatisticDocumentFileTypeCount
 from .status import (
     StatusDatabase,
@@ -59,7 +66,7 @@ from .status import (
     StatusTasks,
     StatusType,
 )
-from .tasks import TaskStatus, TaskType
+from .tasks import TaskStatus, TaskSummary, TaskTriggerSource, TaskType
 from .workflows import (
     WorkflowActionEmail,
     WorkflowActionType,
@@ -100,8 +107,13 @@ __all__ = (
     "GroupFilters",
     "MatchingAlgorithm",
     "Permissions",
+    "SavedViewCustomFieldDisplay",
+    "SavedViewDisplayField",
+    "SavedViewDisplayMode",
     "SavedViewFilterRule",
     "SearchQuery",
+    "ShareLinkBundleFilters",
+    "ShareLinkBundleStatus",
     "ShareLinkFileVersion",
     "ShareLinkFilters",
     "SourceMode",
@@ -115,6 +127,9 @@ __all__ = (
     "TagFilters",
     "TaskFilters",
     "TaskStatus",
+    "TaskSummary",
+    "TaskSummaryFilters",
+    "TaskTriggerSource",
     "TaskType",
     "UserFilters",
     "WorkflowActionEmail",

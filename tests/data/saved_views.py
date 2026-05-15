@@ -4,7 +4,6 @@ DATA_SAVED_VIEWS = {
     "count": 5,
     "next": None,
     "previous": None,
-    "all": [1, 2, 3, 4, 5],
     "results": [
         {
             "id": 1,
@@ -64,6 +63,15 @@ DATA_SAVED_VIEWS = {
             "sort_field": "created",
             "sort_reverse": True,
             "filter_rules": [{"rule_type": 6, "value": "4"}],
+            "page_size": 15,
+            "display_mode": "smallCards",
+            "display_fields": [
+                "title",
+                "created",
+                "correspondent",
+                "custom_field_1",
+                "custom_field_8",
+            ],
             "owner": 1,
             "user_can_change": True,
         },

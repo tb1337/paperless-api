@@ -1,6 +1,6 @@
 # Search Query Builder
 
-The `SearchQuery` builder provides a fluent, composable DSL for constructing Whoosh-style query strings for the Paperless-ngx global search endpoint (`/api/search/`).
+The `SearchQuery` builder provides a fluent, composable DSL for constructing Tantivy query strings for the Paperless-ngx global search endpoint (`/api/search/`).
 
 The builder output is a plain string - it is fully compatible with the raw string API. Both raw strings and builder objects are accepted by `paperless.search()`.
 
@@ -41,12 +41,22 @@ Q("contract")     # exact word
 Match against a specific metadata field:
 
 ```python
-Q.field("type", "invoice")
+Q.field("document_type", "invoice")
 Q.field("tag", "unpaid")
 Q.field("correspondent", "university")
+Q.field("storage_path", "archive")
 ```
 
-The field names correspond to the Paperless-ngx Whoosh index fields: `type`, `tag`, `correspondent`, `title`, `content`.
+Notes and custom fields support JSON sub-field syntax for targeted queries:
+
+```python
+Q.field("notes.note", "urgent")           # match within note text
+Q.field("notes.user", "alice")             # match by note author
+Q.field("custom_fields.value", "12345")    # match custom field value
+Q.field("custom_fields.name", "invoice")  # match custom field name
+```
+
+The field names correspond to the Paperless-ngx Tantivy index schema.
 
 ### Date range (`field:[start to end]`)
 
@@ -61,7 +71,7 @@ Q.date_range("modified", "2024-01-01", "2024-12-31")
 # → modified:[2024-01-01 to 2024-12-31]
 ```
 
-Paperless-ngx uses Whoosh's date parsing - relative expressions like `today`, `yesterday`, and partial dates like `2024` are all valid.
+Paperless-ngx rewrites natural-language date keywords to ISO 8601 ranges before passing them to Tantivy. Relative expressions like `today`, `yesterday`, and partial dates like `2024` are all valid.
 
 ---
 
@@ -75,8 +85,8 @@ All terms must match. Chaining `&` flattens into a single AND node (no extra par
 q = Q("invoice") & Q.field("tag", "unpaid")
 # str(q) → "(invoice AND tag:unpaid)"
 
-q = Q("shop") & Q.field("type", "invoice") & Q.date_range("created", "2020", "2024")
-# str(q) → "(shop AND type:invoice AND created:[2020 to 2024])"
+q = Q("shop") & Q.field("document_type", "invoice") & Q.date_range("created", "2020", "2024")
+# str(q) → "(shop AND document_type:invoice AND created:[2020 to 2024])"
 ```
 
 ### OR (`|`)
@@ -93,8 +103,8 @@ q = Q.field("tag", "inbox") | Q.field("tag", "important")
 Negates a term or expression:
 
 ```python
-q = ~Q.field("type", "letter")
-# str(q) → "NOT type:letter"
+q = ~Q.field("document_type", "letter")
+# str(q) → "NOT document_type:letter"
 ```
 
 ---
@@ -108,12 +118,12 @@ from pypaperless.models.types import SearchQuery as Q
 
 # "Find invoices or receipts tagged unpaid, from 2020 onwards, that are not letters"
 q = (
-    (Q.field("type", "invoice") | Q.field("type", "receipt"))
+    (Q.field("document_type", "invoice") | Q.field("document_type", "receipt"))
     & Q.field("tag", "unpaid")
     & Q.date_range("created", "2020", "today")
-    & ~Q.field("type", "letter")
+    & ~Q.field("document_type", "letter")
 )
-# str(q) → "((type:invoice OR type:receipt) AND tag:unpaid AND created:[2020 to today] AND NOT type:letter)"
+# str(q) → "((document_type:invoice OR document_type:receipt) AND tag:unpaid AND created:[2020 to today] AND NOT document_type:letter)"
 
 result = await paperless.search(q)
 ```
@@ -122,7 +132,7 @@ result = await paperless.search(q)
 
 ## `str()` passthrough
 
-Calling `str()` on any builder object yields the Whoosh query string directly:
+Calling `str()` on any builder object yields the Tantivy query string directly:
 
 ```python
 q = Q("contract") & Q.date_range("created", "2015", "2019")

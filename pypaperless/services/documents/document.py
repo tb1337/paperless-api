@@ -16,7 +16,9 @@ from pypaperless.models.filters import DocumentFilters
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
 
+from .ai_suggestions import DocumentAISuggestionsService
 from .bulk_edit import DocumentBulkEditService
+from .chat import DocumentChatService
 from .files import (
     DocumentFileDownloadService,
     DocumentFilePreviewService,
@@ -25,6 +27,7 @@ from .files import (
 from .history import DocumentHistoryService
 from .notes import DocumentNoteService
 from .share_links import DocumentShareLinkService
+from .versions import DocumentRootService, DocumentVersionService
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
@@ -96,7 +99,9 @@ class DocumentService(
         """Initialize a `DocumentService` instance."""
         super().__init__(runtime)
 
+        self._ai_suggestions = DocumentAISuggestionsService(runtime)
         self._bulk_edit = DocumentBulkEditService(runtime)
+        self._chat = DocumentChatService(runtime)
         self._download = DocumentFileDownloadService(runtime)
         self._history = DocumentHistoryService(runtime)
         self._meta = DocumentMetaService(runtime)
@@ -105,6 +110,20 @@ class DocumentService(
         self._share_links = DocumentShareLinkService(runtime)
         self._suggestions = DocumentSuggestionsService(runtime)
         self._thumbnail = DocumentFileThumbnailService(runtime)
+        self._root = DocumentRootService(runtime)
+        self._versions = DocumentVersionService(runtime)
+
+    @property
+    def ai_suggestions(self) -> DocumentAISuggestionsService:
+        """Return the ``DocumentAISuggestionsService`` sub-service.
+
+        Example::
+
+            result = await paperless.documents.ai_suggestions(42)
+            print(result.title, result.suggested_tags)
+
+        """
+        return self._ai_suggestions
 
     @property
     def bulk_edit(self) -> DocumentBulkEditService:
@@ -116,6 +135,18 @@ class DocumentService(
 
         """
         return self._bulk_edit
+
+    @property
+    def chat(self) -> DocumentChatService:
+        """Return the ``DocumentChatService`` sub-service.
+
+        Example::
+
+            response = await paperless.documents.chat("What is this invoice about?", 42)
+            print(response.q)
+
+        """
+        return self._chat
 
     @property
     def download(self) -> DocumentFileDownloadService:
@@ -223,6 +254,31 @@ class DocumentService(
 
         """
         return self._thumbnail
+
+    @property
+    def root(self) -> DocumentRootService:
+        """Return the ``DocumentRootService`` sub-service.
+
+        Example::
+
+            result = await paperless.documents.root(42)
+            print(result.root_id)
+
+        """
+        return self._root
+
+    @property
+    def versions(self) -> DocumentVersionService:
+        """Return the ``DocumentVersionService`` sub-service.
+
+        Example::
+
+            await paperless.documents.versions.upload(file, pk=42)
+            result = await paperless.documents.versions.update(1, version_label="v2", pk=42)
+            await paperless.documents.versions.delete(1, pk=42)
+
+        """
+        return self._versions
 
     async def get_next_asn(self) -> int:
         """Request the next available archive serial number from Paperless.

@@ -28,6 +28,7 @@ from .mappings import (
     MAIL_RULE_MAP,
     PROCESSED_MAIL_MAP,
     SAVED_VIEW_MAP,
+    SHARE_LINK_BUNDLE_MAP,
     SHARE_LINK_MAP,
     STORAGE_PATH_MAP,
     TAG_MAP,
@@ -77,25 +78,6 @@ class _SharedServiceTests:
         async for item in getattr(paperless, mapping.resource):
             assert isinstance(item, mapping.model_cls)
 
-    async def test_all(
-        self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
-    ) -> None:
-        """Test all."""
-        httpx_mock.add_response(
-            method="GET",
-            url=re.compile(
-                r"^"
-                f"{PAPERLESS_TEST_URL}{EndpointPath[mapping.resource.upper()]}"
-                r"\?.*$"
-            ),
-            status_code=200,
-            json=mapping.data,
-        )
-        items = await getattr(paperless, mapping.resource).all()
-        assert isinstance(items, list)
-        for item in items:
-            assert isinstance(item, int)
-
     async def test_call(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
@@ -135,6 +117,7 @@ class _SharedServiceTests:
         MAIL_RULE_MAP,
         PROCESSED_MAIL_MAP,
         SAVED_VIEW_MAP,
+        SHARE_LINK_BUNDLE_MAP,
         SHARE_LINK_MAP,
         STORAGE_PATH_MAP,
         TAG_MAP,
@@ -190,6 +173,7 @@ class TestReadOnly(_SharedServiceTests):
         CORRESPONDENT_MAP,
         CUSTOM_FIELD_MAP,
         DOCUMENT_TYPE_MAP,
+        SHARE_LINK_BUNDLE_MAP,
         SHARE_LINK_MAP,
         STORAGE_PATH_MAP,
         TAG_MAP,

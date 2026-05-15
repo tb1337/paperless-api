@@ -4,7 +4,6 @@ DATA_DOCUMENTS = {
     "count": 2,
     "next": None,
     "previous": "",
-    "all": [1, 2],
     "results": [
         {
             "id": 1,

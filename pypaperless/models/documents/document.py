@@ -20,9 +20,12 @@ from pypaperless.models.custom_fields import (
     CustomFieldValueT,
 )
 from pypaperless.models.documents.notes import DocumentNote
+from pypaperless.models.documents.versions import DocumentVersionInfo
+from pypaperless.services.documents.ai_suggestions import DocumentAISuggestionsService
 from pypaperless.services.documents.history import DocumentHistoryService
 from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.documents.share_links import DocumentShareLinkService
+from pypaperless.services.documents.versions import DocumentRootService, DocumentVersionService
 from pypaperless.utils import object_to_dict_value
 
 
@@ -42,6 +45,14 @@ class DocumentSearchHit(BaseModel):
     highlights: str | None = None
     note_highlights: str | None = None
     rank: int | None = None
+
+
+class DuplicateDocumentSummary(BaseModel):
+    """Represent a subtype of `Document`."""
+
+    id: int | None = None
+    title: str | None = None
+    deleted_at: datetime.datetime | None = None
 
 
 class FileRetrieveMode(StrEnum):
@@ -182,8 +193,11 @@ class Document(
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _history: DocumentHistoryService | None = PrivateAttr(default=None)
+    _ai_suggestions: DocumentAISuggestionsService | None = PrivateAttr(default=None)
     _notes: DocumentNoteService | None = PrivateAttr(default=None)
+    _root: DocumentRootService | None = PrivateAttr(default=None)
     _share_links: DocumentShareLinkService | None = PrivateAttr(default=None)
+    _versions: DocumentVersionService | None = PrivateAttr(default=None)
 
     id: int | None = None
     correspondent: int | None = None
@@ -199,11 +213,16 @@ class Document(
     archive_serial_number: int | None = None
     original_file_name: str | None = None
     archived_file_name: str | None = None
+    duplicate_documents: list[DuplicateDocumentSummary] | None = None
     is_shared_by_requester: bool | None = None
     custom_fields: DocumentCustomFieldList | list | None = None
     notes_: list[DocumentNote] | None = Field(default=None, alias="notes", exclude=True, repr=False)
     page_count: int | None = None
     mime_type: str | None = None
+    root_document: int | None = None
+    versions_: list[DocumentVersionInfo] | None = Field(
+        default=None, alias="versions", exclude=True, repr=False
+    )
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
 
     @field_validator("custom_fields", mode="before")
@@ -224,6 +243,13 @@ class Document(
         return self
 
     @property
+    def ai_suggestions(self) -> DocumentAISuggestionsService:
+        """Return the AI suggestions service for this document."""
+        if self._ai_suggestions is None:
+            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, cast("int", self.id))
+        return self._ai_suggestions
+
+    @property
     def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
         if self._history is None:
@@ -238,11 +264,25 @@ class Document(
         return self._notes
 
     @property
+    def root(self) -> DocumentRootService:
+        """Return the root service for this document."""
+        if self._root is None:
+            self._root = DocumentRootService(self._runtime, cast("int", self.id))
+        return self._root
+
+    @property
     def share_links(self) -> DocumentShareLinkService:
         """Return the share links service for this document."""
         if self._share_links is None:
             self._share_links = DocumentShareLinkService(self._runtime, cast("int", self.id))
         return self._share_links
+
+    @property
+    def versions(self) -> DocumentVersionService:
+        """Return the versions service for this document."""
+        if self._versions is None:
+            self._versions = DocumentVersionService(self._runtime, cast("int", self.id))
+        return self._versions
 
     @property
     def created_date(self) -> datetime.date | None:

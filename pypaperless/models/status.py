@@ -49,6 +49,16 @@ class StatusStorage(BaseModel):
     available: int | None = None
 
 
+class StatusTasksSummary(BaseModel):
+    """Represent a subtype of `StatusTasks`."""
+
+    days: int | None = None
+    total_count: int | None = None
+    pending_count: int | None = None
+    success_count: int | None = None
+    failure_count: int | None = None
+
+
 class StatusTasks(BaseModel):
     """Represent a subtype of `Status`."""
 
@@ -67,6 +77,7 @@ class StatusTasks(BaseModel):
     sanity_check_status: StatusType | None = None
     sanity_check_last_run: datetime.datetime | None = None
     sanity_check_error: str | None = None
+    summary: StatusTasksSummary | None = None
 
 
 class Status(PaperlessModel):

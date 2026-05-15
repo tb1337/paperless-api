@@ -20,6 +20,10 @@ All fields are optional (``total=False``).  Pagination parameters (``page``,
 
 from typing import TypedDict
 
+from pypaperless.builders import CustomFieldQuery, SearchQuery
+from pypaperless.models.share_links import ShareLinkBundleStatus
+from pypaperless.models.tasks import TaskStatus, TaskTriggerSource, TaskType
+
 
 class _CreatedFilters(TypedDict, total=False):
     """Common created-date filter fields."""
@@ -42,6 +46,22 @@ class _IdFilters(TypedDict, total=False):
 
     id: int
     id__in: str  # comma-separated PKs
+
+
+class _ExpirationFilters(TypedDict, total=False):
+    """Common expiration-date filter fields."""
+
+    expiration__date__gt: str
+    expiration__date__gte: str
+    expiration__date__lt: str
+    expiration__date__lte: str
+    expiration__day: int
+    expiration__gt: str
+    expiration__gte: str
+    expiration__lt: str
+    expiration__lte: str
+    expiration__month: int
+    expiration__year: int
 
 
 class _NameFilters(_IdFilters, total=False):
@@ -100,7 +120,7 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     correspondent__name__iendswith: str
     correspondent__name__iexact: str
     correspondent__name__istartswith: str
-    custom_field_query: str  # JSON expression — build with CustomFieldQuery
+    custom_field_query: str | CustomFieldQuery
     custom_fields__icontains: str
     custom_fields__id__all: str
     custom_fields__id__in: str
@@ -137,7 +157,8 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     owner__id__in: str
     owner__id__none: str
     owner__isnull: bool
-    query: str  # full-text search query
+    query: str | SearchQuery
+    search: str
     shared_by__id: int
     storage_path__id: int
     storage_path__id__in: str
@@ -155,11 +176,13 @@ class DocumentFilters(_IdFilters, _CreatedFilters, total=False):
     tags__name__iendswith: str
     tags__name__iexact: str
     tags__name__istartswith: str
+    text: str
     title__icontains: str
     title__iendswith: str
     title__iexact: str
     title__istartswith: str
     title_content: str  # searches title AND content simultaneously
+    title_search: str
 
 
 class DocumentTypeFilters(_NameFilters, total=False):
@@ -170,20 +193,15 @@ class GroupFilters(_NameFilters, total=False):
     """Filters for :attr:`Paperless.groups`."""
 
 
-class ShareLinkFilters(_CreatedFilters, total=False):
+class ShareLinkFilters(_CreatedFilters, _ExpirationFilters, total=False):
     """Filters for :attr:`Paperless.share_links`."""
 
-    expiration__date__gt: str
-    expiration__date__gte: str
-    expiration__date__lt: str
-    expiration__date__lte: str
-    expiration__day: int
-    expiration__gt: str
-    expiration__gte: str
-    expiration__lt: str
-    expiration__lte: str
-    expiration__month: int
-    expiration__year: int
+
+class ShareLinkBundleFilters(_CreatedFilters, _ExpirationFilters, total=False):
+    """Filters for :attr:`Paperless.share_link_bundles`."""
+
+    documents: int
+    status: ShareLinkBundleStatus | str
 
 
 class StoragePathFilters(_NameFilters, total=False):
@@ -202,12 +220,24 @@ class TagFilters(_NameFilters, total=False):
 
 
 class TaskFilters(TypedDict, total=False):
-    """Filters for :attr:`Paperless.tasks`."""
+    """Filters for :attr:`Paperless.tasks` and :meth:`TaskService.active`."""
 
     acknowledged: bool
-    status: str
-    task_name: str
-    type: str
+    date_created_after: str
+    date_created_before: str
+    is_complete: bool
+    ordering: str
+    owner: int
+    status: TaskStatus | str | list[TaskStatus | str]
+    task_id: str
+    task_type: TaskType | str | list[TaskType | str]
+    trigger_source: TaskTriggerSource | str | list[TaskTriggerSource | str]
+
+
+class TaskSummaryFilters(TaskFilters, total=False):
+    """Additional filters for :meth:`~pypaperless.services.tasks.TaskService.summary`."""
+
+    days: int
 
 
 class UserFilters(TypedDict, total=False):

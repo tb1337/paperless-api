@@ -31,12 +31,12 @@ Before starting, answer these questions:
 ```bash
 source /home/vscode/.local/dev-venv/bin/activate
 # Inspect live response
-curl -s http://172.17.0.1:8000/api/<endpoint>/ \
+curl -s http://host.docker.internal:8000/api/<endpoint>/ \
   -H "Authorization: Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52" | python3 -m json.tool | head -60
 # Check OpenAPI schema component
 python3 -c "
 import httpx, json
-r = httpx.get('http://172.17.0.1:8000/api/schema/?format=json',
+r = httpx.get('http://host.docker.internal:8000/api/schema/?format=json',
     headers={'Authorization': 'Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52'})
 s = r.json()
 # Replace 'ComponentName' with the schema component name
@@ -266,5 +266,5 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 ## Reference
 
 - [Code patterns & templates](./references/patterns.md)
-- Live Paperless: `http://172.17.0.1:8000` · Token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
+- Live Paperless: `http://host.docker.internal:8000` · Token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
 - Test document ID: `1980`

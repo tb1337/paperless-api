@@ -5,9 +5,8 @@ from enum import StrEnum
 from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath, PaperlessResource
-
-from . import mixins
-from .base import PaperlessModel
+from pypaperless.models import mixins
+from pypaperless.models.base import PaperlessModel
 
 
 class ShareLinkFileVersion(StrEnum):

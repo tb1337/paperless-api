@@ -16,6 +16,8 @@ class WorkflowActionType(Enum):
     REMOVAL = 2
     EMAIL = 3
     WEBHOOK = 4
+    PASSWORD_REMOVAL = 5
+    MOVE_TO_TRASH = 6
     UNKNOWN = -1
 
     @classmethod
@@ -85,3 +87,4 @@ class WorkflowAction(PaperlessModel):
     remove_change_groups: list[int] | None = None
     email: WorkflowActionEmail | None = None
     webhook: WorkflowActionWebhook | None = None
+    passwords: list[str] | None = None

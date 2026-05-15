@@ -4,7 +4,6 @@ DATA_CUSTOM_FIELDS = {
     "count": 8,
     "next": None,
     "previous": None,
-    "all": [8, 7, 6, 5, 4, 3, 2, 1],
     "results": [
         {"id": 8, "name": "Custom Link", "data_type": "documentlink"},
         {"id": 7, "name": "Custom URL", "data_type": "url"},

@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Self
 
-API_VERSION = 9
+API_VERSION = 10
 
 ENV_PREFIX = "PYPAPERLESS_"
 ENV_URL = f"{ENV_PREFIX}URL"
@@ -39,7 +39,9 @@ class EndpointPath(StrEnum):
     DOCUMENT_TYPES_SINGLE = "/api/document_types/{pk}/"
 
     DOCUMENTS = "/api/documents/"
+    DOCUMENTS_AI_SUGGESTIONS = "/api/documents/{pk}/ai_suggestions/"
     DOCUMENTS_BULK_EDIT = "/api/documents/bulk_edit/"
+    DOCUMENTS_CHAT = "/api/documents/chat/"
     DOCUMENTS_DELETE = "/api/documents/delete/"
     DOCUMENTS_DOWNLOAD = "/api/documents/{pk}/download/"
     DOCUMENTS_EDIT_PDF = "/api/documents/edit_pdf/"
@@ -54,10 +56,13 @@ class EndpointPath(StrEnum):
     DOCUMENTS_REMOVE_PASSWORD = "/api/documents/remove_password/"
     DOCUMENTS_REPROCESS = "/api/documents/reprocess/"
     DOCUMENTS_ROTATE = "/api/documents/rotate/"
+    DOCUMENTS_ROOT = "/api/documents/{pk}/root/"
     DOCUMENTS_SHARE_LINKS = "/api/documents/{pk}/share_links/"
     DOCUMENTS_SINGLE = "/api/documents/{pk}/"
     DOCUMENTS_SUGGESTIONS = "/api/documents/{pk}/suggestions/"
     DOCUMENTS_THUMBNAIL = "/api/documents/{pk}/thumb/"
+    DOCUMENTS_UPDATE_VERSION = "/api/documents/{pk}/update_version/"
+    DOCUMENTS_VERSION = "/api/documents/{pk}/versions/{version_id}/"
 
     GROUPS = "/api/groups/"
     GROUPS_SINGLE = "/api/groups/{pk}/"
@@ -85,6 +90,10 @@ class EndpointPath(StrEnum):
     SHARE_LINKS = "/api/share_links/"
     SHARE_LINKS_SINGLE = "/api/share_links/{pk}/"
 
+    SHARE_LINK_BUNDLES = "/api/share_link_bundles/"
+    SHARE_LINK_BUNDLES_REBUILD = "/api/share_link_bundles/{pk}/rebuild/"
+    SHARE_LINK_BUNDLES_SINGLE = "/api/share_link_bundles/{pk}/"
+
     STATISTICS = "/api/statistics/"
 
     STATUS = "/api/status/"
@@ -97,8 +106,10 @@ class EndpointPath(StrEnum):
 
     TASKS = "/api/tasks/"
     TASKS_ACKNOWLEDGE = "/api/tasks/acknowledge/"
+    TASKS_ACTIVE = "/api/tasks/active/"
     TASKS_RUN = "/api/tasks/run/"
     TASKS_SINGLE = "/api/tasks/{pk}/"
+    TASKS_SUMMARY = "/api/tasks/summary/"
 
     TRASH = "/api/trash/"
 
@@ -131,6 +142,7 @@ class PaperlessResource(StrEnum):
     PROFILE = "profile"
     SAVED_VIEWS = "saved_views"
     SEARCH = "search"
+    SHARE_LINK_BUNDLES = "share_link_bundles"
     SHARE_LINKS = "share_links"
     STATISTICS = "statistics"
     REMOTE_VERSION = "remote_version"

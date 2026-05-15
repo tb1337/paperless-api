@@ -18,6 +18,7 @@ from .data import (
     DATA_MAIL_RULES,
     DATA_PROCESSED_MAIL,
     DATA_SAVED_VIEWS,
+    DATA_SHARE_LINK_BUNDLES,
     DATA_SHARE_LINKS,
     DATA_STATUS,
     DATA_STORAGE_PATHS,
@@ -165,6 +166,21 @@ SHARE_LINK_MAP = ResourceTestMapping(
     required_field=None,
     update_field="document",
     update_value=2,
+)
+
+SHARE_LINK_BUNDLE_MAP = ResourceTestMapping(
+    PaperlessResource.SHARE_LINK_BUNDLES,
+    DATA_SHARE_LINK_BUNDLES,
+    services.ShareLinkBundleService,
+    models.ShareLinkBundle,
+    models.ShareLinkBundleDraft,
+    {
+        "document_ids": [1, 2],
+        "file_version": types.ShareLinkFileVersion.ARCHIVE,
+    },
+    required_field=None,
+    update_field="document_count",
+    update_value=5,
 )
 
 STATUS_MAP = ResourceTestMapping(

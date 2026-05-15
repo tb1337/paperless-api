@@ -1,5 +1,7 @@
 """PyPaperless document models."""
 
+from .ai_suggestions import DocumentAISuggestions  # noqa: F401
+from .chat import DocumentChat  # noqa: F401
 from .document import (  # noqa: F401
     Document,
     DocumentCustomFieldList,
@@ -13,3 +15,4 @@ from .document import (  # noqa: F401
 )
 from .history import DocumentHistory, DocumentHistoryAction, DocumentHistoryActor  # noqa: F401
 from .notes import DocumentNote, DocumentNoteDraft  # noqa: F401
+from .versions import DocumentRoot, DocumentVersionInfo  # noqa: F401

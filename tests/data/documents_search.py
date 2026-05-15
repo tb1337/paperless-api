@@ -4,7 +4,6 @@ DATA_DOCUMENTS_SEARCH = {
     "count": 1,
     "next": None,
     "previous": None,
-    "all": [1],
     "results": [
         {
             "id": 1,

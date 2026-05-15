@@ -4,7 +4,6 @@ DATA_GROUPS = {
     "count": 1,
     "next": None,
     "previous": None,
-    "all": [1],
     "results": [
         {
             "id": 1,

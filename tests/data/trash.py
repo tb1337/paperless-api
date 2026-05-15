@@ -4,7 +4,6 @@ DATA_TRASH = {
     "count": 2,
     "next": None,
     "previous": None,
-    "all": [100, 101],
     "results": [
         {
             "id": 100,

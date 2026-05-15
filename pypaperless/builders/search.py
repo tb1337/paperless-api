@@ -1,4 +1,4 @@
-"""Fluent builder for Whoosh-style search queries (``/api/search/?query=…``).
+"""Fluent builder for Tantivy search queries (``/api/search/?query=…``).
 
 Combine atoms with ``&`` (AND), ``|`` (OR) and ``~`` (NOT), then pass
 ``str(q)`` — or the builder itself — as the ``query`` argument to
@@ -10,15 +10,15 @@ Combine atoms with ``&`` (AND), ``|`` (OR) and ``~`` (NOT), then pass
     result = await paperless.search(q)
 
 Use :meth:`SearchQuery.field` and :meth:`SearchQuery.date_range` for
-field-scoped and date-range terms.  Raw Whoosh strings are also accepted
-— just pass a ``str`` to the service instead of a builder object.
+field-scoped and date-range terms.  Raw Tantivy query strings are also
+accepted — just pass a ``str`` to the service instead of a builder object.
 """
 
 from typing import Literal
 
 # The following list is based on the schema defined in:
-# https://github.com/paperless-ngx/paperless-ngx/blob/dev/src/documents/index.py
-# -> schema
+# https://github.com/paperless-ngx/paperless-ngx/blob/dev/src/documents/search/_schema.py
+# -> build_schema()
 
 type _SearchField = Literal[
     "id",
@@ -27,40 +27,33 @@ type _SearchField = Literal[
     "asn",
     "correspondent",
     "correspondent_id",
-    "has_correspondent",
     "tag",
     "tag_id",
-    "has_tag",
-    "type",
-    "type_id",
-    "has_type",
+    "document_type",
+    "document_type_id",
+    "storage_path",
+    "storage_path_id",
     "created",
     "modified",
     "added",
-    "path",
-    "path_id",
-    "has_path",
-    "notes",
+    "notes.note",
+    "notes.user",
     "num_notes",
-    "custom_fields",
-    "custom_field_count",
-    "has_custom_fields",
-    "custom_fields_id",
+    "custom_fields.value",
+    "custom_fields.name",
     "owner",
     "owner_id",
-    "has_owner",
     "viewer_id",
     "checksum",
     "page_count",
     "original_filename",
-    "is_shared",
 ]
 
 type _SearchDateField = Literal["created", "modified", "added"]
 
-# The following list is based on the schema defined in:
-# https://github.com/paperless-ngx/paperless-ngx/blob/dev/src/documents/index.py
-# -> rewrite_natural_date_keywords
+# The following list is based on the _DATE_KEYWORDS constant defined in:
+# https://github.com/paperless-ngx/paperless-ngx/blob/dev/src/documents/search/_query.py
+# -> rewrite_natural_date_keywords()
 
 type _SearchDateKeyword = Literal[
     "today",
@@ -71,25 +64,11 @@ type _SearchDateKeyword = Literal[
     "previous quarter",
     "this year",
     "previous year",
-    "last monday",
-    "last tuesday",
-    "last wednesday",
-    "last thursday",
-    "last friday",
-    "last saturday",
-    "last sunday",
-    "next monday",
-    "next tuesday",
-    "next wednesday",
-    "next thursday",
-    "next friday",
-    "next saturday",
-    "next sunday",
 ]
 
 
 class SearchQuery:
-    """A single term or Whoosh query fragment.
+    """A single term or Tantivy query fragment.
 
     Use the ``&``, ``|``, ``~`` operators to combine atoms into boolean
     expressions.  Call :func:`str` on the result to obtain the query string
@@ -105,7 +84,7 @@ class SearchQuery:
     """
 
     def __init__(self, term: str) -> None:
-        """Initialise with a raw Whoosh query term."""
+        """Initialise with a raw Tantivy query term."""
         self._term = term
 
     @classmethod
@@ -114,14 +93,16 @@ class SearchQuery:
 
         Args:
             field_name: The Paperless field to scope the search to, e.g.
-                        ``"type"``, ``"tag"``, ``"correspondent"``.
+                        ``"document_type"``, ``"tag"``, ``"correspondent"``.
             value:      The exact value to match within that field.
 
         Example::
 
-            SearchQuery.field("tag", "unpaid")         # → tag:unpaid
-            SearchQuery.field("type", "invoice")       # → type:invoice
-            SearchQuery.field("correspondent", "acme") # → correspondent:acme
+            SearchQuery.field("tag", "unpaid")                  # → tag:unpaid
+            SearchQuery.field("document_type", "invoice")       # → document_type:invoice
+            SearchQuery.field("correspondent", "acme")          # → correspondent:acme
+            SearchQuery.field("notes.note", "urgent")           # → notes.note:urgent
+            SearchQuery.field("custom_fields.name", "amount")   # → custom_fields.name:amount
 
         """
         return cls(f"{field_name}:{value}")
@@ -154,7 +135,7 @@ class SearchQuery:
         return cls(f"{field_name}:[{start} to {end}]")
 
     def build(self) -> str:
-        """Return the Whoosh query fragment for this expression."""
+        """Return the Tantivy query fragment for this expression."""
         return self._term
 
     def __str__(self) -> str:
@@ -196,7 +177,7 @@ class _SearchQueryAnd(SearchQuery):
         self._queries = queries
 
     def build(self) -> str:
-        """Return the Whoosh query fragment for this AND expression."""
+        """Return the Tantivy query fragment for this AND expression."""
         return "(" + " AND ".join(q.build() for q in self._queries) + ")"
 
     def __and__(self, other: SearchQuery) -> "_SearchQueryAnd":
@@ -218,7 +199,7 @@ class _SearchQueryOr(SearchQuery):
         self._queries = queries
 
     def build(self) -> str:
-        """Return the Whoosh query fragment for this OR expression."""
+        """Return the Tantivy query fragment for this OR expression."""
         return "(" + " OR ".join(q.build() for q in self._queries) + ")"
 
     def __or__(self, other: SearchQuery) -> "_SearchQueryOr":
@@ -231,8 +212,8 @@ class _SearchQueryNot(SearchQuery):
 
     Prefer the ``~`` prefix operator over instantiating this class directly::
 
-        q = ~SearchQuery.field("type", "letter")
-        # str(q) → "NOT type:letter"
+        q = ~SearchQuery.field("document_type", "letter")
+        # str(q) → "NOT document_type:letter"
     """
 
     def __init__(self, query: SearchQuery) -> None:
@@ -240,5 +221,5 @@ class _SearchQueryNot(SearchQuery):
         self._query = query
 
     def build(self) -> str:
-        """Return the Whoosh query fragment for this NOT expression."""
+        """Return the Tantivy query fragment for this NOT expression."""
         return f"NOT {self._query.build()}"

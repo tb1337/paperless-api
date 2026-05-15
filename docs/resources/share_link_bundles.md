@@ -1,0 +1,73 @@
+# Share Link Bundles
+
+Share link bundles group multiple documents into a single shareable archive. They support the full CRUD lifecycle plus a `rebuild` action.
+
+## Models
+
+See [`pypaperless/models/share_links/bundle.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/share_links/bundle.py) for all fields and [`pypaperless/models/types.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/types.py) for enum and filter types, and the [Paperless-ngx API docs](https://docs.paperless-ngx.com/api/) for the upstream schema.
+
+## Fetch one
+
+```python
+bundle = await paperless.share_link_bundles(3)
+print(bundle.slug)          # "xyz789abc"
+print(bundle.status)        # ShareLinkBundleStatus.READY
+print(bundle.documents)     # [42, 43]
+print(bundle.size_bytes)    # 204800
+```
+
+## Iterate
+
+```python
+async for bundle in paperless.share_link_bundles:
+    print(bundle.id, bundle.status, bundle.documents)
+```
+
+## Create
+
+```python
+from pypaperless.models.share_links import ShareLinkFileVersion
+
+draft = paperless.share_link_bundles.create(
+    document_ids=[42, 43],
+    file_version=ShareLinkFileVersion.ARCHIVE,
+)
+bundle_id = int(await paperless.share_link_bundles.save(draft))
+print(bundle_id)  # 3
+```
+
+## Rebuild
+
+Trigger a rebuild of an existing bundle (e.g. after documents change):
+
+```python
+updated = await paperless.share_link_bundles.rebuild(3)
+print(updated.status)  # ShareLinkBundleStatus.PENDING
+```
+
+## Update
+
+```python
+import datetime
+
+bundle = await paperless.share_link_bundles(3)
+bundle.expiration = datetime.datetime(2026, 6, 1, tzinfo=datetime.timezone.utc)
+changed = await paperless.share_link_bundles.update(bundle)
+```
+
+## Delete
+
+```python
+bundle = await paperless.share_link_bundles(3)
+deleted = await paperless.share_link_bundles.delete(bundle)
+print(deleted)  # True
+
+## Filter
+
+```python
+from pypaperless.models.types import ShareLinkBundleFilters
+
+async with paperless.share_link_bundles.filter(status="ready"):
+    async for bundle in paperless.share_link_bundles:
+        print(bundle.id, bundle.size_bytes)
+```

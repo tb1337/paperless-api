@@ -30,7 +30,7 @@ def test_atom_repr() -> None:
 def test_field_factory() -> None:
     """SearchQuery.field() produces a ``field:value`` term."""
     assert str(SearchQuery.field("tag", "unpaid")) == "tag:unpaid"
-    assert str(SearchQuery.field("type", "invoice")) == "type:invoice"
+    assert str(SearchQuery.field("document_type", "invoice")) == "document_type:invoice"
     assert str(SearchQuery.field("correspondent", "acme")) == "correspondent:acme"
 
 
@@ -88,6 +88,31 @@ def test_or_flatten() -> None:
 
 def test_not_operator() -> None:
     """``~`` wraps an atom into a _SearchQueryNot."""
-    q = ~SearchQuery.field("type", "letter")
+    q = ~SearchQuery.field("document_type", "letter")
     assert isinstance(q, _SearchQueryNot)
-    assert str(q) == "NOT type:letter"
+    assert str(q) == "NOT document_type:letter"
+
+
+# ---------------------------------------------------------------------------
+# Tantivy field renames and new JSON sub-fields
+# ---------------------------------------------------------------------------
+
+
+def test_renamed_fields() -> None:
+    """document_type and storage_path use the correct Tantivy field names."""
+    assert str(SearchQuery.field("document_type", "invoice")) == "document_type:invoice"
+    assert str(SearchQuery.field("document_type_id", "5")) == "document_type_id:5"
+    assert str(SearchQuery.field("storage_path", "archive")) == "storage_path:archive"
+    assert str(SearchQuery.field("storage_path_id", "3")) == "storage_path_id:3"
+
+
+def test_notes_subfields() -> None:
+    """JSON sub-field syntax for notes produces ``notes.note:`` and ``notes.user:`` terms."""
+    assert str(SearchQuery.field("notes.note", "urgent")) == "notes.note:urgent"
+    assert str(SearchQuery.field("notes.user", "alice")) == "notes.user:alice"
+
+
+def test_custom_fields_subfields() -> None:
+    """JSON sub-field syntax for custom_fields produces the correct dotted terms."""
+    assert str(SearchQuery.field("custom_fields.value", "42")) == "custom_fields.value:42"
+    assert str(SearchQuery.field("custom_fields.name", "amount")) == "custom_fields.name:amount"

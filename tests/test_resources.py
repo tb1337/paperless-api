@@ -15,10 +15,12 @@ from pypaperless.models import (
     Document,
     Profile,
     SearchResult,
+    ShareLinkBundle,
     Status,
     Task,
 )
 from pypaperless.models.mixins.securable import Permissions
+from pypaperless.models.tasks import TaskSummary
 from pypaperless.models.types import (
     StatisticDocumentFileTypeCount,
     StatusDatabase,
@@ -35,9 +37,12 @@ from .data import (
     DATA_PROFILE,
     DATA_REMOTE_VERSION,
     DATA_SEARCH,
+    DATA_SHARE_LINK_BUNDLES,
     DATA_STATISTICS,
     DATA_STATUS,
     DATA_TASKS,
+    DATA_TASKS_ACTIVE,
+    DATA_TASKS_SUMMARY,
     DATA_TRASH,
 )
 
@@ -226,7 +231,7 @@ class TestTasks:
     """Task service: iteration, filter, single fetch by pk and uuid."""
 
     async def test_iter(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
-        """Iterating over tasks yields Task instances."""
+        """Iterating over tasks yields Task instances from paginated response."""
         httpx_mock.add_response(
             method="GET",
             url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r".*$"),
@@ -237,15 +242,16 @@ class TestTasks:
             assert isinstance(item, Task)
 
     async def test_filter(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
-        """tasks.filter() passes kwargs as query params."""
+        """tasks.filter() is a context manager passing kwargs as query params."""
         httpx_mock.add_response(
             method="GET",
             url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?.*status.*$"),
             status_code=200,
             json=DATA_TASKS,
         )
-        async for item in paperless.tasks.filter(status="SUCCESS"):
-            assert isinstance(item, Task)
+        async with paperless.tasks.filter(status=["pending"]) as filtered:
+            async for item in filtered:
+                assert isinstance(item, Task)
 
     async def test_call_by_pk(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks(pk) fetches by primary key."""
@@ -253,14 +259,14 @@ class TestTasks:
             method="GET",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1),
             status_code=200,
-            json=DATA_TASKS[0],
+            json=DATA_TASKS["results"][0],
         )
         item = await paperless.tasks(1)
         assert item
         assert isinstance(item, Task)
 
     async def test_call_by_uuid(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
-        """tasks(uuid) fetches by task UUID."""
+        """tasks(uuid) fetches by task UUID via paginated list filter."""
         httpx_mock.add_response(
             method="GET",
             url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
@@ -286,15 +292,29 @@ class TestTasks:
     async def test_call_uuid_not_found(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
-        """tasks(unknown_uuid) raises TaskNotFoundError."""
+        """tasks(unknown_uuid) raises TaskNotFoundError on empty paginated result."""
         httpx_mock.add_response(
             method="GET",
             url=re.compile(r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS}" + r"\?task_id.*$"),
             status_code=200,
-            json=[],
+            json={"count": 0, "next": None, "previous": None, "results": []},
         )
         with pytest.raises(TaskNotFoundError):
             await paperless.tasks("dummy-not-found")
+
+    async def test_active(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """tasks.active() returns an async iterator of Task instances."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_ACTIVE}",
+            status_code=200,
+            json=DATA_TASKS_ACTIVE,
+        )
+        items = []
+        async for item in paperless.tasks.active():
+            assert isinstance(item, Task)
+            items.append(item)
+        assert len(items) == len(DATA_TASKS_ACTIVE)
 
     async def test_acknowledge(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks.acknowledge([...]) POSTs and returns acknowledged count."""
@@ -307,16 +327,31 @@ class TestTasks:
         result = await paperless.tasks.acknowledge([1])
         assert result == 1
 
+    async def test_summary(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """tasks.summary() returns a list of TaskSummary instances."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SUMMARY}",
+            status_code=200,
+            json=DATA_TASKS_SUMMARY,
+        )
+        result = await paperless.tasks.summary()
+        assert isinstance(result, list)
+        assert len(result) == len(DATA_TASKS_SUMMARY)
+        assert all(isinstance(s, TaskSummary) for s in result)
+
     async def test_run(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
-        """tasks.run(task_id) POSTs and returns a Task."""
+        """tasks.run(task_type) POSTs and returns the Celery UUID string."""
+        task_uuid = "11112222-aaaa-bbbb-cccc-333344445555"
         httpx_mock.add_response(
             method="POST",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_RUN}",
             status_code=200,
-            json=DATA_TASKS[0],
+            json={"task_id": task_uuid},
         )
-        item = await paperless.tasks.run(DATA_TASKS[0]["task_id"])
-        assert isinstance(item, Task)
+        result = await paperless.tasks.run("sanity_check")
+        assert isinstance(result, str)
+        assert result == task_uuid
 
 
 # ---------------------------------------------------------------------------
@@ -788,3 +823,27 @@ class TestDocumentsBulkEdit:
         )
         with pytest.raises(BulkEditError):
             await paperless.documents.bulk_edit.modify_tags([1], add_tags=[3], remove_tags=[])
+
+
+# ---------------------------------------------------------------------------
+# ShareLinkBundles
+# ---------------------------------------------------------------------------
+
+
+class TestShareLinkBundleRebuild:
+    """ShareLinkBundleService.rebuild() triggers a rebuild and returns a bundle."""
+
+    async def test_rebuild(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """rebuild() POSTs to the rebuild endpoint and returns a ShareLinkBundle."""
+        bundle_data = DATA_SHARE_LINK_BUNDLES["results"][0]
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.SHARE_LINK_BUNDLES_REBUILD}".format(
+                pk=bundle_data["id"]
+            ),
+            status_code=200,
+            json={**bundle_data, "status": "pending"},
+        )
+        result = await paperless.share_link_bundles.rebuild(bundle_data["id"])
+        assert isinstance(result, ShareLinkBundle)
+        assert result.id == bundle_data["id"]
