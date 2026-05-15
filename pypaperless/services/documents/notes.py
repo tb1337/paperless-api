@@ -141,34 +141,64 @@ class DocumentNoteService(
             ]
         return new_id
 
-    async def delete(self, note: DocumentNote, *, silent_fail: bool = False) -> None:
+    async def delete(
+        self,
+        note: DocumentNote | int,
+        pk: int | None = None,
+        *,
+        silent_fail: bool = False,
+    ) -> None:
         """Delete a document note.
 
         Raises :exc:`~pypaperless.exceptions.DeletionError` on failure unless
         *silent_fail* is ``True``.
 
+        *note* may be either a
+        :class:`~pypaperless.models.documents.notes.DocumentNote` instance **or**
+        the integer id of the note to delete.  When an integer is given the
+        document primary key must be resolvable — either from the parent
+        :class:`~pypaperless.models.documents.document.Document` (when accessed
+        via ``doc.notes``) or from the *pk* parameter (standalone use).
+
         Args:
             note:        The :class:`~pypaperless.models.documents.notes.DocumentNote`
-                         instance to delete.
+                         instance **or** the integer note id to delete.
+            pk:          Document primary key.  May be omitted when the service is
+                         accessed via a document instance or when *note* is a
+                         :class:`~pypaperless.models.documents.notes.DocumentNote`
+                         (whose document pk is embedded in the model).
             silent_fail: When ``True``, swallow :exc:`~pypaperless.exceptions.DeletionError`
                          instead of raising it.
 
         Example::
 
+            # model-based (existing style)
             notes = await paperless.documents.notes(42)
-            if notes:
-                await paperless.documents.notes.delete(notes[0])
+            await paperless.documents.notes.delete(notes[0])
+
+            # integer shorthand — document context provides the document pk implicitly
+            doc = await paperless.documents(42)
+            await doc.notes.delete(7)
+
+            # integer shorthand — standalone, document pk passed explicitly
+            await paperless.documents.notes.delete(7, pk=42)
 
         """
-        params = {
-            "id": note.id,
-        }
+        if isinstance(note, int):
+            doc_pk = self._get_document_pk(pk)
+            note_id: int | None = note
+            path = self._get_api_path(doc_pk)
+        else:
+            note_id = note.id
+            path = note.api_path
+
+        params = {"id": note_id}
         try:
-            await self._runtime.transport.delete(note.api_path, params=params)
+            await self._runtime.transport.delete(path, params=params)
         except DeletionError:
             if not silent_fail:
                 raise
         else:
             if self._document is not None and self._document.notes_ is not None:
                 # Remove the deleted note from the cache directly.
-                self._document.notes_ = [n for n in self._document.notes_ if n.id != note.id]
+                self._document.notes_ = [n for n in self._document.notes_ if n.id != note_id]

@@ -361,6 +361,18 @@ class TestDocuments:
         cached = await item.notes()
         assert len(cached) == len(DATA_DOCUMENT_NOTES) - 1
         assert all(n.id != deleted.id for n in cached)
+        # integer shorthand: delete by note id in document context
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=204,
+        )
+        int_target = cached[0]
+        await item.notes.delete(int_target.id)
+        cached = await item.notes()
+        assert all(n.id != int_target.id for n in cached)
         # failed note deletion raises DeletionError
         httpx_mock.add_response(
             method="DELETE",
@@ -519,6 +531,20 @@ class TestDocuments:
             status_code=204,
         )
         await paperless.documents.notes.delete(notes[0])
+        # integer shorthand with explicit pk
+        httpx_mock.add_response(
+            method="DELETE",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1) + r"\?.*$"
+            ),
+            status_code=204,
+        )
+        await paperless.documents.notes.delete(notes[0].id, pk=1)
+
+    async def test_note_delete_missing_pk(self, paperless: PaperlessClient) -> None:
+        """Integer delete without document context and no pk raises PrimaryKeyRequiredError."""
+        with pytest.raises(PrimaryKeyRequiredError):
+            await paperless.documents.notes.delete(2)
 
     async def test_history_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """History returns typed entries; direct service call and missing pk error both work."""

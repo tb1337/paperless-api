@@ -74,7 +74,8 @@ notes      = await doc.notes()                    # from cache (no HTTP request)
 notes      = await doc.notes(force_request=True)  # fresh from API
 note_draft = doc.notes.create(note="Checked.")
 note_id    = await doc.notes.save(note_draft)
-await doc.notes.delete(notes[0])
+await doc.notes.delete(notes[0])        # model instance
+await doc.notes.delete(notes[0].id)     # integer shorthand (document pk implicit)
 
 # history (read-only)
 entries = await doc.history()              # list[DocumentHistory]
