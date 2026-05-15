@@ -11,11 +11,15 @@ from pypaperless.const import EndpointPath
 from .const import PAPERLESS_TEST_URL
 from .data import (
     DATA_CORRESPONDENTS,
+    DATA_CUSTOM_FIELDS,
+    DATA_DOCUMENT_TYPES,
     DATA_DOCUMENTS,
     DATA_GROUPS,
     DATA_SHARE_LINK_BUNDLES,
+    DATA_SHARE_LINKS,
     DATA_STORAGE_PATHS,
     DATA_TAGS,
+    DATA_TASKS,
     DATA_TRASH,
     DATA_USERS,
 )
@@ -46,6 +50,30 @@ from .data import (
             {"status": "ready", "documents": 1},
             DATA_SHARE_LINK_BUNDLES,
         ),
+        (
+            "custom_fields",
+            "custom_fields",
+            {"name__icontains": "project"},
+            DATA_CUSTOM_FIELDS,
+        ),
+        (
+            "document_types",
+            "document_types",
+            {"name__icontains": "invoice"},
+            DATA_DOCUMENT_TYPES,
+        ),
+        (
+            "share_links",
+            "share_links",
+            {"expiration__year": 2025},
+            DATA_SHARE_LINKS,
+        ),
+        (
+            "tasks",
+            "tasks",
+            {"status": "pending"},
+            DATA_TASKS,
+        ),
     ],
     ids=[
         "documents",
@@ -56,6 +84,10 @@ from .data import (
         "groups",
         "users",
         "share_link_bundles",
+        "custom_fields",
+        "document_types",
+        "share_links",
+        "tasks",
     ],
 )
 async def test_service_filter_accepts_typed_kwargs(

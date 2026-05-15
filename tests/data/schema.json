@@ -10490,6 +10490,12 @@
             "title": "Sets the LLM embedding model",
             "maxLength": 128
           },
+          "llm_embedding_endpoint": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM embedding endpoint, optional",
+            "maxLength": 256
+          },
           "llm_backend": {
             "nullable": true,
             "title": "Sets the LLM backend",
@@ -10762,6 +10768,12 @@
             "nullable": true,
             "title": "Sets the LLM embedding model",
             "maxLength": 128
+          },
+          "llm_embedding_endpoint": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM embedding endpoint, optional",
+            "maxLength": 256
           },
           "llm_backend": {
             "nullable": true,
@@ -12415,10 +12427,11 @@
       "LlmEmbeddingBackendEnum": {
         "enum": [
           "openai-like",
-          "huggingface"
+          "huggingface",
+          "ollama"
         ],
         "type": "string",
-        "description": "* `openai-like` - OpenAI-compatible\n* `huggingface` - Huggingface"
+        "description": "* `openai-like` - OpenAI-compatible\n* `huggingface` - Huggingface\n* `ollama` - Ollama"
       },
       "LogEntry": {
         "type": "object",
@@ -14190,6 +14203,12 @@
             "nullable": true,
             "title": "Sets the LLM embedding model",
             "maxLength": 128
+          },
+          "llm_embedding_endpoint": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM embedding endpoint, optional",
+            "maxLength": 256
           },
           "llm_backend": {
             "nullable": true,
