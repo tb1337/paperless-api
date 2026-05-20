@@ -21,11 +21,12 @@ print(f"{len(trashed)} document(s) in trash")
 
 ```python
 # Trashed documents matching a title substring
-async for doc in paperless.trash.filter(title__icontains="invoice"):
-    print(doc.id, doc.title)
+async with paperless.trash.filter(title__icontains="invoice") as ctx:
+    async for doc in ctx:
+        print(doc.id, doc.title)
 ```
 
-`filter()` accepts the same parameters as `paperless.documents.filter()`. See [Documents](documents.md#filter) for available parameters.
+`filter()` accepts the same parameters as `paperless.documents.filter()` — see [`DocumentFilters`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/models/filters.py) for all available keys.
 
 ## Restore
 

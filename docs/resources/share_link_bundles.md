@@ -59,15 +59,15 @@ changed = await paperless.share_link_bundles.update(bundle)
 
 ```python
 bundle = await paperless.share_link_bundles(3)
-deleted = await paperless.share_link_bundles.delete(bundle)
-print(deleted)  # True
+await paperless.share_link_bundles.delete(bundle)
+```
+
+Raises `DeletionError` on failure. Pass `silent_fail=True` to suppress it.
 
 ## Filter
 
 ```python
-from pypaperless.models.types import ShareLinkBundleFilters
-
-async with paperless.share_link_bundles.filter(status="ready"):
-    async for bundle in paperless.share_link_bundles:
+async with paperless.share_link_bundles.filter(status="ready") as ctx:
+    async for bundle in ctx:
         print(bundle.id, bundle.size_bytes)
 ```
