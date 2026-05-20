@@ -30,21 +30,25 @@ doc_links = [
 
 ## Create
 
+`save()` calls `validate_draft()` first — `document` and `file_version` are required.
+
 ```python
 import datetime
 from pypaperless.models.share_links import ShareLinkFileVersion
 
-draft = paperless.share_links.create()
-draft.document = 42
-draft.file_version = ShareLinkFileVersion.ARCHIVE
-draft.expiration = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
+draft = paperless.share_links.create(
+    document=42,
+    file_version=ShareLinkFileVersion.ARCHIVE,
+    expiration=datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc),
+)
 
-slug = await paperless.share_links.save(draft)
-print(slug)  # "abc123xyz"  (str, not an int)
+new_id = await paperless.share_links.save(draft)
+print(new_id)  # primary key of the new share link
+
+# fetch the freshly created link to read its generated slug
+link = await paperless.share_links(new_id)
+print(link.slug)  # e.g. "abc123xyz"
 ```
-
-!!! note
-    `save()` returns the link's `slug` string, not an integer primary key.
 
 ## Update
 
