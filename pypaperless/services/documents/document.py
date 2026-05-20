@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import AsnRequestError, SendEmailError
 from pypaperless.models.documents.document import (
     Document,
@@ -37,7 +37,6 @@ class DocumentSuggestionsService(ResourceService):
     """Represent a factory for Paperless `DocumentSuggestions` models."""
 
     _api_path = EndpointPath.DOCUMENTS_SUGGESTIONS
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentSuggestions
 
@@ -54,7 +53,6 @@ class DocumentMetaService(ResourceService, mixins.CallableService[DocumentMeta])
     """Represent a factory for Paperless `DocumentMeta` models."""
 
     _api_path = EndpointPath.DOCUMENTS_META
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentMeta
 
@@ -71,7 +69,6 @@ class DocumentService(
     """Represent a factory for Paperless `Document` models."""
 
     _api_path = EndpointPath.DOCUMENTS
-    _resource = PaperlessResource.DOCUMENTS
 
     _draft_cls = DocumentDraft
     _resource_cls = Document

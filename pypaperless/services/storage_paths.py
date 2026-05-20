@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.filters import StoragePathFilters
 from pypaperless.models.storage_paths import StoragePath, StoragePathDraft
 
@@ -24,7 +24,6 @@ class StoragePathService(
     """Represent a factory for Paperless `StoragePath` models."""
 
     _api_path = EndpointPath.STORAGE_PATHS
-    _resource = PaperlessResource.STORAGE_PATHS
 
     _draft_cls = StoragePathDraft
     _resource_cls = StoragePath

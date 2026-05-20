@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Protocol
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
@@ -21,7 +21,6 @@ class ResourceServiceProtocol[ResourceT](Protocol):
 
     _runtime: "PaperlessRuntime"
     _api_path: str
-    _resource: PaperlessResource
     _resource_cls: type[ResourceT]
 
 
@@ -29,7 +28,6 @@ class ResourceService(PaperlessService):
     """Base class for all resource services in PyPaperless."""
 
     _api_path = EndpointPath.INDEX
-    _resource: PaperlessResource
 
     @property
     def api_path(self) -> str:

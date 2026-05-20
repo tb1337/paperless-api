@@ -2,7 +2,7 @@
 
 from typing import cast
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.mails.accounts import MailAccount
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
@@ -17,7 +17,6 @@ class MailAccountService(
     """Represent a factory for Paperless `MailAccount` models."""
 
     _api_path = EndpointPath.MAIL_ACCOUNTS
-    _resource = PaperlessResource.MAIL_ACCOUNTS
 
     _resource_cls = MailAccount
 

@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack, cast
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models.filters import TaskFilters, TaskSummaryFilters
 from pypaperless.models.tasks import Task, TaskSummary, TaskType
@@ -20,7 +20,6 @@ class TaskService(
     """Represent a factory for Paperless `Task` models."""
 
     _api_path = EndpointPath.TASKS
-    _resource = PaperlessResource.TASKS
 
     _resource_cls = Task
 

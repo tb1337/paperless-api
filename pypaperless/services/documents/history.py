@@ -1,6 +1,6 @@
 """Provide `DocumentHistory` related services."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.documents.history import DocumentHistory
 
 from .base import DocumentScopedServiceBase
@@ -10,7 +10,6 @@ class DocumentHistoryService(DocumentScopedServiceBase):
     """Represent a factory for Paperless `DocumentHistory` models."""
 
     _api_path = EndpointPath.DOCUMENTS_HISTORY
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentHistory
 

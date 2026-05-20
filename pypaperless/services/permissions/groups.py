@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.filters import GroupFilters
 from pypaperless.models.permissions.groups import Group
 from pypaperless.services import mixins
@@ -19,7 +19,6 @@ class GroupService(
     """Represent a factory for Paperless `Group` models."""
 
     _api_path = EndpointPath.GROUPS
-    _resource = PaperlessResource.GROUPS
 
     _resource_cls = Group
 

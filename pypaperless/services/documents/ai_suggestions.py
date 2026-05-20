@@ -1,6 +1,6 @@
 """Provide `DocumentAISuggestions` service."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.documents.ai_suggestions import DocumentAISuggestions
 
 from .base import DocumentScopedServiceBase
@@ -10,7 +10,6 @@ class DocumentAISuggestionsService(DocumentScopedServiceBase):
     """Represent a factory for Paperless `DocumentAISuggestions` models."""
 
     _api_path = EndpointPath.DOCUMENTS_AI_SUGGESTIONS
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentAISuggestions
 

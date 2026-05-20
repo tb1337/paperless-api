@@ -313,7 +313,6 @@ async def test_draft_not_supported(api: PaperlessClient) -> None:
 
     class TestService(ResourceService, service_mixins.CreatableService):
         _api_path = "any.url"
-        _resource = "test"
         _resource_cls = TestResource
 
     service = TestService(api)

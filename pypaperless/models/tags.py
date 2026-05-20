@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 
 from . import mixins
 from .base import PaperlessModel
@@ -16,7 +16,6 @@ class Tag(
     """Represent a Paperless `Tag`."""
 
     _api_path: ClassVar[str] = EndpointPath.TAGS_SINGLE
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     id: int | None = None
     slug: str | None = None
@@ -38,7 +37,6 @@ class TagDraft(
     """Represent a new `Tag`, which is not yet stored in Paperless."""
 
     _api_path: ClassVar[str] = EndpointPath.TAGS
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
     _create_required_fields: ClassVar[set[str]] = {
         "name",

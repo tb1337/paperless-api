@@ -470,7 +470,6 @@ async def test_iterable_filter_base_method(paperless: PaperlessClient) -> None:
 
     class _MinimalService(ResourceService, svc_mixins.IterableService[_MinimalModel]):
         _api_path = EndpointPath.CORRESPONDENTS
-        _resource = "correspondents"
         _resource_cls = _MinimalModel
 
     svc = _MinimalService(paperless)

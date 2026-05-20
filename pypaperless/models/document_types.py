@@ -2,7 +2,7 @@
 
 from typing import ClassVar
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 
 from . import mixins
 from .base import PaperlessModel
@@ -16,7 +16,6 @@ class DocumentType(
     """Represent a Paperless `DocumentType`."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENT_TYPES_SINGLE
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENT_TYPES
 
     id: int | None = None
     slug: str | None = None
@@ -33,7 +32,6 @@ class DocumentTypeDraft(
     """Represent a new `DocumentType`, which is not yet stored in Paperless."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENT_TYPES
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENT_TYPES
 
     _create_required_fields: ClassVar[set[str]] = {
         "name",

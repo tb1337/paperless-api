@@ -1,6 +1,6 @@
 """Provide `Profile` service."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.profile import Profile
 
 from .base import ResourceService
@@ -10,7 +10,6 @@ class ProfileService(ResourceService):
     """Represent a factory for the Paperless `Profile` model."""
 
     _api_path = EndpointPath.PROFILE
-    _resource = PaperlessResource.PROFILE
 
     _resource_cls = Profile
 

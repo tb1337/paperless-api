@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Self
 
 from pydantic import Field
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
 from pypaperless.models.base import PaperlessModel
 
@@ -32,7 +32,6 @@ class ShareLinkBundle(PaperlessModel):
     """Represent a Paperless ``ShareLinkBundle``."""
 
     _api_path: ClassVar[str] = EndpointPath.SHARE_LINK_BUNDLES_SINGLE
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINK_BUNDLES
 
     id: int
     created: datetime.datetime | None = None
@@ -51,7 +50,6 @@ class ShareLinkBundleDraft(PaperlessModel, mixins.CreatableModel):
     """Represent a new Paperless ``ShareLinkBundle``, which is not stored in Paperless."""
 
     _api_path: ClassVar[str] = EndpointPath.SHARE_LINK_BUNDLES
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINK_BUNDLES
 
     _create_required_fields: ClassVar[set[str]] = {"document_ids"}
 

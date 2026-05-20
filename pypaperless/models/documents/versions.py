@@ -3,14 +3,12 @@
 import datetime
 from typing import ClassVar
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.base import PaperlessModel
 
 
 class DocumentVersionInfo(PaperlessModel):
     """Represent version metadata for a Paperless `Document`."""
-
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     id: int | None = None
     added: datetime.datetime | None = None
@@ -23,6 +21,5 @@ class DocumentRoot(PaperlessModel):
     """Represent the root-document response for a Paperless `Document`."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_ROOT
-    _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     root_id: int | None = None

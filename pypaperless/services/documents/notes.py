@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, cast
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.exceptions import DeletionError, PrimaryKeyRequiredError
 from pypaperless.models.base import DraftLike
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
@@ -23,7 +23,6 @@ class DocumentNoteService(
     """Represent a factory for Paperless `DocumentNote` models."""
 
     _api_path = EndpointPath.DOCUMENTS_NOTES
-    _resource = PaperlessResource.DOCUMENTS
 
     _draft_cls = DocumentNoteDraft
     _resource_cls = DocumentNote

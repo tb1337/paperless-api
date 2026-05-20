@@ -2,7 +2,7 @@
 
 from typing import Any, ClassVar
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.documents.document import DownloadedDocument, FileRetrieveMode
 from pypaperless.services.base import ResourceService
 
@@ -11,7 +11,6 @@ class _DocumentFileServiceBase(ResourceService):
     """Base class for document file retrieval services (download, preview, thumbnail)."""
 
     _api_path = EndpointPath.DOCUMENTS_DOWNLOAD
-    _resource = PaperlessResource.DOCUMENTS
     _mode: ClassVar[FileRetrieveMode]
 
     _resource_cls = DownloadedDocument

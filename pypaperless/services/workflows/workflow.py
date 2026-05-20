@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.workflows.workflow import Workflow
 from pypaperless.services import mixins
 from pypaperless.services.base import ResourceService
@@ -22,7 +22,6 @@ class WorkflowService(
     """Represent a factory for Paperless `Workflow` models."""
 
     _api_path = EndpointPath.WORKFLOWS
-    _resource = PaperlessResource.WORKFLOWS
 
     _resource_cls = Workflow
 

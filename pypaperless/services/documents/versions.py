@@ -2,7 +2,7 @@
 
 from typing import IO
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.documents.versions import DocumentRoot, DocumentVersionInfo
 
 from .base import DocumentScopedServiceBase
@@ -12,7 +12,6 @@ class DocumentVersionService(DocumentScopedServiceBase):
     """Represent a service for managing versions of a Paperless `Document`."""
 
     _api_path = EndpointPath.DOCUMENTS_VERSION
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentVersionInfo
 
@@ -103,7 +102,6 @@ class DocumentRootService(DocumentScopedServiceBase):
     """Represent a factory for Paperless `DocumentRoot` models."""
 
     _api_path = EndpointPath.DOCUMENTS_ROOT
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = DocumentRoot
 

@@ -1,6 +1,6 @@
 """Provide `Status` service."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.status import Status
 
 from .base import ResourceService
@@ -10,7 +10,6 @@ class StatusService(ResourceService):
     """Represent a factory for the Paperless `Status` model."""
 
     _api_path = EndpointPath.STATUS
-    _resource = PaperlessResource.STATUS
 
     _resource_cls = Status
 

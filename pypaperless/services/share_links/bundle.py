@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.filters import ShareLinkBundleFilters
 from pypaperless.models.share_links.bundle import ShareLinkBundle, ShareLinkBundleDraft
 from pypaperless.services import mixins
@@ -22,7 +22,6 @@ class ShareLinkBundleService(
     """Represent a factory for Paperless ``ShareLinkBundle`` models."""
 
     _api_path = EndpointPath.SHARE_LINK_BUNDLES
-    _resource = PaperlessResource.SHARE_LINK_BUNDLES
 
     _draft_cls = ShareLinkBundleDraft
     _resource_cls = ShareLinkBundle

@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.custom_fields import CustomField, CustomFieldDraft
 from pypaperless.models.filters import CustomFieldFilters
 
@@ -23,7 +23,6 @@ class CustomFieldService(
     """Represent a factory for Paperless `CustomField` models."""
 
     _api_path = EndpointPath.CUSTOM_FIELDS
-    _resource = PaperlessResource.CUSTOM_FIELDS
 
     _draft_cls = CustomFieldDraft
     _resource_cls = CustomField

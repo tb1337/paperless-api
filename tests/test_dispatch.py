@@ -6,7 +6,7 @@ import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.dispatch import (
     _MODEL_TO_PROP_NAME,
     DispatchableCachedProperty,
@@ -69,7 +69,6 @@ class _FakeWritableSubSvc(
     """Writable sub-service with _resource_cls but no _draft_cls (exercises L85->83)."""
 
     _api_path = "/api/dispatch-fake/"
-    _resource = PaperlessResource.DOCUMENTS
 
     _resource_cls = _FakeDispatchTestModel
     # Deliberately omit _draft_cls so the loop's False branch (L85->83) is taken.

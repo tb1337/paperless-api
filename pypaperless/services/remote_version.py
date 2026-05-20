@@ -1,6 +1,6 @@
 """Provide `RemoteVersion` service."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.remote_version import RemoteVersion
 
 from .base import ResourceService
@@ -10,7 +10,6 @@ class RemoteVersionService(ResourceService):
     """Represent a factory for Paperless `Remote Version` models."""
 
     _api_path = EndpointPath.REMOTE_VERSION
-    _resource = PaperlessResource.REMOTE_VERSION
 
     _resource_cls = RemoteVersion
 

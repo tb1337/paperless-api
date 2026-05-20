@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Self, Unpack
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.filters import UserFilters
 from pypaperless.models.permissions.users import User
 from pypaperless.services import mixins
@@ -19,7 +19,6 @@ class UserService(
     """Represent a factory for Paperless `User` models."""
 
     _api_path = EndpointPath.USERS
-    _resource = PaperlessResource.USERS
 
     _resource_cls = User
 

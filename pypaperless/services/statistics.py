@@ -1,6 +1,6 @@
 """Provide `Statistic` service."""
 
-from pypaperless.const import EndpointPath, PaperlessResource
+from pypaperless.const import EndpointPath
 from pypaperless.models.statistics import Statistic
 
 from .base import ResourceService
@@ -10,7 +10,6 @@ class StatisticService(ResourceService):
     """Represent a factory for Paperless `Statistic` models."""
 
     _api_path = EndpointPath.STATISTICS
-    _resource = PaperlessResource.STATISTICS
 
     _resource_cls = Statistic
 
