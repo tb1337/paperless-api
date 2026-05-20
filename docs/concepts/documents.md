@@ -300,16 +300,18 @@ See [Custom fields](custom_fields.md) for the full custom field API.
 After uploading a document, use `paperless.tasks` to check the status:
 
 ```python
+import asyncio
+from pypaperless.models.tasks import TaskStatus
+
 task_id = await paperless.documents.save(draft)
 
-import asyncio
 for _ in range(30):
     await asyncio.sleep(2)
     task = await paperless.tasks(task_id)
-    if task.status in ("SUCCESS", "FAILURE"):
+    if task.status in (TaskStatus.SUCCESS, TaskStatus.FAILURE):
         break
 
-print(task.status, task.result)
+print(task.status, task.result_data)
 ```
 
 ---

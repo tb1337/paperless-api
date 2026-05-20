@@ -61,13 +61,17 @@ Q("Invoice Amount", "gte", 100)  # by name
 
 The valid operators depend on the field's data type:
 
-| Applies to                           | Operators                                      |
-| ------------------------------------ | ---------------------------------------------- |
-| **All types**                        | `exact` `in` `isnull` `exists`                 |
-| `STRING` `LONGTEXT` `URL` `MONETARY` | `icontains` `istartswith` `iendswith`          |
-| `INTEGER` `FLOAT` `MONETARY` `DATE`  | `gt` `gte` `lt` `lte` `range`                  |
-| `DOCUMENT_LINK`                      | `contains`                                     |
-| `DATE` (component)                   | `year__exact` `month__exact` `day__exact` etc. |
+| Applies to                           | Operators                             |
+| ------------------------------------ | ------------------------------------- |
+| **All types**                        | `exact` `in` `isnull` `exists`        |
+| `STRING` `LONGTEXT` `URL` `MONETARY` | `icontains` `istartswith` `iendswith` |
+| `INTEGER` `FLOAT` `MONETARY` `DATE`  | `gt` `gte` `lt` `lte` `range`         |
+| `DOCUMENT_LINK`                      | `contains`                            |
+
+The full operator set is enumerated in
+[`builders/custom_fields.py`](https://github.com/tb1337/paperless-api/blob/main/pypaperless/builders/custom_fields.py)
+as the `_QueryOperation` literal — those are the only values the type
+checker accepts as the second argument to `CustomFieldQuery(...)`.
 
 ### `exists` vs `isnull`
 
@@ -85,13 +89,6 @@ Pass a list as the value:
 ```python
 Q("Status", "in", ["open", "pending"])
 Q("Amount", "range", [10, 100])  # start, end (inclusive)
-```
-
-### Date components
-
-```python
-Q("Invoice Date", "year__exact", 2024)
-Q("Invoice Date", "month__exact", 12)
 ```
 
 ---

@@ -30,7 +30,7 @@ if tasks := status.tasks:
     print(tasks.celery_status)  # "OK"
     print(tasks.redis_status)   # "OK"
 
-# Convenience method for any errors present
-if status.has_errors():
+# Convenience property for any errors present
+if status.has_errors:
     print("One or more components are unhealthy!")
 ```

@@ -29,12 +29,12 @@ failures = [
 ]
 ```
 
-## Permissions
+## Owner
+
+`ProcessedMail` carries the `owner` field directly — no `with_permissions()`
+context is needed (the model does not expose the full permissions table).
 
 ```python
-async with paperless.processed_mail.with_permissions():
-    entry = await paperless.processed_mail(5)
-    print(entry.owner)
+entry = await paperless.processed_mail(5)
+print(entry.owner)  # owner user id
 ```
-
-See [Permissions](../concepts/permissions.md) for details.
