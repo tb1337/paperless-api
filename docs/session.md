@@ -184,6 +184,7 @@ After initialisation, the following services are available on the `PaperlessClie
 | `paperless.profile`           | User profile                     |
 | `paperless.saved_views`       | Saved views                      |
 | `paperless.search`            | Full-text search                 |
+| `paperless.share_link_bundles`| Share link bundles               |
 | `paperless.share_links`       | Share links                      |
 | `paperless.statistics`        | Statistics                       |
 | `paperless.remote_version`    | Remote version info              |

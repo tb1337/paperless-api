@@ -38,10 +38,10 @@
 
 ```python
 import asyncio
-from pypaperless import Paperless
+from pypaperless import PaperlessClient
 
 async def main():
-    async with Paperless("localhost:8000", "your-api-token") as paperless:
+    async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
         # iterate all documents - pagination is handled automatically
         async for document in paperless.documents:
             print(document.id, document.title)
@@ -50,8 +50,9 @@ async def main():
         doc = await paperless.documents(42)
 
         # filter with server-side parameters
-        async for tag in paperless.tags.filter(name__icontains="invoice"):
-            print(tag.id, tag.name)
+        async with paperless.tags.filter(name__icontains="invoice") as filtered:
+            async for tag in filtered:
+                print(tag.id, tag.name)
 
 asyncio.run(main())
 ```

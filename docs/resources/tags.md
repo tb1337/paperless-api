@@ -30,11 +30,21 @@ inbox = next(
 
 ## Create
 
+`save()` calls `validate_draft()` first — all of `name`, `color`, `is_inbox_tag`,
+`match`, `matching_algorithm` and `is_insensitive` are required and raise
+`DraftFieldRequiredError` if missing.
+
 ```python
-draft = paperless.tags.create()
-draft.name = "Invoice"
-draft.color = "#a6cee3"
-draft.is_inbox_tag = False
+from pypaperless.models.types import MatchingAlgorithm
+
+draft = paperless.tags.create(
+    name="Invoice",
+    color="#a6cee3",
+    is_inbox_tag=False,
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 
 pk = await paperless.tags.save(draft)
 print(pk)  # primary key of the new tag

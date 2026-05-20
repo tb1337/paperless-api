@@ -56,6 +56,8 @@ asyncio.run(main())
 - [Documents](concepts/documents.md) - uploads, search, download, notes, metadata
 - [Custom fields](concepts/custom_fields.md) - typed field values, cache, read & write
 - [Permissions](concepts/permissions.md) - object-level permission management
+- [Custom field query](concepts/custom_field_query.md) - structured `custom_field_query` filter builder
+- [Search query](concepts/search_query.md) - fluent builder for the global search endpoint
 - [Exceptions](exceptions.md) - full exception reference
 
 ---

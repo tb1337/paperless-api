@@ -20,6 +20,7 @@ Every Paperless-ngx entity is exposed through a **service** on the `PaperlessCli
 | `processed_mail`    |   ✓    |     ✓     |                 |          |          |       ✓       |
 | `profile`           |   ✓    |           |                 |    ✓     |          |               |
 | `saved_views`       |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `share_link_bundles`|   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
 | `share_links`       |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
 | `statistics`        |   ✓    |           |                 |          |          |               |
 | `remote_version`    |   ✓    |           |                 |          |          |               |
@@ -130,7 +131,7 @@ The filter context is automatically cleared when the `async with` block exits.
 
 ## Creating items
 
-Use `draft()` to create a new draft model and `save()` to persist it:
+Use `create()` to construct a new draft model and `save()` to persist it:
 
 ```python
 # Create a new tag

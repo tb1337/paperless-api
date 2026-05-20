@@ -8,10 +8,10 @@ See [`pypaperless/models/config.py`](https://github.com/tb1337/paperless-api/blo
 
 ## Fetch
 
-Config is a singleton - always request it with pk `1`:
+Config is a singleton — call without arguments:
 
 ```python
-config = await paperless.config(1)
+config = await paperless.config()
 
 print(config.language)          # e.g. "deu"
 print(config.barcodes_enabled)  # True / False

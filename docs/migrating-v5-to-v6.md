@@ -510,7 +510,7 @@ Access the currently authenticated user's own profile:
 
 ```python
 profile = await paperless.profile()
-print(profile.username, profile.email)
+print(profile.first_name, profile.email)
 ```
 
 See [Profile](resources/profile.md) for details.
@@ -539,13 +539,14 @@ authentication. Supports full CRUD.
 ```python
 from pypaperless.models.share_links import ShareLinkFileVersion
 
-draft = paperless.share_links.create()
-draft.document = 42
-draft.file_version = ShareLinkFileVersion.ARCHIVE
-slug = await paperless.share_links.save(draft)
-print(slug)  # "abc123xyz"
+draft = paperless.share_links.create(
+    document=42,
+    file_version=ShareLinkFileVersion.ARCHIVE,
+)
+new_id = await paperless.share_links.save(draft)
+link = await paperless.share_links(new_id)
+print(link.slug)  # e.g. "abc123xyz"
 
-link = await paperless.share_links(8)
 await paperless.share_links.delete(link)
 ```
 

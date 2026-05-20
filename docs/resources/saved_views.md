@@ -10,9 +10,10 @@ See [`pypaperless/models/saved_views.py`](https://github.com/tb1337/paperless-ap
 
 ```python
 view = await paperless.saved_views(2)
-print(view.name)               # "Inbox"
-print(view.show_on_dashboard)  # True
-print(view.filter_rules)       # [SavedViewFilterRule(...), ...]
+print(view.name)          # "Inbox"
+print(view.sort_field)    # "created"
+print(view.sort_reverse)  # True
+print(view.filter_rules)  # [SavedViewFilterRule(...), ...]
 ```
 
 ## Iterate
@@ -21,11 +22,8 @@ print(view.filter_rules)       # [SavedViewFilterRule(...), ...]
 async for view in paperless.saved_views:
     print(view.id, view.name)
 
-# Only views shown in the sidebar
-sidebar_views = [
-    v async for v in paperless.saved_views
-    if v.show_in_sidebar
-]
+# Keyed by id
+views = await paperless.saved_views.as_dict()
 ```
 
 ## Permissions

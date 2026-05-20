@@ -35,12 +35,7 @@ print(result)
 ## Process mailbox now
 
 ```python
-# Service action by account id
 await paperless.mail_accounts.process(1)
-
-# Model shortcut
-account = await paperless.mail_accounts(1)
-await account.process()
 ```
 
 ## Permissions

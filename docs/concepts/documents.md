@@ -276,13 +276,15 @@ print(f"Upload queued as task: {task_id}")
 
 ### Uploading with custom field values
 
-To set explicit values on custom fields at upload time, use `DocumentCustomFieldList`:
+To set explicit values on custom fields at upload time, build a
+`DocumentCustomFieldList` via its `from_data()` factory (which binds the
+runtime) and add `CustomFieldValue` entries:
 
 ```python
 from pypaperless.models.documents import DocumentCustomFieldList
 from pypaperless.models.custom_fields import CustomFieldValue
 
-cf_list = DocumentCustomFieldList(paperless, data=[])
+cf_list = DocumentCustomFieldList.from_data(paperless.runtime, [])
 cf_list += CustomFieldValue(field=3, value="ACME Corp")
 cf_list += CustomFieldValue(field=8, value=42)
 
@@ -298,16 +300,18 @@ See [Custom fields](custom_fields.md) for the full custom field API.
 After uploading a document, use `paperless.tasks` to check the status:
 
 ```python
+import asyncio
+from pypaperless.models.tasks import TaskStatus
+
 task_id = await paperless.documents.save(draft)
 
-import asyncio
 for _ in range(30):
     await asyncio.sleep(2)
     task = await paperless.tasks(task_id)
-    if task.status in ("SUCCESS", "FAILURE"):
+    if task.status in (TaskStatus.SUCCESS, TaskStatus.FAILURE):
         break
 
-print(task.status, task.result)
+print(task.status, task.result_data)
 ```
 
 ---

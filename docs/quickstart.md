@@ -18,7 +18,7 @@ Requires **Python 3.13** or higher.
 
 ## Your first session
 
-Import the `Paperless` class and create an instance with your Paperless-ngx host and API token.
+Import the `PaperlessClient` class and create an instance with your Paperless-ngx host and API token.
 
 pypaperless is fully **async**. All API calls must be made inside an `async` function.
 

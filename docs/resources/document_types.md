@@ -26,9 +26,18 @@ types = await paperless.document_types.as_dict()
 
 ## Create
 
+`save()` calls `validate_draft()` first — all of `name`, `match`, `matching_algorithm`
+and `is_insensitive` are required and raise `DraftFieldRequiredError` if missing.
+
 ```python
-draft = paperless.document_types.create()
-draft.name = "Invoice"
+from pypaperless.models.types import MatchingAlgorithm
+
+draft = paperless.document_types.create(
+    name="Invoice",
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 
 pk = await paperless.document_types.save(draft)
 print(pk)  # primary key of the new document type

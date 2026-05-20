@@ -24,7 +24,7 @@ See [`pypaperless/models/search.py`](https://github.com/tb1337/paperless-api/blo
 | `workflows`      | `list[Workflow]`      | Matching workflows                                |
 | `custom_fields`  | `list[CustomField]`   | Matching custom fields                            |
 
-All fields are `None`-able. Nested objects are full model instances - you can call service shortcuts like `.update()` or `.delete()` directly on them.
+All fields are `None`-able. Nested objects are full model instances — pass them to the matching service (`paperless.documents.update(doc)`, `paperless.tags.delete(tag)`, …) or to the client-level dispatcher (`paperless.update(doc)`, `paperless.delete(tag)`) to act on them.
 
 ## Search
 
