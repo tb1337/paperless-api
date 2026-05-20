@@ -29,13 +29,15 @@ To get typed `CustomFieldValue` instances (instead of plain `CustomFieldValue`),
 
 ### Providing a cache
 
-Call `update_cache()` before working with documents that have custom fields:
+The cache lives on the runtime (`paperless.runtime.cache.custom_fields`) and is
+``None`` until you populate it. Fetch all custom fields once and assign them as
+an ``id → CustomField`` mapping before working with documents:
 
 ```python
 from pypaperless import PaperlessClient
 
 async with PaperlessClient("localhost:8000", "your-api-token") as paperless:
-    await paperless.cache.update_custom_fields()
+    paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
     doc = await paperless.documents(42)
 
@@ -161,7 +163,7 @@ print(item.labels)  # all available options as list[CustomFieldSelectOptions]
 The recommended way is to call `draft_value()` on a `CustomField` instance. With the cache active, it returns the correct typed subclass:
 
 ```python
-await paperless.cache.update_custom_fields()
+paperless.runtime.cache.custom_fields = await paperless.custom_fields.as_dict()
 
 cf = await paperless.custom_fields(8)
 new_value = cf.draft_value(42)
