@@ -20,6 +20,7 @@ Every Paperless-ngx entity is exposed through a **service** on the `PaperlessCli
 | `processed_mail`    |   ✓    |     ✓     |                 |          |          |       ✓       |
 | `profile`           |   ✓    |           |                 |    ✓     |          |               |
 | `saved_views`       |   ✓    |     ✓     |                 |          |          |       ✓       |
+| `share_link_bundles`|   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
 | `share_links`       |   ✓    |     ✓     |        ✓        |    ✓     |    ✓     |               |
 | `statistics`        |   ✓    |           |                 |          |          |               |
 | `remote_version`    |   ✓    |           |                 |          |          |               |
