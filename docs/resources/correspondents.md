@@ -32,9 +32,18 @@ filtered = [
 
 ## Create
 
+`save()` calls `validate_draft()` first — all of `name`, `match`, `matching_algorithm`
+and `is_insensitive` are required and raise `DraftFieldRequiredError` if missing.
+
 ```python
-draft = paperless.correspondents.create()
-draft.name = "ACME Corp"
+from pypaperless.models.types import MatchingAlgorithm
+
+draft = paperless.correspondents.create(
+    name="ACME Corp",
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 
 pk = await paperless.correspondents.save(draft)
 print(pk)  # primary key of the new correspondent

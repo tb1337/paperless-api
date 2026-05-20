@@ -26,10 +26,20 @@ paths = await paperless.storage_paths.as_dict()
 
 ## Create
 
+`save()` calls `validate_draft()` first — all of `name`, `path`, `match`,
+`matching_algorithm` and `is_insensitive` are required and raise
+`DraftFieldRequiredError` if missing.
+
 ```python
-draft = paperless.storage_paths.create()
-draft.name = "By year and type"
-draft.path = "{created_year}/{document_type}/{title}"
+from pypaperless.models.types import MatchingAlgorithm
+
+draft = paperless.storage_paths.create(
+    name="By year and type",
+    path="{created_year}/{document_type}/{title}",
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 
 pk = await paperless.storage_paths.save(draft)
 print(pk)  # primary key of the new storage path
