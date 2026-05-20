@@ -130,7 +130,7 @@ The filter context is automatically cleared when the `async with` block exits.
 
 ## Creating items
 
-Use `draft()` to create a new draft model and `save()` to persist it:
+Use `create()` to construct a new draft model and `save()` to persist it:
 
 ```python
 # Create a new tag

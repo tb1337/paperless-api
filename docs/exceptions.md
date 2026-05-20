@@ -135,7 +135,7 @@ except DraftFieldRequiredError as exc:
 
 #### `DraftNotSupportedError`
 
-Raised when calling `draft()` on a service that does not have a `_draft_cls` defined (i.e. creation is not supported for that resource).
+Raised when calling `create()` on a service that does not have a `_draft_cls` defined (i.e. creation is not supported for that resource).
 
 ---
 

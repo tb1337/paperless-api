@@ -83,7 +83,7 @@ The flag applies to all methods on the service (`__call__`, iteration, `update()
 
 ## Creating an item with permissions
 
-When drafting a new item, use `set_permissions` to assign ownership and ACLs at creation time (`SecurableDraftMixin`):
+When drafting a new item, use `set_permissions` to assign ownership and ACLs at creation time (`SecurableDraftModel`):
 
 ```python
 from pypaperless.models.types import Permissions
