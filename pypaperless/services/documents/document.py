@@ -73,6 +73,24 @@ class DocumentService(
     _draft_cls = DocumentDraft
     _resource_cls = Document
 
+    def __init__(self, runtime: "PaperlessRuntime") -> None:
+        """Initialize a `DocumentService` instance."""
+        super().__init__(runtime)
+
+        self._ai_suggestions = DocumentAISuggestionsService(runtime)
+        self._bulk_edit = DocumentBulkEditService(runtime)
+        self._chat = DocumentChatService(runtime)
+        self._download = DocumentFileDownloadService(runtime)
+        self._history = DocumentHistoryService(runtime)
+        self._meta = DocumentMetaService(runtime)
+        self._notes = DocumentNoteService(runtime)
+        self._preview = DocumentFilePreviewService(runtime)
+        self._share_links = DocumentShareLinkService(runtime)
+        self._suggestions = DocumentSuggestionsService(runtime)
+        self._thumbnail = DocumentFileThumbnailService(runtime)
+        self._root = DocumentRootService(runtime)
+        self._versions = DocumentVersionService(runtime)
+
     @asynccontextmanager
     async def filter(self, **kwargs: Unpack[DocumentFilters]) -> AsyncGenerator[Self]:
         """Iterate documents with server-side filters.
@@ -91,24 +109,6 @@ class DocumentService(
         """
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
-
-    def __init__(self, runtime: "PaperlessRuntime") -> None:
-        """Initialize a `DocumentService` instance."""
-        super().__init__(runtime)
-
-        self._ai_suggestions = DocumentAISuggestionsService(runtime)
-        self._bulk_edit = DocumentBulkEditService(runtime)
-        self._chat = DocumentChatService(runtime)
-        self._download = DocumentFileDownloadService(runtime)
-        self._history = DocumentHistoryService(runtime)
-        self._meta = DocumentMetaService(runtime)
-        self._notes = DocumentNoteService(runtime)
-        self._preview = DocumentFilePreviewService(runtime)
-        self._share_links = DocumentShareLinkService(runtime)
-        self._suggestions = DocumentSuggestionsService(runtime)
-        self._thumbnail = DocumentFileThumbnailService(runtime)
-        self._root = DocumentRootService(runtime)
-        self._versions = DocumentVersionService(runtime)
 
     @property
     def ai_suggestions(self) -> DocumentAISuggestionsService:
