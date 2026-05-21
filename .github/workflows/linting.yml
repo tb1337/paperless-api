@@ -10,18 +10,21 @@ on:
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
+      - ".pre-commit-config.yaml"
+      - ".github/workflows/linting.yml"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   DEFAULT_PYTHON: "3.14"
 
 jobs:
   lint:
-    name: ${{ matrix.tool }}
+    name: Lint
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        tool: [codespell, ruff, prek-hooks, yamllint]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v6.0.2
@@ -31,30 +34,17 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: 🏗 Install Python dependencies
         run: uv sync --group dev
-      - name: 🚀 Execute checks
+      - name: 🚀 Run ruff (with GitHub annotations)
         run: |
-          if [ "${{ matrix.tool }}" = "codespell" ]; then
-            uv run prek run codespell --all-files
-          elif [ "${{ matrix.tool }}" = "ruff" ]; then
-            uv run ruff check --output-format=github .
-            uv run ruff format --check .
-          elif [ "${{ matrix.tool }}" = "prek-hooks" ]; then
-            uv run prek run check-ast --all-files
-            uv run prek run check-case-conflict --all-files
-            uv run prek run check-docstring-first --all-files
-            uv run prek run check-json --all-files
-            uv run prek run check-merge-conflict --all-files
-            uv run prek run check-symlinks --all-files
-            uv run prek run check-toml --all-files
-            uv run prek run check-yaml --all-files
-            uv run prek run detect-private-key --all-files
-            uv run prek run end-of-file-fixer --all-files
-            uv run prek run trailing-whitespace --all-files
-          elif [ "${{ matrix.tool }}" = "yamllint" ]; then
-            uv run yamllint .
-          fi
+          uv run ruff check --output-format=github .
+          uv run ruff format --check .
+      - name: 🚀 Run remaining hooks via prek
+        env:
+          SKIP: mypy,pytest,ruff-check,ruff-format
+        run: uv run prek run --all-files --show-diff-on-failure

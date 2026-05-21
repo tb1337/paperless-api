@@ -29,9 +29,10 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: 🏗 Install Python dependencies
         run: uv sync --group dev
       - name: 🏗 Set package version
