@@ -10,7 +10,12 @@ on:
       - "uv.lock"
       - "pypaperless/**"
       - "tests/**"
+      - ".github/workflows/typing.yml"
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   DEFAULT_PYTHON: "3.14"
@@ -28,9 +33,10 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: 🏗 Set up uv
-        run: |
-          pipx install uv
-          uv venv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
       - name: 🏗 Install Python dependencies
         run: uv sync --group dev
       - name: 🚀 Run mypy
