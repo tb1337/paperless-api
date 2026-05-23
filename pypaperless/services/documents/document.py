@@ -1,5 +1,7 @@
 """Provide `Document` related services."""
 
+import asyncio
+import hashlib
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Self, Unpack
@@ -352,6 +354,53 @@ class DocumentService(
         async with self.filter(**filters):
             async for item in self:
                 yield item
+
+    async def find_duplicate(
+        self,
+        content: bytes,
+        *,
+        filename: str | None = None,
+    ) -> Document | None:
+        """Return an existing document with matching MD5 checksum, or ``None``.
+
+        Paperless-ngx stores an MD5 hash of every uploaded file. This helper
+        computes the hash client-side and queries the API before you upload,
+        so you can skip the round-trip through the consume queue for known
+        duplicates. When ``filename`` is given, it is additionally matched
+        against ``original_filename`` (case-insensitive).
+
+        Args:
+            content:  Raw file bytes you intend to upload.
+            filename: Optional original filename to narrow the match further.
+
+        Example::
+
+            with open("invoice.pdf", "rb") as f:
+                content = f.read()
+
+            existing = await paperless.documents.find_duplicate(
+                content, filename="invoice.pdf"
+            )
+            if existing is not None:
+                print(f"Already uploaded as #{existing.id}: {existing.title}")
+            else:
+                draft = paperless.documents.create(
+                    document=content, filename="invoice.pdf"
+                )
+                await paperless.documents.save(draft)
+
+        """
+        checksum = await asyncio.to_thread(
+            lambda: hashlib.md5(content, usedforsecurity=False).hexdigest()
+        )
+        filters: DocumentFilters = {"checksum__iexact": checksum}
+        if filename is not None:
+            filters["original_filename__iexact"] = filename
+
+        async with self.filter(**filters):
+            async for doc in self:
+                return doc
+        return None
 
     async def email(
         self,

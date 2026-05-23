@@ -275,6 +275,42 @@ class TestDocuments:
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHit)
 
+    async def test_find_duplicate(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """find_duplicate() hashes the bytes and returns the first match, or None."""
+        content = b"%PDF-fake-content"
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}" + r"\?.*checksum.*$"
+            ),
+            status_code=200,
+            json=DATA_DOCUMENTS,
+        )
+        hit = await paperless.documents.find_duplicate(content, filename="invoice.pdf")
+        assert isinstance(hit, Document)
+        assert hit.id == DATA_DOCUMENTS["results"][0]["id"]
+
+        request = httpx_mock.get_requests()[-1]
+        assert "checksum__iexact=" in request.url.query.decode()
+        assert "original_filename__iexact=invoice.pdf" in request.url.query.decode()
+
+        httpx_mock.add_response(
+            method="GET",
+            url=re.compile(
+                r"^" + f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}" + r"\?.*checksum.*$"
+            ),
+            status_code=200,
+            json={"count": 0, "next": None, "previous": "", "results": [], "all": []},
+        )
+        miss = await paperless.documents.find_duplicate(content)
+        assert miss is None
+
+        request = httpx_mock.get_requests()[-1]
+        assert "original_filename__iexact" not in request.url.query.decode()
+
     async def test_note_call(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """Notes list returns DocumentNote instances; missing pk raises PrimaryKeyRequiredError."""
         httpx_mock.add_response(

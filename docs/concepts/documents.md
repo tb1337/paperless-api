@@ -274,6 +274,24 @@ print(f"Upload queued as task: {task_id}")
 !!! note
     Unlike other resources, `save()` for documents returns a **task ID string**, not an integer ID. The document is processed asynchronously by Paperless-ngx. Use `paperless.tasks` to monitor the task.
 
+### Skipping duplicates before upload
+
+Paperless-ngx rejects duplicate files server-side, but the consume task only fails *after* the file has been transferred and queued. For large files, or when you upload from a bulk script, it is cheaper to check up-front. `find_duplicate()` hashes the bytes (MD5, as used by Paperless) and asks the server whether a document with that checksum already exists:
+
+```python
+with open("invoice.pdf", "rb") as f:
+    content = f.read()
+
+existing = await paperless.documents.find_duplicate(content, filename="invoice.pdf")
+if existing is not None:
+    print(f"Already uploaded as #{existing.id}: {existing.title}")
+else:
+    draft = paperless.documents.create(document=content, filename="invoice.pdf")
+    await paperless.documents.save(draft)
+```
+
+`filename` is optional and, when given, additionally matches `original_filename` case-insensitively. The hash is computed in a worker thread so the event loop stays responsive on large files.
+
 ### Uploading with custom field values
 
 To set explicit values on custom fields at upload time, build a
