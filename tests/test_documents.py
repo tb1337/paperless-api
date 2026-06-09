@@ -275,9 +275,7 @@ class TestDocuments:
             assert item.has_search_hit
             assert isinstance(item.search_hit, DocumentSearchHit)
 
-    async def test_find_duplicate(
-        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
-    ) -> None:
+    async def test_find_duplicate(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """find_duplicate() hashes the bytes and returns the first match, or None."""
         content = b"%PDF-fake-content"
 
