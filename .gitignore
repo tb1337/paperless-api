@@ -126,3 +126,10 @@ run/
 
 # zensical docs build output
 site/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
