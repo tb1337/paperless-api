@@ -30,7 +30,7 @@ jobs:
         python: ["3.13", "3.14"]
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6.0.3
+        uses: actions/checkout@v7.0.0
       - name: 🏗 Set up Python ${{ matrix.python }}
         id: python
         uses: actions/setup-python@v6.3.0
