@@ -35,7 +35,7 @@ class CallableService(ResourceServiceProtocol[ResourceT]):
             return self._resource_cls.from_data(self._runtime, {"id": pk})
 
         params: dict[str, Any] = {}
-        if getattr(self, "_request_full_perms", False):
+        if getattr(self, "request_permissions", False):
             params["full_perms"] = "true"
 
         api_path = self._resource_cls.format_api_path(pk=pk)

@@ -52,4 +52,4 @@ class MailAccountService(
             EndpointPath.MAIL_ACCOUNTS_PROCESS.format(pk=pk),
             json={},
         )
-        res.raise_for_status()
+        self._runtime.transport.raise_for_status(res)

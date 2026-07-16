@@ -2,14 +2,13 @@
 
 import re
 
-import httpx
 import pytest
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
 from pypaperless.builders import SearchQuery
 from pypaperless.const import EndpointPath
-from pypaperless.exceptions import BulkEditError, TaskNotFoundError
+from pypaperless.exceptions import BulkEditError, NotFoundError, TaskNotFoundError
 from pypaperless.models import (
     Config,
     Document,
@@ -280,13 +279,13 @@ class TestTasks:
     async def test_call_pk_not_found(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
-        """tasks(unknown_pk) raises HTTPStatusError."""
+        """tasks(unknown_pk) raises NotFoundError."""
         httpx_mock.add_response(
             method="GET",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_SINGLE}".format(pk=1337),
             status_code=404,
         )
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(NotFoundError):
             await paperless.tasks(1337)
 
     async def test_call_uuid_not_found(

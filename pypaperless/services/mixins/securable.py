@@ -2,7 +2,16 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from typing import Self
+
+# Task-local identities of services with the full-permissions payload enabled.
+# Values are immutable sets that are replaced (never mutated) on entry and
+# restored via token reset on exit, so concurrent asyncio tasks using
+# with_permissions() on the same service cannot interfere with each other.
+_SCOPED_FULL_PERMS: ContextVar[frozenset[int]] = ContextVar(
+    "_SCOPED_FULL_PERMS", default=frozenset()
+)
 
 
 class SecurableService:
@@ -16,7 +25,7 @@ class SecurableService:
 
         Documentation: https://docs.paperless-ngx.com/api/#permissions
         """
-        return self._request_full_perms
+        return self._request_full_perms or id(self) in _SCOPED_FULL_PERMS.get()
 
     @request_permissions.setter
     def request_permissions(self, value: bool) -> None:
@@ -31,7 +40,9 @@ class SecurableService:
         """Context manager that enables the full permissions payload for a block.
 
         The flag is reset automatically on exit, even if an exception is raised.
-        Combine with :meth:`~pypaperless.services.mixins.iterable.IterableService.filter`
+        It is task-local — concurrent asyncio tasks cannot interfere with each
+        other.  Combine with
+        :meth:`~pypaperless.services.mixins.iterable.IterableService.filter`
         or direct service calls.
 
         Example::
@@ -44,8 +55,8 @@ class SecurableService:
                     print(doc.owner, doc.permissions)
 
         """
-        self._request_full_perms = True
+        token = _SCOPED_FULL_PERMS.set(_SCOPED_FULL_PERMS.get() | {id(self)})
         try:
             yield self
         finally:
-            self._request_full_perms = False
+            _SCOPED_FULL_PERMS.reset(token)

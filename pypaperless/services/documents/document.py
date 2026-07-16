@@ -313,8 +313,8 @@ class DocumentService(
                 print(doc.title)
 
         """
-        async with self.filter(more_like_id=pk):
-            async for item in self:
+        async with self.filter(more_like_id=pk) as filtered:
+            async for item in filtered:
                 yield item
 
     async def search(
@@ -351,8 +351,8 @@ class DocumentService(
         if custom_field_query is not None:
             filters["custom_field_query"] = custom_field_query
 
-        async with self.filter(**filters):
-            async for item in self:
+        async with self.filter(**filters) as filtered:
+            async for item in filtered:
                 yield item
 
     async def find_duplicate(
@@ -397,8 +397,8 @@ class DocumentService(
         if filename is not None:
             filters["original_filename__iexact"] = filename
 
-        async with self.filter(**filters):
-            async for doc in self:
+        async with self.filter(**filters) as filtered:
+            async for doc in filtered:
                 return doc
         return None
 

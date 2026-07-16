@@ -50,14 +50,16 @@ By default, Paperless-ngx does not include the full permission table in response
 
 ### Recommended: `with_permissions()` context manager
 
-Use the `with_permissions()` context manager - the flag is set automatically on entry and reset on exit, even if an exception occurs:
+Use the `with_permissions()` context manager - the flag is set automatically on
+entry and reset on exit, even if an exception occurs. It is task-local, so
+concurrent asyncio tasks cannot interfere with each other:
 
 ```python
-async with paperless.documents.with_permissions():
-    doc = await paperless.documents(42)
+async with paperless.documents.with_permissions() as docs:
+    doc = await docs(42)
     print(doc.permissions.view.users)
 
-    async for doc in paperless.documents:
+    async for doc in docs:
         print(doc.owner, doc.permissions)
 ```
 
@@ -128,8 +130,8 @@ await paperless.documents.update(doc)
 **Or mutate in place** (useful when adding/removing a single user):
 
 ```python
-async with paperless.documents.with_permissions():
-    doc = await paperless.documents(42)
+async with paperless.documents.with_permissions() as docs:
+    doc = await docs(42)
 
 doc.permissions.view.users.append(9)
 doc.permissions.change.users.remove(3)

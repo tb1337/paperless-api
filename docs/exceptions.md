@@ -19,6 +19,8 @@ PaperlessError
 ├── ResponseError
 │   ├── BadJsonResponseError
 │   ├── JsonResponseWithError
+│   ├── NotFoundError
+│   ├── UnexpectedStatusError
 │   └── BulkEditError
 ├── DraftError
 │   ├── DraftFieldRequiredError
@@ -100,6 +102,23 @@ try:
 except JsonResponseWithError as exc:
     print(exc)  # e.g. "Paperless [document]: No file was submitted."
 ```
+
+#### `NotFoundError`
+
+The server responded with HTTP **404** - the requested resource does not exist. The original `httpx.Response` is available as the `response` attribute.
+
+```python
+from pypaperless.exceptions import NotFoundError
+
+try:
+    doc = await paperless.documents(999999)
+except NotFoundError:
+    print("Document does not exist.")
+```
+
+#### `UnexpectedStatusError`
+
+The server responded with a non-2xx status code that has no dedicated exception (e.g. a 5xx server error). The original `httpx.Response` is available as the `response` attribute.
 
 #### `BulkEditError`
 

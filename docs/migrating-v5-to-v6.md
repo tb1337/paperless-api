@@ -34,6 +34,7 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 | 11  | `Task` fields and enum values overhauled; `run()` signature changed; new `active()` and `summary()` methods           | [Changed resources](#changed-resources)                                       |
 | 12  | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`               | [New resources](#new-resources)                                               |
 | 13  | Rename four `Paperless`-prefixed exception classes; new `DeletionError`, `DispatchError`                              | [Error handling](#error-handling)                                             |
+| 14  | HTTP error statuses now raise typed exceptions: 404 → `NotFoundError`, other non-2xx → `UnexpectedStatusError`        | [Error handling](#http-error-statuses-raise-typed-exceptions)                 |
 
 ---
 
@@ -660,6 +661,44 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 !!! tip
     `PaperlessConnectionError` wraps `httpx.ConnectError` and works in both v5 and v6 - catching it is the most forward-compatible option.
 
+### HTTP error statuses raise typed exceptions
+
+In v5, requests failing with an HTTP error status leaked the HTTP library's own
+exception (`aiohttp.ClientResponseError`). v6 translates every non-2xx response
+into a pypaperless exception, so you never need to catch `httpx` exceptions:
+
+| Status                   | v6 exception                                          |
+| ------------------------ | ----------------------------------------------------- |
+| 400 (with JSON body)     | `JsonResponseWithError`                               |
+| 401                      | `InvalidTokenError` / `InactiveOrDeletedError`        |
+| 403                      | `ForbiddenError`                                      |
+| 404                      | `NotFoundError`                                       |
+| any other non-2xx status | `UnexpectedStatusError`                               |
+
+`NotFoundError` and `UnexpectedStatusError` expose the original `httpx.Response`
+via their `response` attribute.
+
+=== "v5"
+    ```python
+    import aiohttp
+
+    try:
+        doc = await paperless.documents(999999)
+    except aiohttp.ClientResponseError as exc:
+        if exc.status == 404:
+            print("Document does not exist.")
+    ```
+
+=== "v6"
+    ```python
+    from pypaperless.exceptions import NotFoundError
+
+    try:
+        doc = await paperless.documents(999999)
+    except NotFoundError:
+        print("Document does not exist.")
+    ```
+
 ### Exception renames
 
 Four exception classes lost their `Paperless` prefix to follow standard Python naming conventions. `PaperlessConnectionError` is the only exception kept as-is, because it would otherwise shadow Python's built-in `ConnectionError`.
@@ -698,14 +737,16 @@ v6 introduces intermediate base classes that you can use to catch whole groups o
 | Class                 | Catches                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------ |
 | `InitializationError` | All session/transport errors (unchanged from v5)                                     |
-| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `BulkEditError`                     |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `NotFoundError`, `UnexpectedStatusError`, `BulkEditError` |
 | `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                  |
 | `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
 | `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                  |
 
 ### New exceptions
 
-| Exception       | When raised                                                             |
-| --------------- | ----------------------------------------------------------------------- |
-| `DeletionError` | `delete()` call receives a non-2xx HTTP response                        |
-| `DispatchError` | `update()` / `delete()` / `save()` called on an unregistered model type |
+| Exception               | When raised                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `DeletionError`         | `delete()` call receives a non-2xx HTTP response                         |
+| `DispatchError`         | `update()` / `delete()` / `save()` called on an unregistered model type  |
+| `NotFoundError`         | The requested resource does not exist (HTTP 404)                         |
+| `UnexpectedStatusError` | The API responds with an unhandled non-2xx status code (e.g. 5xx errors) |

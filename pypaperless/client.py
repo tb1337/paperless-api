@@ -57,6 +57,8 @@ class PaperlessClient:
             token:  An API token from Paperless Django admin or via
                     :func:`~pypaperless.transport.generate_api_token`.
             client: A custom :class:`httpx.AsyncClient` to use for requests.
+                    It is never closed by :meth:`close` — its lifecycle
+                    belongs to the caller.
 
         Example::
 
@@ -153,7 +155,11 @@ class PaperlessClient:
         return self._runtime
 
     async def close(self) -> None:
-        """Clean up the connection."""
+        """Clean up the connection.
+
+        Closes the internally created HTTP client.  A custom
+        :class:`httpx.AsyncClient` passed to the constructor stays open.
+        """
         await self._runtime.transport.close()
         self.logger.info("Closed.")
 

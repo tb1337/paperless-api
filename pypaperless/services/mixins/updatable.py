@@ -46,7 +46,7 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
     def _get_request_params(self) -> dict[str, Any]:
         """Build request parameters."""
         params: dict[str, Any] = {}
-        if getattr(self, "_request_full_perms", False):
+        if getattr(self, "request_permissions", False):
             params["full_perms"] = "true"
         return params
 

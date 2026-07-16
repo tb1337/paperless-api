@@ -18,7 +18,9 @@ from pypaperless.exceptions import (
     InitializationError,
     InvalidTokenError,
     JsonResponseWithError,
+    NotFoundError,
     PaperlessConnectionError,
+    UnexpectedStatusError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
@@ -202,6 +204,20 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
     )
     assert token == PAPERLESS_TEST_TOKEN
 
+    # scheme-less URLs are normalized like in PaperlessClient
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+        status_code=200,
+        json=DATA_TOKEN,
+    )
+    token = await generate_api_token(
+        PAPERLESS_TEST_URL.removeprefix("https://"),
+        PAPERLESS_TEST_USER,
+        PAPERLESS_TEST_PASSWORD,
+    )
+    assert token == PAPERLESS_TEST_TOKEN
+
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
@@ -349,12 +365,19 @@ async def test_object_to_dict_value() -> None:
 
 
 async def test_request_merges_custom_headers(httpx_mock: HTTPXMock) -> None:
-    """request_raw() merges caller-supplied headers with the default auth headers."""
+    """request_raw() lets caller-supplied headers win and never mutates the caller's dict."""
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
     transport = api._runtime.transport
-    res = await transport.request_raw("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
+    caller_headers = {"X-Custom": "value", "Accept": "application/json; version=1"}
+    res = await transport.request_raw("get", PAPERLESS_TEST_URL, headers=caller_headers)
     assert res.status_code == 200
+
+    request = httpx_mock.get_requests()[-1]
+    assert request.headers["X-Custom"] == "value"
+    assert request.headers["Accept"] == "application/json; version=1"
+    assert request.headers["Authorization"] == f"Token {PAPERLESS_TEST_TOKEN}"
+    assert caller_headers == {"X-Custom": "value", "Accept": "application/json; version=1"}
     await api.close()
 
 
@@ -382,6 +405,57 @@ async def test_transport_delete_raises_deletion_error(
     )
     with pytest.raises(DeletionError):
         await api._runtime.transport.delete(f"{PAPERLESS_TEST_URL}/api/documents/42/")
+
+
+async def test_request_json_typed_status_errors(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """get() raises NotFoundError on 404 and UnexpectedStatusError on other non-2xx codes."""
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/missing",
+        method="GET",
+        status_code=404,
+        json={"detail": "Not found."},
+    )
+    with pytest.raises(NotFoundError):
+        await api._runtime.transport.get(f"{PAPERLESS_TEST_URL}/missing")
+
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/boom",
+        method="GET",
+        status_code=502,
+        text="Bad Gateway",
+    )
+    with pytest.raises(UnexpectedStatusError):
+        await api._runtime.transport.get(f"{PAPERLESS_TEST_URL}/boom")
+
+
+async def test_external_client_stays_open(httpx_mock: HTTPXMock) -> None:
+    """close() must not close a caller-supplied httpx.AsyncClient."""
+    external = httpx.AsyncClient()
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
+        method="GET",
+        status_code=200,
+        json=DATA_PATHS,
+    )
+    async with PaperlessClient(
+        PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN, client=external
+    ) as paperless:
+        assert paperless.is_initialized
+
+    assert not external.is_closed
+    await external.aclose()
+
+
+async def test_owned_client_closed_on_close(httpx_mock: HTTPXMock) -> None:
+    """close() closes the lazily created internal httpx client."""
+    transport = PaperlessTransport(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
+    httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
+    await transport.request_raw("get", PAPERLESS_TEST_URL)
+    await transport.close()
+    assert transport._httpx_client is not None
+    assert transport._httpx_client.is_closed
 
 
 async def test_service_base_api_path(api: PaperlessClient) -> None:

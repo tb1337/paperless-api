@@ -52,6 +52,9 @@ docs = [
 "Bug Reports" = "https://github.com/tb1337/paperless-api/issues"
 "Coverage" = "https://codecov.io/gh/tb1337/paperless-api"
 
+[tool.codespell]
+skip = "./site,./uv.lock"
+
 [tool.coverage.run]
 plugins = ["covdefaults"]
 source = ["pypaperless"]

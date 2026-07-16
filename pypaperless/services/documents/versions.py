@@ -44,7 +44,7 @@ class DocumentVersionService(DocumentScopedServiceBase):
         if version_label is not None:
             form["version_label"] = version_label
         res = await self._runtime.transport.request_raw("post", api_path, form=form)
-        res.raise_for_status()
+        self._runtime.transport.raise_for_status(res)
 
     async def update(
         self,

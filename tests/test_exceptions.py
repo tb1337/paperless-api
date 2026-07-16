@@ -28,9 +28,29 @@ from pypaperless.exceptions import (
             [{"some": [[{"weird": {"error": ["occurred"]}}]]}],
             "Paperless [some -> weird -> error]: occurred",
         ),
+        (
+            {},
+            "Paperless [error]: unknown error",
+        ),
+        (
+            [],
+            "Paperless [error]: unknown error",
+        ),
+        (
+            {"detail": []},
+            "Paperless [detail]: unknown error",
+        ),
     ],
 )
 def test_json_response_with_error_formatting(payload: object, expected_message: str) -> None:
     """JsonResponseWithError must format its message correctly for every payload shape."""
     with pytest.raises(JsonResponseWithError, match=re.escape(expected_message)):
         raise JsonResponseWithError(payload)
+
+
+def test_json_response_with_error_does_not_mutate_payload() -> None:
+    """JsonResponseWithError must not consume list entries while parsing the payload."""
+    payload = [{"some": ["deep", "error"]}]
+    with pytest.raises(JsonResponseWithError):
+        raise JsonResponseWithError(payload)
+    assert payload == [{"some": ["deep", "error"]}]
