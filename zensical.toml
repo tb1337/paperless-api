@@ -15,6 +15,7 @@ repo_name = "tb1337/paperless-api"
 edit_uri = "blob/main/docs/"
 
 extra_css = ["stylesheets/extra.css"]
+extra_javascript = ["javascripts/counter.js"]
 
 nav = [
   "index.md",
