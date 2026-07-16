@@ -133,3 +133,6 @@ site/
 !.dev.vars.example
 .env*
 !.env.example
+
+# Claude
+.claude/settings.local.json
