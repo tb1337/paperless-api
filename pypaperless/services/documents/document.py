@@ -88,7 +88,7 @@ class DocumentService(
 
             async with paperless.documents.filter(
                 title__icontains="invoice",
-                tag__id__all=[3, 7],
+                tags__id__all="3,7",
             ) as filtered:
                 async for doc in filtered:
                     print(doc.title)

@@ -93,6 +93,9 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
     @property
     def last_page(self) -> int:
         """Return the last page number."""
+        if self.page_size <= 0:
+            msg = "Page was created without pagination context; pass page_size= to from_data()"
+            raise RuntimeError(msg)
         return math.ceil(self.count / self.page_size)
 
     @property

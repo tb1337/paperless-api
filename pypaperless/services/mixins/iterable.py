@@ -143,7 +143,9 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         params: dict[str, Any] = dict(_SCOPED_FILTERS.get().get(id(self), {}))
 
         for param, value in params.items():
-            if param.endswith("__in") and isinstance(value, list):
+            # Paperless expects comma-separated values; a plain list would be sent as
+            # repeated query params, of which Django only reads the last one.
+            if param.endswith(("__in", "__all")) and isinstance(value, list):
                 params[param] = ",".join(map(str, value))
 
         params.setdefault("page", page)

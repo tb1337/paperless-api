@@ -505,6 +505,27 @@ async def test_filter_contexts_are_isolated(
     assert requests[-1].url.params["name__icontains"] == "acme"
 
 
+async def test_filter_joins_in_and_all_lists(
+    httpx_mock: HTTPXMock, paperless: PaperlessClient
+) -> None:
+    """List values for __in and __all filters are sent comma-separated, not repeated."""
+    httpx_mock.add_response(
+        method="GET",
+        url=re.compile(r"^" f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}" r"\?.*$"),
+        status_code=200,
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+    async with paperless.documents.filter(
+        id__in=[1, 2],
+        tags__id__all=[3, 7],
+    ) as filtered:
+        await filtered.as_list()
+
+    request = httpx_mock.get_requests()[-1]
+    assert request.url.params["id__in"] == "1,2"
+    assert request.url.params["tags__id__all"] == "3,7"
+
+
 async def test_filter_contexts_isolated_across_tasks(
     httpx_mock: HTTPXMock, paperless: PaperlessClient
 ) -> None:

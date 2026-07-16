@@ -533,3 +533,13 @@ def test_page_items_raises_without_resource_cls(api: PaperlessClient) -> None:
     # Accessing .items triggers mapper; _resource_cls is None → L71-72.
     with pytest.raises(RuntimeError, match="resource_cls"):
         _ = page.items
+
+
+def test_page_last_page_raises_without_pagination_context(api: PaperlessClient) -> None:
+    """Page.last_page raises RuntimeError instead of ZeroDivisionError when page_size is 0."""
+    page = Page.from_data(
+        api._runtime,
+        {"count": 42, "next": "http://x/?page=2", "previous": None, "results": [{"id": 1}]},
+    )
+    with pytest.raises(RuntimeError, match="pagination context"):
+        _ = page.last_page
