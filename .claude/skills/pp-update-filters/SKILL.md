@@ -1,5 +1,5 @@
 ---
-name: update-filters
+name: pp-update-filters
 description: "Update the query filter TypedDicts in pypaperless/models/filters.py by reading the paperless-ngx source FilterSets, then sync the service filter() overrides and the docs. Use whenever paperless-ngx adds, renames, or removes filter fields."
 argument-hint: "Optional: name of a specific resource to update (e.g. Document, Tag). Omit to update all."
 ---
@@ -29,7 +29,7 @@ argument-hint: "Optional: name of a specific resource to update (e.g. Document, 
 **Primary:** `tests/data/schema.json` — fetch first to ensure it's current:
 
 ```bash
-python script/pngx_fetch_schema.py
+uv run python script/pngx_fetch_schema.py
 ```
 
 For each list endpoint collect every `"in": "query"` parameter. Exclude: `page`, `page_size`, `format`, `ordering`, `full_perms`.
@@ -121,7 +121,7 @@ Pattern (identical for every service):
 
 ```python
 @asynccontextmanager
-async def filter(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, None]:
+async def filter(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self]:
     """Iterate with server-side filters.
 
     See :class:`~pypaperless.models.filters.XxxFilters` for available keys.
@@ -171,9 +171,9 @@ Only update `docs/resources/<name>.md` files that already have a `filter()` exam
 ## Step 7 — Validate
 
 ```bash
-/usr/local/py-utils/bin/pytest -x -q
-source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py
-python script/pngx_audit_coverage.py
+uv run pytest -x -q
+uv run python script/pngx_smoketest.py
+uv run python script/pngx_audit_coverage.py
 ```
 
 ---

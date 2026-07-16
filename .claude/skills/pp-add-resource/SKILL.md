@@ -1,5 +1,5 @@
 ---
-name: add-resource
+name: pp-add-resource
 description: "Add a new Paperless-ngx API resource to pypaperless. Use when implementing a new endpoint, service, model, or sub-service (e.g. /api/trash/, /api/documents/{id}/history/). Covers model definition, service class, const.py wiring, client registration, test fixtures, unit tests, script/pngx_audit_coverage.py, and script/pngx_smoketest.py."
 argument-hint: "Name or path of the endpoint to implement (e.g. /api/trash/)"
 ---
@@ -18,25 +18,24 @@ Before starting, answer these questions:
 
 | Question                                                          | →                                                                                                     |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Is it a sub-resource of `/api/documents/{id}/...`?                | → **Document sub-service** (see [Sub-service pattern](./references/patterns.md#document-sub-service)) |
-| Does GET return `{ count, next, previous, all, results }`?        | → **Paginated** (`IterableMixin`, `PageGenerator`)                                                    |
-| Does GET return a flat list `[...]`?                              | → **Flat list** (direct `request_json` + list comprehension)                                          |
-| Does GET return a single object (not a list)?                     | → **Direct** (`CallableMixin` only, no `IterableMixin`)                                               |
-| Does the endpoint have POST/action methods (e.g. restore, empty)? | → Add explicit `async def` methods calling `self._client.request("post", ...)`                        |
+| Is it a sub-resource of `/api/documents/{id}/...`?                | → **Document sub-service** (see [Sub-service pattern](./references/patterns.md#document-sub-service-flat-list-attached-pk)) |
+| Does GET return `{ count, next, previous, all, results }`?        | → **Paginated** (`IterableService`)                                                                   |
+| Does GET return a flat list `[...]`?                              | → **Flat list** (direct `transport.get` + list comprehension)                                         |
+| Does GET return a single object (not a list)?                     | → **Direct** (`CallableService` only, no `IterableService`)                                           |
+| Does the endpoint have POST/action methods (e.g. restore, empty)? | → Add explicit `async def` methods calling `self._runtime.transport.post(...)`                        |
 
 ## Step-by-Step Procedure
 
 ### 1. Research the Endpoint
 
 ```bash
-source /home/vscode/.local/dev-venv/bin/activate
 # Inspect live response
-curl -s http://host.docker.internal:8000/api/<endpoint>/ \
+curl -s http://172.17.0.1:8000/api/<endpoint>/ \
   -H "Authorization: Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52" | python3 -m json.tool | head -60
 # Check OpenAPI schema component
-python3 -c "
+uv run python -c "
 import httpx, json
-r = httpx.get('http://host.docker.internal:8000/api/schema/?format=json',
+r = httpx.get('http://172.17.0.1:8000/api/schema/?format=json',
     headers={'Authorization': 'Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52'})
 s = r.json()
 # Replace 'ComponentName' with the schema component name
@@ -46,31 +45,32 @@ print(json.dumps(s['components']['schemas'].get('ComponentName', {}), indent=2))
 
 ### 2. `pypaperless/const.py`
 
-Add a string constant, an `API_PATH` entry, and a `PaperlessResource` enum value:
+Add an `EndpointPath` member (and a `_SINGLE` variant if the resource has detail routes) plus a
+`PaperlessResource` enum value — both in alphabetical order:
 
 ```python
-# String constant (alphabetical order)
-TRASH = "trash"
-
-# API_PATH dict entry
-f"{TRASH}": f"/api/{TRASH}/",
+# EndpointPath (StrEnum) — list route + detail route
+TRASH = "/api/trash/"
+TRASH_SINGLE = "/api/trash/{pk}/"
 
 # PaperlessResource enum
-TRASH = TRASH
+TRASH = "trash"
 ```
 
-For document sub-services, add only an `API_PATH` entry (no new resource constant needed):
+For document sub-services, add only an `EndpointPath` member with a `{pk}` placeholder (no new
+`PaperlessResource` value needed):
 
 ```python
-f"{DOCUMENTS}_history": f"/api/{DOCUMENTS}/{{pk}}/history/",
+DOCUMENTS_HISTORY = "/api/documents/{pk}/history/"
 ```
 
 ### 3. Model (`pypaperless/models/<name>.py` or into `documents.py`)
 
 See [model templates](./references/patterns.md#model-templates) for full code examples.
 
-- Inherit from `PaperlessModel`
-- Set `_api_path: ClassVar[str] = API_PATH["<key>"]`
+- Inherit from `PaperlessModel` (plus the model mixins the resource needs — `SecurableModel`,
+  `MatchingFieldsModel`, `CreatableModel`, `SecurableDraftModel`)
+- Set `_api_path: ClassVar[str] = EndpointPath.<MEMBER>` (and `_resource` for dispatched resources)
 - All fields `Optional` (use `| None = None`)
 - Use `datetime.datetime | None` for timestamps
 - Use `StrEnum` subclasses for typed enum fields
@@ -86,56 +86,58 @@ See [service templates](./references/patterns.md#service-templates).
 **Top-level paginated service:**
 
 ```python
-class TrashService(ServiceBase, mixins.IterableMixin[Document]):
-    _api_path = API_PATH["trash"]
+class TrashService(ResourceService, mixins.IterableService[Document]):
+    _api_path = EndpointPath.TRASH
     _resource = PaperlessResource.TRASH
     _resource_cls = Document
 ```
 
-**Document sub-service (flat list):**
+**Document sub-service (flat list):** inherit `DocumentScopedServiceBase`, which provides
+`__init__(runtime, attached_to=None)` and `_get_document_pk()` — do not re-implement them:
 
 ```python
-class DocumentHistoryService(ServiceBase):
-    _api_path = API_PATH["documents_history"]
+class DocumentHistoryService(DocumentScopedServiceBase):
+    _api_path = EndpointPath.DOCUMENTS_HISTORY
     _resource = PaperlessResource.DOCUMENTS
     _resource_cls = DocumentHistory
 
-    def __init__(self, client, attached_to=None):
-        super().__init__(client)
-        self._attached_to = attached_to
-
-    async def __call__(self, pk=None):
+    async def __call__(self, pk: int | None = None) -> list[DocumentHistory]:
         doc_pk = self._get_document_pk(pk)
-        res = await self._client.request_json("get", self._api_path.format(pk=doc_pk))
-        return [self._resource_cls.from_data(self._client, {**item, "document": doc_pk})
-                for item in res]
-
-    def _get_document_pk(self, pk=None):
-        if not any((self._attached_to, pk)):
-            raise PrimaryKeyRequiredError(...)
-        return cast(int, self._attached_to or pk)
+        res = await self._runtime.transport.get(self._api_path.format(pk=doc_pk))
+        return [
+            self._resource_cls.from_data(self._runtime, {**item, "document": doc_pk})
+            for item in res
+        ]
 ```
 
-**Action methods (POST):**
+**Action methods (POST):** `transport.post` already parses JSON and raises on error:
 
 ```python
 async def restore(self, documents: list[int]) -> None:
-    res = await self._client.request("post", self._api_path,
-        json={"action": "restore", "documents": documents})
-    res.raise_for_status()
+    await self._runtime.transport.post(
+        self._api_path, json={"action": "restore", "documents": documents}
+    )
 ```
 
 ### 5. Wire Up
 
 **`pypaperless/services/__init__.py`** — export the new service class.
 
-**`pypaperless/client.py`** — register in `Paperless.__init__`:
+**`pypaperless/client.py`** — register lazily on `PaperlessClient` as a cached property (never an
+eager assignment in `__init__`):
 
 ```python
-self.trash = services.TrashService(self)
+@cached_property
+def trash(self) -> services.TrashService:
+    """Return the :class:`~pypaperless.services.TrashService`."""
+    return services.TrashService(self._runtime)
 ```
 
-**For document sub-services** — wire into `DocumentService.__init__` and add a lazy property on `Document` (see [sub-service wiring](./references/patterns.md#document-sub-service)).
+Use `@dispatchable_cached_property` instead when the resource supports `paperless.update()` /
+`paperless.delete()` (i.e. it uses `UpdatableService` / `DeletableService`).
+
+**For document sub-services** — construct in `DocumentService.__init__`, expose a property, and add
+a lazy property on the `Document` model (see [sub-service wiring](./references/patterns.md#document-sub-service-wiring)).
 
 ### 6. Test Fixture (`tests/data/<name>.py`)
 
@@ -159,7 +161,7 @@ Pattern for mocking:
 
 ```python
 httpx_mock.add_response(method="GET",
-    url=f"{PAPERLESS_TEST_URL}{API_PATH['trash']}",  # or re.compile(...) for query params
+    url=f"{PAPERLESS_TEST_URL}{EndpointPath.TRASH}",  # or re.compile(...) for query params
     status_code=200, json=DATA_TRASH)
 ```
 
@@ -228,31 +230,29 @@ async def test_trash(p: Paperless) -> None:
 ### 11. Validate
 
 ```bash
-source /home/vscode/.local/dev-venv/bin/activate
-
 # Unit tests
-python -m pytest tests/ -x -q
+uv run pytest -x -q
 
 # Linting
-ruff check pypaperless/
+uv run ruff check pypaperless
 
 # Live audit (requires running Paperless instance)
-python script/pngx_audit_coverage.py
+uv run python script/pngx_audit_coverage.py
 
 # Live smoketest
-python script/pngx_smoketest.py
+uv run python script/pngx_smoketest.py
 ```
 
 Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 failed.
 
 ## Checklist
 
-- [ ] `const.py` — string constant + `API_PATH` + `PaperlessResource`
+- [ ] `const.py` — `EndpointPath` member(s) + `PaperlessResource`
 - [ ] Model class with `_api_path`, typed fields, `StrEnum` for enums; public enum/filter types re-exported via `models/types.py`
 - [ ] `models/__init__.py` — export
 - [ ] Service class with correct mixins
 - [ ] `services/__init__.py` — export
-- [ ] `client.py` — register on `Paperless`
+- [ ] `client.py` — register lazily on `PaperlessClient` (`@cached_property` / `@dispatchable_cached_property`)
 - [ ] Test fixture in `tests/data/`
 - [ ] `tests/data/__init__.py` — export
 - [ ] Unit tests in `test_models_specific.py`
@@ -266,5 +266,5 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 ## Reference
 
 - [Code patterns & templates](./references/patterns.md)
-- Live Paperless: `http://host.docker.internal:8000` · Token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
+- Live Paperless: `http://172.17.0.1:8000` · Token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
 - Test document ID: `1980`
