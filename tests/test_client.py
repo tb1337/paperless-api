@@ -20,6 +20,7 @@ from pypaperless.exceptions import (
     JsonResponseWithError,
     NotFoundError,
     PaperlessConnectionError,
+    PaperlessTimeoutError,
     UnexpectedStatusError,
 )
 from pypaperless.models import Page
@@ -67,6 +68,16 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
     """Test that initialization raises the correct errors for each failure mode."""
     # connection error
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
+    with pytest.raises(PaperlessConnectionError):
+        await api.initialize()
+
+    # timeout
+    httpx_mock.add_exception(httpx.ReadTimeout("Read timed out"))
+    with pytest.raises(PaperlessTimeoutError):
+        await api.initialize()
+
+    # any other transport error
+    httpx_mock.add_exception(httpx.RemoteProtocolError("Server disconnected"))
     with pytest.raises(PaperlessConnectionError):
         await api.initialize()
 
@@ -250,6 +261,31 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
         method="POST",
     )
     with pytest.raises(ValueError):  # noqa: PT011
+        await generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+        )
+
+    # transport errors are wrapped like in PaperlessTransport
+    httpx_mock.add_exception(
+        httpx.ConnectTimeout("Connect timed out"),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+    )
+    with pytest.raises(PaperlessTimeoutError):
+        await generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+        )
+
+    httpx_mock.add_exception(
+        httpx.ConnectError("Connection refused"),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+    )
+    with pytest.raises(PaperlessConnectionError):
         await generate_api_token(
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_USER,

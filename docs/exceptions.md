@@ -12,6 +12,7 @@ All exceptions inherit from `PaperlessError`, which in turn inherits from Python
 PaperlessError
 ├── InitializationError
 │   ├── PaperlessConnectionError
+│   │   └── PaperlessTimeoutError
 │   ├── AuthError
 │   │   ├── InvalidTokenError
 │   │   └── InactiveOrDeletedError
@@ -65,7 +66,11 @@ except InitializationError as exc:
 
 #### `PaperlessConnectionError`
 
-The host could not be reached (network error, wrong URL, DNS failure, etc.).
+The host could not be reached (network error, wrong URL, DNS failure, broken connection mid-response, etc.). All transport-level failures raise this exception - `httpx` internals never leak through.
+
+**Subclasses:**
+
+- **`PaperlessTimeoutError`** - the request timed out. The host is reachable but did not respond in time; retrying, or passing a custom `httpx.AsyncClient` with a higher timeout, may help.
 
 #### `AuthError`
 

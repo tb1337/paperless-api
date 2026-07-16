@@ -15,6 +15,7 @@ from .exceptions import (
     JsonResponseWithError,
     NotFoundError,
     PaperlessConnectionError,
+    PaperlessTimeoutError,
     UnexpectedStatusError,
 )
 from .utils import normalize_base_url, process_form_data
@@ -103,7 +104,7 @@ class PaperlessTransport:
         params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Send an authenticated HTTP request; handle auth, connection errors, and 401/403."""
+        """Send an authenticated HTTP request; handle auth, transport errors, and 401/403."""
         if self._httpx_client is None:
             self._httpx_client = httpx.AsyncClient()
 
@@ -132,7 +133,9 @@ class PaperlessTransport:
                 params=params,
                 **kwargs,
             )
-        except httpx.ConnectError as err:
+        except httpx.TimeoutException as err:
+            raise PaperlessTimeoutError from err
+        except httpx.TransportError as err:
             raise PaperlessConnectionError from err
 
         if res.status_code == 401:
@@ -379,6 +382,10 @@ async def generate_api_token(
         data = res.json()
         res.raise_for_status()
         return str(data["token"])
+    except httpx.TimeoutException as exc:
+        raise PaperlessTimeoutError from exc
+    except httpx.TransportError as exc:
+        raise PaperlessConnectionError from exc
     except (JSONDecodeError, KeyError) as exc:
         message = "Token is missing in response."
         raise BadJsonResponseError(message) from exc

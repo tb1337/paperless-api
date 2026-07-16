@@ -21,6 +21,14 @@ class PaperlessConnectionError(InitializationError):
     """Raised when connection to Paperless is not possible."""
 
 
+class PaperlessTimeoutError(PaperlessConnectionError):
+    """Raised when a request to Paperless times out.
+
+    The host is reachable but did not respond in time — retrying, or using a
+    custom :class:`httpx.AsyncClient` with a higher timeout, may help.
+    """
+
+
 class AuthError(InitializationError):
     """Raised when response is 401 code."""
 

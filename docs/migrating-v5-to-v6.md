@@ -642,7 +642,7 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 ## Error handling
 
-`PaperlessConnectionError` is now raised for `httpx.ConnectError` rather than `aiohttp.ClientConnectorError`. If you catch library-specific exceptions, update accordingly:
+`PaperlessConnectionError` is now raised for every transport-level failure (connection refused, DNS failure, broken connection mid-response) rather than `aiohttp.ClientConnectorError`. Timeouts raise the more specific `PaperlessTimeoutError`, a subclass of `PaperlessConnectionError`. If you catch library-specific exceptions, update accordingly:
 
 === "v5"
     ```python
@@ -652,14 +652,14 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 === "v6"
     ```python
-    except httpx.ConnectError:
-        ...
+    except PaperlessTimeoutError:
+        ...  # host alive but slow - consider retrying
     except PaperlessConnectionError:
-        ...
+        ...  # host not reachable
     ```
 
 !!! tip
-    `PaperlessConnectionError` wraps `httpx.ConnectError` and works in both v5 and v6 - catching it is the most forward-compatible option.
+    `PaperlessConnectionError` works in both v5 and v6 - catching it is the most forward-compatible option. In v6 no `httpx` exception ever leaks through, so catching `httpx.ConnectError` or `httpx.ReadTimeout` is unnecessary.
 
 ### HTTP error statuses raise typed exceptions
 
