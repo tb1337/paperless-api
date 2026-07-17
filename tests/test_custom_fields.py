@@ -20,7 +20,6 @@ from pypaperless.const import EndpointPath
 from pypaperless.models import CustomField, Tag
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
 from pypaperless.models.types import (
-    CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
     CustomFieldDateValue,
     CustomFieldExtraData,
@@ -28,6 +27,7 @@ from pypaperless.models.types import (
     CustomFieldMonetaryValue,
     CustomFieldSelectValue,
     CustomFieldType,
+    CustomFieldValue,
 )
 
 from .const import PAPERLESS_TEST_URL
@@ -45,8 +45,7 @@ async def test_draft_value_without_cache(paperless: PaperlessClient) -> None:
         data={"id": 1337, "name": "Test", "data_type": CustomFieldType.INTEGER},
     )
     field_value = custom_field.draft_value(1337)
-    for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
-        assert not isinstance(field_value, value_type)
+    assert type(field_value) is CustomFieldValue
 
 
 async def test_draft_value_with_cache(httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:

@@ -669,6 +669,25 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 ---
 
+## Custom field values
+
+`DocumentCustomFieldList` is now a pydantic `RootModel` and the typed value
+classes (`CustomFieldBooleanValue`, `CustomFieldDateValue`, …) are resolved
+through a discriminated union on `data_type`. The container API (`add`,
+`remove`, `get`, `default`, `in`, iteration, `+=`/`-=`) is unchanged. Three
+internals moved:
+
+- `CUSTOM_FIELD_TYPE_VALUE_MAP` was removed - use `isinstance()` checks against
+  the typed value classes, or the `AnyCustomFieldValue` union from
+  `pypaperless.models.types`.
+- The `.data` property (raw payload) was removed - the validated items live in
+  `.root`, or just iterate the container.
+- `model_dump()` of a `CustomFieldValue` now emits only `field` and `value` -
+  `name`, `data_type`, and `extra_data` are client-side metadata and are
+  excluded from serialization.
+
+---
+
 ## Error handling
 
 `PaperlessConnectionError` is now raised for every transport-level failure (connection refused, DNS failure, broken connection mid-response) rather than `aiohttp.ClientConnectorError`. Timeouts raise the more specific `PaperlessTimeoutError`, a subclass of `PaperlessConnectionError`. If you catch library-specific exceptions, update accordingly:

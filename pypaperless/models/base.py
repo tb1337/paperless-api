@@ -2,8 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
-from pydantic_core import to_jsonable_python
+from pydantic import BaseModel, ConfigDict, PrivateAttr
 
 from pypaperless.const import EndpointPath
 
@@ -138,42 +137,3 @@ class IdentifiedModel(PaperlessModel):
     """
 
     id: int
-
-
-class PaperlessCustomDataModel(_PaperlessBase):
-    """Base class for all custom data types in PyPaperless."""
-
-    _data: Any = PrivateAttr(default=None)
-
-    def model_post_init(self, __context: Any, /) -> None:
-        """Bind `_runtime` and `_data` from validation context."""
-        super().model_post_init(__context)
-        if isinstance(__context, dict) and "data" in __context:
-            self._data = __context["data"]
-
-    @classmethod
-    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **_context: Any) -> Self:
-        """Return a new instance of ``cls`` from API data."""
-        return cls.model_validate({}, context={"runtime": runtime, "data": data})
-
-    @property
-    def data(self) -> Any:
-        """Return the internal custom-model data payload."""
-        return self._data
-
-    @data.setter
-    def data(self, value: Any) -> None:
-        """Set the internal custom-model data payload."""
-        self._data = value
-
-    def serialize(self) -> Any:
-        """Return the JSON-compatible payload for this model."""
-        payload = {
-            field_name: getattr(self, field_name) for field_name in self.__class__.model_fields
-        }
-        return to_jsonable_python(payload)
-
-    @model_serializer(mode="plain")
-    def _model_serializer(self) -> Any:
-        """Delegate Pydantic serialization to the custom ``serialize`` method."""
-        return self.serialize()

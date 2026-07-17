@@ -14,7 +14,7 @@ from pypaperless.builders import (
 from .base import DraftLike
 from .bulk_edit import BulkEditObjectType, CustomFieldsInput, EditPdfOperation, SourceMode
 from .custom_fields import (
-    CUSTOM_FIELD_TYPE_VALUE_MAP,
+    AnyCustomFieldValue,
     CustomFieldBooleanValue,
     CustomFieldDateValue,
     CustomFieldDocumentLinkValue,
@@ -77,7 +77,7 @@ from .workflows import (
 )
 
 __all__ = (
-    "CUSTOM_FIELD_TYPE_VALUE_MAP",
+    "AnyCustomFieldValue",
     "BulkEditObjectType",
     "CorrespondentFilters",
     "CustomFieldBooleanValue",

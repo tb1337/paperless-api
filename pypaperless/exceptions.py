@@ -154,7 +154,7 @@ class DeletionError(ResourceError):
 
 
 class ItemNotFoundError(ResourceError):
-    """Raised when trying to access non-existing items in PaperlessCustomDataModel classes."""
+    """Raised when trying to access non-existing items in DocumentCustomFieldList classes."""
 
 
 class PrimaryKeyRequiredError(ResourceError):
