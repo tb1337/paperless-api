@@ -374,6 +374,16 @@ async def test_draft_not_supported(api: PaperlessClient) -> None:
         service.create()
 
 
+async def test_draft_rejects_unknown_fields(api: PaperlessClient) -> None:
+    """Draft models forbid unknown kwargs, so typos fail at create() time."""
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        api.tags.create(tag_name="typo")  # wrong keyword for 'name'
+
+    # valid field names still work
+    draft = api.tags.create(name="valid")
+    assert draft.name == "valid"
+
+
 async def test_api_dump(api: PaperlessClient) -> None:
     """api_dump() serializes by alias, honors exclude markers and JSON-mode conversion."""
 

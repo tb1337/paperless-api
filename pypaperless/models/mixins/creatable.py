@@ -2,13 +2,20 @@
 
 from typing import Any, ClassVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from pypaperless.exceptions import DraftFieldRequiredError
 
 
 class CreatableModel(BaseModel):
-    """Provide draft validation and serialization for PyPaperless models."""
+    """Provide draft validation and serialization for PyPaperless models.
+
+    Draft models forbid unknown fields: a typo in a ``create()`` keyword
+    argument raises a :exc:`pydantic.ValidationError` immediately instead of
+    being silently dropped.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     _create_required_fields: ClassVar[set[str]]
 

@@ -336,6 +336,18 @@ For all other resources (correspondents, tags, …):
     pk = await paperless.save(draft)
     ```
 
+!!! warning "Draft models reject unknown fields"
+    In v6, `create()` raises a `pydantic.ValidationError` for unknown keyword
+    arguments instead of silently dropping them:
+
+    ```python
+    paperless.tags.create(tag_name="urgent")  # field is called "name"
+    # ValidationError: Extra inputs are not permitted
+    ```
+
+    v5 ignored such typos, which usually surfaced much later as a confusing
+    "missing field" error - or not at all.
+
 ---
 
 ## Permissions
