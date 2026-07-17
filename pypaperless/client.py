@@ -102,7 +102,7 @@ class PaperlessClient:
         """
         return cls(
             config.url,
-            config.token,
+            config.token.get_secret_value() if config.token else None,
             client=client,
         )
 

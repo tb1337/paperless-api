@@ -9,7 +9,7 @@ import pytest
 from pydantic import BaseModel, Field, ValidationError
 from pytest_httpx import HTTPXMock
 
-from pypaperless import PaperlessClient, generate_api_token
+from pypaperless import PaperlessClient, PaperlessSettings, generate_api_token
 from pypaperless.const import EndpointPath
 from pypaperless.exceptions import (
     BadJsonResponseError,
@@ -571,6 +571,23 @@ def test_config_from_env_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("PYPAPERLESS_TOKEN", raising=False)
     with pytest.raises(ValidationError):
         PaperlessClient.from_env()
+
+
+def test_settings_token_is_secret() -> None:
+    """The token never leaks through repr/str; from_config unwraps it for the transport."""
+    cfg = PaperlessSettings(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
+    assert PAPERLESS_TEST_TOKEN not in repr(cfg)
+    assert PAPERLESS_TEST_TOKEN not in str(cfg)
+    assert cfg.token is not None
+    assert cfg.token.get_secret_value() == PAPERLESS_TEST_TOKEN
+
+    api = PaperlessClient.from_config(cfg)
+    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
+
+    # token=None still initializes an anonymous client
+    cfg_anon = PaperlessSettings(url=PAPERLESS_TEST_URL)
+    api_anon = PaperlessClient.from_config(cfg_anon)
+    assert api_anon._runtime.transport._token is None
 
 
 async def test_transport_close_without_prior_request() -> None:

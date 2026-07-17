@@ -715,13 +715,13 @@ In v5, requests failing with an HTTP error status leaked the HTTP library's own
 exception (`aiohttp.ClientResponseError`). v6 translates every non-2xx response
 into a pypaperless exception, so you never need to catch `httpx` exceptions:
 
-| Status                   | v6 exception                                          |
-| ------------------------ | ----------------------------------------------------- |
-| 400 (with JSON body)     | `JsonResponseWithError`                               |
-| 401                      | `InvalidTokenError` / `InactiveOrDeletedError`        |
-| 403                      | `ForbiddenError`                                      |
-| 404                      | `NotFoundError`                                       |
-| any other non-2xx status | `UnexpectedStatusError`                               |
+| Status                   | v6 exception                                   |
+| ------------------------ | ---------------------------------------------- |
+| 400 (with JSON body)     | `JsonResponseWithError`                        |
+| 401                      | `InvalidTokenError` / `InactiveOrDeletedError` |
+| 403                      | `ForbiddenError`                               |
+| 404                      | `NotFoundError`                                |
+| any other non-2xx status | `UnexpectedStatusError`                        |
 
 `NotFoundError` and `UnexpectedStatusError` expose the original `httpx.Response`
 via their `response` attribute.
@@ -782,13 +782,13 @@ Four exception classes lost their `Paperless` prefix to follow standard Python n
 
 v6 introduces intermediate base classes that you can use to catch whole groups of related errors:
 
-| Class                 | Catches                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `InitializationError` | All session/transport errors (unchanged from v5)                                     |
+| Class                 | Catches                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `InitializationError` | All session/transport errors (unchanged from v5)                                                           |
 | `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `NotFoundError`, `UnexpectedStatusError`, `BulkEditError` |
-| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                  |
-| `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
-| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                  |
+| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                                        |
+| `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError`                       |
+| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                                        |
 
 ### New exceptions
 
