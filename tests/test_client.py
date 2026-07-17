@@ -27,6 +27,7 @@ from pypaperless.exceptions import (
 )
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
+from pypaperless.pagination import PageGenerator
 from pypaperless.services import mixins as service_mixins
 from pypaperless.services.base import ResourceService
 from pypaperless.transport import PaperlessTransport
@@ -642,6 +643,66 @@ def test_page_items_raises_without_resource_cls(api: PaperlessClient) -> None:
     # Accessing .items triggers mapper; _resource_cls is None → L71-72.
     with pytest.raises(RuntimeError, match="resource_cls"):
         _ = page.items
+
+
+async def test_page_generator_follows_next_and_prefetches(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """PageGenerator follows the server-provided next URL across pages."""
+
+    class PagedResource(PaperlessModel):
+        id: int | None = None
+
+    page1 = {
+        "count": 3,
+        "next": f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        "previous": None,
+        "results": [{"id": 1}, {"id": 2}],
+    }
+    page2 = {"count": 3, "next": None, "previous": "x", "results": [{"id": 3}]}
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=1&page_size=150", json=page1
+    )
+    httpx_mock.add_response(url=f"{PAPERLESS_TEST_URL}/api/things/?page=2", json=page2)
+
+    gen = PageGenerator(api.runtime, "/api/things/", PagedResource)
+    pages = [page async for page in gen]
+    assert [page.current_page for page in pages] == [1, 2]
+    assert pages[0].has_next_page
+    assert pages[1].is_last_page
+    assert pages[1].results == [{"id": 3}]
+
+
+async def test_page_generator_aclose_cancels_prefetch(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """Abandoning iteration early cancels the pending prefetch via aclose()."""
+
+    class PagedResource(PaperlessModel):
+        id: int | None = None
+
+    page1 = {
+        "count": 2,
+        "next": f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=1&page_size=150", json=page1
+    )
+    # the prefetch may or may not fire before the cancel wins the race
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        json={"count": 2, "next": None, "previous": "x", "results": [{"id": 2}]},
+        is_optional=True,
+    )
+
+    gen = PageGenerator(api.runtime, "/api/things/", PagedResource)
+    first = await anext(gen)
+    assert first.current_page == 1
+    await gen.aclose()
+    with pytest.raises(StopAsyncIteration):
+        await anext(gen)
 
 
 def test_page_last_page_raises_without_pagination_context(api: PaperlessClient) -> None:

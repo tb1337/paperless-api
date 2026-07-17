@@ -1,8 +1,8 @@
 """Provide pagination primitives: Page and PageGenerator."""
 
+import asyncio
 import math
 from collections.abc import AsyncIterator, Iterator
-from copy import deepcopy
 from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, PrivateAttr
@@ -12,6 +12,12 @@ from pypaperless.models.base import _PaperlessBase
 if TYPE_CHECKING:
     from pypaperless.models.base import PaperlessModel
     from pypaperless.runtime import PaperlessRuntime
+
+
+def _mark_exception_retrieved(task: "asyncio.Task[Any]") -> None:
+    """Consume a finished task's exception so abandoned prefetches never warn."""
+    if not task.cancelled():
+        task.exception()
 
 
 class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
@@ -117,11 +123,14 @@ class Page[ResourceT: "PaperlessModel"](_PaperlessBase):
         return iter(self.items)
 
 
-class PageGenerator(AsyncIterator["Page"]):
+class PageGenerator[ResourceT: "PaperlessModel"](AsyncIterator[Page[ResourceT]]):
     """Async iterator that yields :class:`Page` objects.
 
     Used internally by :meth:`~pypaperless.services.mixins.iterable.IterableService.pages`
-    to fetch and paginate through API results.
+    to fetch and paginate through API results. The first request is built from
+    *url* and *params*; every subsequent request follows the server-provided
+    ``next`` URL. While a page is being consumed, the following one is already
+    prefetched concurrently, hiding the request latency.
 
     Args:
         runtime:      A :class:`~pypaperless.runtime.PaperlessRuntime` instance.
@@ -135,37 +144,59 @@ class PageGenerator(AsyncIterator["Page"]):
         self,
         runtime: "PaperlessRuntime",
         url: str,
-        resource_cls: type,
+        resource_cls: type[ResourceT],
         params: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a :class:`PageGenerator` instance."""
         self._runtime = runtime
-        self._page: Page | None = None
         self._resource_cls = resource_cls
         self._url = url
 
-        self.params = deepcopy(params) if params else {}
+        self.params = dict(params) if params else {}
         self.params.setdefault("page", 1)
         self.params.setdefault("page_size", 150)
 
-    def __aiter__(self) -> "PageGenerator":
+        self._current_page_number = int(self.params["page"])
+        self._prefetch: asyncio.Task[Any] | None = None
+        self._exhausted = False
+
+    def __aiter__(self) -> "PageGenerator[ResourceT]":
         """Return self as iterator."""
         return self
 
-    async def __anext__(self) -> "Page":
-        """Return next item from the current batch."""
-        if self._page is not None and self._page.is_last_page:
+    async def __anext__(self) -> Page[ResourceT]:
+        """Return the next page, kicking off the prefetch for the one after it."""
+        if self._exhausted:
             raise StopAsyncIteration
 
-        res = await self._runtime.transport.get(self._url, params=self.params)
-        self._page = Page.from_data(
+        if self._prefetch is not None:
+            res = await self._prefetch
+            self._prefetch = None
+        else:
+            res = await self._runtime.transport.get(self._url, params=self.params)
+
+        next_url = res.get("next") if isinstance(res, dict) else None
+        if next_url:
+            task = asyncio.ensure_future(self._runtime.transport.get(next_url))
+            task.add_done_callback(_mark_exception_retrieved)
+            self._prefetch = task
+        else:
+            self._exhausted = True
+
+        page: Page[ResourceT] = Page.from_data(
             self._runtime,
             res,
             resource_cls=self._resource_cls,
-            current_page=self.params["page"],
+            current_page=self._current_page_number,
             page_size=self.params["page_size"],
         )
+        self._current_page_number += 1
 
-        self.params["page"] += 1
+        return page
 
-        return self._page
+    async def aclose(self) -> None:
+        """Cancel a pending prefetch; call when abandoning iteration early."""
+        if self._prefetch is not None:
+            self._prefetch.cancel()
+            self._prefetch = None
+        self._exhausted = True

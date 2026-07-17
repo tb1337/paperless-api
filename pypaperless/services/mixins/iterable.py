@@ -4,14 +4,11 @@ from collections.abc import AsyncGenerator, AsyncIterator, Mapping
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
+from typing import Any, Self, TypedDict, Unpack
 
 from pypaperless.models.base import IdentifiedT
 from pypaperless.pagination import PageGenerator
 from pypaperless.services.base import ResourceServiceProtocol
-
-if TYPE_CHECKING:
-    from pypaperless.models import Page
 
 # Task-local query filters, keyed by service identity.  Values are immutable
 # mappings that are replaced (never mutated) on entry and restored via token
@@ -44,9 +41,13 @@ class IterableService(ResourceServiceProtocol[IdentifiedT]):
                 print(item.title)
 
         """
-        async for page in self.pages():
-            for item in page:
-                yield item
+        pages = self.pages()
+        try:
+            async for page in pages:
+                for item in page:
+                    yield item
+        finally:
+            await pages.aclose()
 
     @asynccontextmanager
     async def _store_filters(self: Self, **kwargs: Any) -> AsyncGenerator[Self]:
@@ -121,7 +122,7 @@ class IterableService(ResourceServiceProtocol[IdentifiedT]):
         self,
         page: int = 1,
         page_size: int = 150,
-    ) -> "AsyncIterator[Page[IdentifiedT]]":
+    ) -> PageGenerator[IdentifiedT]:
         """Iterate over resource pages.
 
         Each yielded :class:`~pypaperless.models.pages.Page` contains up to
