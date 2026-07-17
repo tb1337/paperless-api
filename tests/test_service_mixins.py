@@ -257,7 +257,7 @@ class TestReadWrite(_SharedServiceTests):
                 f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
             ).format(pk=pk),
             status_code=200,
-            json={**to_update._snapshot, update_field: update_value},
+            json={**to_update.snapshot, update_field: update_value},
         )
         await service.update(to_update)
         assert getattr(to_update, update_field) == update_value
@@ -271,7 +271,7 @@ class TestReadWrite(_SharedServiceTests):
                 f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
             ).format(pk=pk),
             status_code=200,
-            json={**to_update._snapshot, update_field: update_value},
+            json={**to_update.snapshot, update_field: update_value},
         )
         await service.update(to_update, only_changed=False)
         assert getattr(to_update, update_field) == update_value
@@ -403,7 +403,7 @@ class TestSecurableService:
             assert request.url
             json_data = json_mod.loads(request.content)
             assert "set_permissions" in json_data
-            return httpx.Response(status_code=200, json=item._snapshot)
+            return httpx.Response(status_code=200, json=item.snapshot)
 
         httpx_mock.add_callback(
             _lookup_set_permissions,

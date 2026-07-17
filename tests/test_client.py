@@ -408,6 +408,25 @@ async def test_validate_assignment(api: PaperlessClient) -> None:
         model.tags = bad_tags
 
 
+async def test_snapshot_lazy(api: PaperlessClient) -> None:
+    """Snapshot derives from the raw API payload even when first read after a mutation."""
+
+    class LazyModel(PaperlessModel):
+        id: int | None = None
+        title: str | None = None
+
+    model = LazyModel.from_data(api.runtime, {"id": 1, "title": "before"})
+    model.title = "after"
+    assert model.snapshot["title"] == "before"
+    # cached: repeated access returns the same dict instance
+    assert model.snapshot is model.snapshot
+
+    # direct construction without an API payload freezes the state eagerly
+    direct = LazyModel(id=1, title="x")
+    direct.title = "y"
+    assert direct.snapshot["title"] == "x"
+
+
 async def test_api_dump(api: PaperlessClient) -> None:
     """api_dump() serializes by alias, honors exclude markers and JSON-mode conversion."""
 

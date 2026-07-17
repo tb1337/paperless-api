@@ -68,7 +68,9 @@ class PaperlessModel(_PaperlessBase):
     _pk_field: ClassVar[str] = "id"
     _dump_exclude: ClassVar[set[str]] = set()
 
-    _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
+    _snapshot_source: ClassVar[dict[str, Any] | None] = None
+
+    _snapshot_cache: dict[str, Any] | None = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_runtime` from validation context and resolve the instance API path."""
@@ -76,7 +78,10 @@ class PaperlessModel(_PaperlessBase):
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
-        self._snapshot = self.api_dump()
+        if not (isinstance(__context, dict) and "runtime" in __context):
+            # direct construction without an API payload - freeze the state now,
+            # since there is no raw source to derive the snapshot from later
+            self._snapshot_cache = self.api_dump()
 
     def api_dump(self) -> dict[str, Any]:
         """Return the JSON-safe field state as it is sent to the Paperless API.
@@ -108,9 +113,13 @@ class PaperlessModel(_PaperlessBase):
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
-        Primarily used by service-level factory methods.
+        Primarily used by service-level factory methods. The raw payload is
+        kept as the snapshot source for lazy change tracking - it must not be
+        mutated afterwards.
         """
-        return cls.model_validate(data, context={"runtime": runtime})
+        instance = cls.model_validate(data, context={"runtime": runtime})
+        object.__setattr__(instance, "_snapshot_source", data)
+        return instance
 
     @property
     def api_path(self) -> str:
@@ -119,15 +128,28 @@ class PaperlessModel(_PaperlessBase):
 
     @property
     def snapshot(self) -> dict[str, Any]:
-        """Return the serialized field state as of the last API sync."""
-        return self._snapshot
+        """Return the serialized field state as of the last API sync.
+
+        Computed lazily on first access from the raw API payload, so plain
+        reads and iteration never pay for change tracking. Both the snapshot
+        and the current state pass through :meth:`api_dump`, which keeps the
+        change detection in ``update()`` free of normalization artifacts.
+        """
+        if self._snapshot_cache is None:
+            if self._snapshot_source is not None:
+                fresh = type(self).from_data(self._runtime, self._snapshot_source)
+                self._snapshot_cache = fresh.api_dump()
+            else:
+                self._snapshot_cache = self.api_dump()
+        return self._snapshot_cache
 
     def refresh_from(self, data: dict[str, Any]) -> None:
-        """Replace all field values and snapshot in-place from a fresh API response."""
+        """Replace all field values and snapshot source in-place from a fresh API response."""
         fresh = type(self).from_data(self._runtime, data)
         for name in self.__class__.model_fields:
             setattr(self, name, getattr(fresh, name))
-        self._snapshot = self.api_dump()
+        object.__setattr__(self, "_snapshot_source", data)
+        self._snapshot_cache = None
 
 
 class IdentifiedModel(PaperlessModel):

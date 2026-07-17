@@ -115,7 +115,7 @@ class TestDocuments:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
-            json={**to_update._snapshot, "title": new_title},
+            json={**to_update.snapshot, "title": new_title},
         )
         await paperless.documents.update(to_update)
         assert to_update.title == new_title
