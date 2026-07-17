@@ -2,6 +2,7 @@
 
 import datetime
 from io import BytesIO
+from typing import Any
 
 import httpx
 import pytest
@@ -382,6 +383,29 @@ async def test_draft_rejects_unknown_fields(api: PaperlessClient) -> None:
     # valid field names still work
     draft = api.tags.create(name="valid")
     assert draft.name == "valid"
+
+
+async def test_validate_assignment(api: PaperlessClient) -> None:
+    """Field assignments are validated and coerced in place."""
+
+    class AssignModel(PaperlessModel):
+        id: int | None = None
+        created: datetime.date | None = None
+        tags: list[int] | None = None
+
+    model = AssignModel.from_data(api.runtime, {"id": 1})
+
+    iso_string: Any = "2024-01-15"
+    model.created = iso_string  # coerced by pydantic
+    assert model.created == datetime.date(2024, 1, 15)
+
+    bad_date: Any = "not a date"
+    with pytest.raises(ValidationError):
+        model.created = bad_date
+
+    bad_tags: Any = "3,7"
+    with pytest.raises(ValidationError):
+        model.tags = bad_tags
 
 
 async def test_api_dump(api: PaperlessClient) -> None:

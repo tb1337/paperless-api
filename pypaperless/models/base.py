@@ -61,6 +61,7 @@ class PaperlessModel(_PaperlessBase):
         arbitrary_types_allowed=True,
         populate_by_name=True,
         use_enum_values=False,
+        validate_assignment=True,
     )
 
     _api_path: ClassVar[str] = EndpointPath.INDEX

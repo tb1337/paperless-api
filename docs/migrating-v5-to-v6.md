@@ -267,6 +267,17 @@ v6 provides two equivalent ways to perform CRUD:
     await paperless.update(doc)  # resolves to DocumentService automatically
     ```
 
+!!! warning "Assignments are validated"
+    In v6, assigning a value to a model field validates (and coerces) it
+    immediately - invalid values raise a `pydantic.ValidationError` at the
+    assignment site instead of failing later inside `update()` with a server
+    error:
+
+    ```python
+    doc.created = "2024-08-13"   # coerced to datetime.date(2024, 8, 13)
+    doc.created = "not a date"   # ValidationError - right here
+    ```
+
 ### delete()
 
 `delete()` no longer returns a boolean. It raises `DeletionError` on failure
