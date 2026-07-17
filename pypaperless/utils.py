@@ -1,11 +1,7 @@
 """Utility functions for pypaperless."""
 
-from datetime import date, datetime
-from enum import Enum
 from io import BytesIO
 from typing import Any
-
-from pydantic import BaseModel
 
 
 def normalize_base_url(url: str) -> str:
@@ -72,24 +68,3 @@ def process_form_data(data: dict[str, Any]) -> tuple[dict[str, Any], list[tuple[
     Returns a tuple of (data_fields, file_fields) for httpx.
     """
     return _FormDataBuilder().build(data)
-
-
-def _dateobj_to_str(value: date | datetime) -> str:
-    """Parse string from date objects."""
-    return value.isoformat().replace("+00:00", "Z")
-
-
-def object_to_dict_value(value: Any) -> Any:
-    """Convert object values to their corresponding json values."""
-    if isinstance(value, dict):
-        return {k: object_to_dict_value(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [object_to_dict_value(item) for item in value]
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, (date, datetime)):
-        return _dateobj_to_str(value)
-    if isinstance(value, BaseModel):
-        return object_to_dict_value(value.model_dump(mode="json"))
-
-    return value

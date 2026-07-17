@@ -2,29 +2,24 @@
 
 from typing import Any, ClassVar
 
+from pydantic import BaseModel
+
 from pypaperless.exceptions import DraftFieldRequiredError
-from pypaperless.utils import object_to_dict_value
 
 
-class CreatableModel:
+class CreatableModel(BaseModel):
     """Provide draft validation and serialization for PyPaperless models."""
 
     _create_required_fields: ClassVar[set[str]]
-    model_fields: ClassVar[dict[str, Any]]  # provided by BaseModel
 
     def serialize(self) -> dict[str, Any]:
         """Serialize draft fields for API submission."""
-        data = {
-            "json": {
-                name: object_to_dict_value(getattr(self, name))
-                for name in self.__class__.model_fields
-            },
-        }
-        # check for empty permissions as they will raise if None
-        if "set_permissions" in data["json"] and data["json"]["set_permissions"] is None:
-            del data["json"]["set_permissions"]
+        payload = self.model_dump(mode="json", by_alias=True)
+        # empty permissions raise server-side, so drop the field when unset
+        if payload.get("set_permissions") is None:
+            payload.pop("set_permissions", None)
 
-        return data
+        return {"json": payload}
 
     def validate_draft(self) -> None:
         """Check required fields before persisting the item to Paperless."""

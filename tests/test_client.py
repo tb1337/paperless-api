@@ -1,10 +1,11 @@
 """Tests for the PaperlessClient client: init, context, requests, URL, token, Page model."""
 
+import datetime
 from io import BytesIO
 
 import httpx
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient, generate_api_token
@@ -28,7 +29,7 @@ from pypaperless.models.base import PaperlessModel
 from pypaperless.services import mixins as service_mixins
 from pypaperless.services.base import ResourceService
 from pypaperless.transport import PaperlessTransport
-from pypaperless.utils import normalize_base_url, object_to_dict_value, process_form_data
+from pypaperless.utils import normalize_base_url, process_form_data
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -373,31 +374,33 @@ async def test_draft_not_supported(api: PaperlessClient) -> None:
         service.create()
 
 
-async def test_object_to_dict_value() -> None:
-    """Test object_to_dict_value converts Pydantic models and passes primitives through."""
+async def test_api_dump(api: PaperlessClient) -> None:
+    """api_dump() serializes by alias, honors exclude markers and JSON-mode conversion."""
 
-    class SomeModel(BaseModel):
+    class SubModel(BaseModel):
         name: str
-        age: int
 
-    model = SomeModel(name="Test", age=42)
-    result = object_to_dict_value(model)
-    assert isinstance(result, dict)
-    assert result["name"] == "Test"
-    assert result["age"] == 42
+    class DumpModel(PaperlessModel):
+        id: int | None = None
+        created: datetime.date | None = None
+        sub: SubModel | None = None
+        notes_: list[int] | None = Field(default=None, alias="notes", exclude=True)
+        hit_: str | None = Field(default=None, alias="__hit__")
 
-    models_list = [SomeModel(name="A", age=1), SomeModel(name="B", age=2)]
-    result = object_to_dict_value(models_list)
-    assert isinstance(result, list)
-    assert len(result) == 2
-    assert isinstance(result[0], dict)
+    model = DumpModel.from_data(
+        api.runtime,
+        {"id": 1, "created": "2024-01-15", "sub": {"name": "x"}, "notes": [1], "__hit__": "y"},
+    )
+    dump = model.api_dump()
 
-    assert object_to_dict_value("hello") == "hello"
-    assert object_to_dict_value(42) == 42
-    assert object_to_dict_value(None) is None
-
-    d = {"key": "value"}
-    assert object_to_dict_value(d) == d
+    assert dump == {
+        "id": 1,
+        "created": "2024-01-15",
+        "sub": {"name": "x"},
+        "__hit__": "y",
+    }
+    # the snapshot uses the exact same representation
+    assert model.snapshot == dump
 
 
 async def test_request_merges_custom_headers(httpx_mock: HTTPXMock) -> None:

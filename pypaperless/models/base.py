@@ -3,9 +3,9 @@
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
+from pydantic_core import to_jsonable_python
 
 from pypaperless.const import EndpointPath
-from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
@@ -65,6 +65,7 @@ class PaperlessModel(_PaperlessBase):
 
     _api_path: ClassVar[str] = EndpointPath.INDEX
     _pk_field: ClassVar[str] = "id"
+    _dump_exclude: ClassVar[set[str]] = set()
 
     _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
 
@@ -74,13 +75,22 @@ class PaperlessModel(_PaperlessBase):
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
-        self._snapshot = self._build_snapshot()
+        self._snapshot = self.api_dump()
 
-    def _build_snapshot(self) -> dict[str, Any]:
-        """Return the current field values as a serialized dict."""
-        return {
-            name: object_to_dict_value(getattr(self, name)) for name in self.__class__.model_fields
-        }
+    def api_dump(self) -> dict[str, Any]:
+        """Return the JSON-safe field state as it is sent to the Paperless API.
+
+        Keys are the API field names (aliases), fields marked ``exclude=True``
+        and binary payload fields listed in ``_dump_exclude`` are omitted.
+
+        Example::
+
+            document = await paperless.documents(42)
+            payload = document.api_dump()
+            print(payload["title"])
+
+        """
+        return self.model_dump(mode="json", by_alias=True, exclude=self._dump_exclude or None)
 
     @classmethod
     def format_api_path(cls, **kwargs: Any) -> str:
@@ -116,7 +126,7 @@ class PaperlessModel(_PaperlessBase):
         fresh = type(self).from_data(self._runtime, data)
         for name in self.__class__.model_fields:
             setattr(self, name, getattr(fresh, name))
-        self._snapshot = self._build_snapshot()
+        self._snapshot = self.api_dump()
 
 
 class PaperlessCustomDataModel(_PaperlessBase):
@@ -150,7 +160,7 @@ class PaperlessCustomDataModel(_PaperlessBase):
         payload = {
             field_name: getattr(self, field_name) for field_name in self.__class__.model_fields
         }
-        return object_to_dict_value(payload)
+        return to_jsonable_python(payload)
 
     @model_serializer(mode="plain")
     def _model_serializer(self) -> Any:

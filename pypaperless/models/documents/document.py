@@ -26,7 +26,6 @@ from pypaperless.services.documents.history import DocumentHistoryService
 from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.documents.share_links import DocumentShareLinkService
 from pypaperless.services.documents.versions import DocumentRootService, DocumentVersionService
-from pypaperless.utils import object_to_dict_value
 
 
 class DocumentMetaEntry(BaseModel):
@@ -312,6 +311,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableModel):
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _create_required_fields: ClassVar[set[str]] = {"document"}
+    _dump_exclude: ClassVar[set[str]] = {"document"}
 
     document: bytes | None = None
     filename: str | None = None
@@ -326,12 +326,12 @@ class DocumentDraft(PaperlessModel, mixins.CreatableModel):
 
     def serialize(self) -> dict[str, Any]:
         """Return the multipart form data payload for POSTing a new document."""
-        data = {
-            "form": {
-                name: object_to_dict_value(getattr(self, name))
-                for name in self.__class__.model_fields
-                if name not in {"document", "filename", "custom_fields"}
-            }
+        data: dict[str, dict[str, Any]] = {
+            "form": self.model_dump(
+                mode="json",
+                by_alias=True,
+                exclude={"document", "filename", "custom_fields"},
+            )
         }
 
         if self.custom_fields is not None:
@@ -377,6 +377,7 @@ class DownloadedDocument(PaperlessModel):
     """Represent a Paperless `Document`'s downloaded file."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS
+    _dump_exclude: ClassVar[set[str]] = {"content"}
 
     id: int | None = None
     mode: FileRetrieveMode | None = None
