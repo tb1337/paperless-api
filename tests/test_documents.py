@@ -14,6 +14,7 @@ from pypaperless.exceptions import (
     AsnRequestError,
     DeletionError,
     DraftFieldRequiredError,
+    JsonResponseWithError,
     PrimaryKeyRequiredError,
     SendEmailError,
 )
@@ -545,6 +546,20 @@ class TestDocuments:
         )
         result = await paperless.documents.notes.save(draft)
         assert isinstance(result, int)
+
+    async def test_note_save_error_payload(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """save() raises JsonResponseWithError when Paperless returns 200 with an error dict."""
+        draft = paperless.documents.notes.create(1, note="Doomed note.")
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
+            status_code=200,
+            json={"error": "Error saving note, check logs for more detail."},
+        )
+        with pytest.raises(JsonResponseWithError, match="Error saving note"):
+            await paperless.documents.notes.save(draft)
 
     async def test_note_standalone_delete(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient

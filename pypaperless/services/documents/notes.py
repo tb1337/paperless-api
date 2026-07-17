@@ -3,7 +3,11 @@
 from typing import TYPE_CHECKING, Any, cast
 
 from pypaperless.const import EndpointPath, PaperlessResource
-from pypaperless.exceptions import DeletionError, PrimaryKeyRequiredError
+from pypaperless.exceptions import (
+    DeletionError,
+    JsonResponseWithError,
+    PrimaryKeyRequiredError,
+)
 from pypaperless.models.base import DraftLike
 from pypaperless.models.documents.notes import DocumentNote, DocumentNoteDraft
 from pypaperless.services.mixins import CreatableService, DeletableService
@@ -132,6 +136,10 @@ class DocumentNoteService(
         draft.validate_draft()
         kwdict = draft.serialize()
         res = await self._runtime.transport.post(draft.api_path, **kwdict)
+        if isinstance(res, dict):
+            # Paperless responds with HTTP 200 and an error payload when it
+            # cannot save the note (e.g. the search index is locked).
+            raise JsonResponseWithError(res)
         new_id = cast("int", max(item.get("id") for item in res))
         if self._document is not None:
             # The POST response is the full updated notes list — keep the cache current.
