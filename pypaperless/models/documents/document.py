@@ -4,14 +4,14 @@ import datetime
 import json
 from collections.abc import Iterator
 from enum import StrEnum
-from typing import Any, ClassVar, Self, cast, overload
+from typing import Any, ClassVar, Self, overload
 
 from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator, model_validator
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessCustomDataModel, PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessCustomDataModel, PaperlessModel
 from pypaperless.models.custom_fields import (
     CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomField,
@@ -183,7 +183,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 
 
 class Document(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.SecurableModel,
 ):
     """Represent a Paperless `Document`."""
@@ -198,7 +198,6 @@ class Document(
     _share_links: DocumentShareLinkService | None = PrivateAttr(default=None)
     _versions: DocumentVersionService | None = PrivateAttr(default=None)
 
-    id: int | None = None
     correspondent: int | None = None
     document_type: int | None = None
     storage_path: int | None = None
@@ -245,14 +244,14 @@ class Document(
     def ai_suggestions(self) -> DocumentAISuggestionsService:
         """Return the AI suggestions service for this document."""
         if self._ai_suggestions is None:
-            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, cast("int", self.id))
+            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, self.id)
         return self._ai_suggestions
 
     @property
     def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
         if self._history is None:
-            self._history = DocumentHistoryService(self._runtime, cast("int", self.id))
+            self._history = DocumentHistoryService(self._runtime, self.id)
         return self._history
 
     @property
@@ -266,21 +265,21 @@ class Document(
     def root(self) -> DocumentRootService:
         """Return the root service for this document."""
         if self._root is None:
-            self._root = DocumentRootService(self._runtime, cast("int", self.id))
+            self._root = DocumentRootService(self._runtime, self.id)
         return self._root
 
     @property
     def share_links(self) -> DocumentShareLinkService:
         """Return the share links service for this document."""
         if self._share_links is None:
-            self._share_links = DocumentShareLinkService(self._runtime, cast("int", self.id))
+            self._share_links = DocumentShareLinkService(self._runtime, self.id)
         return self._share_links
 
     @property
     def versions(self) -> DocumentVersionService:
         """Return the versions service for this document."""
         if self._versions is None:
-            self._versions = DocumentVersionService(self._runtime, cast("int", self.id))
+            self._versions = DocumentVersionService(self._runtime, self.id)
         return self._versions
 
     @property
@@ -373,13 +372,12 @@ class DocumentMeta(PaperlessModel):
     archive_metadata: list[DocumentMetaEntry] | None = None
 
 
-class DownloadedDocument(PaperlessModel):
+class DownloadedDocument(IdentifiedModel):
     """Represent a Paperless `Document`'s downloaded file."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS
     _dump_exclude: ClassVar[set[str]] = {"content"}
 
-    id: int | None = None
     mode: FileRetrieveMode | None = None
     original: bool | None = None
     content: bytes | None = None
@@ -388,12 +386,11 @@ class DownloadedDocument(PaperlessModel):
     disposition_type: str | None = None
 
 
-class DocumentSuggestions(PaperlessModel):
+class DocumentSuggestions(IdentifiedModel):
     """Represent a Paperless `Document`'s suggestions."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_SUGGESTIONS
 
-    id: int | None = None
     correspondents: list[int] | None = None
     tags: list[int] | None = None
     document_types: list[int] | None = None

@@ -5,7 +5,7 @@ from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath
 
-from .base import PaperlessModel
+from .base import IdentifiedModel
 
 
 class ArchiveFileGeneration(StrEnum):
@@ -93,12 +93,11 @@ class UnpaperClean(StrEnum):
         return cls["UNKNOWN"]
 
 
-class Config(PaperlessModel):
+class Config(IdentifiedModel):
     """Represent a Paperless `Config`."""
 
     _api_path: ClassVar[str] = EndpointPath.CONFIG_SINGLE
 
-    id: int | None = None
     user_args: str | None = None
     output_type: str | None = None
     pages: int | None = None

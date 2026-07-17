@@ -6,11 +6,11 @@ from typing import ClassVar
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class Correspondent(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
 ):
@@ -19,7 +19,6 @@ class Correspondent(
     _api_path: ClassVar[str] = EndpointPath.CORRESPONDENTS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CORRESPONDENTS
 
-    id: int | None = None
     slug: str | None = None
     name: str | None = None
     document_count: int | None = None

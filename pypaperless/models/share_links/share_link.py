@@ -6,7 +6,7 @@ from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessModel
 
 
 class ShareLinkFileVersion(StrEnum):
@@ -23,14 +23,13 @@ class ShareLinkFileVersion(StrEnum):
 
 
 class ShareLink(
-    PaperlessModel,
+    IdentifiedModel,
 ):
     """Represent a Paperless `ShareLink`."""
 
     _api_path: ClassVar[str] = EndpointPath.SHARE_LINKS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINKS
 
-    id: int
     created: datetime.datetime | None = None
     expiration: datetime.datetime | None = None
     slug: str | None = None

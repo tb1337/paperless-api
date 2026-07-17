@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class CustomFieldSelectOptions(BaseModel):
@@ -197,14 +197,13 @@ CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
 
 
 class CustomField(
-    PaperlessModel,
+    IdentifiedModel,
 ):
     """Represent a Paperless `CustomField`."""
 
     _api_path: ClassVar[str] = EndpointPath.CUSTOM_FIELDS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
-    id: int
     name: str | None = None
     data_type: CustomFieldType | None = None
     extra_data: CustomFieldExtraData | None = None

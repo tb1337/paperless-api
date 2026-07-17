@@ -5,11 +5,11 @@ from typing import ClassVar
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class Tag(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
 ):
@@ -18,7 +18,6 @@ class Tag(
     _api_path: ClassVar[str] = EndpointPath.TAGS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.TAGS
 
-    id: int | None = None
     slug: str | None = None
     name: str | None = None
     color: str | None = None

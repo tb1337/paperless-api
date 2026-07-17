@@ -244,6 +244,12 @@ v6 provides two equivalent ways to perform CRUD:
   `await paperless.delete(model)` / `await paperless.save(draft)` directly on
   the client; the dispatcher resolves the responsible service automatically.
 
+!!! tip "`id` is no longer optional"
+    Resource models fetched from the API now type their `id` as a required
+    `int` instead of `int | None`. Guards like `if doc.id is not None` are
+    dead code in v6, and expressions such as `my_dict[doc.id]` type-check
+    without casts.
+
 ### update()
 
 === "v5"

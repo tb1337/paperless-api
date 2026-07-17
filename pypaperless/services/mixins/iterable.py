@@ -6,7 +6,7 @@ from contextvars import ContextVar
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
 
-from pypaperless.models.base import ResourceT
+from pypaperless.models.base import IdentifiedT
 from pypaperless.pagination import PageGenerator
 from pypaperless.services.base import ResourceServiceProtocol
 
@@ -32,10 +32,10 @@ class _BaseFilters(TypedDict, total=False):
     """
 
 
-class IterableService(ResourceServiceProtocol[ResourceT]):
+class IterableService(ResourceServiceProtocol[IdentifiedT]):
     """Provide methods for iterating over resource items."""
 
-    async def __aiter__(self) -> AsyncIterator[ResourceT]:
+    async def __aiter__(self) -> AsyncIterator[IdentifiedT]:
         """Iterate over all resource items, page by page.
 
         Example::
@@ -92,7 +92,7 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
 
-    async def as_dict(self) -> dict[int, ResourceT]:
+    async def as_dict(self) -> dict[int, IdentifiedT]:
         """Return a ``{pk: model}`` mapping of all resource items.
 
         When used within a :meth:`filter` context, only filtered items are included.
@@ -103,9 +103,9 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
             doc = docs[42]
 
         """
-        return {item.id: item async for item in self}  # type: ignore[attr-defined]
+        return {item.id: item async for item in self}
 
-    async def as_list(self) -> list[ResourceT]:
+    async def as_list(self) -> list[IdentifiedT]:
         """Return a flat list of all resource items.
 
         When used within a :meth:`filter` context, only filtered items are included.
@@ -121,7 +121,7 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         self,
         page: int = 1,
         page_size: int = 150,
-    ) -> "AsyncIterator[Page[ResourceT]]":
+    ) -> "AsyncIterator[Page[IdentifiedT]]":
         """Iterate over resource pages.
 
         Each yielded :class:`~pypaperless.models.pages.Page` contains up to

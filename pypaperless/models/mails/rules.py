@@ -4,15 +4,14 @@ from typing import ClassVar
 
 from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
-class MailRule(PaperlessModel, mixins.SecurableModel):
+class MailRule(IdentifiedModel, mixins.SecurableModel):
     """Represent a Paperless `MailRule`."""
 
     _api_path: ClassVar[str] = EndpointPath.MAIL_RULES_SINGLE
 
-    id: int | None = None
     name: str | None = None
     account: int | None = None
     enabled: bool | None = None

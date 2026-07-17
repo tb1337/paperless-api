@@ -7,16 +7,15 @@ from pydantic import field_validator
 
 from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessModel
 
 
-class DocumentNote(PaperlessModel):
+class DocumentNote(IdentifiedModel):
     """Represent a Paperless `DocumentNote`."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_NOTES
     _pk_field: ClassVar[str] = "document"
 
-    id: int | None = None
     note: str | None = None
     created: datetime.datetime | None = None
     document: int | None = None

@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from pypaperless.const import EndpointPath
 
-from .base import PaperlessModel
+from .base import IdentifiedModel
 
 
 class TaskType(StrEnum):
@@ -68,12 +68,11 @@ class TaskTriggerSource(StrEnum):
         return cls["UNKNOWN"]
 
 
-class Task(PaperlessModel):
+class Task(IdentifiedModel):
     """Represent a Paperless ``Task``."""
 
     _api_path: ClassVar[str] = EndpointPath.TASKS_SINGLE
 
-    id: int | None = None
     task_id: str | None = None
     task_type: TaskType | None = None
     task_type_display: str | None = None

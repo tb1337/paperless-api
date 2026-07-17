@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
+IdentifiedT = TypeVar("IdentifiedT", bound="IdentifiedModel")
 
 
 class DraftLike(Protocol):
@@ -128,6 +129,15 @@ class PaperlessModel(_PaperlessBase):
         for name in self.__class__.model_fields:
             setattr(self, name, getattr(fresh, name))
         self._snapshot = self.api_dump()
+
+
+class IdentifiedModel(PaperlessModel):
+    """Base class for models whose API endpoint always provides an ``id``.
+
+    Subclasses expose ``id`` as a required, non-optional ``int``.
+    """
+
+    id: int
 
 
 class PaperlessCustomDataModel(_PaperlessBase):
