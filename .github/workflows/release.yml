@@ -22,7 +22,7 @@ jobs:
       id-token: write # important for trusted publishing (pypi)
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6.1.0
+        uses: actions/checkout@v7.0.1
       - name: 🏗 Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
         uses: actions/setup-python@v7.0.0
