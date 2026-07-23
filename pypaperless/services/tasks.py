@@ -7,7 +7,7 @@ from typing import Self, Unpack, cast
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import TaskNotFoundError
 from pypaperless.models.filters import TaskFilters, TaskSummaryFilters
-from pypaperless.models.tasks import Task, TaskSummary, TaskType
+from pypaperless.models.tasks import Task, TaskStatusCounts, TaskSummary, TaskType
 
 from . import mixins
 from .base import ResourceService
@@ -122,6 +122,18 @@ class TaskService(
             EndpointPath.TASKS_SUMMARY, params=dict(kwargs) or None
         )
         return [TaskSummary.model_validate(data) for data in res]
+
+    async def status_counts(self) -> TaskStatusCounts:
+        """Return aggregated task counts for the task UI sections.
+
+        Example::
+
+            counts = await paperless.tasks.status_counts()
+            print(counts.all, counts.needs_attention)
+
+        """
+        res = await self._runtime.transport.get(EndpointPath.TASKS_STATUS_COUNTS)
+        return TaskStatusCounts.model_validate(res)
 
     async def run(self, task_type: str | TaskType) -> str:
         """Trigger a background task by type and return the resulting Celery UUID.

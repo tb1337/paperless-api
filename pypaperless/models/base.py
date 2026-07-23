@@ -2,16 +2,16 @@
 
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Self, TypeVar, final
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr, model_serializer
+from pydantic import BaseModel, ConfigDict, PrivateAttr
 
 from pypaperless.const import EndpointPath
-from pypaperless.utils import object_to_dict_value
 
 if TYPE_CHECKING:
     from pypaperless.runtime import PaperlessRuntime
 
 
 ResourceT = TypeVar("ResourceT", bound="PaperlessModel")
+IdentifiedT = TypeVar("IdentifiedT", bound="IdentifiedModel")
 
 
 class DraftLike(Protocol):
@@ -61,12 +61,16 @@ class PaperlessModel(_PaperlessBase):
         arbitrary_types_allowed=True,
         populate_by_name=True,
         use_enum_values=False,
+        validate_assignment=True,
     )
 
     _api_path: ClassVar[str] = EndpointPath.INDEX
     _pk_field: ClassVar[str] = "id"
+    _dump_exclude: ClassVar[set[str]] = set()
 
-    _snapshot: dict[str, Any] = PrivateAttr(default_factory=dict)
+    _snapshot_source: ClassVar[dict[str, Any] | None] = None
+
+    _snapshot_cache: dict[str, Any] | None = PrivateAttr(default=None)
 
     def model_post_init(self, __context: Any, /) -> None:
         """Bind `_runtime` from validation context and resolve the instance API path."""
@@ -74,13 +78,25 @@ class PaperlessModel(_PaperlessBase):
         pk = getattr(self, self._pk_field, None)
         if pk is not None:
             object.__setattr__(self, "_api_path", self._api_path.format(pk=pk))
-        self._snapshot = self._build_snapshot()
+        if not (isinstance(__context, dict) and "runtime" in __context):
+            # direct construction without an API payload - freeze the state now,
+            # since there is no raw source to derive the snapshot from later
+            self._snapshot_cache = self.api_dump()
 
-    def _build_snapshot(self) -> dict[str, Any]:
-        """Return the current field values as a serialized dict."""
-        return {
-            name: object_to_dict_value(getattr(self, name)) for name in self.__class__.model_fields
-        }
+    def api_dump(self) -> dict[str, Any]:
+        """Return the JSON-safe field state as it is sent to the Paperless API.
+
+        Keys are the API field names (aliases), fields marked ``exclude=True``
+        and binary payload fields listed in ``_dump_exclude`` are omitted.
+
+        Example::
+
+            document = await paperless.documents(42)
+            payload = document.api_dump()
+            print(payload["title"])
+
+        """
+        return self.model_dump(mode="json", by_alias=True, exclude=self._dump_exclude or None)
 
     @classmethod
     def format_api_path(cls, **kwargs: Any) -> str:
@@ -97,9 +113,13 @@ class PaperlessModel(_PaperlessBase):
     ) -> Self:
         """Return a new instance of `cls` from `data`.
 
-        Primarily used by service-level factory methods.
+        Primarily used by service-level factory methods. The raw payload is
+        kept as the snapshot source for lazy change tracking - it must not be
+        mutated afterwards.
         """
-        return cls.model_validate(data, context={"runtime": runtime})
+        instance = cls.model_validate(data, context={"runtime": runtime})
+        object.__setattr__(instance, "_snapshot_source", data)
+        return instance
 
     @property
     def api_path(self) -> str:
@@ -108,51 +128,34 @@ class PaperlessModel(_PaperlessBase):
 
     @property
     def snapshot(self) -> dict[str, Any]:
-        """Return the serialized field state as of the last API sync."""
-        return self._snapshot
+        """Return the serialized field state as of the last API sync.
+
+        Computed lazily on first access from the raw API payload, so plain
+        reads and iteration never pay for change tracking. Both the snapshot
+        and the current state pass through :meth:`api_dump`, which keeps the
+        change detection in ``update()`` free of normalization artifacts.
+        """
+        if self._snapshot_cache is None:
+            if self._snapshot_source is not None:
+                fresh = type(self).from_data(self._runtime, self._snapshot_source)
+                self._snapshot_cache = fresh.api_dump()
+            else:
+                self._snapshot_cache = self.api_dump()
+        return self._snapshot_cache
 
     def refresh_from(self, data: dict[str, Any]) -> None:
-        """Replace all field values and snapshot in-place from a fresh API response."""
+        """Replace all field values and snapshot source in-place from a fresh API response."""
         fresh = type(self).from_data(self._runtime, data)
         for name in self.__class__.model_fields:
             setattr(self, name, getattr(fresh, name))
-        self._snapshot = self._build_snapshot()
+        object.__setattr__(self, "_snapshot_source", data)
+        self._snapshot_cache = None
 
 
-class PaperlessCustomDataModel(_PaperlessBase):
-    """Base class for all custom data types in PyPaperless."""
+class IdentifiedModel(PaperlessModel):
+    """Base class for models whose API endpoint always provides an ``id``.
 
-    _data: Any = PrivateAttr(default=None)
+    Subclasses expose ``id`` as a required, non-optional ``int``.
+    """
 
-    def model_post_init(self, __context: Any, /) -> None:
-        """Bind `_runtime` and `_data` from validation context."""
-        super().model_post_init(__context)
-        if isinstance(__context, dict) and "data" in __context:
-            self._data = __context["data"]
-
-    @classmethod
-    def from_data(cls, runtime: "PaperlessRuntime", data: Any, **_context: Any) -> Self:
-        """Return a new instance of ``cls`` from API data."""
-        return cls.model_validate({}, context={"runtime": runtime, "data": data})
-
-    @property
-    def data(self) -> Any:
-        """Return the internal custom-model data payload."""
-        return self._data
-
-    @data.setter
-    def data(self, value: Any) -> None:
-        """Set the internal custom-model data payload."""
-        self._data = value
-
-    def serialize(self) -> Any:
-        """Return the JSON-compatible payload for this model."""
-        payload = {
-            field_name: getattr(self, field_name) for field_name in self.__class__.model_fields
-        }
-        return object_to_dict_value(payload)
-
-    @model_serializer(mode="plain")
-    def _model_serializer(self) -> Any:
-        """Delegate Pydantic serialization to the custom ``serialize`` method."""
-        return self.serialize()
+    id: int

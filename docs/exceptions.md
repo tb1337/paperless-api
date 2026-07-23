@@ -12,6 +12,7 @@ All exceptions inherit from `PaperlessError`, which in turn inherits from Python
 PaperlessError
 ├── InitializationError
 │   ├── PaperlessConnectionError
+│   │   └── PaperlessTimeoutError
 │   ├── AuthError
 │   │   ├── InvalidTokenError
 │   │   └── InactiveOrDeletedError
@@ -19,6 +20,8 @@ PaperlessError
 ├── ResponseError
 │   ├── BadJsonResponseError
 │   ├── JsonResponseWithError
+│   ├── NotFoundError
+│   ├── UnexpectedStatusError
 │   └── BulkEditError
 ├── DraftError
 │   ├── DraftFieldRequiredError
@@ -63,7 +66,11 @@ except InitializationError as exc:
 
 #### `PaperlessConnectionError`
 
-The host could not be reached (network error, wrong URL, DNS failure, etc.).
+The host could not be reached (network error, wrong URL, DNS failure, broken connection mid-response, etc.). All transport-level failures raise this exception - `httpx` internals never leak through.
+
+**Subclasses:**
+
+- **`PaperlessTimeoutError`** - the request timed out. The host is reachable but did not respond in time; retrying, or passing a custom `httpx.AsyncClient` with a higher timeout, may help.
 
 #### `AuthError`
 
@@ -100,6 +107,23 @@ try:
 except JsonResponseWithError as exc:
     print(exc)  # e.g. "Paperless [document]: No file was submitted."
 ```
+
+#### `NotFoundError`
+
+The server responded with HTTP **404** - the requested resource does not exist. The original `httpx.Response` is available as the `response` attribute.
+
+```python
+from pypaperless.exceptions import NotFoundError
+
+try:
+    doc = await paperless.documents(999999)
+except NotFoundError:
+    print("Document does not exist.")
+```
+
+#### `UnexpectedStatusError`
+
+The server responded with a non-2xx status code that has no dedicated exception (e.g. a 5xx server error). The original `httpx.Response` is available as the `response` attribute.
 
 #### `BulkEditError`
 

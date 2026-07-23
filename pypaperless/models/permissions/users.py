@@ -4,15 +4,14 @@ import datetime
 from typing import ClassVar
 
 from pypaperless.const import EndpointPath
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
-class User(PaperlessModel):
+class User(IdentifiedModel):
     """Represent a Paperless `User`."""
 
     _api_path: ClassVar[str] = EndpointPath.USERS_SINGLE
 
-    id: int
     username: str | None = None
     # password: intentionally excluded
     email: str | None = None

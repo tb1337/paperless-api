@@ -1,15 +1,22 @@
 """IterableService for PyPaperless services."""
 
-from collections.abc import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator, Mapping
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, Self, TypedDict, Unpack
+from contextvars import ContextVar
+from types import MappingProxyType
+from typing import Any, Self, TypedDict, Unpack
 
-from pypaperless.models.base import ResourceT
+from pypaperless.models.base import IdentifiedT
 from pypaperless.pagination import PageGenerator
 from pypaperless.services.base import ResourceServiceProtocol
 
-if TYPE_CHECKING:
-    from pypaperless.models import Page
+# Task-local query filters, keyed by service identity.  Values are immutable
+# mappings that are replaced (never mutated) on entry and restored via token
+# reset on exit, so concurrent asyncio tasks filtering the same (client-cached)
+# service instance cannot clobber each other.
+_SCOPED_FILTERS: ContextVar[Mapping[int, dict[str, Any]]] = ContextVar(
+    "_SCOPED_FILTERS", default=MappingProxyType({})
+)
 
 
 class _BaseFilters(TypedDict, total=False):
@@ -22,12 +29,10 @@ class _BaseFilters(TypedDict, total=False):
     """
 
 
-class IterableService(ResourceServiceProtocol[ResourceT]):
+class IterableService(ResourceServiceProtocol[IdentifiedT]):
     """Provide methods for iterating over resource items."""
 
-    _aiter_filters: dict[str, Any] | None = None
-
-    async def __aiter__(self) -> AsyncIterator[ResourceT]:
+    async def __aiter__(self) -> AsyncIterator[IdentifiedT]:
         """Iterate over all resource items, page by page.
 
         Example::
@@ -36,24 +41,29 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
                 print(item.title)
 
         """
-        async for page in self.pages():
-            for item in page:
-                yield item
+        pages = self.pages()
+        try:
+            async for page in pages:
+                for item in page:
+                    yield item
+        finally:
+            await pages.aclose()
 
     @asynccontextmanager
     async def _store_filters(self: Self, **kwargs: Any) -> AsyncGenerator[Self]:
-        """Store query filters for the duration of the context.
+        """Store query filters in :data:`_SCOPED_FILTERS` for the duration of the context.
 
-        This is the private implementation backing :meth:`reduce`.  Subclasses
+        This is the private implementation backing :meth:`filter`.  Subclasses
         call ``self._store_filters(**kwargs)`` rather than ``super().filter()``
         so that the typed public override does not need to widen its signature
         back to ``**kwargs: Any``.
         """
-        self._aiter_filters = kwargs
+        scoped = MappingProxyType({**_SCOPED_FILTERS.get(), id(self): kwargs})
+        token = _SCOPED_FILTERS.set(scoped)
         try:
             yield self
         finally:
-            self._aiter_filters = None
+            _SCOPED_FILTERS.reset(token)
 
     @asynccontextmanager
     async def filter(
@@ -63,7 +73,9 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         """Context manager for iterating over resource items with query parameters.
 
         The context variable is the service itself, scoped to the given filters.
-        Use :meth:`__aiter__` or :meth:`pages` inside the block.
+        Use :meth:`__aiter__` or :meth:`pages` inside the block.  The filters are
+        task-local — concurrent asyncio tasks filtering the same service do not
+        interfere with each other.
 
         Example::
 
@@ -81,7 +93,7 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         async with self._store_filters(**kwargs) as ctx:
             yield ctx
 
-    async def as_dict(self) -> dict[int, ResourceT]:
+    async def as_dict(self) -> dict[int, IdentifiedT]:
         """Return a ``{pk: model}`` mapping of all resource items.
 
         When used within a :meth:`filter` context, only filtered items are included.
@@ -92,9 +104,9 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
             doc = docs[42]
 
         """
-        return {item.id: item async for item in self}  # type: ignore[attr-defined]
+        return {item.id: item async for item in self}
 
-    async def as_list(self) -> list[ResourceT]:
+    async def as_list(self) -> list[IdentifiedT]:
         """Return a flat list of all resource items.
 
         When used within a :meth:`filter` context, only filtered items are included.
@@ -110,7 +122,7 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
         self,
         page: int = 1,
         page_size: int = 150,
-    ) -> "AsyncIterator[Page[ResourceT]]":
+    ) -> PageGenerator[IdentifiedT]:
         """Iterate over resource pages.
 
         Each yielded :class:`~pypaperless.models.pages.Page` contains up to
@@ -129,17 +141,19 @@ class IterableService(ResourceServiceProtocol[ResourceT]):
                     print(doc.title)
 
         """
-        params: dict[str, Any] = dict(getattr(self, "_aiter_filters", None) or {})
+        params: dict[str, Any] = dict(_SCOPED_FILTERS.get().get(id(self), {}))
 
         for param, value in params.items():
-            if param.endswith("__in") and isinstance(value, list):
+            # Paperless expects comma-separated values; a plain list would be sent as
+            # repeated query params, of which Django only reads the last one.
+            if param.endswith(("__in", "__all")) and isinstance(value, list):
                 params[param] = ",".join(map(str, value))
 
         params.setdefault("page", page)
         params.setdefault("page_size", page_size)
 
         # set requesting full permissions
-        if getattr(self, "_request_full_perms", False):
+        if getattr(self, "request_permissions", False):
             params.update({"full_perms": "true"})
 
         return PageGenerator(self._runtime, self._api_path, self._resource_cls, params=params)

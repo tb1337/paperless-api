@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field
 
 from pypaperless.const import EndpointPath
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
 class DocumentHistoryAction(StrEnum):
@@ -24,12 +24,11 @@ class DocumentHistoryActor(BaseModel):
     username: str | None = None
 
 
-class DocumentHistory(PaperlessModel):
+class DocumentHistory(IdentifiedModel):
     """Represent a single Paperless document history (audit-log) entry."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_HISTORY
 
-    id: int | None = None
     document: int | None = None
     timestamp: datetime.datetime | None = None
     action: DocumentHistoryAction | None = None

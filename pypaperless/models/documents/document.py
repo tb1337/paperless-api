@@ -6,16 +6,22 @@ from collections.abc import Iterator
 from enum import StrEnum
 from typing import Any, ClassVar, Self, cast, overload
 
-from pydantic import BaseModel, Field, PrivateAttr, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    PrivateAttr,
+    RootModel,
+    ValidationInfo,
+    model_validator,
+)
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.exceptions import ItemNotFoundError
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessCustomDataModel, PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessModel
 from pypaperless.models.custom_fields import (
-    CUSTOM_FIELD_TYPE_VALUE_MAP,
+    AnyCustomFieldValue,
     CustomField,
-    CustomFieldType,
     CustomFieldValue,
     CustomFieldValueT,
 )
@@ -26,7 +32,6 @@ from pypaperless.services.documents.history import DocumentHistoryService
 from pypaperless.services.documents.notes import DocumentNoteService
 from pypaperless.services.documents.share_links import DocumentShareLinkService
 from pypaperless.services.documents.versions import DocumentRootService, DocumentVersionService
-from pypaperless.utils import object_to_dict_value
 
 
 class DocumentMetaEntry(BaseModel):
@@ -63,37 +68,50 @@ class FileRetrieveMode(StrEnum):
     THUMBNAIL = "thumb"
 
 
-class DocumentCustomFieldList(PaperlessCustomDataModel):
-    """Represent a list of Paperless custom field instances typically on documents."""
+class DocumentCustomFieldList(RootModel[list[AnyCustomFieldValue]]):
+    """Represent a list of Paperless custom field instances typically on documents.
 
-    _fields: list[CustomFieldValue] = PrivateAttr(default_factory=list)
+    Items are validated into their typed :class:`CustomFieldValue` subclass via
+    the ``data_type`` discriminator. Raw API payloads carry only ``field`` and
+    ``value`` - when the custom-fields cache is populated, each item is
+    enriched with ``name``, ``data_type``, and ``extra_data`` before validation.
+    """
 
-    def model_post_init(self, __context: Any, /) -> None:
-        """Populate ``_fields`` from the raw API payload stored in ``_data``."""
-        super().model_post_init(__context)
-        self._fields = []
+    root: list[AnyCustomFieldValue] = Field(default_factory=list)
 
-        cache = self._runtime.cache.custom_fields
-
-        for item in self._data:
-            if cache and (field := cache.get(item["field"], None)):
-                klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
-                    field.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
+    @model_validator(mode="before")
+    @classmethod
+    def _enrich_from_cache(cls, data: Any, info: ValidationInfo) -> Any:
+        """Merge cached CustomField metadata into raw items so the discriminator resolves."""
+        context = info.context if isinstance(info.context, dict) else {}
+        runtime = context.get("runtime")
+        cache = runtime.cache.custom_fields if runtime is not None else None
+        if not isinstance(data, list) or not cache:
+            return data
+        enriched: list[Any] = []
+        for item in data:
+            if isinstance(item, dict) and (field := cache.get(item.get("field"))):
+                enriched.append(
+                    {
+                        **item,
+                        "name": field.name,
+                        "data_type": field.data_type,
+                        "extra_data": field.extra_data,
+                    }
                 )
-                klass_data = {
-                    **item,
-                    "name": field.name,
-                    "data_type": field.data_type,
-                    "extra_data": field.extra_data,
-                }
-                self._fields.append(klass(**klass_data))
             else:
-                self._fields.append(CustomFieldValue(**item))
+                enriched.append(item)
+        return enriched
+
+    @classmethod
+    def from_data(cls, runtime: Any, data: list[Any]) -> Self:
+        """Return a new instance from raw API data, enriching from *runtime*'s cache."""
+        return cls.model_validate(data, context={"runtime": runtime})
 
     def __contains__(self, field: int | CustomField) -> bool:
         """Check if the given `CustomField` or its id is present in `DocumentCustomFieldList`."""
         item_id = field.id if isinstance(field, CustomField) else field
-        return any(item.field == item_id for item in self._fields)
+        return any(item.field == item_id for item in self.root)
 
     def __iter__(self) -> Iterator[CustomFieldValue]:  # type: ignore[override]
         """Iterate over custom fields.
@@ -107,7 +125,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
                 print(item.field, item.value)
 
         """
-        yield from self._fields
+        yield from self.root
 
     def __iadd__(self, field: CustomFieldValue) -> Self:
         """Add a new `CustomFieldValue` to a document."""
@@ -115,7 +133,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
 
     def add(self, field: CustomFieldValue) -> Self:
         """Add a new `CustomFieldValue` to a document."""
-        self._fields.append(field)
+        self.root.append(field)
         return self
 
     def __isub__(self, field: CustomFieldValue | CustomField | int) -> Self:
@@ -131,7 +149,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
             if isinstance(field, CustomFieldValue)
             else field
         )
-        self._fields = [field for field in self._fields if field.field != item_id]
+        self.root = [field for field in self.root if field.field != item_id]
         return self
 
     @overload
@@ -170,7 +188,7 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
     ) -> CustomFieldValue | CustomFieldValueT:
         """Access and return a (typed) `CustomFieldValue` from the list."""
         item_id = field.id if isinstance(field, CustomField) else field
-        for item in self._fields:
+        for item in self.root:
             if item.field == item_id:
                 if expected_type is not None and not isinstance(item, expected_type):
                     msg = f"Expected {expected_type.__name__}, got {type(item).__name__}"
@@ -179,12 +197,12 @@ class DocumentCustomFieldList(PaperlessCustomDataModel):
         raise ItemNotFoundError
 
     def serialize(self) -> list[dict[str, Any]]:
-        """Serialize the class data."""
-        return [{"field": field.field, "value": field.value} for field in self._fields]
+        """Return the JSON-safe ``[{"field": ..., "value": ...}]`` payload for the API."""
+        return cast("list[dict[str, Any]]", self.model_dump(mode="json"))
 
 
 class Document(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.SecurableModel,
 ):
     """Represent a Paperless `Document`."""
@@ -199,7 +217,6 @@ class Document(
     _share_links: DocumentShareLinkService | None = PrivateAttr(default=None)
     _versions: DocumentVersionService | None = PrivateAttr(default=None)
 
-    id: int | None = None
     correspondent: int | None = None
     document_type: int | None = None
     storage_path: int | None = None
@@ -215,7 +232,7 @@ class Document(
     archived_file_name: str | None = None
     duplicate_documents: list[DuplicateDocumentSummary] | None = None
     is_shared_by_requester: bool | None = None
-    custom_fields: DocumentCustomFieldList | list | None = None
+    custom_fields: DocumentCustomFieldList | None = None
     notes_: list[DocumentNote] | None = Field(default=None, alias="notes", exclude=True, repr=False)
     page_count: int | None = None
     mime_type: str | None = None
@@ -224,14 +241,6 @@ class Document(
         default=None, alias="versions", exclude=True, repr=False
     )
     search_hit_: DocumentSearchHit | None = Field(default=None, alias="__search_hit__")
-
-    @field_validator("custom_fields", mode="before")
-    @classmethod
-    def _coerce_custom_fields(cls, v: Any, info: ValidationInfo) -> Any:
-        """Convert a raw list of custom field dicts into a ``DocumentCustomFieldList``."""
-        if isinstance(v, list) and isinstance(info.context, dict) and "runtime" in info.context:
-            return DocumentCustomFieldList.from_data(info.context["runtime"], v)
-        return v
 
     @model_validator(mode="after")
     def _init_notes_cache(self) -> "Document":
@@ -246,14 +255,14 @@ class Document(
     def ai_suggestions(self) -> DocumentAISuggestionsService:
         """Return the AI suggestions service for this document."""
         if self._ai_suggestions is None:
-            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, cast("int", self.id))
+            self._ai_suggestions = DocumentAISuggestionsService(self._runtime, self.id)
         return self._ai_suggestions
 
     @property
     def history(self) -> DocumentHistoryService:
         """Return the history service for this document."""
         if self._history is None:
-            self._history = DocumentHistoryService(self._runtime, cast("int", self.id))
+            self._history = DocumentHistoryService(self._runtime, self.id)
         return self._history
 
     @property
@@ -267,21 +276,21 @@ class Document(
     def root(self) -> DocumentRootService:
         """Return the root service for this document."""
         if self._root is None:
-            self._root = DocumentRootService(self._runtime, cast("int", self.id))
+            self._root = DocumentRootService(self._runtime, self.id)
         return self._root
 
     @property
     def share_links(self) -> DocumentShareLinkService:
         """Return the share links service for this document."""
         if self._share_links is None:
-            self._share_links = DocumentShareLinkService(self._runtime, cast("int", self.id))
+            self._share_links = DocumentShareLinkService(self._runtime, self.id)
         return self._share_links
 
     @property
     def versions(self) -> DocumentVersionService:
         """Return the versions service for this document."""
         if self._versions is None:
-            self._versions = DocumentVersionService(self._runtime, cast("int", self.id))
+            self._versions = DocumentVersionService(self._runtime, self.id)
         return self._versions
 
     @property
@@ -312,6 +321,7 @@ class DocumentDraft(PaperlessModel, mixins.CreatableModel):
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
     _create_required_fields: ClassVar[set[str]] = {"document"}
+    _dump_exclude: ClassVar[set[str]] = {"document"}
 
     document: bytes | None = None
     filename: str | None = None
@@ -326,12 +336,12 @@ class DocumentDraft(PaperlessModel, mixins.CreatableModel):
 
     def serialize(self) -> dict[str, Any]:
         """Return the multipart form data payload for POSTing a new document."""
-        data = {
-            "form": {
-                name: object_to_dict_value(getattr(self, name))
-                for name in self.__class__.model_fields
-                if name not in {"document", "filename", "custom_fields"}
-            }
+        data: dict[str, dict[str, Any]] = {
+            "form": self.model_dump(
+                mode="json",
+                by_alias=True,
+                exclude={"document", "filename", "custom_fields"},
+            )
         }
 
         if self.custom_fields is not None:
@@ -373,12 +383,12 @@ class DocumentMeta(PaperlessModel):
     archive_metadata: list[DocumentMetaEntry] | None = None
 
 
-class DownloadedDocument(PaperlessModel):
+class DownloadedDocument(IdentifiedModel):
     """Represent a Paperless `Document`'s downloaded file."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS
+    _dump_exclude: ClassVar[set[str]] = {"content"}
 
-    id: int | None = None
     mode: FileRetrieveMode | None = None
     original: bool | None = None
     content: bytes | None = None
@@ -387,12 +397,11 @@ class DownloadedDocument(PaperlessModel):
     disposition_type: str | None = None
 
 
-class DocumentSuggestions(PaperlessModel):
+class DocumentSuggestions(IdentifiedModel):
     """Represent a Paperless `Document`'s suggestions."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_SUGGESTIONS
 
-    id: int | None = None
     correspondents: list[int] | None = None
     tags: list[int] | None = None
     document_types: list[int] | None = None

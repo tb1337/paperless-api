@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from pypaperless.models.base import ResourceT
 from pypaperless.services.base import ResourceServiceProtocol
-from pypaperless.utils import object_to_dict_value
 
 
 class UpdatableService(ResourceServiceProtocol[ResourceT]):
@@ -46,7 +45,7 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
     def _get_request_params(self) -> dict[str, Any]:
         """Build request parameters."""
         params: dict[str, Any] = {}
-        if getattr(self, "_request_full_perms", False):
+        if getattr(self, "request_permissions", False):
             params["full_perms"] = "true"
         return params
 
@@ -65,12 +64,12 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
         self, model: ResourceT, params: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Use the http `PATCH` method for updating only changed fields."""
-        changed: dict[str, Any] = {}
-        for name in model.__class__.model_fields:
-            new_value = object_to_dict_value(getattr(model, name))
-
-            if name in model.snapshot and new_value != model.snapshot[name]:
-                changed[name] = new_value
+        snapshot = model.snapshot
+        changed: dict[str, Any] = {
+            key: value
+            for key, value in model.api_dump().items()
+            if key in snapshot and value != snapshot[key]
+        }
 
         if not changed:
             return None
@@ -88,10 +87,7 @@ class UpdatableService(ResourceServiceProtocol[ResourceT]):
 
     async def _put_fields(self, model: ResourceT, params: dict[str, Any]) -> dict[str, Any]:
         """Use the http `PUT` method to replace all fields."""
-        data = {
-            name: object_to_dict_value(getattr(model, name))
-            for name in model.__class__.model_fields
-        }
+        data = model.api_dump()
 
         self._check_permissions_field(model, data)
 

@@ -4,14 +4,14 @@ import contextlib
 import datetime
 import re
 from enum import StrEnum
-from typing import Any, ClassVar, Self, TypeVar, overload
+from typing import Annotated, Any, ClassVar, Literal, Self, TypeVar, overload
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator
 
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class CustomFieldSelectOptions(BaseModel):
@@ -50,13 +50,18 @@ class CustomFieldType(StrEnum):
 
 
 class CustomFieldValue(BaseModel):
-    """Represent a subtype of `CustomField`."""
+    """Represent a subtype of `CustomField`.
+
+    ``name``, ``data_type``, and ``extra_data`` are enriched client-side from
+    the custom-fields cache and excluded from serialization - the API only
+    accepts ``field`` and ``value``.
+    """
 
     field: int | None = None
     value: Any | None = None
-    name: str | None = None
-    data_type: CustomFieldType | None = None
-    extra_data: CustomFieldExtraData | None = None
+    name: str | None = Field(default=None, exclude=True)
+    data_type: CustomFieldType | None = Field(default=None, exclude=True)
+    extra_data: CustomFieldExtraData | None = Field(default=None, exclude=True)
 
 
 CustomFieldValueT = TypeVar("CustomFieldValueT", bound=CustomFieldValue)
@@ -66,12 +71,16 @@ class CustomFieldBooleanValue(CustomFieldValue):
     """Represent a boolean `CustomFieldValue`."""
 
     value: bool | None = None
+    data_type: Literal[CustomFieldType.BOOLEAN] = Field(
+        default=CustomFieldType.BOOLEAN, exclude=True
+    )
 
 
 class CustomFieldDateValue(CustomFieldValue):
     """Represent a date `CustomFieldValue`."""
 
     value: datetime.date | str | None = None
+    data_type: Literal[CustomFieldType.DATE] = Field(default=CustomFieldType.DATE, exclude=True)
 
     @field_validator("value", mode="before")
     @classmethod
@@ -88,24 +97,34 @@ class CustomFieldDocumentLinkValue(CustomFieldValue):
     """Represent a document link `CustomFieldValue`."""
 
     value: list[int] | int | None = None
+    data_type: Literal[CustomFieldType.DOCUMENT_LINK] = Field(
+        default=CustomFieldType.DOCUMENT_LINK, exclude=True
+    )
 
 
 class CustomFieldFloatValue(CustomFieldValue):
     """Represent a float `CustomFieldValue`."""
 
     value: float | None = None
+    data_type: Literal[CustomFieldType.FLOAT] = Field(default=CustomFieldType.FLOAT, exclude=True)
 
 
 class CustomFieldIntegerValue(CustomFieldValue):
     """Represent an integer `CustomFieldValue`."""
 
     value: int | None = None
+    data_type: Literal[CustomFieldType.INTEGER] = Field(
+        default=CustomFieldType.INTEGER, exclude=True
+    )
 
 
 class CustomFieldMonetaryValue(CustomFieldValue):
     """Represent a monetary `CustomFieldValue`."""
 
     value: str | None = None
+    data_type: Literal[CustomFieldType.MONETARY] = Field(
+        default=CustomFieldType.MONETARY, exclude=True
+    )
 
     @field_validator("value", mode="before")
     @classmethod
@@ -153,6 +172,7 @@ class CustomFieldSelectValue(CustomFieldValue):
     """Represent a select `CustomFieldValue`."""
 
     value: int | str | None = None
+    data_type: Literal[CustomFieldType.SELECT] = Field(default=CustomFieldType.SELECT, exclude=True)
 
     @property
     def labels(self) -> list[CustomFieldSelectOptions | None]:
@@ -171,40 +191,52 @@ class CustomFieldSelectValue(CustomFieldValue):
 
 
 class CustomFieldStringValue(CustomFieldValue):
-    """Represent a string `CustomFieldValue`."""
+    """Represent a string or longtext `CustomFieldValue`."""
 
     value: str | None = None
+    data_type: Literal[CustomFieldType.STRING, CustomFieldType.LONGTEXT] = Field(
+        default=CustomFieldType.STRING, exclude=True
+    )
 
 
 class CustomFieldURLValue(CustomFieldValue):
     """Represent an url `CustomFieldValue`."""
 
     value: str | None = None
+    data_type: Literal[CustomFieldType.URL] = Field(default=CustomFieldType.URL, exclude=True)
 
 
-CUSTOM_FIELD_TYPE_VALUE_MAP: dict[CustomFieldType, type[CustomFieldValue]] = {
-    CustomFieldType.BOOLEAN: CustomFieldBooleanValue,
-    CustomFieldType.DATE: CustomFieldDateValue,
-    CustomFieldType.DOCUMENT_LINK: CustomFieldDocumentLinkValue,
-    CustomFieldType.FLOAT: CustomFieldFloatValue,
-    CustomFieldType.INTEGER: CustomFieldIntegerValue,
-    CustomFieldType.LONGTEXT: CustomFieldStringValue,
-    CustomFieldType.MONETARY: CustomFieldMonetaryValue,
-    CustomFieldType.SELECT: CustomFieldSelectValue,
-    CustomFieldType.STRING: CustomFieldStringValue,
-    CustomFieldType.URL: CustomFieldURLValue,
-}
+# Discriminated union resolving a value payload to its typed class via ``data_type``.
+TypedCustomFieldValue = Annotated[
+    CustomFieldBooleanValue
+    | CustomFieldDateValue
+    | CustomFieldDocumentLinkValue
+    | CustomFieldFloatValue
+    | CustomFieldIntegerValue
+    | CustomFieldMonetaryValue
+    | CustomFieldSelectValue
+    | CustomFieldStringValue
+    | CustomFieldURLValue,
+    Field(discriminator="data_type"),
+]
+
+# A typed value when ``data_type`` is known, a plain ``CustomFieldValue`` otherwise.
+AnyCustomFieldValue = Annotated[
+    TypedCustomFieldValue | CustomFieldValue,
+    Field(union_mode="left_to_right"),
+]
+
+_ANY_VALUE_ADAPTER = TypeAdapter[CustomFieldValue](AnyCustomFieldValue)
 
 
 class CustomField(
-    PaperlessModel,
+    IdentifiedModel,
 ):
     """Represent a Paperless `CustomField`."""
 
     _api_path: ClassVar[str] = EndpointPath.CUSTOM_FIELDS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.CUSTOM_FIELDS
 
-    id: int
     name: str | None = None
     data_type: CustomFieldType | None = None
     extra_data: CustomFieldExtraData | None = None
@@ -227,17 +259,15 @@ class CustomField(
         cache = self._runtime.cache.custom_fields
 
         if cache and self.id in cache:
-            klass = CUSTOM_FIELD_TYPE_VALUE_MAP.get(
-                self.data_type or CustomFieldType.UNKNOWN, CustomFieldValue
+            result: CustomFieldValue = _ANY_VALUE_ADAPTER.validate_python(
+                {
+                    "field": self.id,
+                    "value": value,
+                    "name": self.name,
+                    "data_type": self.data_type,
+                    "extra_data": self.extra_data,
+                }
             )
-            klass_data = {
-                "field": self.id,
-                "value": value,
-                "name": self.name,
-                "data_type": self.data_type,
-                "extra_data": self.extra_data,
-            }
-            result: CustomFieldValue = klass(**klass_data)
         else:
             result = CustomFieldValue(field=self.id, value=value)
 

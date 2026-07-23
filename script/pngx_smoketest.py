@@ -39,6 +39,23 @@ from pypaperless.models.share_links import (
 from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
 from pypaperless.builders.custom_fields import CustomFieldQuery
+from pypaperless.exceptions import DeletionError, JsonResponseWithError
+
+
+async def _retry_flaky[T](coro_factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
+    """Run a server-flaky operation, retrying once after a short delay.
+
+    The Paperless-ngx notes endpoints intermittently fail while the search
+    index writer is busy (HTTP 500 on delete, HTTP 200 with an error payload
+    on save). One retry after a pause reliably clears the transient without
+    masking real regressions - the retried call still has to succeed.
+    """
+    try:
+        return await coro_factory()
+    except (DeletionError, JsonResponseWithError):
+        await asyncio.sleep(5)
+        return await coro_factory()
+
 
 # ── PDF helper ────────────────────────────────────────────────────────────────
 
@@ -612,7 +629,7 @@ async def test_document_notes(p: PaperlessClient) -> None:
         draft: DocumentNoteDraft = p.documents.notes.create(
             TEST_DOCUMENT_ID, note="pypaperless smoke-test note"
         )
-        note_id = await p.documents.notes.save(draft)
+        note_id = await _retry_flaky(lambda: p.documents.notes.save(draft))
         ok("documents.notes.save(draft)", f"note_id={note_id}")
     except Exception as exc:
         fail("documents.notes.save()", exc)
@@ -624,7 +641,7 @@ async def test_document_notes(p: PaperlessClient) -> None:
             all_notes = await p.documents.notes(TEST_DOCUMENT_ID, force_request=True)
             created = next((n for n in all_notes if n.id == note_id), None)
             if created is not None:
-                deleted = await p.documents.notes.delete(created)
+                deleted = await _retry_flaky(lambda: p.documents.notes.delete(created))
                 ok("documents.notes.delete(note)", f"deleted={deleted}")
             else:
                 ok("documents.notes.delete(note)", "note not found – skipped")
@@ -1334,7 +1351,7 @@ async def test_users_groups(p: PaperlessClient) -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_tasks(p: PaperlessClient) -> None:
-    _hdr("Tasks – iterate, fetch by uuid, active, summary")
+    _hdr("Tasks – iterate, fetch by uuid, active, summary, status_counts")
 
     tasks = []
     try:
@@ -1371,6 +1388,12 @@ async def test_tasks(p: PaperlessClient) -> None:
         "tasks.summary(days=7)",
         p.tasks.summary(days=7),
         detail_fn=lambda r: f"types={len(r)}",
+    )
+
+    await check(
+        "tasks.status_counts()",
+        p.tasks.status_counts(),
+        detail_fn=lambda r: f"all={r.all} needs_attention={r.needs_attention}",
     )
 
 

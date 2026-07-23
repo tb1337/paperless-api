@@ -4,15 +4,14 @@ import datetime
 from typing import ClassVar
 
 from pypaperless.const import EndpointPath, PaperlessResource
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessModel
 
 
-class DocumentVersionInfo(PaperlessModel):
+class DocumentVersionInfo(IdentifiedModel):
     """Represent version metadata for a Paperless `Document`."""
 
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENTS
 
-    id: int | None = None
     added: datetime.datetime | None = None
     version_label: str | None = None
     checksum: str | None = None

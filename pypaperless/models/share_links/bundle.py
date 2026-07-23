@@ -8,7 +8,7 @@ from pydantic import Field
 
 from pypaperless.const import EndpointPath, PaperlessResource
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel, PaperlessModel
 
 from .share_link import ShareLinkFileVersion
 
@@ -28,13 +28,12 @@ class ShareLinkBundleStatus(StrEnum):
         return cls["UNKNOWN"]
 
 
-class ShareLinkBundle(PaperlessModel):
+class ShareLinkBundle(IdentifiedModel):
     """Represent a Paperless ``ShareLinkBundle``."""
 
     _api_path: ClassVar[str] = EndpointPath.SHARE_LINK_BUNDLES_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.SHARE_LINK_BUNDLES
 
-    id: int
     created: datetime.datetime | None = None
     expiration: datetime.datetime | None = None
     slug: str | None = None

@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-requires-python = ">=3.13, <3.15"
+requires-python = ">=3.13"
 dependencies = [
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
@@ -51,6 +51,9 @@ docs = [
 "Source Code" = "https://github.com/tb1337/paperless-api"
 "Bug Reports" = "https://github.com/tb1337/paperless-api/issues"
 "Coverage" = "https://codecov.io/gh/tb1337/paperless-api"
+
+[tool.codespell]
+skip = "./site,./uv.lock"
 
 [tool.coverage.run]
 plugins = ["covdefaults"]

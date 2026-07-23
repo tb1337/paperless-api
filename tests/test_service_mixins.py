@@ -1,5 +1,6 @@
 """Parameterized service mixin tests: ReadOnly, ReadWrite, SecurableService."""
 
+import asyncio
 import json as json_mod
 import re
 
@@ -9,7 +10,7 @@ from pytest_httpx import HTTPXMock
 
 from pypaperless import PaperlessClient
 from pypaperless.const import EndpointPath
-from pypaperless.exceptions import DeletionError, DraftFieldRequiredError
+from pypaperless.exceptions import DeletionError, DraftFieldRequiredError, NotFoundError
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
 from pypaperless.models.types import Permissions
@@ -101,7 +102,7 @@ class _SharedServiceTests:
             ).format(pk=1337),
             status_code=404,
         )
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(NotFoundError):
             await getattr(paperless, mapping.resource)(1337)
 
 
@@ -256,7 +257,7 @@ class TestReadWrite(_SharedServiceTests):
                 f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
             ).format(pk=pk),
             status_code=200,
-            json={**to_update._snapshot, update_field: update_value},
+            json={**to_update.snapshot, update_field: update_value},
         )
         await service.update(to_update)
         assert getattr(to_update, update_field) == update_value
@@ -270,7 +271,7 @@ class TestReadWrite(_SharedServiceTests):
                 f"{PAPERLESS_TEST_URL}{EndpointPath[(mapping.resource + '_single').upper()]}"
             ).format(pk=pk),
             status_code=200,
-            json={**to_update._snapshot, update_field: update_value},
+            json={**to_update.snapshot, update_field: update_value},
         )
         await service.update(to_update, only_changed=False)
         assert getattr(to_update, update_field) == update_value
@@ -402,7 +403,7 @@ class TestSecurableService:
             assert request.url
             json_data = json_mod.loads(request.content)
             assert "set_permissions" in json_data
-            return httpx.Response(status_code=200, json=item._snapshot)
+            return httpx.Response(status_code=200, json=item.snapshot)
 
         httpx_mock.add_callback(
             _lookup_set_permissions,
@@ -423,7 +424,7 @@ class TestSecurableService:
     async def test_with_permissions_context_manager(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient, mapping: ResourceTestMapping
     ) -> None:
-        """with_permissions() enables the flag and resets it automatically on exit."""
+        """with_permissions() enables the flag task-locally and resets it on exit."""
         service = getattr(paperless, mapping.resource)
         assert not service.request_permissions
 
@@ -440,9 +441,9 @@ class TestSecurableService:
             json={**mapping.data["results"][0], "permissions": DATA_OBJECT_PERMISSIONS},
         )
 
-        async with service.with_permissions():
-            assert service.request_permissions
-            item = await service(1)
+        async with service.with_permissions() as scoped:
+            assert scoped.request_permissions
+            item = await scoped(1)
             assert item.has_permissions
             assert isinstance(item.permissions, Permissions)
 
@@ -463,7 +464,7 @@ def test_permissions_from_existing_instance() -> None:
 
 
 async def test_iterable_filter_base_method(paperless: PaperlessClient) -> None:
-    """IterableService.filter() stores filters for the context duration and clears them after."""
+    """IterableService.filter() applies filters for the context duration and clears them after."""
 
     class _MinimalModel(PaperlessModel):
         id: int | None = None
@@ -474,7 +475,75 @@ async def test_iterable_filter_base_method(paperless: PaperlessClient) -> None:
         _resource_cls = _MinimalModel
 
     svc = _MinimalService(paperless)
-    assert getattr(svc, "_aiter_filters", None) is None
     async with svc.filter(title__icontains="test") as ctx:
-        assert ctx._aiter_filters == {"title__icontains": "test"}
-    assert svc._aiter_filters is None
+        assert ctx is svc
+        generator = ctx.pages()
+        assert generator.params["title__icontains"] == "test"
+    generator = svc.pages()
+    assert "title__icontains" not in generator.params
+
+
+async def test_filter_contexts_are_isolated(
+    httpx_mock: HTTPXMock, paperless: PaperlessClient
+) -> None:
+    """Overlapping filter() contexts on the same service must not clobber each other."""
+    httpx_mock.add_response(
+        method="GET",
+        url=re.compile(r"^" f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS}" r"\?.*$"),
+        status_code=200,
+        json={"count": 0, "next": None, "previous": None, "results": []},
+        is_reusable=True,
+    )
+    async with paperless.correspondents.filter(name__icontains="acme") as ctx_a:
+        async with paperless.correspondents.filter(name__icontains="globex") as ctx_b:
+            await ctx_b.as_list()
+        # ctx_b has exited — ctx_a must still carry its own filters
+        await ctx_a.as_list()
+
+    requests = httpx_mock.get_requests()
+    assert requests[-2].url.params["name__icontains"] == "globex"
+    assert requests[-1].url.params["name__icontains"] == "acme"
+
+
+async def test_filter_joins_in_and_all_lists(
+    httpx_mock: HTTPXMock, paperless: PaperlessClient
+) -> None:
+    """List values for __in and __all filters are sent comma-separated, not repeated."""
+    httpx_mock.add_response(
+        method="GET",
+        url=re.compile(r"^" f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS}" r"\?.*$"),
+        status_code=200,
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+    async with paperless.documents.filter(
+        id__in=[1, 2],
+        tags__id__all=[3, 7],
+    ) as filtered:
+        await filtered.as_list()
+
+    request = httpx_mock.get_requests()[-1]
+    assert request.url.params["id__in"] == "1,2"
+    assert request.url.params["tags__id__all"] == "3,7"
+
+
+async def test_filter_contexts_isolated_across_tasks(
+    httpx_mock: HTTPXMock, paperless: PaperlessClient
+) -> None:
+    """Concurrent tasks filtering the same service must each keep their own filters."""
+    httpx_mock.add_response(
+        method="GET",
+        url=re.compile(r"^" f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS}" r"\?.*$"),
+        status_code=200,
+        json={"count": 0, "next": None, "previous": None, "results": []},
+        is_reusable=True,
+    )
+
+    async def fetch(name: str) -> None:
+        async with paperless.correspondents.filter(name__icontains=name) as filtered:
+            await asyncio.sleep(0)
+            await filtered.as_list()
+
+    await asyncio.gather(fetch("acme"), fetch("globex"))
+
+    sent = {req.url.params["name__icontains"] for req in httpx_mock.get_requests()[-2:]}
+    assert sent == {"acme", "globex"}

@@ -5,7 +5,7 @@ from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath
 
-from .base import PaperlessModel
+from .base import IdentifiedModel
 
 
 class ArchiveFileGeneration(StrEnum):
@@ -79,6 +79,22 @@ class OcrMode(StrEnum):
         return cls["UNKNOWN"]
 
 
+class OutputType(StrEnum):
+    """Represent a subtype of `Config`."""
+
+    PDF = "pdf"
+    PDF_A = "pdfa"
+    PDF_A1 = "pdfa-1"
+    PDF_A2 = "pdfa-2"
+    PDF_A3 = "pdfa-3"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
+
+
 class UnpaperClean(StrEnum):
     """Represent a subtype of `Config`."""
 
@@ -93,14 +109,13 @@ class UnpaperClean(StrEnum):
         return cls["UNKNOWN"]
 
 
-class Config(PaperlessModel):
+class Config(IdentifiedModel):
     """Represent a Paperless `Config`."""
 
     _api_path: ClassVar[str] = EndpointPath.CONFIG_SINGLE
 
-    id: int | None = None
     user_args: str | None = None
-    output_type: str | None = None
+    output_type: OutputType | None = None
     pages: int | None = None
     language: str | None = None
     mode: OcrMode | None = None
@@ -130,7 +145,11 @@ class Config(PaperlessModel):
     llm_embedding_backend: LLMEmbeddingBackend | None = None
     llm_embedding_model: str | None = None
     llm_embedding_endpoint: str | None = None
+    llm_embedding_chunk_size: int | None = None
+    llm_context_size: int | None = None
     llm_endpoint: str | None = None
     llm_model: str | None = None
     llm_api_key: str | None = None
     llm_backend: LLMBackend | None = None
+    llm_output_language: str | None = None
+    llm_request_timeout: int | None = None

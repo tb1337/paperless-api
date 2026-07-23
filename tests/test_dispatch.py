@@ -139,7 +139,7 @@ class TestDispatchUpdate:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.CORRESPONDENTS_SINGLE}".format(pk=pk),
             status_code=200,
-            json={**corr._snapshot, "name": "Dispatcher Updated"},
+            json={**corr.snapshot, "name": "Dispatcher Updated"},
         )
         result = await paperless.update(corr)
         assert result is True

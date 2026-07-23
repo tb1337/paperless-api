@@ -14,6 +14,7 @@ from pypaperless.exceptions import (
     AsnRequestError,
     DeletionError,
     DraftFieldRequiredError,
+    JsonResponseWithError,
     PrimaryKeyRequiredError,
     SendEmailError,
 )
@@ -36,9 +37,7 @@ from pypaperless.models import (
     DownloadedDocument,
     ShareLink,
 )
-from pypaperless.models.base import PaperlessCustomDataModel
 from pypaperless.models.types import (
-    CUSTOM_FIELD_TYPE_VALUE_MAP,
     CustomFieldBooleanValue,
     CustomFieldDocumentLinkValue,
     CustomFieldIntegerValue,
@@ -116,7 +115,7 @@ class TestDocuments:
             method="PATCH",
             url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_SINGLE}".format(pk=1),
             status_code=200,
-            json={**to_update._snapshot, "title": new_title},
+            json={**to_update.snapshot, "title": new_title},
         )
         await paperless.documents.update(to_update)
         assert to_update.title == new_title
@@ -546,6 +545,20 @@ class TestDocuments:
         result = await paperless.documents.notes.save(draft)
         assert isinstance(result, int)
 
+    async def test_note_save_error_payload(
+        self, httpx_mock: HTTPXMock, paperless: PaperlessClient
+    ) -> None:
+        """save() raises JsonResponseWithError when Paperless returns 200 with an error dict."""
+        draft = paperless.documents.notes.create(1, note="Doomed note.")
+        httpx_mock.add_response(
+            method="POST",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.DOCUMENTS_NOTES}".format(pk=1),
+            status_code=200,
+            json={"error": "Error saving note, check logs for more detail."},
+        )
+        with pytest.raises(JsonResponseWithError, match="Error saving note"):
+            await paperless.documents.notes.save(draft)
+
     async def test_note_standalone_delete(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
     ) -> None:
@@ -671,9 +684,7 @@ class TestDocuments:
         item = await paperless.documents(2)
         assert isinstance(item.custom_fields, DocumentCustomFieldList)
         for field in item.custom_fields:
-            for value_type in CUSTOM_FIELD_TYPE_VALUE_MAP.values():
-                assert not isinstance(field, value_type)
-            assert isinstance(field, CustomFieldValue)
+            assert type(field) is CustomFieldValue
 
     async def test_custom_field_list_with_cache(
         self, httpx_mock: HTTPXMock, paperless: PaperlessClient
@@ -871,22 +882,6 @@ class TestDocuments:
         # permissions not in changed, so no set_permissions key added
         assert "set_permissions" not in changed
         assert "name" in changed
-
-
-def test_custom_data_model_base_methods(api: PaperlessClient) -> None:
-    """Cover PaperlessCustomDataModel.data getter/setter, serialize, and no-data context."""
-    # model_post_init with context that has runtime but no "data" key → L130->exit branch.
-    no_data = PaperlessCustomDataModel.model_validate({}, context={"runtime": api._runtime})
-    assert no_data._data is None
-
-    # from_data provides both runtime and data → L141 (getter) and L146 (setter).
-    instance = PaperlessCustomDataModel.from_data(api._runtime, [1, 2, 3])
-    assert instance.data == [1, 2, 3]
-    instance.data = "replaced"
-    assert instance.data == "replaced"
-
-    # serialize() over an empty model_fields dict → L150-153.
-    assert instance.serialize() == {}
 
 
 def test_coerce_custom_fields_non_list_passthrough(api: PaperlessClient) -> None:

@@ -5,11 +5,11 @@ from typing import ClassVar
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class StoragePath(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
 ):
@@ -18,7 +18,6 @@ class StoragePath(
     _api_path: ClassVar[str] = EndpointPath.STORAGE_PATHS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.STORAGE_PATHS
 
-    id: int | None = None
     slug: str | None = None
     name: str | None = None
     path: str | None = None

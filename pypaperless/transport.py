@@ -13,7 +13,10 @@ from .exceptions import (
     InactiveOrDeletedError,
     InvalidTokenError,
     JsonResponseWithError,
+    NotFoundError,
     PaperlessConnectionError,
+    PaperlessTimeoutError,
+    UnexpectedStatusError,
 )
 from .utils import normalize_base_url, process_form_data
 
@@ -54,6 +57,7 @@ class PaperlessTransport:
         self._base_url = normalize_base_url(base_url)
         self._token = token
         self._httpx_client = client
+        self._owns_client = client is None
 
     @property
     def base_url(self) -> str:
@@ -61,8 +65,12 @@ class PaperlessTransport:
         return self._base_url
 
     async def close(self) -> None:
-        """Close the underlying :class:`httpx.AsyncClient`, if open."""
-        if self._httpx_client:
+        """Close the :class:`httpx.AsyncClient` if this transport created it.
+
+        A client passed in by the caller is left open — its lifecycle belongs
+        to the caller.
+        """
+        if self._owns_client and self._httpx_client:
             await self._httpx_client.aclose()
 
     async def probe(self) -> "_HostInfo":
@@ -96,7 +104,7 @@ class PaperlessTransport:
         params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> httpx.Response:
-        """Send an authenticated HTTP request; handle auth, connection errors, and 401/403."""
+        """Send an authenticated HTTP request; handle auth, transport errors, and 401/403."""
         if self._httpx_client is None:
             self._httpx_client = httpx.AsyncClient()
 
@@ -106,10 +114,8 @@ class PaperlessTransport:
         if self._token:
             headers["Authorization"] = f"Token {self._token}"
 
-        if "headers" in kwargs:
-            kwargs["headers"].update(headers)
-        else:
-            kwargs["headers"] = headers
+        # caller-supplied headers win over the defaults; never mutate the caller's dict
+        kwargs["headers"] = {**headers, **kwargs.get("headers", {})}
 
         files = None
         if isinstance(form, dict):
@@ -127,7 +133,9 @@ class PaperlessTransport:
                 params=params,
                 **kwargs,
             )
-        except httpx.ConnectError as err:
+        except httpx.TimeoutException as err:
+            raise PaperlessTimeoutError from err
+        except httpx.TransportError as err:
             raise PaperlessConnectionError from err
 
         if res.status_code == 401:
@@ -147,10 +155,34 @@ class PaperlessTransport:
 
         return res
 
+    @staticmethod
+    def raise_for_status(res: httpx.Response) -> None:
+        """Raise a typed pypaperless exception for any non-2xx response.
+
+        Raises :exc:`~pypaperless.exceptions.NotFoundError` for HTTP 404 and
+        :exc:`~pypaperless.exceptions.UnexpectedStatusError` for any other
+        non-2xx status code.  Responses with a 2xx status pass silently.
+
+        Args:
+            res: The :class:`httpx.Response` to check.
+
+        Example::
+
+            res = await transport.request_raw("get", "/api/documents/42/download/")
+            transport.raise_for_status(res)
+
+        """
+        if res.status_code == 404:
+            raise NotFoundError(res)
+        try:
+            res.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            raise UnexpectedStatusError(res) from exc
+
     def _parse_json(self, res: httpx.Response) -> Any:
         """Parse a JSON response; raise on non-JSON, bad JSON, HTTP 400, or other errors."""
         if "application/json" not in res.headers.get("content-type", ""):
-            res.raise_for_status()
+            self.raise_for_status(res)
             raise BadJsonResponseError(res)
 
         try:
@@ -161,7 +193,7 @@ class PaperlessTransport:
         if res.status_code == 400:
             raise JsonResponseWithError(payload)
 
-        res.raise_for_status()
+        self.raise_for_status(res)
         return payload
 
     async def get(
@@ -320,11 +352,12 @@ async def generate_api_token(
 
     .. warning::
 
-        The token request is sent as plain HTTP — do not use this in
-        production or on untrusted networks.
+        The credentials are transmitted in the request body.  Make sure the
+        URL points to an HTTPS endpoint when used on untrusted networks.
 
     Args:
         url:      Hostname, IP-address, or full URL of the Paperless instance.
+                  Scheme-less values default to ``https://``.
         username: Paperless user name.
         password: Paperless user password.
         client:   Optional :class:`httpx.AsyncClient` to reuse.  A new client
@@ -340,7 +373,7 @@ async def generate_api_token(
     external_client = client is not None
     client = client or httpx.AsyncClient()
     try:
-        url = url.rstrip("/")
+        url = normalize_base_url(url)
         json_data = {
             "username": username,
             "password": password,
@@ -349,6 +382,10 @@ async def generate_api_token(
         data = res.json()
         res.raise_for_status()
         return str(data["token"])
+    except httpx.TimeoutException as exc:
+        raise PaperlessTimeoutError from exc
+    except httpx.TransportError as exc:
+        raise PaperlessConnectionError from exc
     except (JSONDecodeError, KeyError) as exc:
         message = "Token is missing in response."
         raise BadJsonResponseError(message) from exc

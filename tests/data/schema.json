@@ -8023,6 +8023,14 @@
             "description": "Is Complete"
           },
           {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name"
+          },
+          {
             "name": "ordering",
             "required": false,
             "in": "query",
@@ -8055,6 +8063,14 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "result",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Result"
           },
           {
             "in": "query",
@@ -8207,7 +8223,7 @@
     "/api/tasks/acknowledge/": {
       "post": {
         "operationId": "acknowledge_tasks",
-        "description": "Acknowledge a list of tasks",
+        "description": "Acknowledge a list of tasks, or all visible unacknowledged tasks",
         "tags": [
           "tasks"
         ],
@@ -8228,8 +8244,7 @@
                 "$ref": "#/components/schemas/AcknowledgeTasksViewRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "security": [
           {
@@ -8296,6 +8311,14 @@
             "description": "Is Complete"
           },
           {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name"
+          },
+          {
             "name": "ordering",
             "required": false,
             "in": "query",
@@ -8310,6 +8333,14 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "result",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Result"
           },
           {
             "in": "query",
@@ -8474,6 +8505,38 @@
         }
       }
     },
+    "/api/tasks/status_counts/": {
+      "get": {
+        "operationId": "tasks_status_counts_retrieve",
+        "description": "Aggregated task counts for task UI sections.",
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "PaperelessBasicAuthentication": []
+          },
+          {
+            "tokenAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskStatusCounts"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/tasks/summary/": {
       "get": {
         "operationId": "tasks_summary_list",
@@ -8525,6 +8588,14 @@
             "description": "Is Complete"
           },
           {
+            "in": "query",
+            "name": "name",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Name"
+          },
+          {
             "name": "ordering",
             "required": false,
             "in": "query",
@@ -8539,6 +8610,14 @@
             "schema": {
               "type": "integer"
             }
+          },
+          {
+            "in": "query",
+            "name": "result",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Result"
           },
           {
             "in": "query",
@@ -10227,11 +10306,13 @@
               "type": "integer"
             },
             "writeOnly": true
+          },
+          "all": {
+            "type": "boolean",
+            "writeOnly": true,
+            "default": false
           }
-        },
-        "required": [
-          "tasks"
-        ]
+        }
       },
       "Actor": {
         "type": "object",
@@ -10496,6 +10577,22 @@
             "title": "Sets the LLM embedding endpoint, optional",
             "maxLength": 256
           },
+          "llm_embedding_chunk_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM embedding chunk size"
+          },
+          "llm_context_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM context size"
+          },
           "llm_backend": {
             "nullable": true,
             "title": "Sets the LLM backend",
@@ -10522,6 +10619,20 @@
             "nullable": true,
             "title": "Sets the LLM endpoint, optional",
             "maxLength": 256
+          },
+          "llm_output_language": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM output language",
+            "maxLength": 32
+          },
+          "llm_request_timeout": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM timeout in seconds"
           }
         },
         "required": [
@@ -10775,6 +10886,22 @@
             "title": "Sets the LLM embedding endpoint, optional",
             "maxLength": 256
           },
+          "llm_embedding_chunk_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM embedding chunk size"
+          },
+          "llm_context_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM context size"
+          },
           "llm_backend": {
             "nullable": true,
             "title": "Sets the LLM backend",
@@ -10801,6 +10928,20 @@
             "nullable": true,
             "title": "Sets the LLM endpoint, optional",
             "maxLength": 256
+          },
+          "llm_output_language": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM output language",
+            "maxLength": 32
+          },
+          "llm_request_timeout": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM timeout in seconds"
           }
         },
         "required": [
@@ -11122,7 +11263,8 @@
         "type": "object",
         "properties": {
           "q": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 4000
           },
           "document_id": {
             "type": "integer",
@@ -11138,7 +11280,8 @@
         "properties": {
           "q": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "maxLength": 4000
           },
           "document_id": {
             "type": "integer",
@@ -14210,6 +14353,22 @@
             "title": "Sets the LLM embedding endpoint, optional",
             "maxLength": 256
           },
+          "llm_embedding_chunk_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM embedding chunk size"
+          },
+          "llm_context_size": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM context size"
+          },
           "llm_backend": {
             "nullable": true,
             "title": "Sets the LLM backend",
@@ -14236,6 +14395,20 @@
             "nullable": true,
             "title": "Sets the LLM endpoint, optional",
             "maxLength": 256
+          },
+          "llm_output_language": {
+            "type": "string",
+            "nullable": true,
+            "title": "Sets the LLM output language",
+            "maxLength": 32
+          },
+          "llm_request_timeout": {
+            "type": "integer",
+            "maximum": 9223372036854775807,
+            "minimum": 1,
+            "format": "int64",
+            "nullable": true,
+            "title": "Sets the LLM timeout in seconds"
           }
         }
       },
@@ -17253,6 +17426,29 @@
         ],
         "type": "string",
         "description": "* `pending` - Pending\n* `started` - Started\n* `success` - Success\n* `failure` - Failure\n* `revoked` - Revoked"
+      },
+      "TaskStatusCounts": {
+        "type": "object",
+        "properties": {
+          "all": {
+            "type": "integer"
+          },
+          "needs_attention": {
+            "type": "integer"
+          },
+          "in_progress": {
+            "type": "integer"
+          },
+          "completed": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "all",
+          "completed",
+          "in_progress",
+          "needs_attention"
+        ]
       },
       "TaskSummary": {
         "type": "object",

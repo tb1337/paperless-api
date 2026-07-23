@@ -1,5 +1,5 @@
 ---
-name: update-filters
+name: pp-update-filters
 description: "Update the query filter TypedDicts in pypaperless/models/filters.py by reading the paperless-ngx source FilterSets, then sync the service filter() overrides and the docs. Use whenever paperless-ngx adds, renames, or removes filter fields."
 argument-hint: "Optional: name of a specific resource to update (e.g. Document, Tag). Omit to update all."
 ---
@@ -29,7 +29,7 @@ argument-hint: "Optional: name of a specific resource to update (e.g. Document, 
 **Primary:** `tests/data/schema.json` — fetch first to ensure it's current:
 
 ```bash
-python script/pngx_fetch_schema.py
+uv run python script/pngx_fetch_schema.py
 ```
 
 For each list endpoint collect every `"in": "query"` parameter. Exclude: `page`, `page_size`, `format`, `ordering`, `full_perms`.
@@ -69,6 +69,10 @@ Schema bug: `shared_by__id` is `boolean` in the schema — keep `int` in the Typ
 | `DocumentFilterSet` | `DocumentFilters` |
 | `PaperlessTaskFilterSet` | `TaskFilters` |
 | `ShareLinkFilterSet` | `ShareLinkFilters` |
+
+Not every filterable resource maps to a dedicated upstream FilterSet. `GroupFilters`, `UserFilters`,
+`ShareLinkBundleFilters` and `TaskSummaryFilters` are pypaperless-composed (they extend the private
+bases or another TypedDict) — take their fields from `schema.json` (Step 1), not from a row above.
 
 ### Style rules
 
@@ -121,7 +125,7 @@ Pattern (identical for every service):
 
 ```python
 @asynccontextmanager
-async def filter(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self, None]:
+async def filter(self, **kwargs: Unpack[XxxFilters]) -> AsyncGenerator[Self]:
     """Iterate with server-side filters.
 
     See :class:`~pypaperless.models.filters.XxxFilters` for available keys.
@@ -138,9 +142,10 @@ Always call `self._store_filters(**kwargs)` — never `super().filter(**kwargs)`
 | --- | --- |
 | `CorrespondentService` | `CorrespondentFilters` |
 | `CustomFieldService` | `CustomFieldFilters` |
-| `DocumentsService` | `DocumentFilters` |
+| `DocumentService` | `DocumentFilters` |
 | `DocumentTypeService` | `DocumentTypeFilters` |
 | `GroupService` | `GroupFilters` |
+| `ShareLinkBundleService` | `ShareLinkBundleFilters` |
 | `ShareLinkService` | `ShareLinkFilters` |
 | `StoragePathService` | `StoragePathFilters` |
 | `TagService` | `TagFilters` |
@@ -149,6 +154,11 @@ Always call `self._store_filters(**kwargs)` — never `super().filter(**kwargs)`
 | `UserService` | `UserFilters` |
 
 No override for: `SavedViewService`, `WorkflowService`, `MailAccountService`, `MailRuleService`, `ProcessedMailService`.
+
+`TaskService` additionally exposes two typed methods that must be kept in sync alongside `filter()`:
+`active(**Unpack[TaskFilters])` and `summary(**Unpack[TaskSummaryFilters])`. `TaskSummaryFilters`
+extends `TaskFilters` (adds `days: int`); when `TaskFilters` fields change, both methods follow
+automatically, but a summary-only field belongs on `TaskSummaryFilters`.
 
 ---
 
@@ -160,7 +170,7 @@ Only update `docs/resources/<name>.md` files that already have a `filter()` exam
 
 ## Step 6 — Add or Update Tests
 
-**`tests/test_filters.py`** — add the new TypedDict to `_ALL_FILTER_CLASSES` and add a test verifying its resource-specific fields via `__optional_keys__ | __required_keys__`.
+**`tests/test_filters.py`** — add a row to the `test_service_filter_accepts_typed_kwargs` parametrize table **and** the matching entry in its `ids` list: an `(api_key, service_attr, filter_kwargs, mock_data)` tuple where `filter_kwargs` uses a key specific to the new TypedDict and `mock_data` is the resource's `DATA_*` fixture (import it at the top).
 
 **`tests/test_service_mixins.py`** — add an HTTP-level test for the new service's `filter()` using a key specific to that TypedDict.
 
@@ -171,9 +181,9 @@ Only update `docs/resources/<name>.md` files that already have a `filter()` exam
 ## Step 7 — Validate
 
 ```bash
-/usr/local/py-utils/bin/pytest -x -q
-source /home/vscode/.local/dev-venv/bin/activate && python script/pngx_smoketest.py
-python script/pngx_audit_coverage.py
+uv run pytest -x -q
+uv run python script/pngx_smoketest.py
+uv run python script/pngx_audit_coverage.py
 ```
 
 ---
@@ -187,4 +197,4 @@ python script/pngx_audit_coverage.py
 - Sorting fields non-alphabetically.
 - Using `TypeVar` with `Unpack` (not supported by PEP 692).
 - Calling `super().filter(**kwargs)` instead of `self._store_filters(**kwargs)`.
-- Forgetting to add the new TypedDict to `_ALL_FILTER_CLASSES` in tests.
+- Forgetting to add the resource's row to the `test_service_filter_accepts_typed_kwargs` parametrize table (and its `ids` list) in `tests/test_filters.py`.

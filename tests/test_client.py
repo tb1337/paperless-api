@@ -1,13 +1,15 @@
 """Tests for the PaperlessClient client: init, context, requests, URL, token, Page model."""
 
+import datetime
 from io import BytesIO
+from typing import Any
 
 import httpx
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from pytest_httpx import HTTPXMock
 
-from pypaperless import PaperlessClient, generate_api_token
+from pypaperless import PaperlessClient, PaperlessSettings, generate_api_token
 from pypaperless.const import EndpointPath
 from pypaperless.exceptions import (
     BadJsonResponseError,
@@ -18,14 +20,18 @@ from pypaperless.exceptions import (
     InitializationError,
     InvalidTokenError,
     JsonResponseWithError,
+    NotFoundError,
     PaperlessConnectionError,
+    PaperlessTimeoutError,
+    UnexpectedStatusError,
 )
 from pypaperless.models import Page
 from pypaperless.models.base import PaperlessModel
+from pypaperless.pagination import PageGenerator
 from pypaperless.services import mixins as service_mixins
 from pypaperless.services.base import ResourceService
 from pypaperless.transport import PaperlessTransport
-from pypaperless.utils import normalize_base_url, object_to_dict_value, process_form_data
+from pypaperless.utils import normalize_base_url, process_form_data
 from tests.const import (
     PAPERLESS_TEST_PASSWORD,
     PAPERLESS_TEST_TOKEN,
@@ -65,6 +71,16 @@ async def test_init_error(httpx_mock: HTTPXMock, api: PaperlessClient) -> None:
     """Test that initialization raises the correct errors for each failure mode."""
     # connection error
     httpx_mock.add_exception(httpx.ConnectError("Connection refused"))
+    with pytest.raises(PaperlessConnectionError):
+        await api.initialize()
+
+    # timeout
+    httpx_mock.add_exception(httpx.ReadTimeout("Read timed out"))
+    with pytest.raises(PaperlessTimeoutError):
+        await api.initialize()
+
+    # any other transport error
+    httpx_mock.add_exception(httpx.RemoteProtocolError("Server disconnected"))
     with pytest.raises(PaperlessConnectionError):
         await api.initialize()
 
@@ -202,6 +218,20 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
     )
     assert token == PAPERLESS_TEST_TOKEN
 
+    # scheme-less URLs are normalized like in PaperlessClient
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+        status_code=200,
+        json=DATA_TOKEN,
+    )
+    token = await generate_api_token(
+        PAPERLESS_TEST_URL.removeprefix("https://"),
+        PAPERLESS_TEST_USER,
+        PAPERLESS_TEST_PASSWORD,
+    )
+    assert token == PAPERLESS_TEST_TOKEN
+
     httpx_mock.add_response(
         url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
         method="POST",
@@ -234,6 +264,31 @@ async def test_generate_api_token(httpx_mock: HTTPXMock) -> None:
         method="POST",
     )
     with pytest.raises(ValueError):  # noqa: PT011
+        await generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+        )
+
+    # transport errors are wrapped like in PaperlessTransport
+    httpx_mock.add_exception(
+        httpx.ConnectTimeout("Connect timed out"),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+    )
+    with pytest.raises(PaperlessTimeoutError):
+        await generate_api_token(
+            PAPERLESS_TEST_URL,
+            PAPERLESS_TEST_USER,
+            PAPERLESS_TEST_PASSWORD,
+        )
+
+    httpx_mock.add_exception(
+        httpx.ConnectError("Connection refused"),
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.TOKEN}",
+        method="POST",
+    )
+    with pytest.raises(PaperlessConnectionError):
         await generate_api_token(
             PAPERLESS_TEST_URL,
             PAPERLESS_TEST_USER,
@@ -321,40 +376,101 @@ async def test_draft_not_supported(api: PaperlessClient) -> None:
         service.create()
 
 
-async def test_object_to_dict_value() -> None:
-    """Test object_to_dict_value converts Pydantic models and passes primitives through."""
+async def test_draft_rejects_unknown_fields(api: PaperlessClient) -> None:
+    """Draft models forbid unknown kwargs, so typos fail at create() time."""
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        api.tags.create(tag_name="typo")  # wrong keyword for 'name'
 
-    class SomeModel(BaseModel):
+    # valid field names still work
+    draft = api.tags.create(name="valid")
+    assert draft.name == "valid"
+
+
+async def test_validate_assignment(api: PaperlessClient) -> None:
+    """Field assignments are validated and coerced in place."""
+
+    class AssignModel(PaperlessModel):
+        id: int | None = None
+        created: datetime.date | None = None
+        tags: list[int] | None = None
+
+    model = AssignModel.from_data(api.runtime, {"id": 1})
+
+    iso_string: Any = "2024-01-15"
+    model.created = iso_string  # coerced by pydantic
+    assert model.created == datetime.date(2024, 1, 15)
+
+    bad_date: Any = "not a date"
+    with pytest.raises(ValidationError):
+        model.created = bad_date
+
+    bad_tags: Any = "3,7"
+    with pytest.raises(ValidationError):
+        model.tags = bad_tags
+
+
+async def test_snapshot_lazy(api: PaperlessClient) -> None:
+    """Snapshot derives from the raw API payload even when first read after a mutation."""
+
+    class LazyModel(PaperlessModel):
+        id: int | None = None
+        title: str | None = None
+
+    model = LazyModel.from_data(api.runtime, {"id": 1, "title": "before"})
+    model.title = "after"
+    assert model.snapshot["title"] == "before"
+    # cached: repeated access returns the same dict instance
+    assert model.snapshot is model.snapshot
+
+    # direct construction without an API payload freezes the state eagerly
+    direct = LazyModel(id=1, title="x")
+    direct.title = "y"
+    assert direct.snapshot["title"] == "x"
+
+
+async def test_api_dump(api: PaperlessClient) -> None:
+    """api_dump() serializes by alias, honors exclude markers and JSON-mode conversion."""
+
+    class SubModel(BaseModel):
         name: str
-        age: int
 
-    model = SomeModel(name="Test", age=42)
-    result = object_to_dict_value(model)
-    assert isinstance(result, dict)
-    assert result["name"] == "Test"
-    assert result["age"] == 42
+    class DumpModel(PaperlessModel):
+        id: int | None = None
+        created: datetime.date | None = None
+        sub: SubModel | None = None
+        notes_: list[int] | None = Field(default=None, alias="notes", exclude=True)
+        hit_: str | None = Field(default=None, alias="__hit__")
 
-    models_list = [SomeModel(name="A", age=1), SomeModel(name="B", age=2)]
-    result = object_to_dict_value(models_list)
-    assert isinstance(result, list)
-    assert len(result) == 2
-    assert isinstance(result[0], dict)
+    model = DumpModel.from_data(
+        api.runtime,
+        {"id": 1, "created": "2024-01-15", "sub": {"name": "x"}, "notes": [1], "__hit__": "y"},
+    )
+    dump = model.api_dump()
 
-    assert object_to_dict_value("hello") == "hello"
-    assert object_to_dict_value(42) == 42
-    assert object_to_dict_value(None) is None
-
-    d = {"key": "value"}
-    assert object_to_dict_value(d) == d
+    assert dump == {
+        "id": 1,
+        "created": "2024-01-15",
+        "sub": {"name": "x"},
+        "__hit__": "y",
+    }
+    # the snapshot uses the exact same representation
+    assert model.snapshot == dump
 
 
 async def test_request_merges_custom_headers(httpx_mock: HTTPXMock) -> None:
-    """request_raw() merges caller-supplied headers with the default auth headers."""
+    """request_raw() lets caller-supplied headers win and never mutates the caller's dict."""
     api = PaperlessClient(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
     httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
     transport = api._runtime.transport
-    res = await transport.request_raw("get", PAPERLESS_TEST_URL, headers={"X-Custom": "value"})
+    caller_headers = {"X-Custom": "value", "Accept": "application/json; version=1"}
+    res = await transport.request_raw("get", PAPERLESS_TEST_URL, headers=caller_headers)
     assert res.status_code == 200
+
+    request = httpx_mock.get_requests()[-1]
+    assert request.headers["X-Custom"] == "value"
+    assert request.headers["Accept"] == "application/json; version=1"
+    assert request.headers["Authorization"] == f"Token {PAPERLESS_TEST_TOKEN}"
+    assert caller_headers == {"X-Custom": "value", "Accept": "application/json; version=1"}
     await api.close()
 
 
@@ -382,6 +498,57 @@ async def test_transport_delete_raises_deletion_error(
     )
     with pytest.raises(DeletionError):
         await api._runtime.transport.delete(f"{PAPERLESS_TEST_URL}/api/documents/42/")
+
+
+async def test_request_json_typed_status_errors(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """get() raises NotFoundError on 404 and UnexpectedStatusError on other non-2xx codes."""
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/missing",
+        method="GET",
+        status_code=404,
+        json={"detail": "Not found."},
+    )
+    with pytest.raises(NotFoundError):
+        await api._runtime.transport.get(f"{PAPERLESS_TEST_URL}/missing")
+
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/boom",
+        method="GET",
+        status_code=502,
+        text="Bad Gateway",
+    )
+    with pytest.raises(UnexpectedStatusError):
+        await api._runtime.transport.get(f"{PAPERLESS_TEST_URL}/boom")
+
+
+async def test_external_client_stays_open(httpx_mock: HTTPXMock) -> None:
+    """close() must not close a caller-supplied httpx.AsyncClient."""
+    external = httpx.AsyncClient()
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}{EndpointPath.INDEX}",
+        method="GET",
+        status_code=200,
+        json=DATA_PATHS,
+    )
+    async with PaperlessClient(
+        PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN, client=external
+    ) as paperless:
+        assert paperless.is_initialized
+
+    assert not external.is_closed
+    await external.aclose()
+
+
+async def test_owned_client_closed_on_close(httpx_mock: HTTPXMock) -> None:
+    """close() closes the lazily created internal httpx client."""
+    transport = PaperlessTransport(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
+    httpx_mock.add_response(url=PAPERLESS_TEST_URL, method="GET", status_code=200)
+    await transport.request_raw("get", PAPERLESS_TEST_URL)
+    await transport.close()
+    assert transport._httpx_client is not None
+    assert transport._httpx_client.is_closed
 
 
 async def test_service_base_api_path(api: PaperlessClient) -> None:
@@ -426,6 +593,23 @@ def test_config_from_env_missing_url(monkeypatch: pytest.MonkeyPatch) -> None:
         PaperlessClient.from_env()
 
 
+def test_settings_token_is_secret() -> None:
+    """The token never leaks through repr/str; from_config unwraps it for the transport."""
+    cfg = PaperlessSettings(url=PAPERLESS_TEST_URL, token=PAPERLESS_TEST_TOKEN)
+    assert PAPERLESS_TEST_TOKEN not in repr(cfg)
+    assert PAPERLESS_TEST_TOKEN not in str(cfg)
+    assert cfg.token is not None
+    assert cfg.token.get_secret_value() == PAPERLESS_TEST_TOKEN
+
+    api = PaperlessClient.from_config(cfg)
+    assert api._runtime.transport._token == PAPERLESS_TEST_TOKEN
+
+    # token=None still initializes an anonymous client
+    cfg_anon = PaperlessSettings(url=PAPERLESS_TEST_URL)
+    api_anon = PaperlessClient.from_config(cfg_anon)
+    assert api_anon._runtime.transport._token is None
+
+
 async def test_transport_close_without_prior_request() -> None:
     """transport.close() must be a no-op when no httpx client was ever created (L65->exit)."""
     transport = PaperlessTransport(PAPERLESS_TEST_URL, PAPERLESS_TEST_TOKEN)
@@ -459,3 +643,73 @@ def test_page_items_raises_without_resource_cls(api: PaperlessClient) -> None:
     # Accessing .items triggers mapper; _resource_cls is None → L71-72.
     with pytest.raises(RuntimeError, match="resource_cls"):
         _ = page.items
+
+
+async def test_page_generator_follows_next_and_prefetches(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """PageGenerator follows the server-provided next URL across pages."""
+
+    class PagedResource(PaperlessModel):
+        id: int | None = None
+
+    page1 = {
+        "count": 3,
+        "next": f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        "previous": None,
+        "results": [{"id": 1}, {"id": 2}],
+    }
+    page2 = {"count": 3, "next": None, "previous": "x", "results": [{"id": 3}]}
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=1&page_size=150", json=page1
+    )
+    httpx_mock.add_response(url=f"{PAPERLESS_TEST_URL}/api/things/?page=2", json=page2)
+
+    gen = PageGenerator(api.runtime, "/api/things/", PagedResource)
+    pages = [page async for page in gen]
+    assert [page.current_page for page in pages] == [1, 2]
+    assert pages[0].has_next_page
+    assert pages[1].is_last_page
+    assert pages[1].results == [{"id": 3}]
+
+
+async def test_page_generator_aclose_cancels_prefetch(
+    httpx_mock: HTTPXMock, api: PaperlessClient
+) -> None:
+    """Abandoning iteration early cancels the pending prefetch via aclose()."""
+
+    class PagedResource(PaperlessModel):
+        id: int | None = None
+
+    page1 = {
+        "count": 2,
+        "next": f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        "previous": None,
+        "results": [{"id": 1}],
+    }
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=1&page_size=150", json=page1
+    )
+    # the prefetch may or may not fire before the cancel wins the race
+    httpx_mock.add_response(
+        url=f"{PAPERLESS_TEST_URL}/api/things/?page=2",
+        json={"count": 2, "next": None, "previous": "x", "results": [{"id": 2}]},
+        is_optional=True,
+    )
+
+    gen = PageGenerator(api.runtime, "/api/things/", PagedResource)
+    first = await anext(gen)
+    assert first.current_page == 1
+    await gen.aclose()
+    with pytest.raises(StopAsyncIteration):
+        await anext(gen)
+
+
+def test_page_last_page_raises_without_pagination_context(api: PaperlessClient) -> None:
+    """Page.last_page raises RuntimeError instead of ZeroDivisionError when page_size is 0."""
+    page = Page.from_data(
+        api._runtime,
+        {"count": 42, "next": "http://x/?page=2", "previous": None, "results": [{"id": 1}]},
+    )
+    with pytest.raises(RuntimeError, match="pagination context"):
+        _ = page.last_page

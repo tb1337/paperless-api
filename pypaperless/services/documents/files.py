@@ -25,6 +25,7 @@ class _DocumentFileServiceBase(ResourceService):
         res = await self._runtime.transport.request_raw(
             "get", self._api_path.format(pk=pk), params=params
         )
+        self._runtime.transport.raise_for_status(res)
 
         data: dict[str, Any] = {
             "id": pk,

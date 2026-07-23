@@ -5,7 +5,7 @@ from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
 class WorkflowTriggerType(Enum):
@@ -53,12 +53,11 @@ class WorkflowTriggerSource(Enum):
         return cls["UNKNOWN"]
 
 
-class WorkflowTrigger(PaperlessModel, mixins.MatchingFieldsModel):
+class WorkflowTrigger(IdentifiedModel, mixins.MatchingFieldsModel):
     """Represent a Paperless `WorkflowTrigger`."""
 
     _api_path: ClassVar[str] = EndpointPath.WORKFLOW_TRIGGERS_SINGLE
 
-    id: int | None = None
     sources: list[WorkflowTriggerSource] | None = None
     type: WorkflowTriggerType | None = None
     filter_path: str | None = None

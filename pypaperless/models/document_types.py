@@ -5,11 +5,11 @@ from typing import ClassVar
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class DocumentType(
-    PaperlessModel,
+    IdentifiedModel,
     mixins.MatchingFieldsModel,
     mixins.SecurableModel,
 ):
@@ -18,7 +18,6 @@ class DocumentType(
     _api_path: ClassVar[str] = EndpointPath.DOCUMENT_TYPES_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.DOCUMENT_TYPES
 
-    id: int | None = None
     slug: str | None = None
     name: str | None = None
     document_count: int | None = None

@@ -126,6 +126,8 @@ async with paperless.documents.filter(title__icontains="invoice") as ctx:
 ```
 
 The filter context is automatically cleared when the `async with` block exits.
+Filters are task-local - concurrent asyncio tasks filtering the same service
+do not interfere with each other.
 
 ---
 

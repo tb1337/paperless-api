@@ -27,7 +27,6 @@ class CreatableService(ResourceServiceProtocol[ResourceT]):
         if not hasattr(self, "_draft_cls"):
             message = "Service class has no _draft_cls attribute."
             raise DraftNotSupportedError(message)
-        kwargs.update({"id": -1})
 
         return self._draft_cls.from_data(self._runtime, data=kwargs)
 

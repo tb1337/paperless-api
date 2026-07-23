@@ -83,7 +83,7 @@ Full documentation is available **[here][docs-url]**.
 
 ## Authors & contributors
 
-**pypaperless** is written and maintained by [Tobias Schulz][contributors-tbsch]. Feedback and contributions are always welcome.
+**pypaperless** is written and maintained by: [Tobias Schulz][contributors-tbsch] and Claude. Feedback and contributions are always welcome.
 
 Check out all [contributors][contributors-url].
 

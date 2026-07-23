@@ -13,8 +13,9 @@ from pypaperless.builders import (
 
 from .base import DraftLike
 from .bulk_edit import BulkEditObjectType, CustomFieldsInput, EditPdfOperation, SourceMode
+from .config import OutputType
 from .custom_fields import (
-    CUSTOM_FIELD_TYPE_VALUE_MAP,
+    AnyCustomFieldValue,
     CustomFieldBooleanValue,
     CustomFieldDateValue,
     CustomFieldDocumentLinkValue,
@@ -49,6 +50,15 @@ from .filters import (
     TaskSummaryFilters,
     UserFilters,
 )
+from .mails.accounts import ImapSecurity, MailAccountType
+from .mails.rules import (
+    MailRuleAction,
+    MailRuleAttachmentType,
+    MailRuleConsumptionScope,
+    MailRuleCorrespondentSource,
+    MailRulePdfLayout,
+    MailRuleTitleSource,
+)
 from .mixins.data_fields import MatchingAlgorithm
 from .mixins.securable import Permissions
 from .saved_views import (
@@ -66,7 +76,7 @@ from .status import (
     StatusTasks,
     StatusType,
 )
-from .tasks import TaskStatus, TaskSummary, TaskTriggerSource, TaskType
+from .tasks import TaskStatus, TaskStatusCounts, TaskSummary, TaskTriggerSource, TaskType
 from .workflows import (
     WorkflowActionEmail,
     WorkflowActionType,
@@ -77,7 +87,7 @@ from .workflows import (
 )
 
 __all__ = (
-    "CUSTOM_FIELD_TYPE_VALUE_MAP",
+    "AnyCustomFieldValue",
     "BulkEditObjectType",
     "CorrespondentFilters",
     "CustomFieldBooleanValue",
@@ -105,7 +115,16 @@ __all__ = (
     "EditPdfOperation",
     "FileRetrieveMode",
     "GroupFilters",
+    "ImapSecurity",
+    "MailAccountType",
+    "MailRuleAction",
+    "MailRuleAttachmentType",
+    "MailRuleConsumptionScope",
+    "MailRuleCorrespondentSource",
+    "MailRulePdfLayout",
+    "MailRuleTitleSource",
     "MatchingAlgorithm",
+    "OutputType",
     "Permissions",
     "SavedViewCustomFieldDisplay",
     "SavedViewDisplayField",
@@ -127,6 +146,7 @@ __all__ = (
     "TagFilters",
     "TaskFilters",
     "TaskStatus",
+    "TaskStatusCounts",
     "TaskSummary",
     "TaskSummaryFilters",
     "TaskTriggerSource",

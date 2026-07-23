@@ -1,6 +1,9 @@
 """PyPaperless exceptions."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    import httpx
 
 
 class PaperlessError(Exception):
@@ -16,6 +19,14 @@ class InitializationError(PaperlessError):
 
 class PaperlessConnectionError(InitializationError):
     """Raised when connection to Paperless is not possible."""
+
+
+class PaperlessTimeoutError(PaperlessConnectionError):
+    """Raised when a request to Paperless times out.
+
+    The host is reachable but did not respond in time — retrying, or using a
+    custom :class:`httpx.AsyncClient` with a higher timeout, may help.
+    """
 
 
 class AuthError(InitializationError):
@@ -52,13 +63,13 @@ class JsonResponseWithError(ResponseError):
         """Initialize a `JsonResponseWithError` instance."""
 
         def _parse_payload(payload: Any, key: list[str] | None = None) -> tuple[list[str], str]:
-            """Parse first suitable error from payload."""
+            """Parse first suitable error from payload without mutating it."""
             if key is None:
                 key = []
 
-            if isinstance(payload, list):
-                return _parse_payload(payload.pop(0), key)
-            if isinstance(payload, dict):
+            if isinstance(payload, list) and payload:
+                return _parse_payload(payload[0], key)
+            if isinstance(payload, dict) and payload:
                 if "error" in payload:
                     key.append("error")
                     return _parse_payload(payload["error"], key)
@@ -67,6 +78,8 @@ class JsonResponseWithError(ResponseError):
                 key.append(new_key)
 
                 return _parse_payload(payload[new_key], key)
+            if isinstance(payload, list | dict):
+                return key, "unknown error"
 
             return key, payload
 
@@ -77,6 +90,26 @@ class JsonResponseWithError(ResponseError):
         key_chain = " -> ".join(key)
 
         super().__init__(f"Paperless [{key_chain}]: {message}")
+
+
+class NotFoundError(ResponseError):
+    """Raised when the requested resource does not exist (HTTP 404)."""
+
+    def __init__(self, response: "httpx.Response") -> None:
+        """Initialize a `NotFoundError` instance."""
+        self.response = response
+        super().__init__(f"Requested resource does not exist: {response.request.url}")
+
+
+class UnexpectedStatusError(ResponseError):
+    """Raised when Paperless responds with an unhandled non-2xx status code."""
+
+    def __init__(self, response: "httpx.Response") -> None:
+        """Initialize an `UnexpectedStatusError` instance."""
+        self.response = response
+        super().__init__(
+            f"Paperless responded with HTTP {response.status_code} ({response.reason_phrase})."
+        )
 
 
 class BulkEditError(ResponseError):
@@ -121,7 +154,7 @@ class DeletionError(ResourceError):
 
 
 class ItemNotFoundError(ResourceError):
-    """Raised when trying to access non-existing items in PaperlessCustomDataModel classes."""
+    """Raised when trying to access non-existing items in DocumentCustomFieldList classes."""
 
 
 class PrimaryKeyRequiredError(ResourceError):

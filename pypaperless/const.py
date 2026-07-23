@@ -109,6 +109,7 @@ class EndpointPath(StrEnum):
     TASKS_ACTIVE = "/api/tasks/active/"
     TASKS_RUN = "/api/tasks/run/"
     TASKS_SINGLE = "/api/tasks/{pk}/"
+    TASKS_STATUS_COUNTS = "/api/tasks/status_counts/"
     TASKS_SUMMARY = "/api/tasks/summary/"
 
     TRASH = "/api/trash/"

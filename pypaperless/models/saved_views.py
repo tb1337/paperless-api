@@ -9,7 +9,7 @@ from pydantic import BaseModel, PlainValidator
 from pypaperless.const import EndpointPath
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel
 
 _CUSTOM_FIELD_RE: re.Pattern[str] = re.compile(r"^custom_field_(\d+)$")
 
@@ -20,6 +20,7 @@ class SavedViewDisplayMode(StrEnum):
     TABLE = "table"
     SMALL_CARDS = "smallCards"
     LARGE_CARDS = "largeCards"
+    UNKNOWN = "unknown"
 
     @classmethod
     def _missing_(cls, *_: object) -> Self:
@@ -112,12 +113,11 @@ class SavedViewFilterRule(BaseModel):
     value: str | None = None
 
 
-class SavedView(PaperlessModel, mixins.SecurableModel):
+class SavedView(IdentifiedModel, mixins.SecurableModel):
     """Represent a Paperless `SavedView`."""
 
     _api_path: ClassVar[str] = EndpointPath.SAVED_VIEWS_SINGLE
 
-    id: int | None = None
     name: str | None = None
     sort_field: str | None = None
     sort_reverse: bool | None = None

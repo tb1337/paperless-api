@@ -3,15 +3,14 @@
 from typing import ClassVar
 
 from pypaperless.const import EndpointPath
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
-class DocumentAISuggestions(PaperlessModel):
+class DocumentAISuggestions(IdentifiedModel):
     """Represent a Paperless `Document`'s AI-generated suggestions."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_AI_SUGGESTIONS
 
-    id: int | None = None
     title: str | None = None
     correspondents: list[int] | None = None
     suggested_correspondents: list[str] | None = None

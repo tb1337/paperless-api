@@ -34,6 +34,7 @@ v6 is also almost a full rewrite of pypaperless. Three things drove it:
 | 11  | `Task` fields and enum values overhauled; `run()` signature changed; new `active()` and `summary()` methods           | [Changed resources](#changed-resources)                                       |
 | 12  | New: `profile`, `trash`, `documents.history`, `share_links`, `documents.bulk_edit`, `bulk_edit_objects`               | [New resources](#new-resources)                                               |
 | 13  | Rename four `Paperless`-prefixed exception classes; new `DeletionError`, `DispatchError`                              | [Error handling](#error-handling)                                             |
+| 14  | HTTP error statuses now raise typed exceptions: 404 → `NotFoundError`, other non-2xx → `UnexpectedStatusError`        | [Error handling](#http-error-statuses-raise-typed-exceptions)                 |
 
 ---
 
@@ -243,6 +244,12 @@ v6 provides two equivalent ways to perform CRUD:
   `await paperless.delete(model)` / `await paperless.save(draft)` directly on
   the client; the dispatcher resolves the responsible service automatically.
 
+!!! tip "`id` is no longer optional"
+    Resource models fetched from the API now type their `id` as a required
+    `int` instead of `int | None`. Guards like `if doc.id is not None` are
+    dead code in v6, and expressions such as `my_dict[doc.id]` type-check
+    without casts.
+
 ### update()
 
 === "v5"
@@ -264,6 +271,17 @@ v6 provides two equivalent ways to perform CRUD:
     doc = await paperless.documents(42)
     doc.title = "New Title"
     await paperless.update(doc)  # resolves to DocumentService automatically
+    ```
+
+!!! warning "Assignments are validated"
+    In v6, assigning a value to a model field validates (and coerces) it
+    immediately - invalid values raise a `pydantic.ValidationError` at the
+    assignment site instead of failing later inside `update()` with a server
+    error:
+
+    ```python
+    doc.created = "2024-08-13"   # coerced to datetime.date(2024, 8, 13)
+    doc.created = "not a date"   # ValidationError - right here
     ```
 
 ### delete()
@@ -334,6 +352,18 @@ For all other resources (correspondents, tags, …):
     draft = paperless.tags.create(name="urgent")
     pk = await paperless.save(draft)
     ```
+
+!!! warning "Draft models reject unknown fields"
+    In v6, `create()` raises a `pydantic.ValidationError` for unknown keyword
+    arguments instead of silently dropping them:
+
+    ```python
+    paperless.tags.create(tag_name="urgent")  # field is called "name"
+    # ValidationError: Extra inputs are not permitted
+    ```
+
+    v5 ignored such typos, which usually surfaced much later as a confusing
+    "missing field" error - or not at all.
 
 ---
 
@@ -639,9 +669,28 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 ---
 
+## Custom field values
+
+`DocumentCustomFieldList` is now a pydantic `RootModel` and the typed value
+classes (`CustomFieldBooleanValue`, `CustomFieldDateValue`, …) are resolved
+through a discriminated union on `data_type`. The container API (`add`,
+`remove`, `get`, `default`, `in`, iteration, `+=`/`-=`) is unchanged. Three
+internals moved:
+
+- `CUSTOM_FIELD_TYPE_VALUE_MAP` was removed - use `isinstance()` checks against
+  the typed value classes, or the `AnyCustomFieldValue` union from
+  `pypaperless.models.types`.
+- The `.data` property (raw payload) was removed - the validated items live in
+  `.root`, or just iterate the container.
+- `model_dump()` of a `CustomFieldValue` now emits only `field` and `value` -
+  `name`, `data_type`, and `extra_data` are client-side metadata and are
+  excluded from serialization.
+
+---
+
 ## Error handling
 
-`PaperlessConnectionError` is now raised for `httpx.ConnectError` rather than `aiohttp.ClientConnectorError`. If you catch library-specific exceptions, update accordingly:
+`PaperlessConnectionError` is now raised for every transport-level failure (connection refused, DNS failure, broken connection mid-response) rather than `aiohttp.ClientConnectorError`. Timeouts raise the more specific `PaperlessTimeoutError`, a subclass of `PaperlessConnectionError`. If you catch library-specific exceptions, update accordingly:
 
 === "v5"
     ```python
@@ -651,14 +700,52 @@ See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 === "v6"
     ```python
-    except httpx.ConnectError:
-        ...
+    except PaperlessTimeoutError:
+        ...  # host alive but slow - consider retrying
     except PaperlessConnectionError:
-        ...
+        ...  # host not reachable
     ```
 
 !!! tip
-    `PaperlessConnectionError` wraps `httpx.ConnectError` and works in both v5 and v6 - catching it is the most forward-compatible option.
+    `PaperlessConnectionError` works in both v5 and v6 - catching it is the most forward-compatible option. In v6 no `httpx` exception ever leaks through, so catching `httpx.ConnectError` or `httpx.ReadTimeout` is unnecessary.
+
+### HTTP error statuses raise typed exceptions
+
+In v5, requests failing with an HTTP error status leaked the HTTP library's own
+exception (`aiohttp.ClientResponseError`). v6 translates every non-2xx response
+into a pypaperless exception, so you never need to catch `httpx` exceptions:
+
+| Status                   | v6 exception                                   |
+| ------------------------ | ---------------------------------------------- |
+| 400 (with JSON body)     | `JsonResponseWithError`                        |
+| 401                      | `InvalidTokenError` / `InactiveOrDeletedError` |
+| 403                      | `ForbiddenError`                               |
+| 404                      | `NotFoundError`                                |
+| any other non-2xx status | `UnexpectedStatusError`                        |
+
+`NotFoundError` and `UnexpectedStatusError` expose the original `httpx.Response`
+via their `response` attribute.
+
+=== "v5"
+    ```python
+    import aiohttp
+
+    try:
+        doc = await paperless.documents(999999)
+    except aiohttp.ClientResponseError as exc:
+        if exc.status == 404:
+            print("Document does not exist.")
+    ```
+
+=== "v6"
+    ```python
+    from pypaperless.exceptions import NotFoundError
+
+    try:
+        doc = await paperless.documents(999999)
+    except NotFoundError:
+        print("Document does not exist.")
+    ```
 
 ### Exception renames
 
@@ -695,17 +782,19 @@ Four exception classes lost their `Paperless` prefix to follow standard Python n
 
 v6 introduces intermediate base classes that you can use to catch whole groups of related errors:
 
-| Class                 | Catches                                                                              |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `InitializationError` | All session/transport errors (unchanged from v5)                                     |
-| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `BulkEditError`                     |
-| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                  |
-| `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError` |
-| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                  |
+| Class                 | Catches                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `InitializationError` | All session/transport errors (unchanged from v5)                                                           |
+| `ResponseError`       | `BadJsonResponseError`, `JsonResponseWithError`, `NotFoundError`, `UnexpectedStatusError`, `BulkEditError` |
+| `DraftError`          | `DraftFieldRequiredError`, `DraftNotSupportedError`                                                        |
+| `ResourceError`       | `DeletionError`, `ItemNotFoundError`, `PrimaryKeyRequiredError`, `TaskNotFoundError`                       |
+| `DocumentError`       | `AsnRequestError`, `SendEmailError`                                                                        |
 
 ### New exceptions
 
-| Exception       | When raised                                                             |
-| --------------- | ----------------------------------------------------------------------- |
-| `DeletionError` | `delete()` call receives a non-2xx HTTP response                        |
-| `DispatchError` | `update()` / `delete()` / `save()` called on an unregistered model type |
+| Exception               | When raised                                                              |
+| ----------------------- | ------------------------------------------------------------------------ |
+| `DeletionError`         | `delete()` call receives a non-2xx HTTP response                         |
+| `DispatchError`         | `update()` / `delete()` / `save()` called on an unregistered model type  |
+| `NotFoundError`         | The requested resource does not exist (HTTP 404)                         |
+| `UnexpectedStatusError` | The API responds with an unhandled non-2xx status code (e.g. 5xx errors) |

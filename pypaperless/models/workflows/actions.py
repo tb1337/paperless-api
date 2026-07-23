@@ -6,7 +6,7 @@ from typing import Any, ClassVar, Self
 from pydantic import BaseModel
 
 from pypaperless.const import EndpointPath
-from pypaperless.models.base import PaperlessModel
+from pypaperless.models.base import IdentifiedModel
 
 
 class WorkflowActionType(Enum):
@@ -49,12 +49,11 @@ class WorkflowActionWebhook(BaseModel):
     include_document: bool | None = None
 
 
-class WorkflowAction(PaperlessModel):
+class WorkflowAction(IdentifiedModel):
     """Represent a Paperless `WorkflowAction`."""
 
     _api_path: ClassVar[str] = EndpointPath.WORKFLOW_ACTIONS_SINGLE
 
-    id: int | None = None
     type: WorkflowActionType | None = None
     assign_title: str | None = None
     assign_tags: list[int] | None = None

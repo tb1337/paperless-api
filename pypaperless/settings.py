@@ -1,6 +1,6 @@
 """PyPaperless client configuration."""
 
-from pydantic import model_validator
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .const import ENV_PREFIX, ENV_URL
@@ -13,6 +13,10 @@ class PaperlessSettings(BaseSettings):
 
     - ``PYPAPERLESS_URL`` — Paperless-ngx base URL
     - ``PYPAPERLESS_TOKEN`` — API token
+
+    The token is held as a :class:`pydantic.SecretStr`, so it never appears
+    in ``repr()``, logs, or tracebacks. Use ``token.get_secret_value()`` to
+    read the raw value.
 
     Example — from environment::
 
@@ -31,7 +35,7 @@ class PaperlessSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix=ENV_PREFIX)
 
     url: str = ""
-    token: str | None = None
+    token: SecretStr | None = None
 
     @model_validator(mode="after")
     def _require_url(self) -> "PaperlessSettings":
