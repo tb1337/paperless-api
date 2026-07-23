@@ -1,9 +1,10 @@
 # Code Patterns & Templates
 
 All snippets below reflect the **current** code surface: `EndpointPath` (StrEnum) instead of an
-`API_PATH` dict, `ResourceService` as the service base, `*Service` mixins, model-side `*Model`
-mixins, `self._runtime.transport` for HTTP, `from_data(self._runtime, ...)`, and lazy
-`@cached_property` registration on the client.
+`API_PATH` dict, `IdentifiedModel` (required `id: int`) as the base for API-identified read models,
+`ResourceService` as the service base, `*Service` mixins, model-side `*Model` mixins,
+`self._runtime.transport` for HTTP, `from_data(self._runtime, ...)`, and lazy `@cached_property`
+registration on the client.
 
 ## Model Templates
 
@@ -17,11 +18,11 @@ from typing import ClassVar
 from pypaperless.const import EndpointPath, PaperlessResource
 
 from . import mixins
-from .base import PaperlessModel
+from .base import IdentifiedModel, PaperlessModel
 
 
 class Widget(
-    PaperlessModel,
+    IdentifiedModel,  # provides a required, non-optional `id: int` — do not redeclare it
     mixins.SecurableModel,  # adds owner / user_can_change / permissions
 ):
     """Represent a Paperless `Widget`."""
@@ -29,7 +30,6 @@ class Widget(
     _api_path: ClassVar[str] = EndpointPath.WIDGETS_SINGLE
     _resource: ClassVar[PaperlessResource] = PaperlessResource.WIDGETS
 
-    id: int | None = None
     name: str | None = None
     created: datetime.datetime | None = None
 
@@ -65,15 +65,14 @@ from pydantic import Field
 
 from pypaperless.const import EndpointPath
 
-from .base import PaperlessModel
+from .base import IdentifiedModel
 
 
-class DocumentHistory(PaperlessModel):
+class DocumentHistory(IdentifiedModel):
     """Represent a single Paperless document history (audit-log) entry."""
 
     _api_path: ClassVar[str] = EndpointPath.DOCUMENTS_HISTORY
 
-    id: int | None = None
     document: int | None = None  # injected by the service; not in the API payload
     timestamp: datetime.datetime | None = None
     action: DocumentHistoryAction | None = None
@@ -85,9 +84,9 @@ class DocumentHistory(PaperlessModel):
 
 ## Service Templates
 
-Services reach the API through `self._runtime.transport`, whose methods
-(`get` / `post` / `patch` / `put` / `delete`) already parse JSON and raise on error — no
-manual `raise_for_status()`.
+Services reach the API through `self._runtime.transport`. `get` / `post` / `patch` / `put` parse
+the JSON body and raise on error; `delete` returns `None` (raises on error, no body to parse).
+Either way, no manual `raise_for_status()`.
 
 ### Full CRUD top-level service
 

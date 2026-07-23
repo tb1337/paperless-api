@@ -68,10 +68,12 @@ DOCUMENTS_HISTORY = "/api/documents/{pk}/history/"
 
 See [model templates](./references/patterns.md#model-templates) for full code examples.
 
-- Inherit from `PaperlessModel` (plus the model mixins the resource needs — `SecurableModel`,
-  `MatchingFieldsModel`, `CreatableModel`, `SecurableDraftModel`)
+- The resource (read) model inherits `IdentifiedModel` (provides a required, non-optional `id: int` —
+  do **not** redeclare `id`); the draft model inherits `PaperlessModel`. Add the mixins each side needs
+  (`SecurableModel` / `MatchingFieldsModel` on the read model; `SecurableDraftModel` / `CreatableModel`
+  on the draft)
 - Set `_api_path: ClassVar[str] = EndpointPath.<MEMBER>` (and `_resource` for dispatched resources)
-- All fields `Optional` (use `| None = None`)
+- All other fields `Optional` (use `| None = None`); `id` is the exception — inherited as a required `int`
 - Use `datetime.datetime | None` for timestamps
 - Use `StrEnum` subclasses for typed enum fields
 - Export from `pypaperless/models/__init__.py`
@@ -149,9 +151,10 @@ Create realistic snapshot data matching the actual API response shape:
 
 Export from `tests/data/__init__.py` (import + add to `__all__`).
 
-### 7. Unit Tests (`tests/test_models_specific.py`)
+### 7. Unit Tests
 
-Add a `class TestModel<Name>:` with:
+Add a `class Test<Name>:` — top-level resources go in `tests/test_resources.py`, document
+sub-services in `tests/test_documents.py`:
 
 - `test_iter` / `test_call` — test the main GET path via `httpx_mock`
 - `test_<action>` — test each POST method
@@ -205,7 +208,7 @@ whenever the resource has enum or filter types re-exported there.
 Then update **`docs/resources.md`**:
 
 - Add the new resource to the **capability matrix** table (alphabetical order).
-  Columns: `call`, `iterate`, `draft`/`save`, `update`, `delete`, `permissions`.
+  Columns: `call`, `iterate`, `create`/`save`, `update`, `delete`, `permissions`.
 
 Then register the new page in **`zensical.toml`** (the MkDocs nav):
 
@@ -221,7 +224,7 @@ Then register the new page in **`zensical.toml`** (the MkDocs nav):
 Add a test function before the relevant section and wire it into `main()`:
 
 ```python
-async def test_trash(p: Paperless) -> None:
+async def test_trash(p: PaperlessClient) -> None:
     _hdr("Trash – list deleted documents")
     await check("trash.as_list()", p.trash.as_list(),
         detail_fn=lambda r: f"count={len(r)}")
@@ -255,7 +258,7 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 - [ ] `client.py` — register lazily on `PaperlessClient` (`@cached_property` / `@dispatchable_cached_property`)
 - [ ] Test fixture in `tests/data/`
 - [ ] `tests/data/__init__.py` — export
-- [ ] Unit tests in `test_models_specific.py`
+- [ ] Unit tests in `test_resources.py` (or `test_documents.py` for document sub-services)
 - [ ] `script/pngx_audit_coverage.py` — `EndpointSpec` + any `KNOWN_EXTRAS`
 - [ ] `docs/resources/<name>.md` — model table + usage examples
 - [ ] `docs/resources.md` — capability matrix row

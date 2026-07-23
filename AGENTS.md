@@ -36,6 +36,7 @@ Current code surface (trust these over older docs): `const.py` uses `EndpointPat
 - `uv run ruff format pypaperless` — format
 - `uv run mypy` — static type check (strict-ish)
 - `uv run codespell` — spell check
+- `uv run yamllint .` — lint YAML (enforced by pre-commit)
 - `prek run --all-files` — all pre-commit hooks
 
 ## Testing instructions
