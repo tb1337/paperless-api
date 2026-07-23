@@ -1,11 +1,40 @@
 """Provide `MailAccount` related models."""
 
 import datetime
-from typing import ClassVar
+from enum import IntEnum
+from typing import ClassVar, Self
 
 from pypaperless.const import EndpointPath
 from pypaperless.models import mixins
 from pypaperless.models.base import IdentifiedModel
+
+
+class ImapSecurity(IntEnum):
+    """Represent a subtype of `MailAccount`."""
+
+    NONE = 1
+    SSL = 2
+    STARTTLS = 3
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
+
+
+class MailAccountType(IntEnum):
+    """Represent a subtype of `MailAccount`."""
+
+    IMAP = 1
+    GMAIL_OAUTH = 2
+    OUTLOOK_OAUTH = 3
+    UNKNOWN = -1
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
 
 
 class MailAccount(IdentifiedModel, mixins.SecurableModel):
@@ -16,10 +45,10 @@ class MailAccount(IdentifiedModel, mixins.SecurableModel):
     name: str | None = None
     imap_server: str | None = None
     imap_port: int | None = None
-    imap_security: int | None = None
+    imap_security: ImapSecurity | None = None
     username: str | None = None
     # password:intentionally excluded
     character_set: str | None = None
     is_token: bool | None = None
-    account_type: int | None = None
+    account_type: MailAccountType | None = None
     expiration: datetime.datetime | None = None

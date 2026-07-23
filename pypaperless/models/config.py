@@ -79,6 +79,22 @@ class OcrMode(StrEnum):
         return cls["UNKNOWN"]
 
 
+class OutputType(StrEnum):
+    """Represent a subtype of `Config`."""
+
+    PDF = "pdf"
+    PDF_A = "pdfa"
+    PDF_A1 = "pdfa-1"
+    PDF_A2 = "pdfa-2"
+    PDF_A3 = "pdfa-3"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls, *_: object) -> Self:
+        """Return the UNKNOWN member for any unrecognised value."""
+        return cls["UNKNOWN"]
+
+
 class UnpaperClean(StrEnum):
     """Represent a subtype of `Config`."""
 
@@ -99,7 +115,7 @@ class Config(IdentifiedModel):
     _api_path: ClassVar[str] = EndpointPath.CONFIG_SINGLE
 
     user_args: str | None = None
-    output_type: str | None = None
+    output_type: OutputType | None = None
     pages: int | None = None
     language: str | None = None
     mode: OcrMode | None = None

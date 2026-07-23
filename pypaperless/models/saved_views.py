@@ -20,6 +20,7 @@ class SavedViewDisplayMode(StrEnum):
     TABLE = "table"
     SMALL_CARDS = "smallCards"
     LARGE_CARDS = "largeCards"
+    UNKNOWN = "unknown"
 
     @classmethod
     def _missing_(cls, *_: object) -> Self:

@@ -13,6 +13,7 @@ from pypaperless.builders import (
 
 from .base import DraftLike
 from .bulk_edit import BulkEditObjectType, CustomFieldsInput, EditPdfOperation, SourceMode
+from .config import OutputType
 from .custom_fields import (
     AnyCustomFieldValue,
     CustomFieldBooleanValue,
@@ -48,6 +49,15 @@ from .filters import (
     TaskFilters,
     TaskSummaryFilters,
     UserFilters,
+)
+from .mails.accounts import ImapSecurity, MailAccountType
+from .mails.rules import (
+    MailRuleAction,
+    MailRuleAttachmentType,
+    MailRuleConsumptionScope,
+    MailRuleCorrespondentSource,
+    MailRulePdfLayout,
+    MailRuleTitleSource,
 )
 from .mixins.data_fields import MatchingAlgorithm
 from .mixins.securable import Permissions
@@ -105,7 +115,16 @@ __all__ = (
     "EditPdfOperation",
     "FileRetrieveMode",
     "GroupFilters",
+    "ImapSecurity",
+    "MailAccountType",
+    "MailRuleAction",
+    "MailRuleAttachmentType",
+    "MailRuleConsumptionScope",
+    "MailRuleCorrespondentSource",
+    "MailRulePdfLayout",
+    "MailRuleTitleSource",
     "MatchingAlgorithm",
+    "OutputType",
     "Permissions",
     "SavedViewCustomFieldDisplay",
     "SavedViewDisplayField",

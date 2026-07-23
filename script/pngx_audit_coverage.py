@@ -70,13 +70,29 @@ from pypaperless.models import (
     WorkflowAction,
     WorkflowTrigger,
 )
+from pypaperless.models.config import (
+    ArchiveFileGeneration,
+    ColorConversionStrategy,
+    OcrMode,
+    OutputType,
+    UnpaperClean,
+)
 from pypaperless.models.custom_fields import (
     CustomFieldType,
     CustomFieldValue,
 )
 from pypaperless.models.document_types import DocumentType
+from pypaperless.models.mails.accounts import ImapSecurity, MailAccountType
+from pypaperless.models.mails.rules import (
+    MailRuleAction,
+    MailRuleAttachmentType,
+    MailRuleConsumptionScope,
+    MailRuleCorrespondentSource,
+    MailRulePdfLayout,
+    MailRuleTitleSource,
+)
 from pypaperless.models.mixins.data_fields import MatchingAlgorithm
-from pypaperless.models.saved_views import SavedViewFilterRule
+from pypaperless.models.saved_views import SavedViewDisplayMode, SavedViewFilterRule
 from pypaperless.models.share_links import ShareLinkFileVersion
 from pypaperless.models.status import (
     StatusDatabase,
@@ -347,26 +363,29 @@ ENUM_MAPPINGS: list[tuple[type[Enum], str, str]] = [
         "WorkflowTrigger.schedule_date_field",
     ),
     (WorkflowTriggerSource, "SourcesEnum", "WorkflowTrigger.sources"),
+    (OutputType, "OutputTypeEnum", "Config.output_type"),
+    (OcrMode, "ModeEnum", "Config.mode"),
+    (ArchiveFileGeneration, "ArchiveFileGenerationEnum", "Config.archive_file_generation"),
+    (UnpaperClean, "UnpaperCleanEnum", "Config.unpaper_clean"),
+    (ColorConversionStrategy, "ColorConversionStrategyEnum", "Config.color_conversion_strategy"),
+    (SavedViewDisplayMode, "DisplayModeEnum", "SavedView.display_mode"),
+    (ImapSecurity, "ImapSecurityEnum", "MailAccount.imap_security"),
+    (MailAccountType, "AccountTypeEnum", "MailAccount.account_type"),
+    (MailRuleAction, "MailRuleActionEnum", "MailRule.action"),
+    (MailRuleTitleSource, "AssignTitleFromEnum", "MailRule.assign_title_from"),
+    (
+        MailRuleCorrespondentSource,
+        "AssignCorrespondentFromEnum",
+        "MailRule.assign_correspondent_from",
+    ),
+    (MailRuleAttachmentType, "AttachmentTypeEnum", "MailRule.attachment_type"),
+    (MailRuleConsumptionScope, "ConsumptionScopeEnum", "MailRule.consumption_scope"),
+    (MailRulePdfLayout, "PdfLayoutEnum", "MailRule.pdf_layout"),
 ]
 
 # ── Model fields that use raw int/str where schema defines a typed enum ───────
 # (model_name, field_name, openapi_schema_name)
-UNTYPED_ENUM_FIELDS: list[tuple[str, str, str]] = [
-    ("Config", "output_type", "OutputTypeEnum"),
-    ("Config", "mode", "ModeEnum"),
-    ("Config", "skip_archive_file", "SkipArchiveFileEnum"),
-    ("Config", "unpaper_clean", "UnpaperCleanEnum"),
-    ("Config", "color_conversion_strategy", "ColorConversionStrategyEnum"),
-    ("MailAccount", "imap_security", "ImapSecurityEnum"),
-    ("MailAccount", "account_type", "AccountTypeEnum"),
-    ("MailRule", "action", "MailRuleActionEnum"),
-    ("MailRule", "assign_title_from", "AssignTitleFromEnum"),
-    ("MailRule", "assign_correspondent_from", "AssignCorrespondentFromEnum"),
-    ("MailRule", "attachment_type", "AttachmentTypeEnum"),
-    ("MailRule", "consumption_scope", "ConsumptionScopeEnum"),
-    ("MailRule", "pdf_layout", "PdfLayoutEnum"),
-    ("SavedView", "display_mode", "DisplayModeEnum"),
-]
+UNTYPED_ENUM_FIELDS: list[tuple[str, str, str]] = []
 
 # ── Schema paths that are action/utility endpoints (no resource model needed) ─
 KNOWN_UTILITY_PATHS: set[str] = {
