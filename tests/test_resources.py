@@ -19,7 +19,7 @@ from pypaperless.models import (
     Task,
 )
 from pypaperless.models.mixins.securable import Permissions
-from pypaperless.models.tasks import TaskSummary
+from pypaperless.models.tasks import TaskStatusCounts, TaskSummary
 from pypaperless.models.types import (
     StatisticDocumentFileTypeCount,
     StatusDatabase,
@@ -41,6 +41,7 @@ from .data import (
     DATA_STATUS,
     DATA_TASKS,
     DATA_TASKS_ACTIVE,
+    DATA_TASKS_STATUS_COUNTS,
     DATA_TASKS_SUMMARY,
     DATA_TRASH,
 )
@@ -338,6 +339,19 @@ class TestTasks:
         assert isinstance(result, list)
         assert len(result) == len(DATA_TASKS_SUMMARY)
         assert all(isinstance(s, TaskSummary) for s in result)
+
+    async def test_status_counts(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
+        """tasks.status_counts() returns a single TaskStatusCounts instance."""
+        httpx_mock.add_response(
+            method="GET",
+            url=f"{PAPERLESS_TEST_URL}{EndpointPath.TASKS_STATUS_COUNTS}",
+            status_code=200,
+            json=DATA_TASKS_STATUS_COUNTS,
+        )
+        result = await paperless.tasks.status_counts()
+        assert isinstance(result, TaskStatusCounts)
+        assert result.all == DATA_TASKS_STATUS_COUNTS["all"]
+        assert result.needs_attention == DATA_TASKS_STATUS_COUNTS["needs_attention"]
 
     async def test_run(self, httpx_mock: HTTPXMock, paperless: PaperlessClient) -> None:
         """tasks.run(task_type) POSTs and returns the Celery UUID string."""

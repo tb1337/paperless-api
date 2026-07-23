@@ -96,6 +96,15 @@ for s in summaries:
     print(s.task_type, s.success_count, s.failure_count, s.avg_duration_seconds)
 ```
 
+## Status counts
+
+`status_counts()` returns the aggregated task counts used by the task UI sections:
+
+```python
+counts = await paperless.tasks.status_counts()
+print(counts.all, counts.needs_attention, counts.in_progress, counts.completed)
+```
+
 ## Acknowledge tasks
 
 Acknowledgement happens on the service - pass the list of primary keys to acknowledge:

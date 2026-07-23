@@ -129,7 +129,11 @@ class Config(IdentifiedModel):
     llm_embedding_backend: LLMEmbeddingBackend | None = None
     llm_embedding_model: str | None = None
     llm_embedding_endpoint: str | None = None
+    llm_embedding_chunk_size: int | None = None
+    llm_context_size: int | None = None
     llm_endpoint: str | None = None
     llm_model: str | None = None
     llm_api_key: str | None = None
     llm_backend: LLMBackend | None = None
+    llm_output_language: str | None = None
+    llm_request_timeout: int | None = None

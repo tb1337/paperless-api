@@ -1351,7 +1351,7 @@ async def test_users_groups(p: PaperlessClient) -> None:
 
 # ──────────────────────────────────────────────────────────────────────────────
 async def test_tasks(p: PaperlessClient) -> None:
-    _hdr("Tasks – iterate, fetch by uuid, active, summary")
+    _hdr("Tasks – iterate, fetch by uuid, active, summary, status_counts")
 
     tasks = []
     try:
@@ -1388,6 +1388,12 @@ async def test_tasks(p: PaperlessClient) -> None:
         "tasks.summary(days=7)",
         p.tasks.summary(days=7),
         detail_fn=lambda r: f"types={len(r)}",
+    )
+
+    await check(
+        "tasks.status_counts()",
+        p.tasks.status_counts(),
+        detail_fn=lambda r: f"all={r.all} needs_attention={r.needs_attention}",
     )
 
 

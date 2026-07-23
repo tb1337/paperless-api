@@ -66,7 +66,7 @@ from .status import (
     StatusTasks,
     StatusType,
 )
-from .tasks import TaskStatus, TaskSummary, TaskTriggerSource, TaskType
+from .tasks import TaskStatus, TaskStatusCounts, TaskSummary, TaskTriggerSource, TaskType
 from .workflows import (
     WorkflowActionEmail,
     WorkflowActionType,
@@ -127,6 +127,7 @@ __all__ = (
     "TagFilters",
     "TaskFilters",
     "TaskStatus",
+    "TaskStatusCounts",
     "TaskSummary",
     "TaskSummaryFilters",
     "TaskTriggerSource",

@@ -115,3 +115,21 @@ class TaskSummary(BaseModel):
     last_run: datetime.datetime | None = None
     last_success: datetime.datetime | None = None
     last_failure: datetime.datetime | None = None
+
+
+class TaskStatusCounts(BaseModel):
+    """Represent aggregated task counts for the task UI sections.
+
+    Returned by :meth:`~pypaperless.services.tasks.TaskService.status_counts`.
+
+    Example::
+
+        counts = await paperless.tasks.status_counts()
+        print(counts.all, counts.needs_attention)
+
+    """
+
+    all: int = 0
+    needs_attention: int = 0
+    in_progress: int = 0
+    completed: int = 0

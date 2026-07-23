@@ -403,6 +403,7 @@ KNOWN_UTILITY_PATHS: set[str] = {
     "/api/tasks/acknowledge/",
     "/api/tasks/active/",
     "/api/tasks/run/",
+    "/api/tasks/status_counts/",
     "/api/tasks/summary/",
     "/api/users/{id}/deactivate_totp/",
 }

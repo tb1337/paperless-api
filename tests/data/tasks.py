@@ -98,3 +98,10 @@ DATA_TASKS_SUMMARY = [
         "last_failure": None,
     },
 ]
+
+DATA_TASKS_STATUS_COUNTS = {
+    "all": 3,
+    "needs_attention": 1,
+    "in_progress": 0,
+    "completed": 2,
+}
