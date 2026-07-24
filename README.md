@@ -87,20 +87,20 @@ Full documentation is available **[here][docs-url]**.
 
 Check out all [contributors][contributors-url].
 
-[codecov-badge]: https://codecov.io/gh/tb1337/paperless-api/graph/badge.svg?token=IMXRBK3HRE
-[codecov-url]: https://app.codecov.io/gh/tb1337/paperless-api/tree/main
+[codecov-badge]: https://codecov.io/gh/tb1337/pypaperless/graph/badge.svg?token=IMXRBK3HRE
+[codecov-url]: https://app.codecov.io/gh/tb1337/pypaperless/tree/main
 [contributors-tbsch]: https://tbsch.de
-[contributors-url]: https://github.com/tb1337/paperless-api/graphs/contributors
+[contributors-url]: https://github.com/tb1337/pypaperless/graphs/contributors
 [docs-url]: https://pypaperless.docs.tbsch.de
-[license-badge]: https://img.shields.io/github/license/tb1337/paperless-api
+[license-badge]: https://img.shields.io/github/license/tb1337/pypaperless
 [license-url]: /LICENSE.md
 [python-badge]: https://img.shields.io/pypi/pyversions/pypaperless
 [python-url]: https://pypi.org/project/pypaperless/
-[tests-badge]: https://github.com/tb1337/paperless-api/actions/workflows/tests.yml/badge.svg
-[tests-url]: https://github.com/tb1337/paperless-api/actions
-[release-badge]: https://img.shields.io/github/v/release/tb1337/paperless-api
-[release-url]: https://github.com/tb1337/paperless-api/releases
-[linting-badge]: https://github.com/tb1337/paperless-api/actions/workflows/linting.yml/badge.svg
-[linting-url]: https://github.com/tb1337/paperless-api/actions
-[typing-badge]: https://github.com/tb1337/paperless-api/actions/workflows/typing.yml/badge.svg
-[typing-url]: https://github.com/tb1337/paperless-api/actions
+[tests-badge]: https://github.com/tb1337/pypaperless/actions/workflows/tests.yml/badge.svg
+[tests-url]: https://github.com/tb1337/pypaperless/actions
+[release-badge]: https://img.shields.io/github/v/release/tb1337/pypaperless
+[release-url]: https://github.com/tb1337/pypaperless/releases
+[linting-badge]: https://github.com/tb1337/pypaperless/actions/workflows/linting.yml/badge.svg
+[linting-url]: https://github.com/tb1337/pypaperless/actions
+[typing-badge]: https://github.com/tb1337/pypaperless/actions/workflows/typing.yml/badge.svg
+[typing-url]: https://github.com/tb1337/pypaperless/actions
