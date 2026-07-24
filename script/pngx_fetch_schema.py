@@ -9,8 +9,11 @@ import sys
 
 import httpx
 
-SCHEMA_URL = "http://172.17.0.1:8000/api/schema/?format=json"
-PAPERLESS_TOKEN = "3e9505078d32d8ad4ecea00fa0eec8e426622b52"
+from _dev_env import load_dev_env
+
+_env = load_dev_env()
+SCHEMA_URL = f"{_env.url}/api/schema/?format=json"
+PAPERLESS_TOKEN = _env.token.get_secret_value()
 OUTPUT_PATH = pathlib.Path(__file__).parent.parent / "tests" / "data" / "schema.json"
 
 

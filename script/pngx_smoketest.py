@@ -1,7 +1,8 @@
 """Comprehensive API smoke-test for pypaperless.
 
-Runs against the dev PaperlessClient instance configured in debug.py.
-Document ID 1980 is used as the test document.
+Runs against the dev PaperlessClient instance configured via the repo-root .env
+(PYPAPERLESS_URL / PYPAPERLESS_TOKEN / PYPAPERLESS_TEST_DOC; see .env.example).
+PYPAPERLESS_TEST_DOC is used as the test document.
 
 Exit code 0  → all sections green
 Exit code != 0 → at least one section failed (printed in red)
@@ -40,6 +41,8 @@ from pypaperless.models.storage_paths import StoragePathDraft
 from pypaperless.models.tags import TagDraft
 from pypaperless.builders.custom_fields import CustomFieldQuery
 from pypaperless.exceptions import DeletionError, JsonResponseWithError
+
+from _dev_env import load_dev_env
 
 
 async def _retry_flaky[T](coro_factory: Callable[[], Coroutine[Any, Any, T]]) -> T:
@@ -148,9 +151,10 @@ async def _await_task_and_cleanup(
 logging.basicConfig(level=logging.WARNING)
 
 # ── Connection ────────────────────────────────────────────────────────────────
-PAPERLESS_URL = "http://172.17.0.1:8000"
-PAPERLESS_TOKEN = "3e9505078d32d8ad4ecea00fa0eec8e426622b52"
-TEST_DOCUMENT_ID = 1980
+_env = load_dev_env()
+PAPERLESS_URL = _env.url
+PAPERLESS_TOKEN = _env.token.get_secret_value()
+TEST_DOCUMENT_ID = _env.test_doc
 PAGE_SIZE = 500
 
 # ── Terminal colours ──────────────────────────────────────────────────────────
@@ -790,7 +794,7 @@ async def test_custom_field_values_on_document(p: PaperlessClient) -> None:
     ok("SELECT   modify id=11", f"{originals[11]!r} → {cfv11.value!r}  (label={cfv11.label!r})")
 
     # ══════════════════════════════════════════════════════════════════════
-    #  ADD new fields (not yet on doc 1980)
+    #  ADD new fields (not yet on the test document)
     # ══════════════════════════════════════════════════════════════════════
     NEW_FIELDS: list[tuple[int, object, type]] = [
         (13, 777, CustomFieldIntegerValue),  # INTEGER  – Add Test Field
