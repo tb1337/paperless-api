@@ -39,6 +39,11 @@ Current code surface (trust these over older docs): `const.py` uses `EndpointPat
 - `uv run yamllint .` — lint YAML (enforced by pre-commit)
 - `prek run --all-files` — all pre-commit hooks
 
+Local dev instance credentials live in the git-ignored `.env`
+(`PYPAPERLESS_URL`, `PYPAPERLESS_TOKEN`, `PYPAPERLESS_TEST_DOC`) — copy `.env.example` to `.env`.
+Activate the dev venv before running scripts. The `script/*.py` tools and `run/debug.py` read the
+`.env` via `script/_dev_env.py`.
+
 ## Testing instructions
 
 1. `uv run pytest -x -q` — always required, all green, coverage ≥ 95 %.
@@ -48,10 +53,6 @@ Current code surface (trust these over older docs): `const.py` uses `EndpointPat
 
 For docs, filters, pure refactors and docstrings, run unit tests only and state that the smoketest
 was skipped and why. Report both results (or the skip reason) before closing the task.
-
-Local dev instance (throwaway, no real data — fine to keep here):
-`http://172.17.0.1:8000` · token `3e9505078d32d8ad4ecea00fa0eec8e426622b52` · test doc `1980` ·
-venv `/home/vscode/.local/dev-venv/bin/activate`.
 
 ## PR instructions
 

@@ -29,14 +29,14 @@ Before starting, answer these questions:
 ### 1. Research the Endpoint
 
 ```bash
-# Inspect live response
-curl -s http://172.17.0.1:8000/api/<endpoint>/ \
-  -H "Authorization: Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52" | python3 -m json.tool | head -60
+set -a && source .env && set +a
+curl -s "$PYPAPERLESS_URL/api/<endpoint>/" \
+  -H "Authorization: Token $PYPAPERLESS_TOKEN" | python3 -m json.tool | head -60
 # Check OpenAPI schema component
 uv run python -c "
-import httpx, json
-r = httpx.get('http://172.17.0.1:8000/api/schema/?format=json',
-    headers={'Authorization': 'Token 3e9505078d32d8ad4ecea00fa0eec8e426622b52'})
+import os, httpx, json
+r = httpx.get(f\"{os.environ['PYPAPERLESS_URL']}/api/schema/?format=json\",
+    headers={'Authorization': f\"Token {os.environ['PYPAPERLESS_TOKEN']}\"})
 s = r.json()
 # Replace 'ComponentName' with the schema component name
 print(json.dumps(s['components']['schemas'].get('ComponentName', {}), indent=2))
@@ -269,5 +269,6 @@ Expected: all unit tests pass, audit shows `<Name> → OK`, smoketest shows 0 fa
 ## Reference
 
 - [Code patterns & templates](./references/patterns.md)
-- Live Paperless: `http://172.17.0.1:8000` · Token: `3e9505078d32d8ad4ecea00fa0eec8e426622b52`
-- Test document ID: `1980`
+- Live Paperless dev credentials: git-ignored `.env` (`PYPAPERLESS_URL`, `PYPAPERLESS_TOKEN`,
+  `PYPAPERLESS_TEST_DOC`); copy `.env.example` to `.env`. Scripts and `run/debug.py` read them via
+  `script/_dev_env.py`.

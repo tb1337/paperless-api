@@ -19,7 +19,8 @@ The final summary also lists:
 
 Usage
 -----
-  source /home/vscode/.local/dev-venv/bin/activate
+  # Activate your dev venv, then create .env from .env.example
+  # (PYPAPERLESS_URL / PYPAPERLESS_TOKEN / PYPAPERLESS_TEST_DOC).
   python script/pngx_audit_coverage.py
 """
 
@@ -110,10 +111,13 @@ from pypaperless.models.workflows import (
     WorkflowTriggerType,
 )
 
+from _dev_env import load_dev_env
+
 # ── credentials ───────────────────────────────────────────────────────────────
-PAPERLESS_URL = "http://172.17.0.1:8000"
-PAPERLESS_TOKEN = "3e9505078d32d8ad4ecea00fa0eec8e426622b52"
-TEST_DOC_ID = 1980
+_env = load_dev_env()
+PAPERLESS_URL = _env.url
+PAPERLESS_TOKEN = _env.token.get_secret_value()
+TEST_DOC_ID = _env.test_doc
 
 # ── terminal colours ──────────────────────────────────────────────────────────
 RED = "\033[31m"
