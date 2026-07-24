@@ -127,7 +127,7 @@ The server responded with a non-2xx status code that has no dedicated exception 
 
 #### `BulkEditError`
 
-Raised when a bulk edit operation via `paperless.documents.bulk_edit` or `paperless.bulk_edit_objects` returns a non-OK result from the API.
+Raised when a bulk edit operation via `paperless.documents.bulk_edit` returns a non-OK result from the API.
 
 ```python
 from pypaperless.exceptions import BulkEditError

@@ -136,15 +136,29 @@ do not interfere with each other.
 Use `create()` to construct a new draft model and `save()` to persist it:
 
 ```python
+from pypaperless.models.types import MatchingAlgorithm
+
 # Create a new tag
-draft = paperless.tags.create(name="important", color="#ff0000")
+draft = paperless.tags.create(
+    name="important",
+    color="#ff0000",
+    is_inbox_tag=False,
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 new_id = await paperless.tags.save(draft)
 print(f"Created tag with id {new_id}")
 ```
 
 ```python
 # Create a new correspondent
-draft = paperless.correspondents.create(name="ACME Corp")
+draft = paperless.correspondents.create(
+    name="ACME Corp",
+    match="",
+    matching_algorithm=MatchingAlgorithm.AUTO,
+    is_insensitive=True,
+)
 new_id = await paperless.correspondents.save(draft)
 ```
 

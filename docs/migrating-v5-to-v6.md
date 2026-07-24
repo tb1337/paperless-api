@@ -664,7 +664,9 @@ await paperless.bulk_edit_objects.set_permissions(
 await paperless.bulk_edit_objects.delete("correspondents", [4, 5])
 ```
 
-Raises `BulkEditError` when the API returns a non-OK result.
+Transport-level failures raise the standard errors (e.g. `JsonResponseWithError`
+for an HTTP 400, `UnexpectedStatusError` for other non-2xx responses); unlike
+`paperless.documents.bulk_edit`, this service does not raise `BulkEditError`.
 See [Bulk Edit Objects](resources/bulk_edit_objects.md) for details.
 
 ---
